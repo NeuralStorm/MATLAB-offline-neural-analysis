@@ -1,0 +1,76 @@
+When writing a new NeuroToolbox function, to maintain a consistent
+format, copy and paste the following comment block immediately under the
+function definition line, then fill in details
+
+%FUNCTION_NAME  One-line description of function
+% 
+%     Long description of function Long description of function Long
+%     description of function Long description of function Long description
+%     of function Long description of function Long description of function
+%     
+%     Syntax:
+%     
+%         OUT = FUNCTION_NAME(IN1,IN2) description of syntax description of
+%         syntax description of syntax
+%         
+%         [OUT1 OUT2] = FUNCTION_NAME(IN1,IN2,IN3) description of syntax
+%         description of syntax description of syntax
+%         
+%         FUNCTION_NAME(…,’parameter_1’,value_1,'parameter_2',value_2…)
+%         append parameter-value pairs after the required arguments. You
+%         can list several pairs in series. See Parameter-value pairs
+%         section below for a list of parameters that can be used.
+%     
+%     Outputs:
+%     
+%         OUT is description of output description of output description of
+%         output description of output description of output description of
+%         output description of output description of output
+% 
+%         OUT1 is description of output description of output description
+%         of output description of output description of output description
+%         of output description of output description of output
+% 
+%         OUT2 is description of output description of output description
+%         of output description of output description of output description
+%         of output description of output description of output description
+%         of output description of output
+%     
+%     Inputs:
+%     
+%         IN1 is description of input description of input description of
+%         input description of input description of input description of
+%         input description of input description of input description of
+%         input
+% 
+%         IN2 is description of input description of input description of
+%         input description of input description of input description of
+%         input
+% 
+%         IN3 is description of input description of input description of
+%         input description of input description of input description of
+%         input description of input description of input description of
+%         input description of input description of input
+%     
+%     Parameter-value pairs:
+%     
+%         Parameter-value pairs can be used after the required inputs to
+%         specify the following parameters. Enter the name as a string
+%         followed by the value for that parameter. The following
+%         parameters are valid
+% 
+%         ‘Parameter_1’ – description of parameter description of parameter
+%         description of parameter description of parameter description of
+%         parameter description of parameter description of parameter
+%         description of parameter
+% 
+%         ‘Parameter_2’ - description of parameter description of parameter
+%         description of parameter description of parameter description of
+%         parameter description of parameter
+%     
+%     
+%     See also FUNCTION1, FUNCTION2, FUNCTION3.
+%
+%    $Rev:  $
+%    $Author:  $
+%    $LastChangedDate: $
