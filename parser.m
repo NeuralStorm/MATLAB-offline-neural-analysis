@@ -28,25 +28,25 @@ function [] = parser()
         
         [nunits1, nchannels1] = size(tscounts); 
         allts = cell(nunits1, nchannels1);
-        for iunit = 0:nunits1-1   % starting with unit 0 (unsorted) 
-            for ich = 1:nchannels1-1
-                if ( tscounts( iunit+1 , ich+1 ) > 0 )
+        for iunit = 0:nunits1 - 1   % starting with unit 0 (unsorted) 
+            for ich = 1:nchannels1 - 1
+                if (tscounts( iunit+1 , ich+1 ) > 0)
                     % get the timestamps for this channel and unit 
-                    [nts, allts{iunit+1,ich}] = plx_ts(datafile, ich , iunit );
+                    [nts, allts{iunit+1,ich}] = plx_ts(datafile, ich , iunit);
                  end
             end
         end
-        svStrobed=[];
-        svdummy=[];
+        svStrobed = [];
+        svdummy = [];
         % and finally the events
-        [u,nevchannels] = size( evcounts );  
-        if ( nevchannels > 0 ) 
+        [u, nevchannels] = size( evcounts );  
+        if (nevchannels > 0) 
             % need the event chanmap to make any sense of these
             [u,evchans] = plx_event_chanmap(datafile);
             for iev = 1:nevchannels
-                if ( evcounts(iev) > 0 )
+                if (evcounts(iev) > 0)
                     evch = evchans(iev);
-                    if ( evch == 257 )
+                    if (evch == 257)
                         [nevs{iev}, tsevs{iev}, svStrobed] = plx_event_ts(datafile, evch); 
                     else
                         [nevs{iev}, tsevs{iev}, svdummy{iev}] = plx_event_ts(datafile, evch);
@@ -56,51 +56,51 @@ function [] = parser()
         end
 
         events=[];
-        j=0;
-        if length(svStrobed)>1
-            events = tsevs{1,17};
+        j = 0;
+        if length(svStrobed) > 1
+            events = tsevs{1, 17};
             events = [svStrobed,events];
         else
             for i=1:length(evcounts)
                 if evcounts(i) >= 100
                     [nevs{i}, tsevs{i}, svdummy] = plx_event_ts(datafile, i);
-                    j=j+1;
-                    eventsingle(1:evcounts(i),1)=j;
-                    events= [events;eventsingle,tsevs{i}];
+                    j = j + 1;
+                    eventsingle(1:evcounts(i), 1) = j;
+                    events= [events;eventsingle, tsevs{i}];
                     eventsingle=[];
                 end
             end
             for i=1:length(events)
-                if events(i,1)==2
-                    events(i,1)=3;
-                elseif events(i,1)==3
-                    events(i,1)=4;
-                elseif events(i,1)==4
-                    events(i,1)=6;
+                if events(i,1) == 2
+                    events(i,1) = 3;
+                elseif events(i,1) == 3
+                    events(i,1) = 4;
+                elseif events(i,1) == 4
+                    events(i,1) = 6;
                 end
             end
         end
             %% Removes Doubles and Triples from events
         i=1;
-        while i <= length(events)-1
-            if abs(events(i,2)-events(i+1,2)) < 2
+        while i <= length(events) - 1
+            if abs(events(i,2)-events(i + 1, 2)) < 2
                 events(i+1,:) = [];
             end
-            i = i+1;
+            i = i + 1;
+        end
+        i = 1;
+        while i <= length(events) - 1
+            if abs(events(i,2) - events(i + 1, 2)) < 2
+                events(i+1,:) = [];
+            end
+            i = i + 1;
         end
         i=1;
         while i <= length(events)-1
-            if abs(events(i,2)-events(i+1,2)) < 2
+            if abs(events(i,2) - events(i + 1, 2)) < 2
                 events(i+1,:) = [];
             end
-            i = i+1;
-        end
-        i=1;
-        while i <= length(events)-1
-            if abs(events(i,2)-events(i+1,2)) < 2
-                events(i+1,:) = [];
-            end
-            i = i+1;
+            i = i + 1;
         end
 
         %% Separate hemispheres
@@ -125,11 +125,50 @@ function [] = parser()
             end
         end
         
+        %% Seperation of events        
+        %Organize Events into individual variables that hold all timestamps of a
+        %single event type
+        %For angle data, right is positive, left is negative
+
+        event1=[]; %Right Fast
+        event3=[]; %Right Slow
+        event4=[]; %Left  Fast
+        event6=[]; %Left  Slow
+        for i=1:length(events)
+            if events(i,1)==1
+                event1 = [event1; events(i,2)];
+            elseif events(i,1) == 3
+                event3 = [event3; events(i,2)];
+            elseif events(i,1) == 4
+                event4 = [event4; events(i,2)];
+            else
+                event6 = [event6; events(i,2)];
+            end
+        end
+
+        % Right spikes
+        right_spikes = [];
+        for i=1:length(right_spike_times)
+            for j=1:length(right_spike_times{1,i})
+                right_spikes(i,j) = right_spike_times{1,i}(j);
+            end
+        end
+        
+        % Left spikes
+        left_spikes = [];
+        for i = 1:length(left_spike_times)
+            for j = 1:length(left_spike_times{1,i})
+                left_spikes(i,j) = left_spike_times{1,i}(j);
+            end
+        end
+        
         %% Saves parsed files
         filename = replace(filename, '.plx', '.mat');
         matfile = fullfile(parsed_path, filename);
         
-        save(matfile, 'tscounts', 'wfcounts', 'evcounts', 'slowcounts', 'right_spike_times', 'left_spike_times');
+        save(matfile, 'tscounts', 'wfcounts', 'evcounts', 'slowcounts', ...
+            'right_spike_times', 'left_spike_times', 'right_spikes', 'left_spikes', ...
+            'event1', 'event3', 'event4', 'event6');
     end
     toc;
 end
