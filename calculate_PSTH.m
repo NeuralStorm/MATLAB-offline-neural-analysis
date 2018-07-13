@@ -1,4 +1,4 @@
-function [] = calculate_PSTH(parsed_path, bin, edge)
+function [psth_path] = calculate_PSTH(parsed_path, edge)
 % Current default for bin and edge:
 % bin = 0.001;
 % edge=0:bin:0.4;
@@ -48,7 +48,6 @@ function [] = calculate_PSTH(parsed_path, bin, edge)
         [pathstr,namestr,extstr] = fileparts(file);
         filename = strcat('PSTH.format.', namestr);
         filename = strcat(filename, '.mat');
-        psth_path = strcat(psth_path, '/');
         matfile = fullfile(psth_path, filename);
         
         save(matfile, 'right_total_rel_spikes', 'left_total_rel_spikes');
