@@ -1,4 +1,4 @@
-function [] = parser()
+function [parsed_path] = parser()
     tic;
     %% Select Directory
     dir_path = uigetdir(pwd);
@@ -106,21 +106,21 @@ function [] = parser()
         %% Separate hemispheres
 
         % Right Hemisphere
-        right_spike_times = [];
+        right_spikes = [];
         for i = 1:16
             for j = 2:5
                 if length(allts{j,i}) >= 1
-                    right_spike_times = [right_spike_times, allts(j,i)];
+                    right_spikes = [right_spikes, allts(j,i)];
                 end
             end
         end
 
         % Left Hemisphere
-        left_spike_times = [];
+        left_spikes = [];
         for i = 17:32
             for j = 2:5
                 if length(allts{j,i}) >= 1
-                    left_spike_times = [left_spike_times,allts(j,i)];
+                    left_spikes = [left_spikes,allts(j,i)];
                 end
             end
         end
@@ -147,18 +147,18 @@ function [] = parser()
         end
 
         % Right spikes
-        right_spikes = [];
-        for i=1:length(right_spike_times)
-            for j=1:length(right_spike_times{1,i})
-                right_spikes(i,j) = right_spike_times{1,i}(j);
+        right_spike_times = [];
+        for i=1:length(right_spikes)
+            for j=1:length(right_spikes{1,i})
+                right_spike_times(i,j) = right_spikes{1,i}(j);
             end
         end
         
         % Left spikes
-        left_spikes = [];
-        for i = 1:length(left_spike_times)
-            for j = 1:length(left_spike_times{1,i})
-                left_spikes(i,j) = left_spike_times{1,i}(j);
+        left_spike_times = [];
+        for i = 1:length(left_spikes)
+            for j = 1:length(left_spikes{1,i})
+                left_spike_times(i,j) = left_spikes{1,i}(j);
             end
         end
         
