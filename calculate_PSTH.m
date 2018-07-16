@@ -1,7 +1,7 @@
 function [psth_path] = calculate_PSTH(parsed_path, edge)
 % Current default for bin and edge:
 % bin = 0.001;
-% edge=0:bin:0.4;
+% edge = -0.2:bin:0.2;
     tic;
     parsed_mat_path = strcat(parsed_path, '/*.mat');
     parsed_files = dir([parsed_mat_path]);
@@ -41,8 +41,8 @@ function [psth_path] = calculate_PSTH(parsed_path, edge)
 
         %This next one is important-has spikes in bins
 
-        right_total_rel_spikes = [right_rel_spikes_1, right_rel_spikes_3, right_rel_spikes_4, right_rel_spikes_6];
-        left_total_rel_spikes = [left_rel_spikes_1, left_rel_spikes_3, left_rel_spikes_4, left_rel_spikes_6];        
+        right_total_rel_spikes = [right_rel_spikes_1; right_rel_spikes_3; right_rel_spikes_4; right_rel_spikes_6];
+        left_total_rel_spikes = [left_rel_spikes_1; left_rel_spikes_3; left_rel_spikes_4; left_rel_spikes_6];        
         
         %% Saving the file
         [pathstr,namestr,extstr] = fileparts(file);
