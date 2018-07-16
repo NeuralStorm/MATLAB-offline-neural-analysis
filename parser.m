@@ -13,7 +13,6 @@ function [parsed_path] = parser()
     files = dir([num_plx]);
     
     % Create parsed directory if it does not already exist    
-    % TODO fix it so that file is placed into a parsed directory
     parsed_path = strcat(dir_path, '/parsed_plx');
     if ~exist(parsed_path, 'dir')
        mkdir(dir_path, 'parsed_plx');
@@ -25,6 +24,7 @@ function [parsed_path] = parser()
         % Take the spike times and event times
         datafile = [path, filename];
         [tscounts, wfcounts, evcounts, slowcounts] = plx_info(datafile,1);
+        [tot_channels, channel_names] = plx_adchan_names(datafile);
         
         [nunits1, nchannels1] = size(tscounts); 
         allts = cell(nunits1, nchannels1);
@@ -168,7 +168,7 @@ function [parsed_path] = parser()
         
         save(matfile, 'tscounts', 'wfcounts', 'evcounts', 'tsevs', 'slowcounts', ...
             'right_spike_times', 'left_spike_times', 'right_spikes', 'left_spikes', ...
-            'event1', 'event3', 'event4', 'event6');
+            'event1', 'event3', 'event4', 'event6', 'channel_names');
     end
     toc;
 end
