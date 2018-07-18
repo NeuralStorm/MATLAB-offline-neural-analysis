@@ -27,12 +27,12 @@ function [parsed_path] = parser()
         [tot_channels, channel_names] = plx_adchan_names(datafile);
         
         [nunits1, nchannels1] = size(tscounts); 
-        allts = cell(nunits1, nchannels1);
+        all_neurons = cell(nunits1, nchannels1);
         for iunit = 0:nunits1 - 1   % starting with unit 0 (unsorted) 
             for ich = 1:nchannels1 - 1
                 if (tscounts( iunit+1 , ich+1 ) > 0)
                     % get the timestamps for this channel and unit 
-                    [nts, allts{iunit+1,ich}] = plx_ts(datafile, ich , iunit);
+                    [nts, all_neurons{iunit+1,ich}] = plx_ts(datafile, ich , iunit);
                  end
             end
         end
@@ -109,21 +109,28 @@ function [parsed_path] = parser()
         right_spikes = [];
         for i = 1:16
             for j = 2:5
-                if length(allts{j,i}) >= 1
-                    right_spikes = [right_spikes, allts(j,i)];
+                if length(all_neurons{j,i}) >= 1
+                    right_spikes = [right_spikes, all_neurons(j,i)];
                 end
             end
         end
+        total_right_neurons = length(right_spikes);
 
         % Left Hemisphere
         left_spikes = [];
         for i = 17:32
             for j = 2:5
-                if length(allts{j,i}) >= 1
-                    left_spikes = [left_spikes,allts(j,i)];
+                if length(all_neurons{j,i}) >= 1
+                    left_spikes = [left_spikes,all_neurons(j,i)];
                 end
             end
         end
+        total_left_neurons = length(left_spikes);
+        
+        % All neurons
+        all_spikes = [right_spikes, left_spikes];
+        total_neurons = total_right_neurons + total_left_neurons;
+        
         
         %% Seperation of events        
         %Organize Events into individual variables that hold all timestamps of a
@@ -162,13 +169,22 @@ function [parsed_path] = parser()
             end
         end
         
+        % All Spikes
+        all_spike_times = [];
+        for i = 1:length(all_spikes)
+            for j = 1:length(all_spikes{1,i})
+                all_spike_times(i,j) = all_spikes{1,i}(j);
+            end
+        end
+        
         %% Saves parsed files
         filename = replace(filename, '.plx', '.mat');
         matfile = fullfile(parsed_path, filename);
         
         save(matfile, 'tscounts', 'wfcounts', 'evcounts', 'tsevs', 'slowcounts', ...
             'right_spike_times', 'left_spike_times', 'right_spikes', 'left_spikes', ...
-            'event1', 'event3', 'event4', 'event6', 'channel_names');
+            'event1', 'event3', 'event4', 'event6', 'channel_names', 'total_neurons', ...
+            'total_left_neurons', 'total_right_neurons', 'all_neurons', 'all_spike_times');
     end
     toc;
 end
