@@ -1,25 +1,17 @@
 function [] = graph_PSTH(psth_path, total_bins, total_trials, total_events)
-    %% Uses graphPSTH to create a single PSTH for a neuron given an event
-    %Uses graphtestPSTH to create a PSTH which represents every trial except one, so that the left out trial can be used to test a decoder.
-    
-    % TODO go through each psth file and output graphs for both left and
-    % right hemispheres. Save the graphs as Right_Neuron_# and Left_Neuron_#
-    % where # is continous and matches up with the channel. Save as .fig for
-    % now -> look into saving as .png or .jpeg
-    % make the file grab specifically grab psth formatted files (although
-    % this is not as important because this would only matter when the file
-    % the file system is not being used properly)
-    
-    %neuronnum= input('Enter Neuron Number(1-#neurons):');
-    %graphPSTH(neuronnum,reltotalspikes,edge);
+    %% Graphs each PSTH for every Neuron for every event
     tic;
+    
+    % Grabs all the psth formatted files
     psth_mat_path = strcat(psth_path, '/*.mat');
     psth_files = dir(psth_mat_path);
     
+    % Checks if a psth graph directory exists and if not it creates it
     graph_path = strcat(psth_path, '/psth_graphs');
     if ~exist(graph_path, 'dir')
        mkdir(psth_path, 'psth_graphs');
     end
+    
     %% Iterates through all the psth formated files to create graphs for each neuron
     for h = 1: length(psth_files)
         %% Creating all nec directories and paths to save graphs to

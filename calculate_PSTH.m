@@ -4,9 +4,11 @@ function [psth_path] = calculate_PSTH(parsed_path, total_bins, pre_time, post_ti
 % pre_time = 0.2;
 % post_time = 0.2;
     tic;
+    % Grabs all .mat files in the parsed plx directory
     parsed_mat_path = strcat(parsed_path, '/*.mat');
     parsed_files = dir(parsed_mat_path);
     
+    % Checks and creates a psth directory if it does not exists
     psth_path = strcat(parsed_path, '/psth');
     if ~exist(psth_path, 'dir')
        mkdir(parsed_path, 'psth');
