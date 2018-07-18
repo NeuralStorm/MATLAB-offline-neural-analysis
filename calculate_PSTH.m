@@ -5,7 +5,7 @@ function [psth_path] = calculate_PSTH(parsed_path, total_bins, pre_time, post_ti
 % post_time = 0.2;
     tic;
     parsed_mat_path = strcat(parsed_path, '/*.mat');
-    parsed_files = dir([parsed_mat_path]);
+    parsed_files = dir(parsed_mat_path);
     
     psth_path = strcat(parsed_path, '/psth');
     if ~exist(psth_path, 'dir')
@@ -20,36 +20,19 @@ function [psth_path] = calculate_PSTH(parsed_path, total_bins, pre_time, post_ti
         %totalrelspikes is the (400 trials)x(Bins*Neurons) matrix which has each event trial for each
         %neuron with data put into 100 bins (-0.2 : 0.2) seconds.
         %Binned every 1 ms(see edge above)
-
-        % Right PSTH
-%         [right_rel_spikes_1]= Eventspiketimes(event1, right_spike_times, ...
-%             total_bins, pre_time, post_time);
-%         [right_rel_spikes_3]= Eventspiketimes(event3, right_spike_times, ...
-%             total_bins, pre_time, post_time);
-%         [right_rel_spikes_4]= Eventspiketimes(event4, right_spike_times, ...
-%             total_bins, pre_time, post_time);
-%         [right_rel_spikes_6]= Eventspiketimes(event6, right_spike_times, ...
-%             total_bins, pre_time, post_time);
-%         disp('Right PSTH Done');
-%         
-%         % Left PSTH
-%         [left_rel_spikes_1]= Eventspiketimes(event1, left_spike_times, ...
-%             total_bins, pre_time, post_time);
-%         [left_rel_spikes_3]= Eventspiketimes(event3, left_spike_times, ...
-%             total_bins, pre_time, post_time);
-%         [left_rel_spikes_4]= Eventspiketimes(event4, left_spike_times, ...
-%             total_bins, pre_time, post_time);
-%         [left_rel_spikes_6]= Eventspiketimes(event6, left_spike_times, ...
-%             total_bins, pre_time, post_time);
-%         disp('Left PSTH Done');
         
-        % All PSTH
+        % Turns neuron matrix into PSTH form for the different events
+        
+        % Event 1
         [all_rel_spikes_1]= Eventspiketimes(event1, all_spike_times, ...
             total_bins, pre_time, post_time);
+        % Event 3
         [all_rel_spikes_3]= Eventspiketimes(event3, all_spike_times, ...
             total_bins, pre_time, post_time);
+        % Event 4
         [all_rel_spikes_4]= Eventspiketimes(event4, all_spike_times, ...
             total_bins, pre_time, post_time);
+        % Event 6
         [all_rel_spikes_6]= Eventspiketimes(event6, all_spike_times, ...
             total_bins, pre_time, post_time);
         disp('All PSTH Done');
@@ -61,7 +44,7 @@ function [psth_path] = calculate_PSTH(parsed_path, total_bins, pre_time, post_ti
         all_total_rel_spikes = [all_rel_spikes_1; all_rel_spikes_3; all_rel_spikes_4; all_rel_spikes_6];
         
         %% Saving the file
-        [pathstr,namestr,extstr] = fileparts(file);
+        [~ ,namestr, ~] = fileparts(file);
         filename = strcat('PSTH.format.', namestr);
         filename = strcat(filename, '.mat');
         matfile = fullfile(psth_path, filename);

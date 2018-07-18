@@ -10,7 +10,7 @@ function [parsed_path] = parser()
     % Creates a list of all the files in the given directory ending with
     % *.plx
     num_plx = strcat(dir_path, '/*.plx');
-    files = dir([num_plx]);
+    files = dir(num_plx);
     
     % Create parsed directory if it does not already exist    
     parsed_path = strcat(dir_path, '/parsed_plx');
