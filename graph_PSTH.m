@@ -22,6 +22,7 @@ function [] = graph_PSTH(psth_path, edge, total_bins, total_trials, total_events
     end
     %% Iterates through all the psth formated files to create graphs for each neuron
     for h = 1: length(psth_files)
+        disp('h iteration');
         %% Creating all nec directories and paths to save graphs to
         % Creates file with absolute path to file location
         file = strcat(psth_path, '/');
@@ -34,22 +35,15 @@ function [] = graph_PSTH(psth_path, edge, total_bins, total_trials, total_events
         % This can be changed though if it turns out to be a problem
         split_name = strsplit(namestr, '.');
         day_path = strcat(graph_path, '/');
-        day_path = strcat(day_path, split_name{4});
+        day_path = strcat(day_path, split_name{6});
         % Checks if graph directory for the given say exists already
         if ~exist(day_path, 'dir')
-            mkdir(graph_path, split_name{4});
-        end
-        % checks if a hemisphere path exists and if not, creates right and
-        % left directory
-        right_hemi_path = strcat(day_path, '/right/');
-        left_hemi_path = strcat(day_path, '/left/');
-
-        if ~exist(right_hemi_path, 'dir')
-            mkdir(right_hemi_path, 'right');
-        end
-
-        if ~exist(left_hemi_path, 'dir')
-            mkdir(left_hemi_path, 'left');
+            mkdir(graph_path, split_name{6});
+            event_1_path = [day_path, '/event_1/']; 
+            event_3_path = [day_path, '/event_3/'];
+            event_4_path = [day_path, '/event_4/'];
+            event_6_path = [day_path, '/event_6/'];
+            mkdir(event_1_path, event_3_path, event_4_path, event_6_path);
         end
 
         %% Creating the PSTH graphs       
@@ -59,38 +53,45 @@ function [] = graph_PSTH(psth_path, edge, total_bins, total_trials, total_events
         last = edge(end);
         xedge=linspace(first,last,6);
 
-        % Graphs the right hemisphere
+        % Graphs each neuron
         for event = 1: total_events
-           for neuron = 1: total_right_neurons
+           for neuron = 1: total_neurons
                % For this case I need to grab the first 100 rows of trials
                % and the first 400 cols of bins for each neuron.
                 if mod(event,4) == 1
-                    graph = right_total_rel_spikes(((1:total_trials)+((event-1)*total_trials)), ...
+                    graph = all_total_rel_spikes(((1:total_trials)+((event-1)*total_trials)), ...
                         ((1:total_bins)+((neuron-1)*total_bins)));
+                    save_path = event_1_path;
                     stim = 1;
                 elseif mod(event,4) == 2
-                    graph = right_total_rel_spikes(((1:total_trials)+((event-1)*total_trials)), ...
+                    graph = all_total_rel_spikes(((1:total_trials)+((event-1)*total_trials)), ...
                         ((1:total_bins)+((neuron-1)*total_bins)));
+                    save_path = event_3_path;
                     stim = 3;
                 elseif mod(event,4) == 3
-                    graph = right_total_rel_spikes(((1:total_trials)+((event-1)*total_trials)), ...
+                    graph = all_total_rel_spikes(((1:total_trials)+((event-1)*total_trials)), ...
                         ((1:total_bins)+((neuron-1)*total_bins)));
+                    save_path = event_4_path;
                     stim = 4;
                 else
-                    graph = right_total_rel_spikes(((1:total_trials)+((event-1)*total_trials)), ...
+                    graph = all_total_rel_spikes(((1:total_trials)+((event-1)*total_trials)), ...
                         ((1:total_bins)+((neuron-1)*total_bins)));
+                    save_path = event_6_path;
                     stim = 6;
-                end                
+                end
+                f = figure('visible','off');
+                graph = sum(graph);
+                bar(graph);
+                text=['Histogram of Neuron', num2str(neuron), ' for event ',num2str(stim)];
+                title(text);
+                xlabel('Time (ms)');
+                ylabel('Count');
+                xlim([0 400]);
+                graph_name = ['Neuron_', num2str(neuron), '_event_', num2str(stim), '.png'];
+                saveas(gcf, fullfile(save_path, graph_name));
+%             xticklabels(xedge);
            end
-            figure;
-            graph = sum(graph);
-            bar(graph);
-            text=['Histogram of Neuron for event ',num2str(stim)];
-            title(text);
-            xlabel('Time(seconds)');
-            ylabel('Count');
-            xlim([0 401]);
-            xticklabels(xedge);
+            
         end
         
         
