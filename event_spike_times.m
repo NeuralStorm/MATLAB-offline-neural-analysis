@@ -21,7 +21,9 @@ function [rel_spikes] = event_spike_times(events, spikes, total_bins, bin_size, 
             for col = 1: spike_cols
                 % Checks if each spike time occurs in window
                 if (spikes(row, col) >= window_start) && (spikes(row, col) <= window_end)
-                    neuron_respone = [neuron_respone, (spikes(row, col) - events(event))]; %Normalize the spikes times around event times (-200 ms to 200 ms) per event per neuron
+                     % Normalize the spikes times between window defined by
+                     % pre and post time
+                    neuron_respone = [neuron_respone, (spikes(row, col) - events(event))];
                 end
             end
             % Creates the window (an array from pre_time to post_time stepping
