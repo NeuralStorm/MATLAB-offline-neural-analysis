@@ -17,11 +17,7 @@ function [psth_path] = calculate_PSTH(parsed_path, total_bins, bin_size, pre_tim
     for h = 1: length(parsed_files)
         file = [parsed_path, '/', parsed_files(h).name];
         load(file);
-        
-        %totalrelspikes is the (400 trials)x(Bins*Neurons) matrix which has each event trial for each
-        %neuron with data put into 100 bins (-0.2 : 0.2) seconds.
-        %Binned every 1 ms(see edge above)
-        
+
         % Turns neuron matrix into PSTH form for the different events
         
         % Event 1
@@ -38,10 +34,11 @@ function [psth_path] = calculate_PSTH(parsed_path, total_bins, bin_size, pre_tim
             total_bins, bin_size, pre_time, post_time);
         disp('All PSTH Done');
 
-        %This next one is important-has spikes in bins
-
-%         right_total_rel_spikes = [right_rel_spikes_1; right_rel_spikes_3; right_rel_spikes_4; right_rel_spikes_6];
-%         left_total_rel_spikes = [left_rel_spikes_1; left_rel_spikes_3; left_rel_spikes_4; left_rel_spikes_6];
+        % Total relative spikes is the (# trials)x(bins*neurons) matrix
+        % which has each event trial for each neuron with data put in the #
+        % of total bins defined by the window given by the pre and post
+        % times and stepped by the bin size
+        
         all_total_rel_spikes = [all_rel_spikes_1; all_rel_spikes_3; all_rel_spikes_4; all_rel_spikes_6];
         
         %% Saving the file
@@ -49,9 +46,6 @@ function [psth_path] = calculate_PSTH(parsed_path, total_bins, bin_size, pre_tim
         filename = strcat('PSTH.format.', namestr);
         filename = strcat(filename, '.mat');
         matfile = fullfile(psth_path, filename);
-        
-%         save(matfile, 'right_total_rel_spikes', 'left_total_rel_spikes', ...
-%             'total_left_neurons', 'total_right_neurons', 'all_total_rel_spikes');
         save(matfile, 'all_total_rel_spikes', 'total_neurons');
     end
     toc;
