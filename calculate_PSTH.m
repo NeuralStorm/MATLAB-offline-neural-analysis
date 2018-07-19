@@ -1,4 +1,4 @@
-function [psth_path] = calculate_PSTH(parsed_path, total_bins, pre_time, post_time)
+function [psth_path] = calculate_PSTH(parsed_path, total_bins, bin_size, pre_time, post_time)
 % Current default values for testing:
 % total_bins = 400;
 % pre_time = 0.2;
@@ -15,8 +15,7 @@ function [psth_path] = calculate_PSTH(parsed_path, total_bins, pre_time, post_ti
     end
     
     for h = 1: length(parsed_files)
-        file = strcat(parsed_path, '/');
-        file = strcat(file, parsed_files(h).name);
+        file = [parsed_path, '/', parsed_files(h).name];
         load(file);
         
         %totalrelspikes is the (400 trials)x(Bins*Neurons) matrix which has each event trial for each
@@ -26,17 +25,17 @@ function [psth_path] = calculate_PSTH(parsed_path, total_bins, pre_time, post_ti
         % Turns neuron matrix into PSTH form for the different events
         
         % Event 1
-        [all_rel_spikes_1]= Eventspiketimes(event1, all_spike_times, ...
-            total_bins, pre_time, post_time);
+        [all_rel_spikes_1] = event_spike_times(event1, all_spike_times, ...
+            total_bins, bin_size, pre_time, post_time);
         % Event 3
-        [all_rel_spikes_3]= Eventspiketimes(event3, all_spike_times, ...
-            total_bins, pre_time, post_time);
+        [all_rel_spikes_3] = event_spike_times(event3, all_spike_times, ...
+            total_bins, bin_size, pre_time, post_time);
         % Event 4
-        [all_rel_spikes_4]= Eventspiketimes(event4, all_spike_times, ...
-            total_bins, pre_time, post_time);
+        [all_rel_spikes_4] = event_spike_times(event4, all_spike_times, ...
+            total_bins, bin_size, pre_time, post_time);
         % Event 6
-        [all_rel_spikes_6]= Eventspiketimes(event6, all_spike_times, ...
-            total_bins, pre_time, post_time);
+        [all_rel_spikes_6] = event_spike_times(event6, all_spike_times, ...
+            total_bins, bin_size, pre_time, post_time);
         disp('All PSTH Done');
 
         %This next one is important-has spikes in bins
