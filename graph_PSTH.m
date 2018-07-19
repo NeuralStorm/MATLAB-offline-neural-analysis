@@ -1,4 +1,4 @@
-function [] = graph_PSTH(psth_path, total_bins, total_trials, total_events)
+function [] = graph_PSTH(psth_path, total_bins, total_trials, total_events, pre_time, post_time)
     %% Graphs each PSTH for every Neuron for every event
     tic;
     
@@ -71,10 +71,12 @@ function [] = graph_PSTH(psth_path, total_bins, total_trials, total_events)
                 figure('visible','off');
                 graph = sum(graph);
                 bar(graph);
-                text=['Histogram of Neuron', num2str(neuron), ' for event ',num2str(stim)];
+                text=['Histogram of Neuron ', num2str(neuron), ' for event ',num2str(stim)];
                 title(text);
                 xlabel('Time (ms)');
                 ylabel('Count');
+                % Pre and post times are converted to seconds (hence why
+                % they are multiplied by 1000)
                 xlim([0 400]);
                 graph_name = ['Neuron_', num2str(neuron), '_event_', num2str(stim), '.png'];
                 saveas(gcf, fullfile(save_path, graph_name));
