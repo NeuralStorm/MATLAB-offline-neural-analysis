@@ -16,8 +16,7 @@ function [] = graph_PSTH(psth_path, total_bins, total_trials, total_events)
     for h = 1: length(psth_files)
         %% Creating all nec directories and paths to save graphs to
         % Creates file with absolute path to file location
-        file = strcat(psth_path, '/');
-        file = strcat(file, psth_files(h).name);
+        file = [psth_path, '/', psth_files(h).name];
         [~, name_str, ~] = fileparts(file);
         % Creates day directory if it does not already exist
         % Since the name format is consistent I use the direct index in
