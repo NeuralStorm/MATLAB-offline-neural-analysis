@@ -1,7 +1,7 @@
-function [] = graph_PSTH(psth_path, total_bins, total_trials, total_events, pre_time, post_time)
+function [] = graph_PSTH(psth_path, animal_name, total_bins, total_trials, total_events, pre_time, post_time)
     %% Graphs each PSTH for every Neuron for every event
     tic;
-    
+    fprintf('Graphing PSTH for %s\n', animal_name);
     % Grabs all the psth formatted files
     psth_mat_path = strcat(psth_path, '/*.mat');
     psth_files = dir(psth_mat_path);
@@ -47,6 +47,8 @@ function [] = graph_PSTH(psth_path, total_bins, total_trials, total_events, pre_
            for neuron = 1: total_neurons
                % For this case I need to grab the first 100 rows of trials
                % and the first 400 cols of bins for each neuron.
+               % TODO move to calculate_psth since we also want the histogram data as well
+               % In Bridge's code, this format is reffered to as templates
                 if mod(event, 4) == 1
                     graph = all_total_rel_spikes(((1:total_trials) + ((event-1) * total_trials)), ...
                         ((1:total_bins) + ((neuron - 1) * total_bins)));
