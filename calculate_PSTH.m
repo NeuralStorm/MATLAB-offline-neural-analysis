@@ -1,9 +1,10 @@
-function [psth_path] = calculate_PSTH(parsed_path, total_bins, bin_size, pre_time, post_time)
+function [psth_path] = calculate_PSTH(parsed_path, animal_name, total_bins, bin_size, pre_time, post_time)
 % Current default values for testing:
 % total_bins = 400;
 % pre_time = 0.2;
 % post_time = 0.2;
     tic;
+    fprintf('Calculating PSTH for %s\n', animal_name);
     % Grabs all .mat files in the parsed plx directory
     parsed_mat_path = strcat(parsed_path, '/*.mat');
     parsed_files = dir(parsed_mat_path);
