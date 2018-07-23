@@ -3,3 +3,6 @@
 *.plx
 *.mat
 *.fig
+*.png
+Animals/*
+.vscode/*

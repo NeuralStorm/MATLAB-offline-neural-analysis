@@ -1,0 +1,19 @@
+To start the toolbox run this file  /home/anitha/Documents/RECFIELD TOOLBOX/TOOLBOX_DO NOT EDIT/NDAT/Data functions/Gui/GUI_ImportDataFiles.m  ; 
+Set path to the entire toolbox folder. 
+
+Sample script for SOM is here /home/anitha/Documents/Sciatic Nerve Lesion/ScriptRecFieldAnalysis.m 
+
+How to run the GUI 
+
+to import .plx files and merge as matnd files : 
+chose the directory containing all the .plx files to be merged and analyzed. 
+Select each file individually, select the stimulus to be merged ( 'Event002' in my case )
+Set the exp label in each file ( Date.Animal.ExpType.Loc.) 
+Hit Apply All
+Select all the files to be merged using shift key
+Hit merge files. 
+Import files. 
+
+
+If this doesn't work, you can import files first and then repeat the same procedure as above. 
+

@@ -45,7 +45,7 @@ if nargin>2
     cd(varargin{1})
     
     % generate complete path to file
-    opened_file_name = [plxDir,plxName];
+    opened_file_name = [plxDir, '/', plxName];
     
     % get all event names
     [n, ts, sv] =plx_event_ts(opened_file_name,257);   %for strobed events
@@ -109,11 +109,3 @@ else
     end
     
 end
-
-
-
-
-
-
-
-
