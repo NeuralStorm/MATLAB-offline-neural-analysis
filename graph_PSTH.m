@@ -43,47 +43,50 @@ function [] = graph_PSTH(psth_path, animal_name, total_bins, total_trials, total
         load(file);
 
         % Graphs each neuron
-        for event = 1: total_events
-           for neuron = 1: total_neurons
-               % For this case I need to grab the first 100 rows of trials
-               % and the first 400 cols of bins for each neuron.
-               % TODO move to calculate_psth since we also want the histogram data as well
-               % In Bridge's code, this format is reffered to as templates
-                if mod(event, 4) == 1
-                    graph = all_total_rel_spikes(((1:total_trials) + ((event-1) * total_trials)), ...
-                        ((1:total_bins) + ((neuron - 1) * total_bins)));
-                    save_path = event_1_path;
-                    stim = 1;
-                elseif mod(event, 4) == 2
-                    graph = all_total_rel_spikes(((1:total_trials) + ((event - 1) * total_trials)), ...
-                        ((1:total_bins) + ((neuron - 1) * total_bins)));
-                    save_path = event_3_path;
-                    stim = 3;
-                elseif mod(event, 4) == 3
-                    graph = all_total_rel_spikes(((1:total_trials) + ((event-1) * total_trials)), ...
-                        ((1:total_bins) + ((neuron-1) * total_bins)));
-                    save_path = event_4_path;
-                    stim = 4;
-                else
-                    graph = all_total_rel_spikes(((1:total_trials) + ((event - 1) * total_trials)), ...
-                        ((1:total_bins) + ((neuron - 1) * total_bins)));
-                    save_path = event_6_path;
-                    stim = 6;
-                end
-                figure('visible','off');
-                graph = sum(graph);
-                bar(graph);
-                text=['Histogram of Neuron ', num2str(neuron), ' for event ',num2str(stim)];
-                title(text);
-                xlabel('Time (ms)');
-                ylabel('Count');
-                % Pre and post times are converted to seconds (hence why
-                % they are multiplied by 1000)
-                xlim([0 400]);
-                graph_name = ['Neuron_', num2str(neuron), '_event_', num2str(stim), '.png'];
-                saveas(gcf, fullfile(save_path, graph_name));
-           end           
-        end        
+        for neuron = 1: total_neurons
+            % Graph for event 1
+            figure('visible','off');
+            bar(raster_1(((1:total_bins) + ((neuron-1) * total_bins))));
+            text=['Histogram of Neuron ', num2str(neuron), ' for event 1'];
+            title(text);
+            xlabel('Time (ms)');
+            ylabel('Count');
+            % Pre and post times are converted to seconds (hence why
+            % they are multiplied by 1000)
+            xlim([0 400]);
+            raster_1_name = ['Neuron_', num2str(neuron), '_event_1.png'];
+            saveas(gcf, fullfile(event_1_path, raster_1_name));
+            % Graph for event 3
+            figure('visible','off');
+            bar(raster_3(((1:total_bins) + ((neuron-1) * total_bins))));
+            text=['Histogram of Neuron ', num2str(neuron), ' for event 3'];
+            title(text);
+            xlabel('Time (ms)');
+            ylabel('Count');
+            xlim([0 400]);
+            raster_3_name = ['Neuron_', num2str(neuron), '_event_3.png'];
+            saveas(gcf, fullfile(event_3_path, raster_3_name));
+            % Graph for event 4
+            figure('visible','off');
+            bar(raster_4(((1:total_bins) + ((neuron-1) * total_bins))));
+            text=['Histogram of Neuron ', num2str(neuron), ' for event 4'];
+            title(text);
+            xlabel('Time (ms)');
+            ylabel('Count');
+            xlim([0 400]);
+            raster_4_name = ['Neuron_', num2str(neuron), '_event_4.png'];
+            saveas(gcf, fullfile(event_4_path, raster_4_name));
+            % Graph for event 6
+            figure('visible','off');
+            bar(raster_6(((1:total_bins) + ((neuron-1) * total_bins))));
+            text=['Histogram of Neuron ', num2str(neuron), ' for event 6'];
+            title(text);
+            xlabel('Time (ms)');
+            ylabel('Count');
+            xlim([0 400]);
+            raster_6_name = ['Neuron_', num2str(neuron), '_event_6.png'];
+            saveas(gcf, fullfile(event_6_path, raster_6_name));
+        end                 
     end
     toc;
 end
