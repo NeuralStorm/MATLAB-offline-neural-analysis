@@ -32,7 +32,7 @@ function [rel_spikes] = event_spike_times(events, spikes, total_bins, bin_size, 
             % Includes extra 5ms buffer to deal with spikes that occur on an
             % absolute edge
             event_window(1) = -(abs(event_window(1)) + 0.005);
-            event_window(401) = (abs(event_window(401)) + 0.005);
+            event_window(end) = (abs(event_window(end)) + 0.005);
             % discretize takes the neuron_response array (filled with the
             % normalized spike times) and puts them into the respective bins
             % that they belong to (based on bin_size)
