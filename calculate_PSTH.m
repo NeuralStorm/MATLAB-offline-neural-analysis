@@ -1,10 +1,7 @@
-function [psth_path] = calculate_PSTH(parsed_path, animal_name, total_bins, bin_size, pre_time, post_time)
-% Current default values for testing:
-% total_bins = 400;
-% pre_time = 0.2;
-% post_time = 0.2;
+% TODO change calculate_PSTH name to format_PSTH
+function [psth_path] = calculate_PSTH(parsed_path, animal_name, total_bins, bin_size, pre_time, post_time, ...
+                            wanted_neurons, wanted_events, trial_range)
     tic;
-    fprintf('Calculating PSTH for %s\n', animal_name);
     % Grabs all .mat files in the parsed plx directory
     parsed_mat_path = strcat(parsed_path, '/*.mat');
     parsed_files = dir(parsed_mat_path);
@@ -14,45 +11,63 @@ function [psth_path] = calculate_PSTH(parsed_path, animal_name, total_bins, bin_
     if ~exist(psth_path, 'dir')
        mkdir(parsed_path, 'psth');
     end
+
+    event_strings = {};
+    for i = 1: length(wanted_events)
+        event_strings{end+1} = ['event_', num2str(wanted_events(i))];
+    end
     
     for h = 1: length(parsed_files)
         file = [parsed_path, '/', parsed_files(h).name];
+        seperated_file_name = strsplit(parsed_files(h).name, '.');
+        current_day = seperated_file_name{4};
+        fprintf('Calculating PSTH for %s on %s\n', animal_name, current_day);
         load(file);
-
-        % Turns neuron matrix into PSTH form for the different events
         
-        % Event 1
-        [all_rel_spikes_1] = event_spike_times(event1, all_spike_times, ...
-            total_bins, bin_size, pre_time, post_time);
-        raster_1 = sum(all_rel_spikes_1);
-        % Event 3
-        [all_rel_spikes_3] = event_spike_times(event3, all_spike_times, ...
-            total_bins, bin_size, pre_time, post_time);
-        raster_3 = sum(all_rel_spikes_3);
-        % Event 4
-        [all_rel_spikes_4] = event_spike_times(event4, all_spike_times, ...
-            total_bins, bin_size, pre_time, post_time);
-        raster_4 = sum(all_rel_spikes_4);
-            % Event 6
-        [all_rel_spikes_6] = event_spike_times(event6, all_spike_times, ...
-            total_bins, bin_size, pre_time, post_time);
-        raster_6 = sum(all_rel_spikes_6);
-        disp('All PSTH Done');
-
+        for i = 1: length(wanted_events)
+            %% Slices out the desired neurons from all_spike_times and puts them into
+            %% the neuron matrix
+            neurons = [];
+            if isempty(wanted_neurons)
+                neurons = all_spike_times;
+            else
+                for neuron = length(wanted_neurons)
+                    neurons = [neurons; all_spike_times(wanted_neurons(neuron), :)];
+                end
+            end
+            %% Slices out the desired trials from the events matrix (Inclusive range)
+            events = events(trial_range(1):trial_range(2), :);
+            %% Selects the desired events from the events matrix and puts them into an event_struct
+            event_struct.(event_strings{i}) = events(find(events == wanted_events(i)), 2);
+            event_struct.('total_count') = tabulate(events(:,1));
+            %% Creates the psth format and adds them to the event_struct
+            event_struct.([event_strings{i}, '_rel_spikes']) = ...
+                event_spike_times(event_struct.(event_strings{i}), ...
+                neurons, total_bins, bin_size, pre_time, post_time);
+            event_struct.([event_strings{i}, '_raster']) = ...
+                sum(event_struct.([event_strings{i}, '_rel_spikes']));
+        end
+        
+        %% Concates all relative events together into a combined matrix of all events
         % Total relative spikes is the (# trials)x(bins*neurons) matrix
         % which has each event trial for each neuron with data put in the #
         % of total bins defined by the window given by the pre and post
         % times and stepped by the bin size
-        
-        all_total_rel_spikes = [all_rel_spikes_1; all_rel_spikes_3; all_rel_spikes_4; all_rel_spikes_6];
-
+        struct_names = fieldnames(event_struct);
+        combined_rel_event_spikes = [];
+        for i = 1: length(struct_names)
+            if contains(struct_names{i}, '_rel_spikes')
+                event_struct.combined_rel_event_spikes = ...
+                    [combined_rel_event_spikes; getfield(event_struct, struct_names{i})];                            
+            end
+        end
+        fprintf('Finished PSTH for %s\n', current_day);
         %% Saving the file
         [~ ,namestr, ~] = fileparts(file);
         filename = strcat('PSTH.format.', namestr);
         filename = strcat(filename, '.mat');
         matfile = fullfile(psth_path, filename);
-        save(matfile, 'all_total_rel_spikes', 'total_neurons', 'all_rel_spikes_1', 'all_rel_spikes_3', ...
-            'all_rel_spikes_4', 'all_rel_spikes_6', 'raster_1', 'raster_3', 'raster_4', 'raster_6');
+        save(matfile, 'event_struct', 'total_neurons');
     end
     toc;
 end
