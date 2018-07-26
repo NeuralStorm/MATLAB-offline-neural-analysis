@@ -1,12 +1,11 @@
-function [parsed_path] = parser(dir_path, animal_name, total_trials)
+function [parsed_path] = parser(dir_path, animal_name, total_trials, total_events)
     tic;
-    fprintf('Parsing for %s\n', animal_name);
     %% Select Directory for debugging purposes
 %     dir_path = uigetdir(pwd);
     
     % Necessary for plx_info to run correctly (if the path does not end
     % with / when called in that function, it causes the program to crash)
-    path = strcat(dir_path, '/');
+    original_path = strcat(dir_path, '/');
     
     % Creates a list of all the files in the given directory ending with
     % *.plx
@@ -22,10 +21,13 @@ function [parsed_path] = parser(dir_path, animal_name, total_trials)
     % Runs through all of the .plx files in the selected directory
     for h = 1: length(files)
         filename = files(h).name;
+        seperated_file_name = strsplit(filename, '.');
+        current_day = seperated_file_name{4};
         % Take the spike times and event times
-        datafile = [path, filename];
+        datafile = [original_path, filename];
         [tscounts, wfcounts, evcounts, slowcounts] = plx_info(datafile,1);
         [tot_channels, channel_names] = plx_adchan_names(datafile);
+        fprintf('Parsing for %s on %s\n', animal_name, current_day);
         
         [nunits1, nchannels1] = size(tscounts); 
         % Allocate memory to all_neurons
@@ -70,11 +72,11 @@ function [parsed_path] = parser(dir_path, animal_name, total_trials)
 
         events=[];
         j = 0;
-        %% Handles nonstrobbed events
+        %% Handles strobbed events
         if length(svStrobed) > 1
             events = tsevs{1, 17};
             events = [svStrobed,events];
-        %% Handles strobbed events
+        %% Handles nonstrobbed events
         else
             for i=1:length(evcounts)
                 if evcounts(i) >= total_trials
@@ -85,6 +87,7 @@ function [parsed_path] = parser(dir_path, animal_name, total_trials)
                     eventsingle=[];
                 end
             end
+            % TODO potentially use struct solution in calculate_PSTH to relieve hard coding
             for i=1:length(events)
                 if events(i,1) == 2
                     events(i,1) = 3;
@@ -95,57 +98,40 @@ function [parsed_path] = parser(dir_path, animal_name, total_trials)
                 end
             end
         end
-            %% Removes Doubles and Triples from events
-        i=1;
-        while i <= length(events) - 1
-            if abs(events(i,2)-events(i + 1, 2)) < 2
-                events(i+1,:) = [];
+        %% Removes Doubles and Triples from events
+        [events_rows, ~] = size(events);
+        while events_rows > (total_trials * total_events)
+            i = 1;
+            count = 1;
+            while i <= (length(events)-1)
+                if ((events(i, 2) + 2) > events(i+1, 2))
+                    events(i + 1,:) = [];
+                end
+                i = i + 1;
             end
-            i = i + 1;
-        end
-        i = 1;
-        while i <= length(events) - 1
-            if abs(events(i,2) - events(i + 1, 2)) < 2
-                events(i+1,:) = [];
+            [events_rows, ~] = size(events);
+            if count > 15
+                warning('Potential infinite loop in %s, when trying to remove duplicate events.', ...
+                    'Check to make sure that the total events is greater than the standard total', ...
+                    'trials * total events');
+                break;
             end
-            i = i + 1;
-        end
-        i=1;
-        while i <= length(events)-1
-            if abs(events(i,2) - events(i + 1, 2)) < 2
-                events(i+1,:) = [];
-            end
-            i = i + 1;
+            count = count + 1;
         end
         
-        %% Seperation of events        
-        %Organize Events into individual variables that hold all timestamps of a
-        %single event type
-        %For angle data, right is positive, left is negative
-
-        event1=[]; %Right Fast
-        event3=[]; %Right Slow
-        event4=[]; %Left  Fast
-        event6=[]; %Left  Slow
-        for i=1:length(events)
-            if events(i,1)==1
-                event1 = [event1; events(i,2)];
-            elseif events(i,1) == 3
-                event3 = [event3; events(i,2)];
-            elseif events(i,1) == 4
-                event4 = [event4; events(i,2)];
-            else
-                event6 = [event6; events(i,2)];
-            end
+        % Sorts nonstrobbed events. This used to be done before removing
+        % duplicates, but then it caused infinite loops in some nonstrobbed
+        % animals.
+        % TODO figure out why that happens.
+        if length(svStrobed) < 1
+            events = sortrows(events, 2);
         end
-        
+        fprintf('Finished PSTH for %s\n', current_day);
         %% Saves parsed files
         filename = replace(filename, '.plx', '.mat');
         matfile = fullfile(parsed_path, filename);
-
-        % Can probably remove all_neurons from saved variables since we really only want all_spike_times
-        save(matfile, 'tscounts', 'evcounts', 'tsevs', 'event1', 'event3', ...
-             'event4', 'event6', 'channel_names', 'total_neurons', 'all_spike_times');
+        save(matfile, 'tscounts', 'evcounts', 'tsevs', 'events', 'channel_names', ...
+                'total_neurons', 'all_spike_times');
     end
     toc;
 end
