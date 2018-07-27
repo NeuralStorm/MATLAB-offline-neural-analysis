@@ -58,9 +58,9 @@ function [] = graph_PSTH(psth_path, animal_name, total_bins, total_trials, total
                     filename = ['Neuron_', num2str(neuron), '_event_', current_event, '.png'];
                     saveas(gcf, fullfile(event_path, filename));
                 end
-                fprintf('Finished PSTH for %s\n', current_day);
             end
         end       
+        fprintf('Finished graphing for %s\n', current_day);
     end
     toc;
 end
