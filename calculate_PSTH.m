@@ -67,7 +67,7 @@ function [psth_path] = calculate_PSTH(parsed_path, animal_name, total_bins, bin_
         filename = strcat('PSTH.format.', namestr);
         filename = strcat(filename, '.mat');
         matfile = fullfile(psth_path, filename);
-        save(matfile, 'event_struct', 'total_neurons');
+        save(matfile, 'event_struct', 'total_neurons', 'neuron_map', 'events');
     end
     toc;
 end

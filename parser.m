@@ -1,7 +1,7 @@
 function [parsed_path] = parser(dir_path, animal_name, total_trials, total_events)
     tic;
     %% Select Directory for debugging purposes
-%     dir_path = uigetdir(pwd);
+    % dir_path = uigetdir(pwd);
     
     % Necessary for plx_info to run correctly (if the path does not end
     % with / when called in that function, it causes the program to crash)
@@ -26,8 +26,20 @@ function [parsed_path] = parser(dir_path, animal_name, total_trials, total_event
         % Take the spike times and event times
         datafile = [original_path, filename];
         [tscounts, wfcounts, evcounts, slowcounts] = plx_info(datafile,1);
-        [tot_channels, channel_names] = plx_adchan_names(datafile);
+        tscounts(1,:) = [];
         fprintf('Parsing for %s on %s\n', animal_name, current_day);
+        %% Create neuron map
+        neuron_map = {};
+        [~,spk_names] = plx_chan_names(datafile);
+        subchan = ['a','b','c','d'];  
+        for i = 1:length(tscounts)
+            p = find(tscounts(:,i));
+            if length(p)>=1
+                for j = 1:length(p)
+                    neuron_map(end+1,1) = cellstr([spk_names(i-1,:),subchan(p(j))]);
+                end
+            end
+        end
         
         [nunits1, nchannels1] = size(tscounts); 
         % Allocate memory to all_neurons
@@ -36,7 +48,7 @@ function [parsed_path] = parser(dir_path, animal_name, total_trials, total_event
             for ich = 1:nchannels1 - 1
                 if (tscounts( iunit+1 , ich+1 ) > 0)
                     % get the timestamps for this channel and unit 
-                    [nts, all_neurons{iunit+1,ich}] = plx_ts(datafile, ich , iunit);
+                    [~, all_neurons{iunit+1,ich}] = plx_ts(datafile, ich , iunit);
                  end
             end
         end
@@ -130,8 +142,8 @@ function [parsed_path] = parser(dir_path, animal_name, total_trials, total_event
         %% Saves parsed files
         filename = replace(filename, '.plx', '.mat');
         matfile = fullfile(parsed_path, filename);
-        save(matfile, 'tscounts', 'evcounts', 'tsevs', 'events', 'channel_names', ...
-                'total_neurons', 'all_spike_times');
+        save(matfile, 'tscounts', 'evcounts', 'tsevs', 'events',  ...
+                'total_neurons', 'all_spike_times', 'neuron_map');
     end
     toc;
 end
