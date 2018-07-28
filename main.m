@@ -14,6 +14,7 @@ function [] = main()
     % Give exact match to directory you want skipped
     ignored_animals = [];
     total_bins = (length([-abs(pre_time):bin_size:abs(post_time)]) - 1);
+    failed = {};
 
     % Get the directory with all animals and their respective .plx files
     original_path = uigetdir(pwd);
@@ -28,20 +29,30 @@ function [] = main()
                 continue;
             else
                 %% Run if you want to parse .plx or comment out to skip
-                parsed_path = parser(animal_path, animal_name, total_trials, total_events);
-
+                try
+                    parsed_path = parser(animal_path, animal_name, total_trials, total_events);
+                catch
+                    failed{end+1} = animal_list(animal).name;
+                end
                 %% Use the code commented out below to skip parsing
                 % parsed_path = [animal_path, '/parsed_plx'];
 
                 %% Run if you want to calculate the PSTH or comment it out to skip
-                psth_path = calculate_PSTH(parsed_path, animal_name, total_bins, bin_size, pre_time, post_time, ...
-                    wanted_neurons, wanted_events, trial_range);
-
+                try
+                    psth_path = calculate_PSTH(parsed_path, animal_name, total_bins, bin_size, pre_time, post_time, ...
+                        wanted_neurons, wanted_events, trial_range);
+                catch
+                    failed{end+1} = animal_list(animal).name;
+                end
                 %% Use code commeneted out below to skip PSTH calculations
                 % psth_path = [parsed_path, '/psth'];
 
                 %% Run if you want to graph all of the PSTHs or comment it out to skip
-                graph_PSTH(psth_path, animal_name, total_bins, total_trials, total_events, pre_time, post_time);
+                try
+                    graph_PSTH(psth_path, animal_name, total_bins, total_trials, total_events, pre_time, post_time);
+                catch
+                    failed{end+1} = animal_list(animal).name;
+                end
             end
         end
     end
