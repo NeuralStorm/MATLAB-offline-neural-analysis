@@ -2,7 +2,7 @@ function [parsed_path] = parser(dir_path, animal_name, total_trials, total_event
     tic;
     failed_parsing = {};
     %% Select Directory for debugging purposes
-%     dir_path = uigetdir(pwd);
+    % dir_path = uigetdir(pwd);
     
     % Necessary for plx_info to run correctly (if the path does not end
     % with / when called in that function, it causes the program to crash)
@@ -101,9 +101,9 @@ function [parsed_path] = parser(dir_path, animal_name, total_trials, total_event
             end
             %% Removes Doubles and Triples from events
             [events_rows, ~] = size(events);
+            count = 1;
             while events_rows > (total_trials * total_events)
-                i = 1;
-                count = 1;
+                i = 1;                
                 while i <= (length(events)-1)
                     if ((events(i, 2) + 2) > events(i+1, 2))
                         events(i + 1,:) = [];
@@ -144,7 +144,7 @@ function [parsed_path] = parser(dir_path, animal_name, total_trials, total_event
             end
             neuron_map = [neuron_map, all_spikes'];
             
-            fprintf('Finished PSTH for %s\n', current_day);
+            fprintf('Finished parsing for %s\n', current_day);
             %% Saves parsed files
             filename = replace(filename, '.plx', '.mat');
             matfile = fullfile(parsed_path, filename);
