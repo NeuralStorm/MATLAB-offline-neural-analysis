@@ -1,4 +1,6 @@
 function [] = main()
+    % TODO figure out how to fix pre time and post time window (it will work fine
+    % TODO for negative to postive, 0 to positive, but positive to positive might be a problem)
     %% Initialize global variables
     bin_size = 0.001;
     total_trials = 100;
@@ -48,11 +50,17 @@ function [] = main()
                 % psth_path = [parsed_path, '/psth'];
 
                 %% Run if you want to graph all of the PSTHs or comment it out to skip
-                try
-                    graph_PSTH(psth_path, animal_name, total_bins, total_trials, total_events, pre_time, post_time);
-                catch
-                    failed{end+1} = animal_list(animal).name;
-                end
+                % try
+                %     graph_PSTH(psth_path, animal_name, total_bins, total_trials, total_events, pre_time, post_time);
+                % catch
+                %     failed{end+1} = animal_list(animal).name;
+                % end
+                %% Run for classifier
+                % tiltToolboxPath = 'C:\Users\Ryan PC';
+                % decoderPath = 'C:\Users\Ryan PC';
+                % addpath(genpath(tiltToolboxPath));
+                % classify_path = crude_classifer(psth_path, animal_name, bin_size, pre_time, post_time, wanted_events, ...
+                %     tiltToolboxPath, decoderPath);
             end
         end
     end
