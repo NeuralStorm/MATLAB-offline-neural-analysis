@@ -39,7 +39,7 @@ function [classify_path] = crude_classifer(psth_path, animal_name, bin_size, pre
             all_events = [all_events, event];
         end
         events_cell = [event_strings', all_events'];
-        % Creates tge PSTH object using dark, unknown magic from mythical toolbox
+        % Creates the PSTH object using dark, unknown magic from mythical toolbox
         psth = NeuroToolbox.PSTHToolbox.PSTH(neuron_map, events_cell, 'bin_size', ... 
                 bin_size, 'PSTH_window', [-abs(pre_time), post_time], 'show_progress', true);
         % create template from PSTH object using more dark magic
@@ -51,15 +51,11 @@ function [classify_path] = crude_classifer(psth_path, animal_name, bin_size, pre
         incorrect_trials = {};
         for i = 1: length(correct_trials)
             if ~correct_trials(i)
-                % Correct trial
-                % correct_event = strsplit(decoder_output.Event{i}, '_');
-                % incorrect_event = strsplit(decoder_output.Decision{i}, '_');
                 incorrect_trials{end + 1, 1} = decoder_output.Event{i};
                 incorrect_trials{end, 2} = decoder_output.Decision{i};
             end
         end
-        tabulated_correct = tabulate(incorrect_trials(:, 1));
-        tabulated_incorrect = tabulate(incorrect_trials(:, 2));
+        confusion_matrix = confusionmat(decoder_output.Event, decoder_output.Decision);
         accuracy = mean(correct_trials);
 
         %% Saving classifier info
@@ -69,7 +65,7 @@ function [classify_path] = crude_classifer(psth_path, animal_name, bin_size, pre
         filename = strcat(filename, '.mat');
         matfile = fullfile(classify_path, filename);
         save(matfile, 'psth', 'template', 'decoder_output', 'correct_trials', 'accuracy', 'neuron_map', ...
-            'events_cell', 'incorrect_trials', 'tabulated_correct', 'tabulated_incorrect');
+            'events_cell', 'incorrect_trials', 'confusion_matrix');
     end
     toc;
 end

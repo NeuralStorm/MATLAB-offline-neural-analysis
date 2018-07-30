@@ -59,7 +59,7 @@ function [] = main()
                 % tiltToolboxPath = 'C:\Users\Ryan PC';
                 % decoderPath = 'C:\Users\Ryan PC';
                 % addpath(genpath(tiltToolboxPath));
-                % classify_path = crude_classifer(psth_path, animal_name, bin_size, pre_time, post_time, wanted_events, ...
+                % classify_path = crude_classifier(psth_path, animal_name, bin_size, pre_time, post_time, wanted_events, ...
                 %     tiltToolboxPath, decoderPath);
             end
         end
