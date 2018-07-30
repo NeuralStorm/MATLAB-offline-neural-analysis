@@ -68,12 +68,12 @@ function [psth_path] = calculate_PSTH(parsed_path, animal_name, total_bins, bin_
             filename = strcat('PSTH.format.', namestr);
             filename = strcat(filename, '.mat');
             matfile = fullfile(psth_path, filename);
-            save(matfile, 'event_struct', 'total_neurons', 'neuron_map', 'events');
+            save(matfile, 'event_struct', 'total_neurons', 'neuron_map', 'events', 'event_strings');
         catch
             warning('% failed to calculate', parsed_files(h).name);
             [~ ,namestr, ~] = fileparts(file);
             failed_calculating{end+1} = namestr;
-            filename = strcat('PSTH.format.', namestr);
+            filename = strcat('FAILED.', namestr);
             filename = strcat(filename, '.mat');
             matfile = fullfile(psth_path, filename);
             save(matfile, 'failed_calculating')

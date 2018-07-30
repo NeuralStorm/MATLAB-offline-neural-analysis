@@ -153,6 +153,7 @@ function [parsed_path] = parser(dir_path, animal_name, total_trials, total_event
         catch
             failed_parsing{end + 1} = filename;
             filename = replace(filename, '.plx', '.mat');
+            filename = ['FAILED.', filename];
             warning('%s failed to parse', filename);
             matfile = fullfile(parsed_path, filename);
             save(matfile, failed_parsing);
