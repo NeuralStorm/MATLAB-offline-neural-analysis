@@ -1,6 +1,5 @@
 function [parsed_path] = parser(dir_path, animal_name, total_trials, total_events)
     tic;
-    failed_parsing = {};
     %% Select Directory for debugging purposes
     % dir_path = uigetdir(pwd);
     
@@ -11,23 +10,32 @@ function [parsed_path] = parser(dir_path, animal_name, total_trials, total_event
     % Creates a list of all the files in the given directory ending with
     % *.plx
     num_plx = strcat(dir_path, '/*.plx');
-    files = dir(num_plx);
+    plx_files = dir(num_plx);
     
     % Create parsed directory if it does not already exist    
     parsed_path = strcat(dir_path, '/parsed_plx');
     if ~exist(parsed_path, 'dir')
        mkdir(dir_path, 'parsed_plx');
     end
+
+    % Creates a directory to store the failed files
+    failed_path = [dir_path, '/failed'];
+    if ~exist(failed_path, 'dir')
+        mkdir(dir_path, 'failed');
+    else
+        delete([failed_path, '/*']);
+    end
     
     % Runs through all of the .plx files in the selected directory
-    for h = 1: length(files)
-        filename = files(h).name;
-        seperated_file_name = strsplit(filename, '.');
+    for h = 1: length(plx_files)
+        failed_parsing = {};
+        file = [dir_path, '/', plx_files(h).name];
+        [file_path, file_name, file_extension] = fileparts(file);
+        seperated_file_name = strsplit(file, '.');
         current_day = seperated_file_name{4};
         % Take the spike times and event times
         try
-            datafile = [original_path, filename];
-            [tscounts, wfcounts, evcounts, slowcounts] = plx_info(datafile,1);
+            [tscounts, wfcounts, evcounts, slowcounts] = plx_info(file,1);
             fprintf('Parsing for %s on %s\n', animal_name, current_day);
             
             [nunits1, nchannels1] = size(tscounts); 
@@ -37,7 +45,7 @@ function [parsed_path] = parser(dir_path, animal_name, total_trials, total_event
                 for ich = 1:nchannels1 - 1
                     if (tscounts( iunit+1 , ich+1 ) > 0)
                         % get the timestamps for this channel and unit 
-                        [nts, all_neurons{iunit+1,ich}] = plx_ts(datafile, ich , iunit);
+                        [nts, all_neurons{iunit+1,ich}] = plx_ts(file, ich , iunit);
                     end
                 end
             end
@@ -58,14 +66,14 @@ function [parsed_path] = parser(dir_path, animal_name, total_trials, total_event
             [u, nevchannels] = size( evcounts );
             if (nevchannels > 0) 
                 % need the event chanmap to make any sense of these
-                [u,evchans] = plx_event_chanmap(datafile);
+                [u,evchans] = plx_event_chanmap(file);
                 for iev = 1:nevchannels
                     if (evcounts(iev) > 0)
                         evch = evchans(iev);
                         if (evch == 257)
-                            [nevs{iev}, tsevs{iev}, svStrobed] = plx_event_ts(datafile, evch); 
+                            [nevs{iev}, tsevs{iev}, svStrobed] = plx_event_ts(file, evch); 
                         else
-                            [nevs{iev}, tsevs{iev}, svdummy{iev}] = plx_event_ts(datafile, evch);
+                            [nevs{iev}, tsevs{iev}, svdummy{iev}] = plx_event_ts(file, evch);
                         end
                     end
                 end
@@ -81,7 +89,7 @@ function [parsed_path] = parser(dir_path, animal_name, total_trials, total_event
             else
                 for i=1:length(evcounts)
                     if evcounts(i) >= total_trials
-                        [nevs{i}, tsevs{i}, ~] = plx_event_ts(datafile, i);
+                        [nevs{i}, tsevs{i}, ~] = plx_event_ts(file, i);
                         j = j + 1;
                         eventsingle(1:evcounts(i), 1) = j;
                         events= [events;eventsingle, tsevs{i}];
@@ -132,7 +140,7 @@ function [parsed_path] = parser(dir_path, animal_name, total_trials, total_event
             time_stamp_copy = tscounts;
             time_stamp_copy(1,:) = [];
             neuron_map = {};
-            [~,spk_names] = plx_chan_names(datafile);
+            [~,spk_names] = plx_chan_names(file);
             subchan = ['a','b','c','d'];  
             for i = 1:length(time_stamp_copy)
                 p = find(time_stamp_copy(:,i));
@@ -146,17 +154,19 @@ function [parsed_path] = parser(dir_path, animal_name, total_trials, total_event
             
             fprintf('Finished parsing for %s\n', current_day);
             %% Saves parsed files
-            filename = replace(filename, '.plx', '.mat');
+            % filename = ['PARSED.', file_name, '.mat'];
+            filename = [file_name, '.mat'];
             matfile = fullfile(parsed_path, filename);
             save(matfile, 'tscounts', 'evcounts', 'tsevs', 'events',  ...
                     'total_neurons', 'all_spike_times', 'neuron_map');
-        catch
-            failed_parsing{end + 1} = filename;
-            filename = replace(filename, '.plx', '.mat');
-            filename = ['FAILED.', filename];
-            warning('%s failed to parse', filename);
-            matfile = fullfile(parsed_path, filename);
-            save(matfile, failed_parsing);
+        catch ME
+            failed_parsing{end + 1} = file_name;
+            failed_parsing{end, 2} = ME;
+            filename = ['FAILED.', file_name, '.mat'];
+            warning('%s failed to parse\n', file_name);
+            warning('Error: %s\n', ME.message);
+            matfile = fullfile(failed_path, filename);
+            save(matfile, 'failed_parsing');
         end
     end
     toc;

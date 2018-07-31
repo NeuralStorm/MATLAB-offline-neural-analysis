@@ -2,7 +2,6 @@
 function [psth_path] = calculate_PSTH(parsed_path, animal_name, total_bins, bin_size, pre_time, post_time, ...
                             wanted_neurons, wanted_events, trial_range)
     tic;
-    failed_calculating = {};
     % Grabs all .mat files in the parsed plx directory
     parsed_mat_path = strcat(parsed_path, '/*.mat');
     parsed_files = dir(parsed_mat_path);
@@ -13,14 +12,24 @@ function [psth_path] = calculate_PSTH(parsed_path, animal_name, total_bins, bin_
        mkdir(parsed_path, 'psth');
     end
 
+    % Creates a directory to store the failed files
+    failed_path = [parsed_path, '/failed'];
+    if ~exist(failed_path, 'dir')
+        mkdir(parsed_path, 'failed');
+    else
+        delete([failed_path, '/*']);
+    end
+
     event_strings = {};
     for i = 1: length(wanted_events)
         event_strings{end+1} = ['event_', num2str(wanted_events(i))];
     end
     
     for h = 1: length(parsed_files)
+        failed_calculating = {};
         file = [parsed_path, '/', parsed_files(h).name];
-        seperated_file_name = strsplit(parsed_files(h).name, '.');
+        [file_path, file_name, file_extension] = fileparts(file);
+        seperated_file_name = strsplit(file_name, '.');
         current_day = seperated_file_name{4};
         fprintf('Calculating PSTH for %s on %s\n', animal_name, current_day);
         load(file);
@@ -64,19 +73,17 @@ function [psth_path] = calculate_PSTH(parsed_path, animal_name, total_bins, bin_
             end
             fprintf('Finished PSTH for %s\n', current_day);
             %% Saving the file
-            [~ ,namestr, ~] = fileparts(file);
-            filename = strcat('PSTH.format.', namestr);
-            filename = strcat(filename, '.mat');
+            filename = ['PSTH.format.', file_name, '.mat'];
             matfile = fullfile(psth_path, filename);
             save(matfile, 'event_struct', 'total_neurons', 'neuron_map', 'events', 'event_strings');
-        catch
-            warning('% failed to calculate', parsed_files(h).name);
-            [~ ,namestr, ~] = fileparts(file);
-            failed_calculating{end+1} = namestr;
-            filename = strcat('FAILED.', namestr);
-            filename = strcat(filename, '.mat');
-            matfile = fullfile(psth_path, filename);
-            save(matfile, 'failed_calculating')
+        catch ME
+            failed_calculating{end + 1} = file_name;
+            failed_calculating{end, 2} = ME;
+            filename = ['FAILED.', file_name, '.mat'];
+            warning('%s failed to calculate\n', file_name);
+            warning('Error: %s\n', ME.message);
+            matfile = fullfile(failed_path, filename);
+            save(matfile, 'failed_calculating');
         end
     end
     toc;
