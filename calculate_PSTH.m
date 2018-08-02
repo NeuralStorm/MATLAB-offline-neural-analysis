@@ -48,6 +48,7 @@ function [psth_path] = calculate_PSTH(parsed_path, animal_name, total_bins, bin_
                 %% Slices out the desired trials from the events matrix (Inclusive range)
                 events = events(trial_range(1):trial_range(2), :);
                 %% Selects the desired events from the events matrix and puts them into an event_struct
+                event_struct = struct;
                 event_struct.(event_strings{i}) = events(find(events == wanted_events(i)), 2);
                 event_struct.('total_count') = tabulate(events(:,1));
                 %% Creates the psth format and adds them to the event_struct
@@ -55,7 +56,7 @@ function [psth_path] = calculate_PSTH(parsed_path, animal_name, total_bins, bin_
                     event_spike_times(event_struct.(event_strings{i}), ...
                     neurons, total_bins, bin_size, pre_time, post_time);
                 event_struct.([event_strings{i}, '_raster']) = ...
-                    sum(event_struct.([event_strings{i}, '_rel_spikes']));
+                    sum(event_struct.([event_strings{i}, '_rel_spikes']), 1);
             end
             
             %% Concates all relative events together into a combined matrix of all events
