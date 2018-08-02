@@ -33,6 +33,7 @@ function [psth_path] = calculate_PSTH(parsed_path, animal_name, total_bins, bin_
         current_day = seperated_file_name{4};
         fprintf('Calculating PSTH for %s on %s\n', animal_name, current_day);
         load(file);
+        event_struct = struct;
         try
             for i = 1: length(wanted_events)
                 %% Slices out the desired neurons from all_spike_times and puts them into
@@ -48,7 +49,6 @@ function [psth_path] = calculate_PSTH(parsed_path, animal_name, total_bins, bin_
                 %% Slices out the desired trials from the events matrix (Inclusive range)
                 events = events(trial_range(1):trial_range(2), :);
                 %% Selects the desired events from the events matrix and puts them into an event_struct
-                event_struct = struct;
                 event_struct.(event_strings{i}) = events(find(events == wanted_events(i)), 2);
                 event_struct.('total_count') = tabulate(events(:,1));
                 %% Creates the psth format and adds them to the event_struct
