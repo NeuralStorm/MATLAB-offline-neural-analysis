@@ -5,14 +5,14 @@ function [] = main()
     bin_size = 0.020;
     total_trials = 100;
     total_events = 4;
-    pre_time = 0.2;
+    pre_time = 0;
     post_time = 0.2;
     % Requires for all events to be in array. IF empty it will skip all events
     wanted_events = [1, 3, 4, 6];
     % If wanted_neurons is left empty, it will do all neurons
     wanted_neurons = [];
     % Inclusive Range
-    trial_range = [1, 400];
+    trial_range = [1, 300];
     % Give exact match to directory you want skipped
     ignored_animals = [];
     total_bins = (length([-abs(pre_time):bin_size:abs(post_time)]) - 1);
@@ -42,7 +42,7 @@ function [] = main()
                 %% Run if you want to calculate the PSTH or comment it out to skip
                 try
                     psth_path = calculate_PSTH(parsed_path, animal_name, total_bins, bin_size, pre_time, post_time, ...
-                        wanted_neurons, wanted_events, trial_range);
+                        wanted_neurons, wanted_events, trial_range, total_trials);
                 catch
                     failed{end+1} = animal_list(animal).name;
                 end
@@ -63,10 +63,10 @@ function [] = main()
                     classified_path = crude_classifier(psth_path, animal_name, bin_size, pre_time, post_time, wanted_events, ...
                         tiltToolboxPath, decoderPath);
                 end
-                %% Use code commeneted out below to skip classification
-                % classified_path = strcat(psth_path, '/classifier');
+                % Use code commeneted out below to skip classification
+                classified_path = strcat(psth_path, '/classifier');
 
-                %% Run to add confusion matrix information to the classified struct
+                % Run to add confusion matrix information to the classified struct
                 confusion_matrix_info(classified_path, animal_name, total_events);
             end
         end
