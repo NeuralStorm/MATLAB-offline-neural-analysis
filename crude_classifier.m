@@ -19,15 +19,6 @@ function [classify_path] = crude_classifer(psth_path, animal_name, bin_size, pre
          delete([failed_path, '/*']);
      end
 
-    % ! DEPRICATED BLOCK:
-    % ! Creates event_strings for comptability between versions of calculate_PSTH
-    % ! This will be depricated in the future after classification is done
-    % ! calculate_PSTH.m returns the event_strings, but we do not want to have to recalculate
-    event_strings = {};
-    for i = 1: length(wanted_events)
-        event_strings{end+1} = ['event_', num2str(wanted_events(i))];
-    end
-
     %% Iterates through all the psth formated files to for classifiers
     for h = 1: length(psth_files)
         %% Creating all nec directories and paths to save graphs to
@@ -40,20 +31,9 @@ function [classify_path] = crude_classifer(psth_path, animal_name, bin_size, pre
         fprintf('Classifying PSTH for %s on %s\n', animal_name, current_day);
         try
             load(file);
-            % Grab a single neuron from neuron_map:
-            % neuron = [neuron_map(i,1), neuron_map(i,2)]
-            struct_names = fieldnames(event_struct);
-            % [~, idx] = ismember(event_strings(2), struct_names)
-            % Creates the event cell array needed to create the PSTH object
-            % TODO if keeping this format, move this portion of code to calculate_PSTH
-            all_events = {};
-            for i = 1: length(event_strings)
-                event = getfield(event_struct, event_strings{i});
-                all_events = [all_events, event];
-            end
-            events_cell = [event_strings', all_events'];
+            events_cell = event_struct.all_events;
+            
             classified_struct = struct;
-
             % Initialize dynamic struct fields
             classified_struct.deciscion = {};
             classified_struct.true_event = {};
