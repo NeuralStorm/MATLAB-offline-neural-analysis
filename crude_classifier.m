@@ -1,4 +1,4 @@
-function [classify_path] = crude_classifer(psth_path, animal_name, bin_size, pre_time, post_time, wanted_events, tiltToolboxPath, decoderPath)
+function [classify_path] = crude_classifer(psth_path, animal_name, bin_size, pre_time, post_time, wanted_events, tiltToolboxPath, decoderPath, unit_classification)
     tic;
     %% Crude classifier
     % Grabs all the psth formatted files
@@ -38,59 +38,53 @@ function [classify_path] = crude_classifer(psth_path, animal_name, bin_size, pre
             classified_struct.deciscion = {};
             classified_struct.true_event = {};
             classified_struct.correct_trials = [];
-            for i = 1:length(neuron_map)
-                neuron = [neuron_map(i,1), neuron_map(i,2)];
-                 % Creates the PSTH object using dark, unknown magic from mythical toolbox
-                psth = NeuroToolbox.PSTHToolbox.PSTH(neuron, events_cell, 'bin_size', ... 
-                bin_size, 'PSTH_window', [-abs(pre_time), post_time]);
+            classified_struct.overall_classification = {};
+            if unit_classification
+                for i = 1:length(neuron_map)
+                    neuron = [neuron_map(i,1), neuron_map(i,2)];
+                    % Creates the PSTH object using dark, unknown magic from mythical toolbox
+                    psth = NeuroToolbox.PSTHToolbox.PSTH(neuron, events_cell, 'bin_size', ... 
+                    bin_size, 'PSTH_window', [-abs(pre_time), post_time]);
+                    % create template from PSTH object using more dark magic
+                    template = NeuroToolbox.PSTHToolbox.SU_Classifier(psth);
+                    % peform classification using template with more excitement and fun...
+                    decoder_output = template.classify(neuron_map, events_cell, 'SameDataSet', true);
+                    classified_struct.([neuron_map{i, 1}, '_decorder']) = decoder_output;
+                    classified_struct.deciscion = [classified_struct.deciscion, decoder_output.Decision];
+                    classified_struct.true_event = [classified_struct.true_event, decoder_output.Event];
+                    correct_trials = cellfun(@strcmp, decoder_output.Decision, decoder_output.Event);
+                    classified_struct.correct_trials = [classified_struct.correct_trials, correct_trials];
+                    classified_struct.([neuron_map{i, 1}, '_confusion']) = confusionmat(decoder_output.Event, decoder_output.Decision);
+                    classified_struct.([neuron_map{i, 1}, '_accuracy']) = mean(correct_trials);
+                    classified_struct.([neuron_map{i, 1}, '_PSTH_object']) = psth;
+                    % TODO figure out final saved output
+                    classified_struct.([neuron_map{i, 1}, '_output']) = [decoder_output.Event, decoder_output.Decision, num2cell(correct_trials)];
+                    fprintf('Finished classifying neuron %s\n', neuron_map{i, 1});
+                end
+            else
+                % Creates the PSTH object using dark, unknown magic from mythical toolbox
+                psth = NeuroToolbox.PSTHToolbox.PSTH(neuron_map, events_cell, 'bin_size', ... 
+                            bin_size, 'PSTH_window', [-abs(pre_time), post_time], 'show_progress', true);
                 % create template from PSTH object using more dark magic
                 template = NeuroToolbox.PSTHToolbox.SU_Classifier(psth);
                 % peform classification using template with more excitement and fun...
-                decoder_output = template.classify(neuron_map, events_cell, 'SameDataSet', true);
-                classified_struct.(['neuron_', num2str(i), '_decorder']) = decoder_output;
+                decoder_output = template.classify(neuron_map, events_cell, 'BatchMode', true, 'SameDataSet', true);
+                classified_struct.population_decorder = decoder_output;
                 classified_struct.deciscion = [classified_struct.deciscion, decoder_output.Decision];
                 classified_struct.true_event = [classified_struct.true_event, decoder_output.Event];
                 correct_trials = cellfun(@strcmp, decoder_output.Decision, decoder_output.Event);
                 classified_struct.correct_trials = [classified_struct.correct_trials, correct_trials];
-                incorrect_trials = {};
-                for trial = 1: length(correct_trials)
-                    if ~correct_trials(trial)
-                        incorrect_trials{end + 1, 1} = decoder_output.Event{trial};
-                        incorrect_trials{end, 2} = decoder_output.Decision{trial};
-                    end
-                end
-                classified_struct.(['neuron_', num2str(i), '_incorrect']) = incorrect_trials;
-                classified_struct.(['neuron_', num2str(i), '_confusion']) = confusionmat(decoder_output.Event, decoder_output.Decision);
-                classified_struct.(['neuron_', num2str(i), '_accuracy']) = mean(correct_trials);
-                classified_struct.(['neuron_', num2str(i), '_PSTH_object']) = psth;
-                fprintf('Finished classifying neuron %s\n', num2str(i));
+                classified_struct.population_confusion = confusionmat(decoder_output.Event, decoder_output.Decision);
+                classified_struct.population_accuracy = mean(correct_trials);
+                classified_struct.psth_object = psth;
+                classified_struct.overall_classification = [classified_struct.true_event, classified_struct.deciscion, num2cell(classified_struct.correct_trials)];
+                fprintf('Finished classifying population n %s\n', num2str(i));
             end
-            %% Does population classification
-            % % Creates the PSTH object using dark, unknown magic from mythical toolbox
-            % psth = NeuroToolbox.PSTHToolbox.PSTH(neuron_map, events_cell, 'bin_size', ... 
-            %         bin_size, 'PSTH_window', [-abs(pre_time), post_time], 'show_progress', true);
-            % % create template from PSTH object using more dark magic
-            % template = NeuroToolbox.PSTHToolbox.SU_Classifier(psth);
-            % % peform classification using template with more excitement and fun...
-            % decoder_output = template.classify(neuron_map, events_cell, 'BatchMode', true, 'SameDataSet', true);
-            % quantify performance
-            % correct_trials = cellfun(@strcmp, decoder_output.Decision, decoder_output.Event);
-            % incorrect_trials = {};
-            % for i = 1: length(correct_trials)
-            %     if ~correct_trials(i)
-            %         incorrect_trials{end + 1, 1} = decoder_output.Event{i};
-            %         incorrect_trials{end, 2} = decoder_output.Decision{i};
-            %     end
-            % end
-            % confusion_matrix = confusionmat(decoder_output.Event, decoder_output.Decision);
-            % accuracy = mean(correct_trials);
 
             %% Saving classifier info
             fprintf('Finished classifying for %s\n', current_day);
             filename = ['CLASSIFIED.', file_name, '.mat'];
             matfile = fullfile(classify_path, filename);
-            % save(matfile, 'psth', 'template', 'decoder_output', 'correct_trials', 'accuracy', 'neuron_map', ...
-            %     'events_cell', 'incorrect_trials', 'confusion_matrix');
             save(matfile, 'classified_struct', 'neuron_map', 'events_cell');
         catch ME
             failed_classifying{end + 1} = file_name;
