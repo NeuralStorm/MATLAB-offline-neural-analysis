@@ -37,10 +37,10 @@ function [] = confusion_matrix_info(classified_path, animal_name, total_events)
                     prob_a = sum(confusion_matrix(:, confusion_index)) / num_trials;
                     prob_b = sum(confusion_matrix(confusion_index, :)) / num_trials;
                     if ~(prob_a == 0)
-                        h_a = h_a - prob_a * (log(prob_a)/log(total_events));
+                        h_a = h_a - prob_a * log2(prob_a);
                     end
                     if ~(prob_b == 0)
-                        h_b = h_b - prob_b * (log(prob_b)/log(total_events));
+                        h_b = h_b - prob_b * log2(prob_b);
                     end
                 end
             
@@ -50,7 +50,7 @@ function [] = confusion_matrix_info(classified_path, animal_name, total_events)
                     for b = 1:confusion_length
                         prob_a_b = confusion_matrix(a, b) / num_trials;
                         if ~(prob_a_b == 0)
-                            h_a_b = h_a_b - prob_a_b * (log(prob_a_b)/log(total_events));
+                            h_a_b = h_a_b - prob_a_b * log2(prob_a_b);
                         end
                     end
                 end
