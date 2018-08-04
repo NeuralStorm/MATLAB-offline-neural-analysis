@@ -61,13 +61,17 @@ function [psth_path] = calculate_PSTH(parsed_path, animal_name, total_bins, bin_
                 total_trials, total_bins, bin_size, pre_time, post_time);
             % TODO verify PSTH numbers against plx software
             event_struct.event_count = tabulate(event_struct.all_events(:,1));
-            events_array = event_struct.all_events(:,2);
-            event_count = 0;
-            for event = 1: length(events_array)
-                event_struct.([event_strings{event}, '_raster']) = ...
-                sum(event_struct.relative_response((event_count + 1):1:(event_count + length(events_array{i})),:),1);
-                % Updates event_count to scale sum properly for next row
-                event_count = event_count + length(events_array{i});
+            try
+                events_array = event_struct.all_events(:,2);
+                event_count = 0;
+                for event = 1: length(events_array)
+                    event_struct.([event_strings{event}, '_raster']) = ...
+                    sum(event_struct.relative_response((event_count + 1):1:(event_count + length(events_array{i})),:),1);
+                    % Updates event_count to scale sum properly for next row
+                    event_count = event_count + length(events_array{i});
+                end
+            catch ME
+                warning('Error: %s\n', ME.message);
             end
 
             fprintf('Finished PSTH for %s\n', current_day);
