@@ -5,7 +5,7 @@ function [] = main()
     bin_size = 0.020;
     total_trials = 100;
     total_events = 4;
-    pre_time = 0;
+    pre_time = 0.2;
     post_time = 0.2;
     % Requires for all events to be in array. IF empty it will skip all events
     wanted_events = [1, 3, 4, 6];
@@ -14,9 +14,12 @@ function [] = main()
     % Inclusive Range
     trial_range = [1, 300];
     % Give exact match to directory you want skipped
-    ignored_animals = [];
+    ignored_animals = ['TNC25'];
     total_bins = (length([-abs(pre_time):bin_size:abs(post_time)]) - 1);
     failed = {};
+    % Boolean to control classification for population or single neurons
+    % Default is set to single neuron
+    unit_classification = true;
 
     % Get the directory with all animals and their respective .plx files
     original_path = uigetdir(pwd);
@@ -56,13 +59,13 @@ function [] = main()
                 %     failed{end+1} = animal_list(animal).name;
                 % end
                 %% Run for classifier
-                try
-                    tiltToolboxPath = 'C:\Users\Moxon Lab\Box Sync\MoxonLab';
-                    decoderPath = 'C:\Users\Moxon Lab\Box Sync\MoxonLab';
+                % try
+                    tiltToolboxPath = 'C:\Users\Ryan PC';
+                    decoderPath = 'C:\Users\Ryan PC';
                     addpath(genpath(tiltToolboxPath));
                     classified_path = crude_classifier(psth_path, animal_name, bin_size, pre_time, post_time, wanted_events, ...
-                        tiltToolboxPath, decoderPath);
-                end
+                        tiltToolboxPath, decoderPath, unit_classification);
+                % end
                 % Use code commeneted out below to skip classification
                 classified_path = strcat(psth_path, '/classifier');
 
