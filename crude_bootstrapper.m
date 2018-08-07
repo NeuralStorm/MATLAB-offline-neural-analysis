@@ -1,4 +1,4 @@
-function [classify_path] = crude_bootstrapper(psth_path, animal_name, boot_iterations, bin_size, pre_time, post_time, wanted_events, unit_classification)
+function [classify_path] = crude_bootstrapper(psth_path, animal_name, boot_iterations, bin_size, pre_time, post_time, wanted_events, wanted_neurons, unit_classification)
     % Grabs all the psth formatted files
     psth_mat_path = strcat(psth_path, '/*.mat');
     psth_files = dir(psth_mat_path);
@@ -19,7 +19,7 @@ function [classify_path] = crude_bootstrapper(psth_path, animal_name, boot_itera
 
     %% Iterates through all the psth formated files to for classifiers
     for h = 1: length(psth_files)
-        failed_classifying = {};
+        failed_bootstrapping = {};
         file = [psth_path, '/', psth_files(h).name];
         [file_path, file_name, file_extension] = fileparts(file);
         split_name = strsplit(file_name, '.');
@@ -40,7 +40,6 @@ function [classify_path] = crude_bootstrapper(psth_path, animal_name, boot_itera
             [total_neurons, ~] = size(neuron_map(1,:));
 
             for i = 1: boot_iterations
-                disp(i);
                 if i == 1
                     classified_struct = struct;
                     % Initialize dynamic struct fields
@@ -68,7 +67,10 @@ function [classify_path] = crude_bootstrapper(psth_path, animal_name, boot_itera
             struct_names = fieldnames(classified_struct);
             for i = 1: length(struct_names)
                 if contains(struct_names{i}, '_bootstrapped_info')
+                    field_name = strsplit(struct_names{i}, '_');
+                    channel_name = field_name{1};
                     classified_struct.(struct_names{i}) = mean(classified_struct.(struct_names{i}));
+                    classified_struct.([channel_name, '_corrected_info']) = classified_struct.([channel_name, '_information']) - classified_struct.(struct_names{i});
                 end
             end
 
@@ -79,8 +81,8 @@ function [classify_path] = crude_bootstrapper(psth_path, animal_name, boot_itera
             matfile = fullfile(classify_path, filename);
             save(matfile, 'classified_struct', 'neuron_map', 'all_events');
         catch ME
-            failed_classifying{end + 1} = file_name;
-            failed_classifying{end, 2} = ME;
+            failed_bootstrapping{end + 1} = file_name;
+            failed_bootstrapping{end, 2} = ME;
             filename = ['FAILED.', file_name, '.mat'];
             warning('%s failed to bootstrap\n', file_name);
             warning('Error: %s\n', ME.message);
