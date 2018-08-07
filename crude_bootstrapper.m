@@ -37,7 +37,7 @@ function [classify_path] = crude_bootstrapper(psth_path, animal_name, boot_itera
                 end
                 neuron_map = neurons;
             end
-            [total_neurons, ~] = size(neuron_map(1,:));
+            [total_neurons, ~] = size(neuron_map);
 
             for i = 1: boot_iterations
                 if i == 1
@@ -79,7 +79,7 @@ function [classify_path] = crude_bootstrapper(psth_path, animal_name, boot_itera
             all_events = event_struct.all_events;
             filename = ['CLASSIFIED.', file_name, '.mat'];
             matfile = fullfile(classify_path, filename);
-            save(matfile, 'classified_struct', 'neuron_map', 'all_events');
+            save(matfile, 'classified_struct', 'neuron_map', 'all_events', 'total_neurons');
         catch ME
             failed_bootstrapping{end + 1} = file_name;
             failed_bootstrapping{end, 2} = ME;
