@@ -27,6 +27,18 @@ function [classify_path] = crude_bootstrapper(psth_path, animal_name, boot_itera
         fprintf('Bootstrapping PSTH for %s on %s\n', animal_name, current_day);
         try
             load(file);
+
+            % TODO move this to calculate_psth when neurons are removed
+            % Updates neuron_map and total neurons
+            neurons = [];
+            if ~isempty(wanted_neurons)
+                for neuron = length(wanted_neurons)
+                    neurons = [neurons; neuron_map(wanted_neurons(neuron), :)];
+                end
+                neuron_map = neurons;
+            end
+            [total_neurons, ~] = size(neuron_map(1,:));
+
             for i = 1: boot_iterations
                 disp(i);
                 if i == 1
