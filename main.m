@@ -1,6 +1,5 @@
 function [] = main()
-    % TODO figure out how to fix pre time and post time window (it will work fine
-    % TODO for negative to postive, 0 to positive, but positive to positive might be a problem)
+    start_time = tic;
     %% Initialize global variables
     bin_size = 0.020;
     total_trials = 100;
@@ -20,6 +19,8 @@ function [] = main()
     % Boolean to control classification for population or single neurons
     % Default is set to single neuron
     unit_classification = true;
+    % controls how many bootstrap iterations are done. Default is 1 (equivalent to single classification)
+    boot_iterations = 50;
 
     % Get the directory with all animals and their respective .plx files
     original_path = uigetdir(pwd);
@@ -58,20 +59,12 @@ function [] = main()
                 % catch
                 %     failed{end+1} = animal_list(animal).name;
                 % end
-                %% Run for classifier
-                % try
-                    tiltToolboxPath = 'C:\Users\Ryan PC';
-                    decoderPath = 'C:\Users\Ryan PC';
-                    addpath(genpath(tiltToolboxPath));
-                    classified_path = crude_classifier(psth_path, animal_name, bin_size, pre_time, post_time, wanted_events, ...
-                        tiltToolboxPath, decoderPath, unit_classification);
-                % end
-                % Use code commeneted out below to skip classification
-                classified_path = strcat(psth_path, '/classifier');
 
-                % Run to add confusion matrix information to the classified struct
-                confusion_matrix_info(classified_path, animal_name, total_events);
+                %% Run for bootstrapping
+                classified_path = crude_bootstrapper(psth_path, animal_name, boot_iterations, bin_size, pre_time, ...
+                    post_time, wanted_events, unit_classification);
             end
         end
     end
+    toc(start_time);
 end
