@@ -4,7 +4,7 @@ function [] = main()
     bin_size = 0.020;
     total_trials = 100;
     total_events = 4;
-    pre_time = 0.2;
+    pre_time = 0;
     post_time = 0.2;
     % Requires for all events to be in array. IF empty it will skip all events
     wanted_events = [1, 3, 4, 6];
@@ -20,9 +20,9 @@ function [] = main()
     % Default is set to single neuron
     unit_classification = true;
     % controls how many bootstrap iterations are done. Default is 1 (equivalent to single classification)
-    boot_iterations = 5;
-    spreadsheet_name = 'test.csv';
-    append_spreadsheet = true;
+    boot_iterations = 50;
+    spreadsheet_name = '20ms_spreadsheet.csv';
+    append_spreadsheet = false;
 
     
     % Get the directory with all animals and their respective .plx files
@@ -65,11 +65,11 @@ function [] = main()
                 % end
 
                 %% Run for bootstrapping
-                classified_path = crude_bootstrapper(psth_path, animal_name, boot_iterations, bin_size, pre_time, ...
-                    post_time, wanted_events, wanted_neurons, unit_classification);
+                % classified_path = crude_bootstrapper(psth_path, animal_name, boot_iterations, bin_size, pre_time, ...
+                %     post_time, wanted_events, wanted_neurons, unit_classification);
 
                 %% To skip bootstrapping
-                % classified_path = [psth_path, '/classifier'];
+                classified_path = [psth_path, '/classifier'];
 
                 %% Write to spreadsheet
                 csv_export(classified_path, original_path, total_events, wanted_events, pre_time, post_time, bin_size, first_iteration, ...

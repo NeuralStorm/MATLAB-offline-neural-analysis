@@ -8,6 +8,7 @@ function [] = csv_export(classified_path, original_path, total_events, wanted_ev
     % TODO find a better way to control flow
     if exist(matfile, 'file') == 2 && first_iteration && ~append_spreadsheet
         delete(matfile);
+        pause(5);
         spreadsheet_table = table([], [], [], [], [], [], [], [], [], [], [], [], [], [], [], [], [], [], [], 'VariableNames', ... 
             {'animal_study', 'animal_number', 'experiment_date', 'experiment_day', 'tot_events', 'selected_events', ...
             'tot_neurons', 'event_pre_time', 'event_post_time', 'selected_bin_size', 'tot_trials', 'inclusive_trial_range', 'total_bootstrap', ...
@@ -53,11 +54,11 @@ function [] = csv_export(classified_path, original_path, total_events, wanted_ev
         file = [classified_path, '/', classified_files(h).name];
         [file_path, file_name, file_extension] = fileparts(file);
         animal_info = strsplit(file_name, '.');
-        current_study = animal_info{4};
+        current_study = animal_info(4);
         current_animal_number = str2num(animal_info{5});
-        current_day = animal_info{7};
+        current_day = animal_info(7);
         current_date = str2num(animal_info{end});
-        fprintf('Spreadsheet: On %s on %s\n', animal_name, current_day);
+        fprintf('Spreadsheet: On %s on %s\n', animal_name, current_day{1});
 
         load(file);
         if unit_classification
@@ -75,7 +76,7 @@ function [] = csv_export(classified_path, original_path, total_events, wanted_ev
             inclusive_trial_range = [inclusive_trial_range; repmat(string_trial_range, [total_neurons, 1])];
             total_bootstrap = [total_bootstrap; repmat(boot_iterations, [total_neurons, 1])];
             % TODO event_distribution, z-score
-            classification = 'unit';
+            classification = {'unit'};
             classification_type = [classification_type; repmat(classification, [total_neurons, 1])];
             unit_names = [];
             unit_accuracy = [];
@@ -84,9 +85,10 @@ function [] = csv_export(classified_path, original_path, total_events, wanted_ev
             unit_corrected_info = [];
             for unit = 1: length(neuron_map)
                 %% Channel name
-                channel_name = neuron_map{unit};
+                channel_name = neuron_map(unit);
                 unit_names = [unit_names; channel_name];
                 %% Classification accuracy
+                channel_name = neuron_map{unit};
                 accuracy = classified_struct.([channel_name, '_accuracy']);
                 unit_accuracy = [unit_accuracy; accuracy];
                 %% Initial classified info
@@ -123,9 +125,9 @@ function [] = csv_export(classified_path, original_path, total_events, wanted_ev
         end
 
     end
-    new_spreadsheet_table = table(cellstr(animal_study), animal_number, experiment_date, cellstr(experiment_day), tot_events, selected_events, ...
+    new_spreadsheet_table = table(animal_study, animal_number, experiment_date, experiment_day, tot_events, selected_events, ...
         event_pre_time, event_post_time, selected_bin_size, tot_trials, inclusive_trial_range, total_bootstrap, tot_neurons, ...
-        cellstr(classification_type), cellstr(neuron_name), classification_accuracy, neuron_info, neuron_boot_info, neuron_corrected_info, 'VariableNames', ... 
+        classification_type, neuron_name, classification_accuracy, neuron_info, neuron_boot_info, neuron_corrected_info, 'VariableNames', ... 
         {'animal_study', 'animal_number', 'experiment_date', 'experiment_day', 'tot_events', 'selected_events', ...
         'tot_neurons', 'event_pre_time', 'event_post_time', 'selected_bin_size', 'tot_trials', 'inclusive_trial_range', 'total_bootstrap', ...
         'classification_type', 'neuron_name', 'classification_accuracy', 'neuron_info', 'neuron_boot_info', 'neuron_corrected_info'});
