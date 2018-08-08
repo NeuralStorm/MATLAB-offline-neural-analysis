@@ -13,7 +13,7 @@ function [] = main()
     % Inclusive Range
     trial_range = [1, 300];
     % Give exact match to directory you want skipped
-    ignored_animals = ['TNC25'];
+    ignored_animals = [];
     total_bins = (length([-abs(pre_time):bin_size:abs(post_time)]) - 1);
     failed = {};
     % Boolean to control classification for population or single neurons
@@ -21,12 +21,16 @@ function [] = main()
     unit_classification = true;
     % controls how many bootstrap iterations are done. Default is 1 (equivalent to single classification)
     boot_iterations = 5;
+    spreadsheet_name = 'test.csv';
+    append_spreadsheet = true;
 
+    
     % Get the directory with all animals and their respective .plx files
     original_path = uigetdir(pwd);
     animal_list = dir(original_path);
     % Starts at index 3 since dir returns '.' and '..'
     if length(animal_list) > 2
+        first_iteration = true;
         for animal = 3: length(animal_list)
             animal_name = animal_list(animal).name;
             animal_path = [animal_list(animal).folder, '/', animal_name];
@@ -63,6 +67,15 @@ function [] = main()
                 %% Run for bootstrapping
                 classified_path = crude_bootstrapper(psth_path, animal_name, boot_iterations, bin_size, pre_time, ...
                     post_time, wanted_events, wanted_neurons, unit_classification);
+
+                %% To skip bootstrapping
+                % classified_path = [psth_path, '/classifier'];
+
+                %% Write to spreadsheet
+                csv_export(classified_path, original_path, total_events, wanted_events, pre_time, post_time, bin_size, first_iteration, ...
+                    trial_range, boot_iterations, animal_name, total_trials, unit_classification, spreadsheet_name, append_spreadsheet);
+                first_iteration = false;
+                end
             end
         end
     end
