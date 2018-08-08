@@ -75,7 +75,6 @@ function [] = main()
                 csv_export(classified_path, original_path, total_events, wanted_events, pre_time, post_time, bin_size, first_iteration, ...
                     trial_range, boot_iterations, animal_name, total_trials, unit_classification, spreadsheet_name, append_spreadsheet);
                 first_iteration = false;
-                end
             end
         end
     end
