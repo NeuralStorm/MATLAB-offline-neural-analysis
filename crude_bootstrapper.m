@@ -1,4 +1,5 @@
 function [classify_path] = crude_bootstrapper(psth_path, animal_name, boot_iterations, bin_size, pre_time, post_time, wanted_events, wanted_neurons, unit_classification)
+    tic;
     % Grabs all the psth formatted files
     psth_mat_path = strcat(psth_path, '/*.mat');
     psth_files = dir(psth_mat_path);
@@ -90,4 +91,5 @@ function [classify_path] = crude_bootstrapper(psth_path, animal_name, boot_itera
             save(matfile, 'failed_bootstrapping');
         end
     end
+    toc;
 end

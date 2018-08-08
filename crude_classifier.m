@@ -1,5 +1,4 @@
 function [classified_struct] = crude_classifer(failed_path, file_name, all_events, neuron_map, bin_size, pre_time, post_time, unit_classification, iteration, classified_struct)
-    tic;
     %% Crude classifier
     try
         failed_classifying = {};
@@ -65,5 +64,4 @@ function [classified_struct] = crude_classifer(failed_path, file_name, all_event
         matfile = fullfile(failed_path, filename);
         save(matfile, 'failed_classifying');
     end
-    toc;
 end
