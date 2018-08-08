@@ -18,10 +18,10 @@ function [] = main()
     failed = {};
     % Boolean to control classification for population or single neurons
     % Default is set to single neuron
-    unit_classification = true;
+    unit_classification = false;
     % controls how many bootstrap iterations are done. Default is 1 (equivalent to single classification)
     boot_iterations = 50;
-    spreadsheet_name = '20ms_spreadsheet.csv';
+    spreadsheet_name = 'population_20ms_spreadsheet.csv';
     append_spreadsheet = false;
 
     
@@ -37,7 +37,7 @@ function [] = main()
             % Skips animals we want to ignore
             if ~isempty(ignored_animals) && contains(ignored_animals, animal_name)
                 continue;
-            else
+            elseif isfolder(animal_path)
                 %% Run if you want to parse .plx or comment out to skip
                 % try
                 %     parsed_path = parser(animal_path, animal_name, total_trials, total_events);
@@ -65,11 +65,11 @@ function [] = main()
                 % end
 
                 %% Run for bootstrapping
-                % classified_path = crude_bootstrapper(psth_path, animal_name, boot_iterations, bin_size, pre_time, ...
-                %     post_time, wanted_events, wanted_neurons, unit_classification);
+                classified_path = crude_bootstrapper(psth_path, animal_name, boot_iterations, bin_size, pre_time, ...
+                    post_time, wanted_events, wanted_neurons, unit_classification);
 
                 %% To skip bootstrapping
-                classified_path = [psth_path, '/classifier'];
+                % classified_path = [psth_path, '/classifier'];
 
                 %% Write to spreadsheet
                 csv_export(classified_path, original_path, total_events, wanted_events, pre_time, post_time, bin_size, first_iteration, ...
