@@ -1,25 +1,27 @@
 function [] = csv_export(classified_path, original_path, total_events, wanted_events, pre_time, post_time, bin_size, first_iteration, ...
         trial_range, boot_iterations, animal_name, total_trials, unit_classification, spreadsheet_name, append_spreadsheet)
-    tic;   
     classified_mat_path = strcat(classified_path, '/*.mat');
     classified_files = dir(classified_mat_path);
 
     matfile = fullfile(original_path, spreadsheet_name);
+
+    if unit_classification
+        spreadsheet_table = table([], [], [], [], [], [], [], [], [], [], [], [], [], [], [], [], [], [], [], 'VariableNames', ... 
+                {'animal_study', 'animal_number', 'experiment_date', 'experiment_day', 'tot_events', 'selected_events', ...
+                'tot_neurons', 'event_pre_time', 'event_post_time', 'selected_bin_size', 'tot_trials', 'inclusive_trial_range', 'total_bootstrap', ...
+                'classification_type', 'neuron_name', 'classification_accuracy', 'neuron_info', 'neuron_boot_info', 'neuron_corrected_info'});
+    else
+        spreadsheet_table = table([], [], [], [], [], [], [], [], [], [], [], [], [], [], [], [], [], [], 'VariableNames', ... 
+            {'animal_study', 'animal_number', 'experiment_date', 'experiment_day', 'tot_events', 'selected_events', ...
+            'event_pre_time', 'event_post_time', 'selected_bin_size', 'tot_trials', 'inclusive_trial_range', 'total_bootstrap', 'tot_neurons', ...
+            'classification_type', 'classification_accuracy', 'pop_info', 'pop_boot_info', 'pop_corrected_info'});
+    end
+
     % TODO find a better way to control flow
     if exist(matfile, 'file') == 2 && first_iteration && ~append_spreadsheet
         delete(matfile);
-        pause(5);
-        spreadsheet_table = table([], [], [], [], [], [], [], [], [], [], [], [], [], [], [], [], [], [], [], 'VariableNames', ... 
-            {'animal_study', 'animal_number', 'experiment_date', 'experiment_day', 'tot_events', 'selected_events', ...
-            'tot_neurons', 'event_pre_time', 'event_post_time', 'selected_bin_size', 'tot_trials', 'inclusive_trial_range', 'total_bootstrap', ...
-            'classification_type', 'neuron_name', 'classification_accuracy', 'neuron_info', 'neuron_boot_info', 'neuron_corrected_info'});
     elseif exist(matfile, 'file') == 2
         spreadsheet_table = readtable(matfile);
-    else
-        spreadsheet_table = table([], [], [], [], [], [], [], [], [], [], [], [], [], [], [], [], [], [], [], 'VariableNames', ... 
-            {'animal_study', 'animal_number', 'experiment_date', 'experiment_day', 'tot_events', 'selected_events', ...
-            'tot_neurons', 'event_pre_time', 'event_post_time', 'selected_bin_size', 'tot_trials', 'inclusive_trial_range', 'total_bootstrap', ...
-            'classification_type', 'neuron_name', 'classification_accuracy', 'neuron_info', 'neuron_boot_info', 'neuron_corrected_info'});
     end
 
 
@@ -44,6 +46,9 @@ function [] = csv_export(classified_path, original_path, total_events, wanted_ev
     neuron_info = [];
     neuron_boot_info = [];
     neuron_corrected_info = [];
+    pop_info = [];
+    pop_boot_info = [];
+    pop_corrected_info = [];
     % new_spreadsheet_table = table;
     % Reformat variables so they appear in an array format when saved to table
     string_events = cellstr(num2str(wanted_events));
@@ -107,31 +112,44 @@ function [] = csv_export(classified_path, original_path, total_events, wanted_ev
             neuron_boot_info = [neuron_boot_info; unit_boot_info];
             neuron_corrected_info = [neuron_corrected_info; unit_corrected_info];
         else
-            classification = 'population';
-            classification_type = [classification];
-            animal_study = [current_study];
-            animal_number = [current_animal_number];
-            experiment_date = [current_date];
-            experiment_day = [current_day];
-            tot_events = [total_events];
-            selected_events = [string_events];
-            tot_neurons = [total_neurons];
-            event_pre_time = [pre_time];
-            event_post_time = [post_time];
-            selected_bin_size = [bin_size];
-            tot_trials = [total_possible_trials];
-            inclusive_trial_range = [string_trial_range];
-            total_bootstrap = [boot_iterations];
+            animal_study = [animal_study; current_study];
+            animal_number = [animal_number; current_animal_number];
+            experiment_date = [experiment_date; current_date];
+            experiment_day = [experiment_day; current_day];
+            tot_events = [tot_events; total_events];
+            selected_events = [selected_events; string_events];
+            event_pre_time = [event_pre_time; pre_time];
+            event_post_time = [event_post_time; post_time];
+            selected_bin_size = [selected_bin_size; bin_size];
+            tot_trials = [tot_trials; total_possible_trials];
+            inclusive_trial_range = [inclusive_trial_range; string_trial_range];
+            total_bootstrap = [total_bootstrap; boot_iterations];
+            tot_neurons = [tot_neurons; total_neurons];
+            % TODO Add accuracy and information
+            classification_type = [classification_type; {'population'}];
+            classification_accuracy = [classification_accuracy; classified_struct.population_accuracy];
+            pop_info = [pop_info; classified_struct.population_information];
+            pop_boot_info = [pop_boot_info; classified_struct.population_bootstrapped_info];
+            pop_corrected_info = [pop_corrected_info; classified_struct.population_information];
         end
 
     end
-    new_spreadsheet_table = table(animal_study, animal_number, experiment_date, experiment_day, tot_events, selected_events, ...
-        event_pre_time, event_post_time, selected_bin_size, tot_trials, inclusive_trial_range, total_bootstrap, tot_neurons, ...
-        classification_type, neuron_name, classification_accuracy, neuron_info, neuron_boot_info, neuron_corrected_info, 'VariableNames', ... 
-        {'animal_study', 'animal_number', 'experiment_date', 'experiment_day', 'tot_events', 'selected_events', ...
-        'tot_neurons', 'event_pre_time', 'event_post_time', 'selected_bin_size', 'tot_trials', 'inclusive_trial_range', 'total_bootstrap', ...
-        'classification_type', 'neuron_name', 'classification_accuracy', 'neuron_info', 'neuron_boot_info', 'neuron_corrected_info'});
+    if unit_classification
+        new_spreadsheet_table = table(animal_study, animal_number, experiment_date, experiment_day, tot_events, selected_events, ...
+            event_pre_time, event_post_time, selected_bin_size, tot_trials, inclusive_trial_range, total_bootstrap, tot_neurons, ...
+            classification_type, neuron_name, classification_accuracy, neuron_info, neuron_boot_info, neuron_corrected_info, 'VariableNames', ... 
+            {'animal_study', 'animal_number', 'experiment_date', 'experiment_day', 'tot_events', 'selected_events', ...
+            'tot_neurons', 'event_pre_time', 'event_post_time', 'selected_bin_size', 'tot_trials', 'inclusive_trial_range', 'total_bootstrap', ...
+            'classification_type', 'neuron_name', 'classification_accuracy', 'neuron_info', 'neuron_boot_info', 'neuron_corrected_info'});
+    else
+        % TODO create the new table for population
+        new_spreadsheet_table = table(animal_study, animal_number, experiment_date, experiment_day, tot_events, selected_events, ...
+            event_pre_time, event_post_time, selected_bin_size, tot_trials, inclusive_trial_range, total_bootstrap, tot_neurons, ...
+            classification_type, classification_accuracy, pop_info, pop_boot_info, pop_corrected_info, 'VariableNames', ... 
+            {'animal_study', 'animal_number', 'experiment_date', 'experiment_day', 'tot_events', 'selected_events', ...
+            'event_pre_time', 'event_post_time', 'selected_bin_size', 'tot_trials', 'inclusive_trial_range', 'total_bootstrap', 'tot_neurons', ...
+            'classification_type', 'classification_accuracy', 'pop_info', 'pop_boot_info', 'pop_corrected_info'});
+    end
     spreadsheet_table = [spreadsheet_table; new_spreadsheet_table];
     writetable(spreadsheet_table, matfile, 'Delimiter', ',');
-    toc;
 end
