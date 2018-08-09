@@ -78,7 +78,11 @@ function [classify_path] = crude_bootstrapper(psth_path, animal_name, boot_itera
             %% Saving classifier info
             % fprintf('Finished classifying for %s\n', current_day);
             all_events = event_struct.all_events;
-            filename = ['CLASSIFIED.', file_name, '.mat'];
+            if unit_classification
+                filename = ['UNIT_CLASSIFIED.', file_name, '.mat'];
+            else
+                filename = ['POP_CLASSIFIED.', file_name, '.mat'];
+            end
             matfile = fullfile(classify_path, filename);
             save(matfile, 'classified_struct', 'neuron_map', 'all_events', 'total_neurons');
         catch ME
