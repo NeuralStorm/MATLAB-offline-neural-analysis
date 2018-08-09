@@ -20,7 +20,7 @@ function [] = main()
     % Default is set to single neuron
     unit_classification = false;
     % controls how many bootstrap iterations are done. Default is 1 (equivalent to single classification)
-    boot_iterations = 50;
+    boot_iterations = 5;
     spreadsheet_name = 'population_20ms_spreadsheet.csv';
     append_spreadsheet = false;
 
@@ -65,11 +65,18 @@ function [] = main()
                 % end
 
                 %% Run for bootstrapping
-                classified_path = crude_bootstrapper(psth_path, animal_name, boot_iterations, bin_size, pre_time, ...
-                    post_time, wanted_events, wanted_neurons, unit_classification);
+                % classified_path = crude_bootstrapper(psth_path, animal_name, boot_iterations, bin_size, pre_time, ...
+                %     post_time, wanted_events, wanted_neurons, unit_classification);
 
                 %% To skip bootstrapping
-                % classified_path = [psth_path, '/classifier'];
+                classified_path = [psth_path, '/classifier'];
+
+                % Checks to make sure that both population and unit information exists
+                unit_path = [classified_path, '/unit'];
+                pop_path = [classified_path, '/population'];
+                if (exist(unit_path, 'dir') == 7) && (exist(pop_path, 'dir') == 7)
+                    synergy_redundancy(classified_path, animal_name);
+                end
 
                 %% Write to spreadsheet
                 csv_export(classified_path, original_path, total_events, wanted_events, pre_time, post_time, bin_size, first_iteration, ...

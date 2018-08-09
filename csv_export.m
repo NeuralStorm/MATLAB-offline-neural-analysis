@@ -2,22 +2,27 @@ function [] = csv_export(classified_path, original_path, total_events, wanted_ev
         trial_range, boot_iterations, animal_name, total_trials, unit_classification, spreadsheet_name, append_spreadsheet)
 
     % TODO add synergy reduction to spreadsheet
+    % TODO add error catching
 
-    classified_mat_path = strcat(classified_path, '/*.mat');
-    classified_files = dir(classified_mat_path);
-
+    
     matfile = fullfile(original_path, spreadsheet_name);
-
+    
     if unit_classification
+        classified_mat_path = [classified_path, '/unit/*.mat'];
+        classified_files = dir(classified_mat_path);
+        classified_path = [classified_path, '/unit'];
         spreadsheet_table = table([], [], [], [], [], [], [], [], [], [], [], [], [], [], [], [], [], [], [], 'VariableNames', ... 
                 {'animal_study', 'animal_number', 'experiment_date', 'experiment_day', 'tot_events', 'selected_events', ...
                 'event_pre_time', 'event_post_time', 'selected_bin_size', 'tot_trials', 'inclusive_trial_range', 'total_bootstrap', 'tot_neurons', ...
                 'classification_type', 'neuron_name', 'classification_accuracy', 'neuron_info', 'neuron_boot_info', 'neuron_corrected_info'});
     else
-        spreadsheet_table = table([], [], [], [], [], [], [], [], [], [], [], [], [], [], [], [], [], [], 'VariableNames', ... 
+        classified_mat_path = [classified_path, '/population/*.mat'];
+        classified_files = dir(classified_mat_path);
+        classified_path = [classified_path, '/population'];
+        spreadsheet_table = table([], [], [], [], [], [], [], [], [], [], [], [], [], [], [], [], [], [], [], [], 'VariableNames', ... 
             {'animal_study', 'animal_number', 'experiment_date', 'experiment_day', 'tot_events', 'selected_events', ...
             'event_pre_time', 'event_post_time', 'selected_bin_size', 'tot_trials', 'inclusive_trial_range', 'total_bootstrap', 'tot_neurons', ...
-            'classification_type', 'classification_accuracy', 'pop_info', 'pop_boot_info', 'pop_corrected_info'});
+            'classification_type', 'classification_accuracy', 'pop_info', 'pop_boot_info', 'pop_corrected_info', 'syn_red', 'syn_red_bool'});
     end
 
     % TODO find a better way to control flow
@@ -52,6 +57,8 @@ function [] = csv_export(classified_path, original_path, total_events, wanted_ev
     pop_info = [];
     pop_boot_info = [];
     pop_corrected_info = [];
+    syn_red = [];
+    syn_red_bool = [];
     % new_spreadsheet_table = table;
     % Reformat variables so they appear in an array format when saved to table
     string_events = cellstr(num2str(wanted_events));
@@ -133,6 +140,8 @@ function [] = csv_export(classified_path, original_path, total_events, wanted_ev
             pop_info = [pop_info; classified_struct.population_information];
             pop_boot_info = [pop_boot_info; classified_struct.population_bootstrapped_info];
             pop_corrected_info = [pop_corrected_info; classified_struct.population_information];
+            syn_red = [syn_red; classified_struct.syn_red_value];
+            syn_red_bool = [syn_red_bool; classified_struct.syn_red_bool];
         end
 
     end
@@ -146,10 +155,10 @@ function [] = csv_export(classified_path, original_path, total_events, wanted_ev
     else
         new_spreadsheet_table = table(animal_study, animal_number, experiment_date, experiment_day, tot_events, selected_events, ...
             event_pre_time, event_post_time, selected_bin_size, tot_trials, inclusive_trial_range, total_bootstrap, tot_neurons, ...
-            classification_type, classification_accuracy, pop_info, pop_boot_info, pop_corrected_info, 'VariableNames', ... 
+            classification_type, classification_accuracy, pop_info, pop_boot_info, pop_corrected_info, syn_red, syn_red_bool, 'VariableNames', ... 
             {'animal_study', 'animal_number', 'experiment_date', 'experiment_day', 'tot_events', 'selected_events', ...
             'event_pre_time', 'event_post_time', 'selected_bin_size', 'tot_trials', 'inclusive_trial_range', 'total_bootstrap', 'tot_neurons', ...
-            'classification_type', 'classification_accuracy', 'pop_info', 'pop_boot_info', 'pop_corrected_info'});
+            'classification_type', 'classification_accuracy', 'pop_info', 'pop_boot_info', 'pop_corrected_info', 'syn_red', 'syn_red_bool'});
     end
     spreadsheet_table = [spreadsheet_table; new_spreadsheet_table];
     writetable(spreadsheet_table, matfile, 'Delimiter', ',');
