@@ -139,7 +139,7 @@ function [] = csv_export(classified_path, original_path, total_events, wanted_ev
             classification_accuracy = [classification_accuracy; classified_struct.population_accuracy];
             pop_info = [pop_info; classified_struct.population_information];
             pop_boot_info = [pop_boot_info; classified_struct.population_bootstrapped_info];
-            pop_corrected_info = [pop_corrected_info; classified_struct.population_information];
+            pop_corrected_info = [pop_corrected_info; classified_struct.population_corrected_info];
             syn_red = [syn_red; classified_struct.syn_red_value];
             syn_red_bool = [syn_red_bool; classified_struct.syn_red_bool];
         end
