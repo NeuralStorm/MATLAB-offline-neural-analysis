@@ -10,12 +10,11 @@ function [classify_path] = crude_bootstrapper(psth_path, animal_name, boot_itera
         mkdir(psth_path, 'classifier');
     end
 
-     % Creates a directory to store the failed files
+     % Deletes the failed directory if it already exists
      failed_path = [classify_path, '/failed'];
-     if ~exist(failed_path, 'dir')
-         mkdir(classify_path, 'failed');
-     else
-         delete([failed_path, '/*']);
+     if exist(failed_path, 'dir') == 7
+        delete([failed_path, '/*']);
+        rmdir(failed_path);
      end
 
     %% Iterates through all the psth formated files to for classifiers
@@ -79,13 +78,26 @@ function [classify_path] = crude_bootstrapper(psth_path, animal_name, boot_itera
             % fprintf('Finished classifying for %s\n', current_day);
             all_events = event_struct.all_events;
             if unit_classification
+                unit_path = [classify_path, '/unit'];
+                if ~exist(unit_path, 'dir')
+                    mkdir(classify_path, 'unit');
+                end
                 filename = ['UNIT_CLASSIFIED.', file_name, '.mat'];
+                matfile = fullfile(unit_path, filename);
+                save(matfile, 'classified_struct', 'neuron_map', 'all_events', 'total_neurons');
             else
+                pop_path = [classify_path, '/population'];
+                if ~exist(pop_path, 'dir')
+                    mkdir(classify_path, 'population');
+                end
                 filename = ['POP_CLASSIFIED.', file_name, '.mat'];
+                matfile = fullfile(pop_path, filename);
+                save(matfile, 'classified_struct', 'neuron_map', 'all_events', 'total_neurons');
             end
-            matfile = fullfile(classify_path, filename);
-            save(matfile, 'classified_struct', 'neuron_map', 'all_events', 'total_neurons');
         catch ME
+            if ~exist(failed_path, 'dir')
+                mkdir(classify_path, 'failed');
+            end
             failed_bootstrapping{end + 1} = file_name;
             failed_bootstrapping{end, 2} = ME;
             filename = ['FAILED.', file_name, '.mat'];

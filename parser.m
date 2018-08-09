@@ -18,12 +18,11 @@ function [parsed_path] = parser(dir_path, animal_name, total_trials, total_event
        mkdir(dir_path, 'parsed_plx');
     end
 
-    % Creates a directory to store the failed files
+    % Deletes the failed directory if it already exists
     failed_path = [dir_path, '/failed'];
-    if ~exist(failed_path, 'dir')
-        mkdir(dir_path, 'failed');
-    else
-        delete([failed_path, '/*']);
+    if exist(failed_path, 'dir') == 7
+       delete([failed_path, '/*']);
+       rmdir(failed_path);
     end
     
     % Runs through all of the .plx files in the selected directory
@@ -160,6 +159,9 @@ function [parsed_path] = parser(dir_path, animal_name, total_trials, total_event
             save(matfile, 'tscounts', 'evcounts', 'tsevs', 'events',  ...
                     'total_neurons', 'all_spike_times', 'neuron_map');
         catch ME
+            if ~exist(failed_path, 'dir')
+                mkdir(dir_path, 'failed');
+            end
             failed_parsing{end + 1} = file_name;
             failed_parsing{end, 2} = ME;
             filename = ['FAILED.', file_name, '.mat'];

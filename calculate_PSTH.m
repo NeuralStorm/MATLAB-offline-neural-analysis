@@ -13,12 +13,11 @@ function [psth_path] = calculate_PSTH(parsed_path, animal_name, total_bins, bin_
        mkdir(parsed_path, 'psth');
     end
 
-    % Creates a directory to store the failed files
+    % Deletes the failed directory if it already exists
     failed_path = [parsed_path, '/failed'];
-    if ~exist(failed_path, 'dir')
-        mkdir(parsed_path, 'failed');
-    else
-        delete([failed_path, '/*']);
+    if exist(failed_path, 'dir') == 7
+       delete([failed_path, '/*']);
+       rmdir(failed_path);
     end
 
     event_strings = {};
@@ -80,6 +79,9 @@ function [psth_path] = calculate_PSTH(parsed_path, animal_name, total_bins, bin_
             matfile = fullfile(psth_path, filename);
             save(matfile, 'event_struct', 'total_neurons', 'neuron_map', 'events', 'event_strings');
         catch ME
+            if ~exist(failed_path, 'dir')
+                mkdir(parsed_path, 'failed');
+            end
             failed_calculating{end + 1} = file_name;
             failed_calculating{end, 2} = ME;
             filename = ['FAILED.', file_name, '.mat'];
