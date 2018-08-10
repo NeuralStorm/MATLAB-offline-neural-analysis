@@ -65,9 +65,9 @@ function [psth_path] = calculate_PSTH(parsed_path, animal_name, total_bins, bin_
                 event_count = 0;
                 for event = 1: length(events_array)
                     event_struct.([event_strings{event}, '_raster']) = ...
-                    sum(event_struct.relative_response((event_count + 1):1:(event_count + length(events_array{i})),:),1);
+                    sum(event_struct.relative_response((event_count + 1):1:(event_count + length(events_array{event})),:),1);
                     % Updates event_count to scale sum properly for next row
-                    event_count = event_count + length(events_array{i});
+                    event_count = event_count + length(events_array{event});
                 end
             catch ME
                 warning('Error: %s\n', ME.message);
