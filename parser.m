@@ -40,7 +40,7 @@ function [parsed_path] = parser(dir_path, animal_name, total_trials, total_event
             [nunits1, nchannels1] = size(tscounts); 
             % Allocate memory to all_neurons
             all_neurons = cell(nunits1, nchannels1);
-            for iunit = 0:nunits1 - 1   % starting with unit 0 (unsorted) 
+            for iunit = 1:nunits1 - 1   % starting with unit 0 (unsorted) 
                 for ich = 1:nchannels1 - 1
                     if (tscounts( iunit+1 , ich+1 ) > 0)
                         % get the timestamps for this channel and unit 
