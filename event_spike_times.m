@@ -4,10 +4,6 @@ function [population_response] = event_spike_times(neurons, all_events, total_tr
     %   is 1 neuron, and each row is a trial.
 
     event_window = -(abs(pre_time)) : bin_size : (abs(post_time));
-    % Includes extra 5ms buffer to deal with spikes that occur on an
-    % absolute edge
-    event_window(1) = -(abs(event_window(1)) + 0.005);
-    event_window(end) = (abs(event_window(end)) + 0.005);
     population_response = [];
     for unit = 1: length(neurons)
         unit_response = [];
