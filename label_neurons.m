@@ -13,18 +13,18 @@ function [unit_index] = label_neurons(psth_path, neuron_labels, unit_index)
         indirect_neurons = {};
         for neuron = 1: total_neurons
             if neuron_labels(neuron) == 'Direct'
-                direct_neurons(neuron, 1) = neuron_map(neuron, 1);
-                direct_neurons(neuron, 2) = neuron_map(neuron, 2);
+                direct_neurons(end + 1, 1) = neuron_map(neuron, 1);
+                direct_neurons(end, 2) = neuron_map(neuron, 2);
             else
-                indirect_neurons(neuron, 1) = neuron_map(neuron, 1);
-                indirect_neurons(neuron, 2) = neuron_map(neuron, 2);
+                indirect_neurons(end + 1, 1) = neuron_map(neuron, 1);
+                indirect_neurons(end, 2) = neuron_map(neuron, 2);
             end
             unit_index = unit_index + 1;
         end
         matfile = fullfile(psth_path, [name_str, '.mat']);
         direct_neurons(~cellfun('isempty', direct_neurons));
         indirect_neurons(~cellfun('isempty', indirect_neurons));
-        save(matfile, 'event_struct', 'total_neurons', 'neuron_map', 'events', 'event_strings', 'direct_neurons', 'indirect_neurons');
+        save(matfile, 'event_struct', 'total_neurons', 'neuron_map', 'events', 'event_strings', 'direct_neurons', 'indirect_neurons', 'label_neurons');
         disp(unit_index);
     end
 end

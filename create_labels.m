@@ -39,8 +39,8 @@ function [neuron_labels] = create_labels(original_path)
             %% Clear temporary variables
             clearvars filename delimiter formatSpec fileID dataArray ans;
             %% End of auto-generated code
-            neuron_labels = unit_spreadsheet.neuron_label;
-            neuron_labels(1, :) = [];
+            % neuron_labels = unit_spreadsheet.neuron_label;
+            % neuron_labels(1, :) = [];
         end
     end
 end
