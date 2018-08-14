@@ -13,11 +13,11 @@ function [unit_index] = label_neurons(psth_path, neuron_labels, unit_index)
         indirect_neurons = {};
         for neuron = 1: total_neurons
             if neuron_labels(neuron) == 'Direct'
-                direct_neurons(end + 1) = neuron_map(neuron, 1);
-                direct_neurons(end + 1) = neuron_map(neuron, 2);
+                direct_neurons(neuron, end + 1) = neuron_map(neuron, 1);
+                direct_neurons(neuron, end + 1) = neuron_map(neuron, 2);
             else
-                indirect_neurons(end + 1) = neuron_map(neuron, 1);
-                indirect_neurons(end + 1) = neuron_map(neuron, 2);
+                indirect_neurons(neuron, end + 1) = neuron_map(neuron, 1);
+                indirect_neurons(neuron, end + 1) = neuron_map(neuron, 2);
             end
             unit_index = unit_index + 1;
         end
