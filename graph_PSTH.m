@@ -50,12 +50,12 @@ function [] = graph_PSTH(psth_path, animal_name, total_bins, total_trials, total
                 for neuron = 1: total_neurons
                     figure('visible','off');
                     bar(raster(((1:total_bins) + ((neuron-1) * total_bins))));
-                    text=['Histogram of Neuron ', num2str(neuron), ' for Event ', current_event];
+                    text=[neuron_map{neuron}, ' Histogram for Event ', current_event ' on ', current_day, ' for ', animal_name];
                     title(text);
                     xlabel('Time (ms)');
                     ylabel('Count');
                     xlim([0 total_bins]);
-                    filename = ['Neuron_', num2str(neuron), '_event_', current_event, '.png'];
+                    filename = [neuron_map{neuron}, '_event_', current_event, '.png'];
                     saveas(gcf, fullfile(event_path, filename));
                 end
             end
