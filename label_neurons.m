@@ -22,6 +22,8 @@ function [unit_index] = label_neurons(psth_path, neuron_labels, unit_index)
             unit_index = unit_index + 1;
         end
         matfile = fullfile(psth_path, [name_str, '.mat']);
+        direct_neurons(~cellfun('isempty', direct_neurons));
+        indirect_neurons(~cellfun('isempty', indirect_neurons));
         save(matfile, 'event_struct', 'total_neurons', 'neuron_map', 'events', 'event_strings', 'direct_neurons', 'indirect_neurons');
         disp(unit_index);
     end
