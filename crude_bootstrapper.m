@@ -28,27 +28,12 @@ function [classify_path] = crude_bootstrapper(psth_path, animal_name, boot_itera
         try
             load(file);
 
-            % TODO move this to calculate_psth when neurons are removed
-            % Updates neuron_map and total neurons
-            neurons = [];
-            if ~isempty(wanted_neurons)
-                for neuron = length(wanted_neurons)
-                    neurons = [neurons; neuron_map(wanted_neurons(neuron), :)];
-                end
-                neuron_map = neurons;
-            end
-            [total_neurons, ~] = size(neuron_map);
-
             for i = 1: boot_iterations
                 if i == 1
                     classified_struct = struct;
-                    % Initialize dynamic struct fields
-                    classified_struct.deciscion = {};
-                    classified_struct.true_event = {};
-                    classified_struct.correct_trials = [];
 
                     % Preforms standard classification
-                    classified_struct = crude_classifier(failed_path, file_name, event_struct.all_events, neuron_map, bin_size, pre_time, post_time, unit_classification, i, classified_struct);
+                    classified_struct = crude_classifier(failed_path, file_name, event_struct.all_events, neuron_map, right_neurons, left_neurons, bin_size, pre_time, post_time, unit_classification, i, classified_struct);
                 else
                     % Shuffle event labels from the events matrix
                     shuffled_event_labels = events(:,1);
@@ -60,7 +45,7 @@ function [classify_path] = crude_bootstrapper(psth_path, animal_name, boot_itera
                         %% Slices out the desired trials from the events matrix (Inclusive range)
                         all_events = [all_events; event_strings{event}, {shuffled_events(shuffled_events == wanted_events(event), 2)}];
                     end
-                    classified_struct = crude_classifier(failed_path, file_name, all_events, neuron_map, bin_size, pre_time, post_time, unit_classification, i, classified_struct);
+                    classified_struct = crude_classifier(failed_path, file_name, all_events, neuron_map, right_neurons, left_neurons, bin_size, pre_time, post_time, unit_classification, i, classified_struct);
                 end
             end
 
@@ -92,7 +77,7 @@ function [classify_path] = crude_bootstrapper(psth_path, animal_name, boot_itera
                 end
                 filename = ['POP_CLASSIFIED.', file_name, '.mat'];
                 matfile = fullfile(pop_path, filename);
-                save(matfile, 'classified_struct', 'neuron_map', 'all_events', 'total_neurons');
+                save(matfile, 'classified_struct', 'neuron_map', 'all_events', 'total_neurons', 'right_neurons', 'left_neurons');
             end
         catch ME
             if ~exist(failed_path, 'dir')
