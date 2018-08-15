@@ -15,10 +15,12 @@ function [unit_index] = label_neurons(psth_path, neuron_labels, unit_index)
         direct_neurons = {};
         indirect_neurons = {};
         for neuron = 1: total_neurons
-            if (neuron_labels.animal_study(neuron) == current_animal) && (neuron_labels.animal_number(neuron) == current_animal_num) && (neuron_labels.experiment_day(neuron) == current_day) && (neuron_labels.neuron_label(neuron) == 'Direct')
+            % if (neuron_labels.animal_study(neuron) == current_animal) && (neuron_labels.animal_number(neuron) == current_animal_num) && (neuron_labels.experiment_day(neuron) == current_day) && (neuron_labels.neuron_label(neuron) == 'Direct')
+            if neuron_labels(unit_index) == 'Direct'
                 direct_neurons(end + 1, 1) = neuron_map(neuron, 1);
                 direct_neurons(end, 2) = neuron_map(neuron, 2);
-            elseif (neuron_labels.animal_study(neuron) == current_animal) && (neuron_labels.animal_number(neuron) == current_animal_num) && (neuron_labels.experiment_day(neuron) == current_day) && (neuron_labels.neuron_label(neuron) == 'Indirect')
+            % elseif (neuron_labels.animal_study(neuron) == current_animal) && (neuron_labels.animal_number(neuron) == current_animal_num) && (neuron_labels.experiment_day(neuron) == current_day) && (neuron_labels.neuron_label(neuron) == 'Indirect')
+            else
                 indirect_neurons(end + 1, 1) = neuron_map(neuron, 1);
                 indirect_neurons(end, 2) = neuron_map(neuron, 2);
             end
