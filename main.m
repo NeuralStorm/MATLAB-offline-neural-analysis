@@ -29,7 +29,6 @@ function [] = main()
     % Get the directory with all animals and their respective .plx files
     original_path = uigetdir(pwd);
     animal_list = dir(original_path);
-    neuron_labels = create_labels(original_path);
     % Starts at index 3 since dir returns '.' and '..'
     if length(animal_list) > 2
         first_iteration = true;
@@ -54,13 +53,12 @@ function [] = main()
                 try
                     psth_path = calculate_PSTH(parsed_path, animal_name, total_bins, bin_size, pre_time, post_time, ...
                         wanted_neurons, wanted_events, trial_range, total_trials);
+                    label_neurons(psth_path);
                 catch
                     failed{end+1} = animal_list(animal).name;
                 end
                 %% Use code commeneted out below to skip PSTH calculations
                 psth_path = [parsed_path, '/psth'];
-
-                unit_index = label_neurons(psth_path, neuron_labels, unit_index);
 
                 %% Run if you want to graph all of the PSTHs or comment it out to skip
                 % try
@@ -70,23 +68,23 @@ function [] = main()
                 % end
 
                 %% Run for bootstrapping
-                % classified_path = crude_bootstrapper(psth_path, animal_name, boot_iterations, bin_size, pre_time, ...
-                %     post_time, wanted_events, wanted_neurons, unit_classification);
+                classified_path = crude_bootstrapper(psth_path, animal_name, boot_iterations, bin_size, pre_time, ...
+                    post_time, wanted_events, wanted_neurons, unit_classification);
 
                 %% To skip bootstrapping
                 classified_path = [psth_path, '/classifier'];
 
                 % Checks to make sure that both population and unit information exists
-                % unit_path = [classified_path, '/unit'];
-                % pop_path = [classified_path, '/population'];
-                % if (exist(unit_path, 'dir') == 7) && (exist(pop_path, 'dir') == 7)
-                %     synergy_redundancy(classified_path, animal_name);
-                % end
+                unit_path = [classified_path, '/unit'];
+                pop_path = [classified_path, '/population'];
+                if (exist(unit_path, 'dir') == 7) && (exist(pop_path, 'dir') == 7)
+                    synergy_redundancy(classified_path, animal_name);
+                end
 
                 %% Write to spreadsheet
-                % csv_export(classified_path, original_path, total_events, wanted_events, pre_time, post_time, bin_size, first_iteration, ...
-                %     trial_range, boot_iterations, animal_name, total_trials, unit_classification, spreadsheet_name, append_spreadsheet);
-                % first_iteration = false;
+                csv_export(classified_path, original_path, total_events, wanted_events, pre_time, post_time, bin_size, first_iteration, ...
+                    trial_range, boot_iterations, animal_name, total_trials, unit_classification, spreadsheet_name, append_spreadsheet);
+                first_iteration = false;
             end
         end
     end
