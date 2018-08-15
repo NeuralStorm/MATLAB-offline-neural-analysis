@@ -1,4 +1,4 @@
-function [unit_index] = label_neurons(psth_path, neuron_labels, unit_index)
+function [] = label_neurons(psth_path)
     % Grabs all the psth formatted files
     psth_mat_path = strcat(psth_path, '/*.mat');
     psth_files = dir(psth_mat_path);
@@ -12,24 +12,21 @@ function [unit_index] = label_neurons(psth_path, neuron_labels, unit_index)
         current_animal_num = split_name{4};
         current_day = split_name{6};
         load(file);
-        direct_neurons = {};
-        indirect_neurons = {};
+        right_neurons = {};
+        left_neurons = {};
         for neuron = 1: total_neurons
-            % if (neuron_labels.animal_study(neuron) == current_animal) && (neuron_labels.animal_number(neuron) == current_animal_num) && (neuron_labels.experiment_day(neuron) == current_day) && (neuron_labels.neuron_label(neuron) == 'Direct')
-            if neuron_labels(unit_index) == 'Direct'
-                direct_neurons(end + 1, 1) = neuron_map(neuron, 1);
-                direct_neurons(end, 2) = neuron_map(neuron, 2);
-            % elseif (neuron_labels.animal_study(neuron) == current_animal) && (neuron_labels.animal_number(neuron) == current_animal_num) && (neuron_labels.experiment_day(neuron) == current_day) && (neuron_labels.neuron_label(neuron) == 'Indirect')
+            channel_name = neuron_map{neuron, 1};
+            channel_num = str2num(channel_name(4:6));
+            if channel_num > 16
+                % Assigns to left neurons
+                left_neurons(end + 1, 1) = neuron_map(neuron, 1);
+                left_neurons(end, 2) = neuron_map(neuron, 2);
             else
-                indirect_neurons(end + 1, 1) = neuron_map(neuron, 1);
-                indirect_neurons(end, 2) = neuron_map(neuron, 2);
+                % Assigns to right neurons
+                right_neurons(end + 1, 1) = neuron_map(neuron, 1);
+                right_neurons(end, 2) = neuron_map(neuron, 2);
             end
-            unit_index = unit_index + 1;
         end
-        matfile = fullfile(psth_path, [name_str, '.mat']);
-        direct_neurons(~cellfun('isempty', direct_neurons));
-        indirect_neurons(~cellfun('isempty', indirect_neurons));
-        save(matfile, 'event_struct', 'total_neurons', 'neuron_map', 'events', 'event_strings', 'direct_neurons', 'indirect_neurons', 'neuron_labels');
-        disp(unit_index);
+        save(file, 'event_struct', 'total_neurons', 'neuron_map', 'events', 'event_strings', 'right_neurons', 'left_neurons');
     end
 end
