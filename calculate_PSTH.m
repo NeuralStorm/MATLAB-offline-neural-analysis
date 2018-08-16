@@ -37,29 +37,24 @@ function [psth_path] = calculate_PSTH(parsed_path, animal_name, total_bins, bin_
 
         try
             event_struct = struct;
-            %% Slices out the desired neurons from all_spike_times and puts them into
-            %% the neuron matrix
-            % neurons = [];
-            % if isempty(wanted_neurons)
-            %     neurons = neuron_map(:,2);
-            % else
-            %     for neuron = length(wanted_neurons)
-            %         neurons = [neurons; neuron_map(wanted_neurons(neuron), 2)];
-            %     end
-            % end
-
-             % Updates neuron_map and total neurons
-             neurons = [];
-             if ~isempty(wanted_neurons)
-                 for neuron = length(wanted_neurons)
-                     neurons = [neurons; neuron_map(wanted_neurons(neuron), :)];
-                 end
-                 neuron_map = neurons;
-             end
-             [total_neurons, ~] = size(neuron_map);
+            % Updates neuron_map and total neurons
+            neurons = [];
+            if ~isempty(wanted_neurons)
+                for neuron = length(wanted_neurons)
+                    neurons = [neurons; neuron_map(wanted_neurons(neuron), :)];
+                end
+                neuron_map = neurons;
+            end
+            [total_neurons, ~] = size(neuron_map);
 
             % Truncates events to desired trial range from total_trials * total_events
-            events = events(trial_range(1):trial_range(2), :);
+            try
+                events = events(trial_range(1):trial_range(2), :);
+            catch ME
+                warning('Error: %s\n', ME.message);
+                warning('Animal does not have enough trials for the decided trial range. Truncating to the length of events it has.');
+                events = events(trial_range(1):length(events), :);
+            end
             
             event_struct.all_events = {};
             for i = 1: length(wanted_events)
@@ -67,10 +62,10 @@ function [psth_path] = calculate_PSTH(parsed_path, animal_name, total_bins, bin_
                 event_struct.all_events = [event_struct.all_events; event_strings{i}, {events(events == wanted_events(i), 2)}];
             end
 
+            % Creates the PSTH 
             event_struct.relative_response = event_spike_times(neuron_map(:,2), event_struct.all_events(:,2), ...
                 total_trials, total_bins, bin_size, pre_time, post_time);
-            % TODO verify PSTH numbers against plx software
-            event_struct.event_count = tabulate(event_struct.all_events(:,1));
+            event_struct.event_count = tabulate(events(:,1));
             try
                 events_array = event_struct.all_events(:,2);
                 event_count = 0;
