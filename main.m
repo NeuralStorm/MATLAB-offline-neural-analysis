@@ -50,7 +50,7 @@ function [] = main()
 
                 %% Run if you want to calculate the PSTH or comment it out to skip
                 try
-                    psth_path = calculate_PSTH(parsed_path, animal_name, total_bins, bin_size, pre_time, post_time, ...
+                    psth_path = format_PSTH(parsed_path, animal_name, total_bins, bin_size, pre_time, post_time, ...
                         wanted_neurons, wanted_events, trial_range, total_trials);
                     label_neurons(psth_path);
                 catch
