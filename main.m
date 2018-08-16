@@ -1,5 +1,4 @@
 function [] = main()
-    %% TODO Fix the synergy redundancy to sum up for direct and indirect only instead of total channel sum
     start_time = tic;
     %% Initialize global variables
     bin_size = 0.020;
@@ -19,10 +18,10 @@ function [] = main()
     failed = {};
     % Boolean to control classification for population or single neurons
     % Default is set to single neuron
-    unit_classification = false;
+    unit_classification = true;
     % controls how many bootstrap iterations are done. Default is 1 (equivalent to single classification)
-    boot_iterations = 5;
-    spreadsheet_name = 'population_20ms_spreadsheet.csv';
+    boot_iterations = 50;
+    spreadsheet_name = 'unit_20ms_spreadsheet.csv';
     append_spreadsheet = false;
 
     
@@ -41,11 +40,11 @@ function [] = main()
                 continue;
             elseif isfolder(animal_path)
                 %% Run if you want to parse .plx or comment out to skip
-                % try
-                %     parsed_path = parser(animal_path, animal_name, total_trials, total_events);
-                % catch
-                %     failed{end+1} = animal_list(animal).name;
-                % end
+                try
+                    parsed_path = parser(animal_path, animal_name, total_trials, total_events);
+                catch
+                    failed{end+1} = animal_list(animal).name;
+                end
                 %% Use the code commented out below to skip parsing
                 parsed_path = [animal_path, '/parsed_plx'];
 
@@ -74,6 +73,7 @@ function [] = main()
                 %% To skip bootstrapping
                 classified_path = [psth_path, '/classifier'];
 
+                %% Run for synergy redundancy calculation
                 % Checks to make sure that both population and unit information exists
                 unit_path = [classified_path, '/unit'];
                 pop_path = [classified_path, '/population'];
@@ -81,7 +81,7 @@ function [] = main()
                     synergy_redundancy(classified_path, animal_name);
                 end
 
-                %% Write to spreadsheet
+                % %% Write to spreadsheet
                 csv_export(classified_path, original_path, total_events, wanted_events, pre_time, post_time, bin_size, first_iteration, ...
                     trial_range, boot_iterations, animal_name, total_trials, unit_classification, spreadsheet_name, append_spreadsheet);
                 first_iteration = false;
