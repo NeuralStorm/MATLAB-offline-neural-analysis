@@ -7,8 +7,6 @@ function [] = synergy_redundancy(classified_path, animal_name)
     pop_path = [classified_path, '/population'];
     pop_mat_path = strcat(pop_path, '/*.mat');
     pop_files = dir(pop_mat_path);
-    % TODO add assert or try statement to return early if length of pop and unit
-    % TODO do not match (ie: animal doesnt have same number of days between two files)
     for pop = 1:length(pop_files)
         %% Get the file for the same days for both population and unit
         % Since all files follow same convention throughout processing, this ensures that same day is loaded
@@ -43,7 +41,6 @@ function [] = synergy_redundancy(classified_path, animal_name)
         left_syn_red = corrected_left_info - left_corrected_sum;
         classified_struct.right_syn_red = right_syn_red;
         classified_struct.left_syn_red = left_syn_red;
-        % TODO what happens when syn red is 0?
         classified_struct.right_syn_red_bool = right_syn_red > 0;
         classified_struct.left_syn_red_bool = left_syn_red > 0;
         save(pop_file, 'classified_struct', 'neuron_map', 'all_events', 'total_neurons');
