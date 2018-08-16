@@ -12,7 +12,7 @@ function [] = main()
     wanted_neurons = [];
     % Inclusive Range
     trial_range = [1, 300];
-    % Give exact match to directory you want skipped
+    % Give exact directory name of the animals you want skipped
     ignored_animals = [];
     total_bins = (length([-abs(pre_time):bin_size:abs(post_time)]) - 1);
     failed = {};
@@ -20,7 +20,7 @@ function [] = main()
     % Default is set to single neuron
     unit_classification = true;
     % controls how many bootstrap iterations are done. Default is 1 (equivalent to single classification)
-    boot_iterations = 50;
+    boot_iterations = 5;
     spreadsheet_name = 'unit_20ms_spreadsheet.csv';
     append_spreadsheet = false;
 
@@ -73,18 +73,18 @@ function [] = main()
                 %% To skip bootstrapping
                 classified_path = [psth_path, '/classifier'];
 
-                %% Run for synergy redundancy calculation
-                % Checks to make sure that both population and unit information exists
-                unit_path = [classified_path, '/unit'];
-                pop_path = [classified_path, '/population'];
-                if (exist(unit_path, 'dir') == 7) && (exist(pop_path, 'dir') == 7)
-                    synergy_redundancy(classified_path, animal_name);
-                end
+                % %% Run for synergy redundancy calculation
+                % % Checks to make sure that both population and unit information exists
+                % unit_path = [classified_path, '/unit'];
+                % pop_path = [classified_path, '/population'];
+                % if (exist(unit_path, 'dir') == 7) && (exist(pop_path, 'dir') == 7)
+                %     synergy_redundancy(classified_path, animal_name);
+                % end
 
-                % %% Write to spreadsheet
-                csv_export(classified_path, original_path, total_events, wanted_events, pre_time, post_time, bin_size, first_iteration, ...
-                    trial_range, boot_iterations, animal_name, total_trials, unit_classification, spreadsheet_name, append_spreadsheet);
-                first_iteration = false;
+                % % %% Write to spreadsheet
+                % csv_export(classified_path, original_path, total_events, wanted_events, pre_time, post_time, bin_size, first_iteration, ...
+                %     trial_range, boot_iterations, animal_name, total_trials, unit_classification, spreadsheet_name, append_spreadsheet);
+                % first_iteration = false;
             end
         end
     end

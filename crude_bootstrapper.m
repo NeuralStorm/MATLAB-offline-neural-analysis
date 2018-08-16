@@ -17,7 +17,7 @@ function [classify_path] = crude_bootstrapper(psth_path, animal_name, boot_itera
         rmdir(failed_path);
      end
 
-    %% Iterates through all the psth formated files to for classifiers
+    %% Iterates through all the psth formated files and passes them into the clasifier
     for h = 1: length(psth_files)
         failed_bootstrapping = {};
         file = [psth_path, '/', psth_files(h).name];
@@ -49,6 +49,8 @@ function [classify_path] = crude_bootstrapper(psth_path, animal_name, boot_itera
                 end
             end
 
+            % Goes through all the struct fields in the classified struct
+            % And corrects the info by subtracting the bootstrapped info off of the original info
             struct_names = fieldnames(classified_struct);
             for i = 1: length(struct_names)
                 if contains(struct_names{i}, '_bootstrapped_info')

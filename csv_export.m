@@ -1,6 +1,7 @@
 function [] = csv_export(classified_path, original_path, total_events, wanted_events, pre_time, post_time, bin_size, first_iteration, ...
         trial_range, boot_iterations, animal_name, total_trials, unit_classification, spreadsheet_name, append_spreadsheet)
     
+    % This will load a spreadhseet and add the variables listed in the tables below based on type of classification (unit or population)
     matfile = fullfile(original_path, spreadsheet_name);
     
     if unit_classification
@@ -22,7 +23,6 @@ function [] = csv_export(classified_path, original_path, total_events, wanted_ev
             'left_boot_info', 'left_corrected_info', 'right_syn_red', 'right_syn_red_bool', 'left_syn_red', 'left_syn_red_bool'});
     end
 
-    % TODO find a better way to control flow
     if exist(matfile, 'file') == 2 && first_iteration && ~append_spreadsheet
         delete(matfile);
     elseif exist(matfile, 'file') == 2
@@ -61,13 +61,13 @@ function [] = csv_export(classified_path, original_path, total_events, wanted_ev
     left_syn_red = [];
     right_syn_red_bool = [];
     left_syn_red_bool = [];
-    % new_spreadsheet_table = table;
     % Reformat variables so they appear in an array format when saved to table
     string_events = cellstr(num2str(wanted_events));
     string_trial_range = cellstr(num2str(trial_range));
     total_possible_trials = (total_trials * total_events);
+    % Goes through all the classified files for an animal and grabs the relevant info from each file to append the 
+    % variables to the current table with all the other data
     for h = 1: length(classified_files)
-        % file name: CLASSIFIED.PSTH.format.PRAC.03.ClosedLoop.Day25.111715
         file = [classified_path, '/', classified_files(h).name];
         [file_path, file_name, file_extension] = fileparts(file);
         animal_info = strsplit(file_name, '.');
@@ -170,6 +170,7 @@ function [] = csv_export(classified_path, original_path, total_events, wanted_ev
             'classification_type', 'right_accuracy', 'left_accuracy', 'right_info', 'right_boot_info', 'right_corrected_info', 'left_info', ...
             'left_boot_info', 'left_corrected_info', 'right_syn_red', 'right_syn_red_bool', 'left_syn_red', 'left_syn_red_bool'});
     end
+    % Appends new data to the table and then saves the table
     spreadsheet_table = [spreadsheet_table; new_spreadsheet_table];
     writetable(spreadsheet_table, matfile, 'Delimiter', ',');
 end
