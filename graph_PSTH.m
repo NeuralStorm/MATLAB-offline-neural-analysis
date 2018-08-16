@@ -1,7 +1,7 @@
-function [] = graph_PSTH(psth_path, animal_name, total_bins, total_trials, total_events, pre_time, post_time)
+function [] = graph_PSTH(psth_path, animal_name, total_bins, total_trials, total_events, ...
+                pre_time, post_time)
     %% Graphs each PSTH for every Neuron for every event
     tic;
-    fprintf('Graphing PSTH for %s\n', animal_name);
     % Grabs all the psth formatted files
     psth_mat_path = strcat(psth_path, '/*.mat');
     psth_files = dir(psth_mat_path);
@@ -24,69 +24,43 @@ function [] = graph_PSTH(psth_path, animal_name, total_bins, total_trials, total
         % code instead of searching for the day string in the cell array.
         % This can be changed though if it turns out to be a problem
         split_name = strsplit(name_str, '.');
-        day_path = [graph_path, '/', split_name{6}];
-        % Checks if graph directory for the given day exists already and
-        % creates the day directory and the events directories if it doesnt
-        event_1_path = [day_path, '/event_1/']; 
-        event_3_path = [day_path, '/event_3/'];
-        event_4_path = [day_path, '/event_4/'];
-        event_6_path = [day_path, '/event_6/'];
+        current_day = split_name{6};
+        day_path = [graph_path, '/', current_day];
+        fprintf('Graphing PSTH for %s on %s\n', animal_name, current_day);
+        % Creates the day directory if it does not already exist
         if ~exist(day_path, 'dir')
-            mkdir(graph_path, split_name{6});
-            mkdir(event_1_path);
-            mkdir(event_3_path);
-            mkdir(event_4_path);
-            mkdir(event_6_path);
+            mkdir(graph_path, current_day);
         end
 
-        %% Creating the PSTH graphs       
         load(file);
-
-        % Graphs each neuron
-        for neuron = 1: total_neurons
-            % Graph for event 1
-            figure('visible','off');
-            bar(raster_1(((1:total_bins) + ((neuron-1) * total_bins))));
-            text=['Histogram of Neuron ', num2str(neuron), ' for event 1'];
-            title(text);
-            xlabel('Time (ms)');
-            ylabel('Count');
-            % Pre and post times are converted to seconds (hence why
-            % they are multiplied by 1000)
-            xlim([0 400]);
-            raster_1_name = ['Neuron_', num2str(neuron), '_event_1.png'];
-            saveas(gcf, fullfile(event_1_path, raster_1_name));
-            % Graph for event 3
-            figure('visible','off');
-            bar(raster_3(((1:total_bins) + ((neuron-1) * total_bins))));
-            text=['Histogram of Neuron ', num2str(neuron), ' for event 3'];
-            title(text);
-            xlabel('Time (ms)');
-            ylabel('Count');
-            xlim([0 400]);
-            raster_3_name = ['Neuron_', num2str(neuron), '_event_3.png'];
-            saveas(gcf, fullfile(event_3_path, raster_3_name));
-            % Graph for event 4
-            figure('visible','off');
-            bar(raster_4(((1:total_bins) + ((neuron-1) * total_bins))));
-            text=['Histogram of Neuron ', num2str(neuron), ' for event 4'];
-            title(text);
-            xlabel('Time (ms)');
-            ylabel('Count');
-            xlim([0 400]);
-            raster_4_name = ['Neuron_', num2str(neuron), '_event_4.png'];
-            saveas(gcf, fullfile(event_4_path, raster_4_name));
-            % Graph for event 6
-            figure('visible','off');
-            bar(raster_6(((1:total_bins) + ((neuron-1) * total_bins))));
-            text=['Histogram of Neuron ', num2str(neuron), ' for event 6'];
-            title(text);
-            xlabel('Time (ms)');
-            ylabel('Count');
-            xlim([0 400]);
-            raster_6_name = ['Neuron_', num2str(neuron), '_event_6.png'];
-            saveas(gcf, fullfile(event_6_path, raster_6_name));
-        end                 
+        struct_names = fieldnames(event_struct);
+        for i = 1: length(struct_names)
+            if contains(struct_names{i}, '_raster')
+                % Getting the current event we are graphing (format: event_#_raster)
+                split_raster = strsplit(struct_names{i}, '_');
+                current_event = split_raster{2};
+                % Get the raster matrix
+                raster = getfield(event_struct, struct_names{i});
+                %% Create the event directories
+                event_path = [day_path, '/event_', current_event, '/'];
+                if ~exist(event_path, 'dir')
+                    mkdir(day_path, ['event_', current_event]);
+                end
+                %% Creating the PSTH graphs
+                for neuron = 1: total_neurons
+                    figure('visible','off');
+                    bar(raster(((1:total_bins) + ((neuron-1) * total_bins))));
+                    text=[neuron_map{neuron}, ' Histogram for Event ', current_event ' on ', current_day, ' for ', animal_name];
+                    title(text);
+                    xlabel('Time (ms)');
+                    ylabel('Count');
+                    xlim([0 total_bins]);
+                    filename = [neuron_map{neuron}, '_event_', current_event, '.png'];
+                    saveas(gcf, fullfile(event_path, filename));
+                end
+            end
+        end       
+        fprintf('Finished graphing for %s\n', current_day);
     end
     toc;
 end
