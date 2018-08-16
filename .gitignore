@@ -4,5 +4,7 @@
 *.mat
 *.fig
 *.png
+*.csv
 Animals/*
 .vscode/*
+NeuroToolbox/*
