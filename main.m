@@ -4,7 +4,7 @@ function [] = main()
     bin_size = 0.020;
     total_trials = 100;
     total_events = 4;
-    pre_time = 0;
+    pre_time = 0.1;
     post_time = 0.2;
     % Requires for all events to be in array. IF empty it will skip all events
     wanted_events = [1, 3, 4, 6];
@@ -24,6 +24,17 @@ function [] = main()
     spreadsheet_name = 'unit_20ms_spreadsheet.csv';
     append_spreadsheet = false;
 
+    %% Receptive Field Analysis
+    % Determines threshold equation
+    % Current choices: std (standard deviation) or ci (confidence interval)
+    threshold_type = 'ci';
+    % std scale: determines number of stds
+    % ci scale: 1 = 90%, 2= 95%, 3=99%
+    threshold_scale = 3;
+    % sig_response determines what type of response is a significant response to an event
+    % 1 = at least 1 greater than threshold
+    sig_response = 1;
+
     
     % Get the directory with all animals and their respective .plx files
     original_path = uigetdir(pwd);
@@ -40,11 +51,11 @@ function [] = main()
                 continue;
             elseif isfolder(animal_path)
                 %% Run if you want to parse .plx or comment out to skip
-                try
-                    parsed_path = parser(animal_path, animal_name, total_trials, total_events);
-                catch
-                    failed{end+1} = animal_list(animal).name;
-                end
+                % try
+                %     parsed_path = parser(animal_path, animal_name, total_trials, total_events);
+                % catch
+                %     failed{end+1} = animal_list(animal).name;
+                % end
                 %% Use the code commented out below to skip parsing
                 parsed_path = [animal_path, '/parsed_plx'];
 
@@ -58,6 +69,7 @@ function [] = main()
                 end
                 %% Use code commeneted out below to skip PSTH calculations
                 psth_path = [parsed_path, '/psth'];
+                receptive_field_analysis(psth_path, animal_name, pre_time, post_time, bin_size, total_bins, threshold_type, threshold_scale);
 
                 %% Run if you want to graph all of the PSTHs or comment it out to skip
                 % try
@@ -67,8 +79,8 @@ function [] = main()
                 % end
 
                 %% Run for bootstrapping
-                classified_path = crude_bootstrapper(psth_path, animal_name, boot_iterations, bin_size, pre_time, ...
-                    post_time, wanted_events, wanted_neurons, unit_classification);
+                % classified_path = crude_bootstrapper(psth_path, animal_name, boot_iterations, bin_size, pre_time, ...
+                %     post_time, wanted_events, wanted_neurons, unit_classification);
 
                 %% To skip bootstrapping
                 classified_path = [psth_path, '/classifier'];
