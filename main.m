@@ -5,7 +5,7 @@ function [] = main()
     total_trials = 100;
     total_events = 4;
     pre_time = 0.1;
-    post_time = 0.2;
+    post_time = 0.3;
     % Requires for all events to be in array. IF empty it will skip all events
     wanted_events = [1, 3, 4, 6];
     % If wanted_neurons is left empty, it will do all neurons
@@ -25,15 +25,14 @@ function [] = main()
     append_spreadsheet = false;
 
     %% Receptive Field Analysis
-    % Determines threshold equation
-    % Current choices: std (standard deviation) or ci (confidence interval)
-    threshold_type = 'ci';
-    % std scale: determines number of stds
-    % ci scale: 1 = 90%, 2= 95%, 3=99%
+    % threshold_scale determines how the threshold is scaled
+    % avg background activity + threshold_scale * standard deviation(background activity)
     threshold_scale = 3;
-    % sig_response determines what type of response is a significant response to an event
+    % sig_check determines the significance check used to determine if the response was significant
     % 1 = at least 1 greater than threshold
-    sig_response = 1;
+    sig_check = 3;
+    % sig_bins determines how many bins are needed for conditions 2 and 3 for of sig_check
+    sig_bins = 3;
 
     
     % Get the directory with all animals and their respective .plx files
@@ -69,7 +68,8 @@ function [] = main()
                 end
                 %% Use code commeneted out below to skip PSTH calculations
                 psth_path = [parsed_path, '/psth'];
-                receptive_field_analysis(psth_path, animal_name, pre_time, post_time, bin_size, total_bins, threshold_type, threshold_scale);
+                receptive_field_analysis(psth_path, animal_name, pre_time, post_time, bin_size, total_bins, ...
+                    threshold_scale, sig_check, sig_bins);
 
                 %% Run if you want to graph all of the PSTHs or comment it out to skip
                 % try

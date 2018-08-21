@@ -62,10 +62,23 @@ function [psth_path] = format_PSTH(parsed_path, animal_name, total_bins, bin_siz
                 event_struct.all_events = [event_struct.all_events; event_strings{i}, {events(events == wanted_events(i), 2)}];
             end
 
-            % Creates the PSTH 
+            %% Creates the PSTH 
             event_struct.relative_response = event_spike_times(neuron_map(:,2), event_struct.all_events(:,2), ...
                 total_trials, total_bins, bin_size, pre_time, post_time);
             event_struct.event_count = tabulate(events(:,1));
+
+            %% Creates pre and post PSTH for receptive field analysis
+            if pre_time ~= 0
+                %% Create PSTH for recfield analysis
+                % The PSTHs are transposed since numel iterates through the rows first, not the columns
+                event_struct.pre_time_activity = (event_spike_times(neuron_map(:,2), event_struct.all_events(:,2), ...
+                    total_trials, total_bins, bin_size, pre_time, 0))';
+                event_struct.post_time_activity = (event_spike_times(neuron_map(:,2), event_struct.all_events(:,2), ...
+                    total_trials, total_bins, bin_size, 0, post_time))';
+            end
+
+
+
             try
                 events_array = event_struct.all_events(:,2);
                 event_count = 0;
