@@ -1,11 +1,11 @@
 function [] = main()
     start_time = tic;
     %% Initialize global variables
-    bin_size = 0.020;
+    bin_size = 0.002;
     total_trials = 100;
     total_events = 4;
-    pre_time = 0.1;
-    post_time = 0.3;
+    pre_time = 0.2;
+    post_time = 0.2;
     % Requires for all events to be in array. IF empty it will skip all events
     wanted_events = [1, 3, 4, 6];
     % If wanted_neurons is left empty, it will do all neurons
@@ -23,16 +23,27 @@ function [] = main()
     boot_iterations = 5;
     spreadsheet_name = 'unit_20ms_spreadsheet.csv';
     append_spreadsheet = false;
+    % Sets the coefficents used for smoothing the PSTHs for each neuron
+    %TODO determine to use filter or smooth function
+    % filter parameters
+    n = 6;
+    moving_coeff = ones(n, 1) / n;
+    amplitude_coeff = 1;
+    % smooth parameters
+    span = 3;
 
     %% Receptive Field Analysis
     % threshold_scale determines how the threshold is scaled
     % avg background activity + threshold_scale * standard deviation(background activity)
-    threshold_scale = 3;
+    threshold_scale = 1.65;
     % sig_check determines the significance check used to determine if the response was significant
-    % 1 = at least 1 greater than threshold
-    sig_check = 3;
+    % 1 = at least 1 greater than threshold; 2 = at least x bins have a firing rate higher than threshold;
+    % 3 = at least x bins have a firing rate higher than threshold; 4 = two-sample t test on pre and post psth and 3;
+    % 5 =  unpaired two-sample Kolmogorov-Smirnov test on pre and post psth and 3
+    sig_check = 4;
     % sig_bins determines how many bins are needed for conditions 2 and 3 for of sig_check
-    sig_bins = 3;
+    sig_bins = 5;
+    % Sets the filter window to desired length
 
     
     % Get the directory with all animals and their respective .plx files
@@ -68,8 +79,8 @@ function [] = main()
                 end
                 %% Use code commeneted out below to skip PSTH calculations
                 psth_path = [parsed_path, '/psth'];
-                receptive_field_analysis(psth_path, animal_name, pre_time, post_time, bin_size, total_bins, ...
-                    threshold_scale, sig_check, sig_bins);
+                % receptive_field_analysis(psth_path, animal_name, pre_time, post_time, bin_size, total_bins, ...
+                %     threshold_scale, sig_check, sig_bins, moving_coeff, amplitude_coeff);
 
                 %% Run if you want to graph all of the PSTHs or comment it out to skip
                 % try
