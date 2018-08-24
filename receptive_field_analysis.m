@@ -1,5 +1,5 @@
 function [] = receptive_field_analysis(psth_path, animal_name, pre_time, post_time, bin_size, total_bins, ...
-        threshold_scale, sig_check, sig_bins, moving_coeff, amplitude_coeff)
+        threshold_scale, sig_check, sig_bins, moving_coeff, amplitude_coeff, span, wanted_events)
     tic
 
     if pre_time <= 0.050
@@ -35,7 +35,6 @@ function [] = receptive_field_analysis(psth_path, animal_name, pre_time, post_ti
 
         %% Create the struct fields for the receptive field results
         channel_names = neuron_map(:,1);
-        % disp(channel_names);
         for name = 1:length(channel_names)
             neuron_name = channel_names{name};
             receptive_analysis.([neuron_name, '_first_latency']) = [];
@@ -44,13 +43,14 @@ function [] = receptive_field_analysis(psth_path, animal_name, pre_time, post_ti
             receptive_analysis.([neuron_name, '_peak_response']) = [];
             receptive_analysis.([neuron_name, '_response_magnitude']) = [];
             receptive_analysis.([neuron_name, '_background_rate']) = [];
-            receptive_analysis.([neuron_name, '_neuron_info']) = [];
         end
-        %% Calculates background firing rate before event
+
+        %% Set variables used for pre window analysis
         pre_time_bins = (length([-abs(pre_time): bin_size: 0])) - 1;
         pre_avg_background_firing = [];
-        pre_thresholds = [];
+        thresholds = [];
         pre_neurons = [];
+        smoothed_pre_neurons = [];
         %% Pre time PSTH calculation
         for i = 1: numel(event_struct.pre_time_activity)
             % If the index is at the end of a neuron x bin subsection the the matrix
@@ -59,28 +59,37 @@ function [] = receptive_field_analysis(psth_path, animal_name, pre_time, post_ti
                 % Creates PSTH for the current neuron only
                 neuron = event_struct.pre_time_activity((i - pre_time_bins + 1 ): i);
                 pre_neurons = [pre_neurons; {neuron}];
-                avg_firing_rate = mean(neuron)/pre_time;
-                pre_avg_background_firing = [pre_avg_background_firing; avg_firing_rate];
                 %TODO call smooth or filter?
                 smoothed_neuron = smooth(neuron, span);
-                %% Set threshold
-                avg_threshold = avg_firing_rate + (threshold_scale * (std(neuron) / pre_time));
-                pre_thresholds = [pre_thresholds; avg_threshold];
+                smoothed_pre_neurons = [smoothed_pre_neurons, {smoothed_neuron}];
+                smoothed_avg_background = mean(smoothed_neuron);
+                pre_avg_background_firing = [pre_avg_background_firing; smoothed_avg_background];
+                smoothed_std_background = std(smoothed_neuron);
+                smoothed_threshold = smoothed_avg_background + (threshold_scale * smoothed_std_background);
+                thresholds = [thresholds; smoothed_threshold];
             end
         end
 
+        post_neurons = [];
         %% Post time analysis
         post_time_bins = (length([0:bin_size:post_time])) - 1;
-        post_avg_background_firing = [];
-        significant = [];
+        first_latency = {};
+        last_latency = {};
+        background_rate = {};
+        peak_response = {};
+        response_magnitude = {};
+        peak_latency = {};
+        % Creates sorted event labels
+        sorted_events = sort(events(:,1));
         for i = 1: numel(event_struct.post_time_activity)
+            if i == 1
+                event_label = sorted_events(1);
+            end
             %% Find the receptive field variables if significant response
             if mod(i, post_time_bins) == 0
                 % Grabs PSTH of the current neuron only
                 neuron = event_struct.post_time_activity((i - post_time_bins + 1 ): i);
-                neuron_firing_rate = arrayfun(@(x) (x/bin_size), neuron);
-                avg_firing_rate = mean(neuron)/post_time;
-                post_avg_background_firing = [post_avg_background_firing; avg_firing_rate];
+                post_neurons = [post_neurons; {neuron}];
                 % Smooths the psth for the given neuron
                 %TODO call smooth or filter?
                 % smoothed_neuron = filter(moving_coeff, amplitude_coeff, neuron);
@@ -96,8 +105,8 @@ function [] = receptive_field_analysis(psth_path, animal_name, pre_time, post_ti
                 end
                 %% Determine if given neuron has a significant response 
                 sig_response = false;
-                above_threshold_indeces = find(neuron_firing_rate > pre_thresholds(length(post_avg_background_firing)));
-                above_threshold = neuron(above_threshold_indeces);
+                above_threshold_indeces = find(smoothed_neuron > thresholds(length(post_neurons)));
+                above_threshold = smoothed_neuron(above_threshold_indeces);
                 if sig_check == 1
                     %% checks if the average firing rate is greater than the pre_time average firing rate
                     if length(above_threshold) > 0
@@ -110,32 +119,22 @@ function [] = receptive_field_analysis(psth_path, animal_name, pre_time, post_ti
                     end
                 elseif sig_check == 3
                     %% checks to see if at least x consecutive bins are above threshold
-                    consecutive_bins = 0;
-                    if length(above_threshold_indeces) >= sig_bins
-                        for bin = 1:(length(above_threshold) - 1)
-                            if above_threshold_indeces(bin + 1) - above_threshold_indeces(bin) == 1
-                                consecutive_bins = consecutive_bins + 1;
-                                if consecutive_bins >= sig_bins
-                                    sig_response = true;
-                                    break;
-                                end
-                            else
-                                consecutive_bins = 0;
-                            end
-                        end
+                    if is_consecutive(above_threshold_indeces, sig_bins)
+                        sig_response = true;
                     end
+                % TODO verify if t test and ks test should use smoothed or non smoothed
                 elseif sig_check == 4
-                    %TODO verify that ttest was also supposed to have at least some activity above threshold
-                    reject_null = ttest2(neuron, pre_neurons{length(post_avg_background_firing)});
+                    %TODO verify that ttest should use consecutive bins
+                    reject_null = ttest2(smoothed_neuron, smoothed_pre_neurons{length(post_neurons)});
                     if isnan(reject_null)
                         reject_null = false;
                     end
-                    if reject_null && (length(above_threshold) >= sig_bins)
+                    if reject_null && is_consecutive(above_threshold_indeces, sig_bins)
                         sig_response = true;
                     end
                 elseif sig_check == 5
-                    %TODO verify that ks test was also supposed to have at least some activity above threshold
-                    reject_null =  kstest2(neuron, pre_neurons{length(post_avg_background_firing)});
+                    %TODO verify that ks test should use consecutive bins
+                    reject_null =  kstest2(smoothed_neuron, smoothed_pre_neurons{length(post_neurons)});
                     if isnan(reject_null)
                         reject_null = false;
                     end
@@ -150,19 +149,40 @@ function [] = receptive_field_analysis(psth_path, animal_name, pre_time, post_ti
                     neuron_index = mod((i/post_time_bins), total_neurons);
                     if neuron_index == 0
                         neuron_index = total_neurons;
+                        event_index = i / (total_neurons * post_time_bins);
+                        event_label = sorted_events(event_index);
                     end
                     neuron_name = channel_names{neuron_index};
                     [max_peak, max_index] = max(above_threshold);
-                    receptive_analysis.([neuron_name, '_first_latency']) = [receptive_analysis.([neuron_name, '_first_latency']); (above_threshold_indeces(1) * bin_size)];
-                    receptive_analysis.([neuron_name, '_last_latency']) = [receptive_analysis.([neuron_name, '_last_latency']); (above_threshold_indeces(end) * bin_size)];
-                    receptive_analysis.([neuron_name, '_background_rate']) = [receptive_analysis.([neuron_name, '_background_rate']); pre_avg_background_firing(length(post_avg_background_firing))];
-                    receptive_analysis.([neuron_name, '_peak_response']) = [receptive_analysis.([neuron_name, '_peak_response']); max_peak];
-                    receptive_analysis.([neuron_name, '_response_magnitude']) = [receptive_analysis.([neuron_name, '_response_magnitude']); sum(above_threshold)];
-                    receptive_analysis.([neuron_name, '_peak_latency']) = [receptive_analysis.([neuron_name, '_peak_latency']); (above_threshold_indeces(max_index) * bin_size)]; 
-                    receptive_analysis.([neuron_name, '_neuron_info']) = [receptive_analysis.([neuron_name, '_neuron_info']); [neuron; neuron_firing_rate]];
+                    % if event_label
+                    first_latency = [first_latency; {neuron_name}, {event_label}, {(above_threshold_indeces(1) * bin_size)}];
+                    last_latency =  [last_latency; {neuron_name}, {event_label}, {(above_threshold_indeces(end) * bin_size)}];
+                    background_rate = [background_rate; {neuron_name}, {event_label}, {pre_avg_background_firing(length(post_neurons))}];
+                    peak_response = [peak_response; {neuron_name}, {event_label}, {pre_avg_background_firing(length(post_neurons))}];
+                    response_magnitude = [response_magnitude; {neuron_name}, {event_label}, {max_peak}];
+                    peak_latency = [peak_latency; {neuron_name}, {event_label}, {(above_threshold_indeces(max_index) * bin_size)}];
                 end
             end
+        end % End of post bin analysis
+
+        for j = 1:total_neurons
+            neuron_first_latency = first_latency(strcmp(first_latency(:,1), channel_names{j}), :);
+            neuron_last_latency = last_latency(strcmp(last_latency(:,1), channel_names{j}), :);
+            neuron_background_rate = background_rate(strcmp(background_rate(:,1), channel_names{j}), :);
+            neuron_peak_response = peak_response(strcmp(peak_response(:,1), channel_names{j}), :);
+            neuron_response_magnitude = response_magnitude(strcmp(response_magnitude(:,1), channel_names{j}), :);
+            neuron_peak_latency = peak_latency(strcmp(peak_latency(:,1), channel_names{j}), :);
+            for event = 1:length(wanted_events)
+                % calculate mean example: mean(cell2mat(receptive_analysis.sig001a_first_latency{1,2}))
+                receptive_analysis.([channel_names{j}, '_first_latency']) = [receptive_analysis.([channel_names{j}, '_first_latency']); event_strings{event}, {neuron_first_latency(cell2mat(neuron_first_latency(:,2)) == wanted_events(event), 3)}];
+                receptive_analysis.([channel_names{j}, '_last_latency']) = [receptive_analysis.([channel_names{j}, '_last_latency']); event_strings{event}, {neuron_last_latency(cell2mat(neuron_last_latency(:,2)) == wanted_events(event), 3)}];
+                receptive_analysis.([channel_names{j}, '_background_rate']) = [receptive_analysis.([channel_names{j}, '_background_rate']); event_strings{event}, {neuron_background_rate(cell2mat(neuron_background_rate(:,2)) == wanted_events(event), 3)}];
+                receptive_analysis.([channel_names{j}, '_peak_response']) = [receptive_analysis.([channel_names{j}, '_peak_response']); event_strings{event}, {neuron_peak_response(cell2mat(neuron_peak_response(:,2)) == wanted_events(event), 3)}];
+                receptive_analysis.([channel_names{j}, '_response_magnitude']) = [receptive_analysis.([channel_names{j}, '_response_magnitude']); event_strings{event}, {neuron_response_magnitude(cell2mat(neuron_response_magnitude(:,2)) == wanted_events(event), 3)}];
+                receptive_analysis.([channel_names{j}, '_peak_latency']) = [receptive_analysis.([channel_names{j}, '_peak_latency']); event_strings{event}, {neuron_peak_latency(cell2mat(neuron_peak_latency(:,2)) == wanted_events(event), 3)}];
+            end
         end
+
 
         %% Remove empty fields
         struct_names = fieldnames(receptive_analysis);
@@ -172,6 +192,6 @@ function [] = receptive_field_analysis(psth_path, animal_name, pre_time, post_ti
         rf_filename = strrep(filename, 'PSTH', 'REC');
         rf_filename = strrep(rf_filename, 'format', 'FIELD');
         matfile = fullfile(rf_path, [rf_filename, '.mat']);
-        save(matfile, 'pre_avg_background_firing', 'pre_thresholds', 'post_avg_background_firing', 'neuron', 'neuron_firing_rate', 'receptive_analysis', 'above_threshold', 'smoothed_neuron');
+        save(matfile, 'thresholds', 'neuron', 'receptive_analysis', 'above_threshold', 'smoothed_neuron', 'first_latency');
     end
 end

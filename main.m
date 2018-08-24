@@ -79,8 +79,8 @@ function [] = main()
                 end
                 %% Use code commeneted out below to skip PSTH calculations
                 psth_path = [parsed_path, '/psth'];
-                % receptive_field_analysis(psth_path, animal_name, pre_time, post_time, bin_size, total_bins, ...
-                %     threshold_scale, sig_check, sig_bins, moving_coeff, amplitude_coeff);
+                receptive_field_analysis(psth_path, animal_name, pre_time, post_time, bin_size, total_bins, ...
+                    threshold_scale, sig_check, sig_bins, moving_coeff, amplitude_coeff, span, wanted_events);
 
                 %% Run if you want to graph all of the PSTHs or comment it out to skip
                 % try
