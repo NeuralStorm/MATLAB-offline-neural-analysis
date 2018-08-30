@@ -60,6 +60,11 @@ function [psth_path] = format_PSTH(parsed_path, animal_name, total_bins, bin_siz
             for i = 1: length(wanted_events)
                 %% Slices out the desired trials from the events matrix (Inclusive range)
                 event_struct.all_events = [event_struct.all_events; event_strings{i}, {events(events == wanted_events(i), 2)}];
+                event_struct.([event_strings{i}, '_normalized_raster']) = [];
+                event_struct.([event_strings{i}, '_pre_time_activity']) = [];
+                event_struct.([event_strings{i}, '_post_time_activity']) = [];
+                event_struct.([event_strings{i}, '_norm_pre_time_activity']) = [];
+                event_struct.([event_strings{i}, '_norm_post_time_activity']) = [];
             end
 
             %% Creates the PSTH 
@@ -67,31 +72,36 @@ function [psth_path] = format_PSTH(parsed_path, animal_name, total_bins, bin_siz
                 total_trials, total_bins, bin_size, pre_time, post_time);
             event_struct.event_count = tabulate(events(:,1));
 
-            %% Creates pre and post PSTH for receptive field analysis
-            if pre_time ~= 0
-                %% Create PSTH for recfield analysis
-                % The PSTHs are transposed since numel iterates through the rows first, not the columns
-                event_struct.pre_time_activity = (event_spike_times(neuron_map(:,2), event_struct.all_events(:,2), ...
-                    total_trials, total_bins, bin_size, pre_time, 0))';
-                event_struct.post_time_activity = (event_spike_times(neuron_map(:,2), event_struct.all_events(:,2), ...
-                    total_trials, total_bins, bin_size, 0, post_time))';
-            end
-
-
-
             try
                 events_array = event_struct.all_events(:,2);
                 event_count = 0;
                 for event = 1: length(events_array)
-                    event_struct.([event_strings{event}, '_raster']) = ...
-                    sum(event_struct.relative_response((event_count + 1):1:(event_count + length(events_array{event})),:),1);
+                    % Normalize rasters by the number of events
+                    event_struct.([event_strings{event}, '_normalized_raster']) = ...
+                        sum(event_struct.relative_response((event_count + 1):1:(event_count + length(events_array{event})),:),1) ...
+                        /length(events_array{event});
                     % Updates event_count to scale sum properly for next row
                     event_count = event_count + length(events_array{event});
+                    %% Breaks down the PSTH into pre and post windows for receptive field analysis
+                    if pre_time ~= 0
+                        pre_time_bins = (length([-abs(pre_time): bin_size: 0])) - 1;
+                        post_time_bins = (length([0:bin_size:post_time])) - 1;
+                        normalized_raster = getfield(event_struct, [event_strings{event}, '_normalized_raster']);
+                        pre = pre_time_bins;
+                        post = pre_time_bins + post_time_bins;  
+                        while pre < length(normalized_raster)
+                            event_struct.([event_strings{event}, '_norm_pre_time_activity']) = [event_struct.([event_strings{event}, '_norm_pre_time_activity']); normalized_raster((pre - pre_time_bins + 1 ): pre)];
+                            event_struct.([event_strings{event}, '_norm_post_time_activity']) = [event_struct.([event_strings{event}, '_norm_post_time_activity']); normalized_raster((post - post_time_bins + 1): post)];
+                            % Update pre and post counters
+                            pre = pre + post_time_bins + pre_time_bins;
+                            post = post + pre_time_bins + pre_time_bins;
+                        end
+                    end
                 end
             catch ME
                 warning('Error: %s\n', ME.message);
             end
-
+            
             fprintf('Finished PSTH for %s\n', current_day);
             %% Saving the file
             filename = ['PSTH.format.', file_name, '.mat'];
