@@ -1,11 +1,8 @@
 function [] = main()
     start_time = tic;
     %% Initialize global variables
-    bin_size = 0.002;
-    total_trials = 100;
-    total_events = 4;
-    pre_time = 0.2;
-    post_time = 0.2;
+    bin_size = 0.002; total_trials = 100; total_events = 4; pre_time = 0.2; post_time = 0.2;
+    total_bins = (length([-abs(pre_time):bin_size:abs(post_time)]) - 1);
     % Requires for all events to be in array. IF empty it will skip all events
     wanted_events = [1, 3, 4, 6];
     % If wanted_neurons is left empty, it will do all neurons
@@ -14,8 +11,6 @@ function [] = main()
     trial_range = [1, 300];
     % Give exact directory name of the animals you want skipped
     ignored_animals = [];
-    total_bins = (length([-abs(pre_time):bin_size:abs(post_time)]) - 1);
-    failed = {};
     % Boolean to control classification for population or single neurons
     % Default is set to single neuron
     unit_classification = true;
@@ -23,25 +18,20 @@ function [] = main()
     boot_iterations = 5;
     spreadsheet_name = 'unit_20ms_spreadsheet.csv';
     append_spreadsheet = false;
-    % Sets the coefficents used for smoothing the PSTHs for each neuron
-    %TODO determine to use filter or smooth function
-    % filter parameters
-    n = 6;
-    moving_coeff = ones(n, 1) / n;
-    amplitude_coeff = 1;
-    % smooth parameters
-    span = 3;
 
     %% Receptive Field Analysis
+    rf_analysis = true;
+    % Sets the coefficents used for smoothing the PSTHs for each neuron
+    %TODO determine to use filter or smooth function
+    %% smooth parameters
+    span = 3;
     % threshold_scale determines how the threshold is scaled
     % avg background activity + threshold_scale * standard deviation(background activity)
     threshold_scale = 1.65;
-    % sig_check determines the significance check used to determine if the response was significant
-    % 1 = at least 1 greater than threshold; 2 = at least x bins have a firing rate higher than threshold;
-    % 3 = at least x bins have a firing rate higher than threshold; 4 = two-sample t test on pre and post psth and 3;
-    % 5 =  unpaired two-sample Kolmogorov-Smirnov test on pre and post psth and 3
-    sig_check = 4;
-    % sig_bins determines how many bins are needed for conditions 2 and 3 for of sig_check
+    % Significant response first checks if there are enough consecutive bins and then applies one of the two tests below
+    % 1 = two-sample t test on pre and post psth; 2 =  unpaired two-sample Kolmogorov-Smirnov test on pre and post psth
+    sig_check = 1;
+    % sig_bins determines how many consecutive bins are needed for significant response
     sig_bins = 5;
     % Sets the filter window to desired length
 
@@ -63,8 +53,6 @@ function [] = main()
                 %% Run if you want to parse .plx or comment out to skip
                 % try
                 %     parsed_path = parser(animal_path, animal_name, total_trials, total_events);
-                % catch
-                %     failed{end+1} = animal_list(animal).name;
                 % end
                 %% Use the code commented out below to skip parsing
                 parsed_path = [animal_path, '/parsed_plx'];
@@ -74,19 +62,22 @@ function [] = main()
                     psth_path = format_PSTH(parsed_path, animal_name, total_bins, bin_size, pre_time, post_time, ...
                         wanted_neurons, wanted_events, trial_range, total_trials);
                     label_neurons(psth_path);
-                catch
-                    failed{end+1} = animal_list(animal).name;
                 end
                 %% Use code commeneted out below to skip PSTH calculations
                 psth_path = [parsed_path, '/psth'];
-                receptive_field_analysis(psth_path, animal_name, pre_time, post_time, bin_size, total_bins, ...
-                    threshold_scale, sig_check, sig_bins, moving_coeff, amplitude_coeff, span, wanted_events);
+
+                %% Use to run receptive field analysis
+                % try
+                    rf_path = receptive_field_analysis(psth_path, animal_name, pre_time, post_time, bin_size, total_bins, ...
+                        threshold_scale, sig_check, sig_bins, span, wanted_events);
+                % end
+
+                %% Use code commeneted out below to skip RF analysis calculations
+                rf_path = [psth_path, '/receptive_field_analysis'];
 
                 %% Run if you want to graph all of the PSTHs or comment it out to skip
                 % try
-                %     graph_PSTH(psth_path, animal_name, total_bins, total_trials, total_events, pre_time, post_time);
-                % catch
-                %     failed{end+1} = animal_list(animal).name;
+                   graph_PSTH(psth_path, animal_name, total_bins, total_trials, total_events, bin_size, pre_time, post_time, rf_analysis, rf_path, span);
                 % end
 
                 %% Run for bootstrapping
