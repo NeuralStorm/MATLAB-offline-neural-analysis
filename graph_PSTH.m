@@ -1,5 +1,5 @@
-function [] = graph_PSTH(psth_path, animal_name, total_bins, total_trials, total_events, ...
-                pre_time, post_time)
+function [] = graph_PSTH(psth_path, animal_name, total_bins, total_trials, total_events, bin_size, ...
+                pre_time, post_time, rf_analysis, rf_path, span)
     %% Graphs each PSTH for every Neuron for every event
     tic;
     % Grabs all the psth formatted files
@@ -12,6 +12,8 @@ function [] = graph_PSTH(psth_path, animal_name, total_bins, total_trials, total
        mkdir(psth_path, 'psth_graphs');
     end
     
+    pre_time_bins = (length([-abs(pre_time): bin_size: 0])) - 1;
+    post_time_bins = (length([0:bin_size:post_time])) - 1;
     %% Iterates through all the psth formated files to create graphs for each neuron
     for h = 1: length(psth_files)
         %% Creating all nec directories and paths to save graphs to
@@ -35,7 +37,7 @@ function [] = graph_PSTH(psth_path, animal_name, total_bins, total_trials, total
         load(file);
         struct_names = fieldnames(event_struct);
         for i = 1: length(struct_names)
-            if contains(struct_names{i}, '_raster')
+            if contains(struct_names{i}, '_normalized_raster')
                 % Getting the current event we are graphing (format: event_#_raster)
                 split_raster = strsplit(struct_names{i}, '_');
                 current_event = split_raster{2};
@@ -43,18 +45,53 @@ function [] = graph_PSTH(psth_path, animal_name, total_bins, total_trials, total
                 raster = getfield(event_struct, struct_names{i});
                 %% Create the event directories
                 event_path = [day_path, '/event_', current_event, '/'];
+                event_name = ['event_', current_event];
                 if ~exist(event_path, 'dir')
-                    mkdir(day_path, ['event_', current_event]);
+                    mkdir(day_path, event_name);
                 end
                 %% Creating the PSTH graphs
                 for neuron = 1: total_neurons
-                    figure('visible','off');
-                    bar(raster(((1:total_bins) + ((neuron-1) * total_bins))));
-                    text=[neuron_map{neuron}, ' Histogram for Event ', current_event ' on ', current_day, ' for ', animal_name];
+                    current_neuron = raster(((1:total_bins) + ((neuron-1) * total_bins)));
+                    figure('visible','off');                 
+                    %% Graphs determined threshold from receptive field analysis
+                    if rf_analysis
+                        hold on;
+                        bar(smooth(current_neuron, span));
+                        rf_file = [rf_path, '/', psth_files(h).name];
+                        [rf_path, rf_filename, ~] = fileparts(rf_file);
+                        rf_filename = strrep(rf_filename, 'PSTH', 'REC');
+                        rf_filename = strrep(rf_filename, 'format', 'FIELD');
+                        rf_matfile = fullfile(rf_path, [rf_filename, '.mat']);
+                        load(rf_matfile, 'receptive_analysis');
+                        try
+                            %% Get the receptive field struct fields
+                            event_thresholds = getfield(receptive_analysis, [neuron_map{neuron}, '_threshold']);
+                            event_first = getfield(receptive_analysis, [neuron_map{neuron}, '_first_latency']);
+                            event_last = getfield(receptive_analysis, [neuron_map{neuron}, '_last_latency']);
+                            %% Gets info from cell array
+                            current_threshold = find(strcmp(event_name, event_thresholds(:,1)));
+                            current_threshold = event_thresholds{current_threshold, 2};
+                            current_first = find(strcmp(event_name, event_first(:,1)));
+                            current_first = (event_first{current_first, 2}/bin_size) + pre_time_bins;
+                            current_last = find(strcmp(event_name, event_last(:,1)));
+                            current_last = (event_last{current_last, 2}/bin_size) + pre_time_bins;
+                            %% Plots elements from rec field analysis
+                            plot(xlim,[current_threshold current_threshold], 'r', 'LineWidth', 0.75);
+                            line([current_first current_first], ylim, 'Color', 'red', 'LineWidth', 0.75);
+                            line([current_last current_last], ylim, 'Color', 'red', 'LineWidth', 0.75);
+                            line([pre_time_bins pre_time_bins], ylim, 'Color', 'black', 'LineWidth', 0.75);
+                        % catch ME
+                        %     warning('Error: %s\n', ME.message);
+                        end
+                    else
+                        bar(current_neuron,'BarWidth', 1);
+                    end
+                    x_values = get(gca, 'XTick');
+                    set(gca, 'XTick', x_values, 'XTickLabel', ((x_values*2)/1000) - pre_time);
+                    text=[neuron_map{neuron}, ' Normalized Histogram for Event ', current_event ' on ', current_day, ' for ', animal_name];
                     title(text);
-                    xlabel('Time (ms)');
+                    xlabel('Time (s)');
                     ylabel('Count');
-                    xlim([0 total_bins]);
                     filename = [neuron_map{neuron}, '_event_', current_event, '.png'];
                     saveas(gcf, fullfile(event_path, filename));
                 end
