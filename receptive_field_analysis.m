@@ -39,11 +39,18 @@ function [rf_path] = receptive_field_analysis(psth_path, animal_name, pre_time, 
             neuron_name = channel_names{name};
             receptive_analysis.([neuron_name, '_first_latency']) = [];
             receptive_analysis.([neuron_name, '_last_latency']) = [];
+            receptive_analysis.([neuron_name, '_duration']) = [];
             receptive_analysis.([neuron_name, '_peak_latency']) = [];
             receptive_analysis.([neuron_name, '_peak_response']) = [];
             receptive_analysis.([neuron_name, '_response_magnitude']) = [];
+            receptive_analysis.([neuron_name, '_corrected_peak_response']) = [];
+            receptive_analysis.([neuron_name, '_corrected_response_magnitude']) = [];
+            receptive_analysis.([neuron_name, '_normalized_response_magnitude']) = [];
+            receptive_analysis.([neuron_name, '_principal_event']) = [];
             receptive_analysis.([neuron_name, '_background_rate']) = [];
+            receptive_analysis.([neuron_name, '_background_std']) = [];
             receptive_analysis.([neuron_name, '_threshold']) = [];
+            receptive_analysis.([neuron_name, '_total_significant_events']) = [];
         end
 
         %% Set variables used for pre window analysis
@@ -53,9 +60,11 @@ function [rf_path] = receptive_field_analysis(psth_path, animal_name, pre_time, 
         pre_neurons = [];
         smoothed_pre_neurons = [];
         for event = 1:length(wanted_events)
-            norm_pre_window = event_struct.([event_strings{event}, '_norm_pre_time_activity']);
-            norm_post_window = event_struct.([event_strings{event}, '_norm_post_time_activity']);
+            current_event = event_strings{event};
+            norm_pre_window = event_struct.([current_event, '_norm_pre_time_activity']);
+            norm_post_window = event_struct.([current_event, '_norm_post_time_activity']);
             for neuron = 1:total_neurons
+                neuron_name = channel_names{neuron};
                 %% Deal with pre window first
                 smoothed_pre_window = smooth(norm_pre_window(neuron, :), span);
                 smoothed_avg_background = mean(smoothed_pre_window);
@@ -97,21 +106,44 @@ function [rf_path] = receptive_field_analysis(psth_path, animal_name, pre_time, 
                     peak = max(above_threshold);
                     peak_index = find(peak == response);
                     background_rate = mean(norm_pre_window(neuron, :));
-                    receptive_analysis.([channel_names{neuron}, '_first_latency']) = [receptive_analysis.([channel_names{neuron}, '_first_latency']); event_strings{event}, {(smooth_above_threshold_indeces(1)) * bin_size}];
-                    receptive_analysis.([channel_names{neuron}, '_last_latency']) = [receptive_analysis.([channel_names{neuron}, '_last_latency']); event_strings{event}, {(smooth_above_threshold_indeces(end)) * bin_size}];
-                    receptive_analysis.([channel_names{neuron}, '_background_rate']) = [receptive_analysis.([channel_names{neuron}, '_background_rate']); event_strings{event}, {background_rate}];
-                    receptive_analysis.([channel_names{neuron}, '_threshold']) = [receptive_analysis.([channel_names{neuron}, '_threshold']); event_strings{event}, {smoothed_threshold}];
-                    receptive_analysis.([channel_names{neuron}, '_peak_response']) = [receptive_analysis.([channel_names{neuron}, '_peak_response']); event_strings{event}, {peak - background_rate}];
-                    receptive_analysis.([channel_names{neuron}, '_peak_latency']) = [receptive_analysis.([channel_names{neuron}, '_peak_latency']); event_strings{event}, {peak_index * bin_size}];
-                    receptive_analysis.([channel_names{neuron}, '_response_magnitude']) = [receptive_analysis.([channel_names{neuron}, '_response_magnitude']); event_strings{event}, {sum(response(smooth_above_threshold_indeces(1):smooth_above_threshold_indeces(end)))}];
+                    response_magnitude = sum(response(smooth_above_threshold_indeces(1):smooth_above_threshold_indeces(end)));
+                    first_latency = (smooth_above_threshold_indeces(1)) * bin_size;
+                    last_latency = (smooth_above_threshold_indeces(end)) * bin_size;
+                    receptive_analysis.([neuron_name, '_first_latency']) = [receptive_analysis.([neuron_name, '_first_latency']); current_event, {first_latency}];
+                    receptive_analysis.([neuron_name, '_last_latency']) = [receptive_analysis.([neuron_name, '_last_latency']); current_event, {last_latency}];
+                    receptive_analysis.([neuron_name, '_duration']) = [receptive_analysis.([neuron_name, '_duration']); current_event, {last_latency - first_latency}];
+                    receptive_analysis.([neuron_name, '_background_rate']) = [receptive_analysis.([neuron_name, '_background_rate']); current_event, {background_rate}];
+                    receptive_analysis.([neuron_name, '_background_std']) = [receptive_analysis.([neuron_name, '_background_std']); current_event, {std(norm_pre_window(neuron,:))}];
+                    receptive_analysis.([neuron_name, '_threshold']) = [receptive_analysis.([neuron_name, '_threshold']); current_event, {smoothed_threshold}];
+                    receptive_analysis.([neuron_name, '_peak_response']) = [receptive_analysis.([neuron_name, '_peak_response']); current_event, {peak}];
+                    receptive_analysis.([neuron_name, '_corrected_peak_response']) = [receptive_analysis.([neuron_name, '_corrected_peak_response']); current_event, {peak - background_rate}];
+                    receptive_analysis.([neuron_name, '_peak_latency']) = [receptive_analysis.([neuron_name, '_peak_latency']); current_event, {peak_index * bin_size}];
+                    receptive_analysis.([neuron_name, '_response_magnitude']) = [receptive_analysis.([neuron_name, '_response_magnitude']); current_event, {response_magnitude}];
+                    receptive_analysis.([neuron_name, '_corrected_response_magnitude']) = [receptive_analysis.([neuron_name, '_corrected_response_magnitude']); current_event, {response_magnitude - background_rate}];
                 end
+            end
+        end
+        %% Normalize response magnitude and find primary event for each neuron
+        % Normalizes response magnitude on response magnitude, not response magnitude - background rate
+        struct_names = fieldnames(receptive_analysis);
+        for field = 1:length(struct_names)
+            field_name = strsplit(struct_names{field}, '_');
+            neuron_name = field_name{1};
+            if contains(struct_names{field}, [neuron_name, '_response_magnitude']) && ~isempty(receptive_analysis.(struct_names{field}))
+                % seperated_file_name = strsplit(file_name, '.');
+                magnitude = getfield(receptive_analysis, struct_names{field});
+                receptive_analysis.([neuron_name, '_total_significant_events']) = length(magnitude(:,1));
+                [max_magnitude, max_magnitude_index] = max([magnitude{:,2}]);
+                norm_magnitude = num2cell([[magnitude{:,2}] ./ max_magnitude]');
+                receptive_analysis.([neuron_name, '_normalized_response_magnitude']) = horzcat(magnitude(:,1), norm_magnitude);
+                receptive_analysis.([neuron_name, '_principal_event']) = magnitude(max_magnitude_index, 1);
             end
         end
 
         %% Remove empty fields
-        struct_names = fieldnames(receptive_analysis);
         empty = cellfun(@(x) isempty(receptive_analysis.(x)), struct_names);
         receptive_analysis = rmfield(receptive_analysis, struct_names(empty));
+
         %% Saving receptive field analysis
         rf_filename = strrep(filename, 'PSTH', 'REC');
         rf_filename = strrep(rf_filename, 'format', 'FIELD');
