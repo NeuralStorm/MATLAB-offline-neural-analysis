@@ -148,6 +148,6 @@ function [rf_path] = receptive_field_analysis(psth_path, animal_name, pre_time, 
         rf_filename = strrep(filename, 'PSTH', 'REC');
         rf_filename = strrep(rf_filename, 'format', 'FIELD');
         matfile = fullfile(rf_path, [rf_filename, '.mat']);
-        save(matfile, 'receptive_analysis');
+        save(matfile, 'receptive_analysis', 'labeled_neurons');
     end
 end
