@@ -26,12 +26,12 @@ function [] = label_neurons(animal_path, psth_path)
         for region = 1:length(unique_regions)
             % Seperate out specific region index in table. IE: only indeces for left neurons in the .csv
             region_name_indeces = strcmpi(labels.(2), unique_regions{region});
+            region_names = labels.(2)(region_name_indeces);
+            region_values = num2cell(labels.(3)(region_name_indeces));
             channels = labels.(1)(region_name_indeces);
             % Find the channels in the neuron_map that actually have data
-            [shared_channels, map_indeces, channels_indeces] = intersect(neuron_map(:,1), channels);
-            regions = labels.(2)(channels_indeces);
-            region_values = num2cell(labels.(3)(channels_indeces));
-            labeled_neurons.(unique_regions{region}) = horzcat(shared_channels, regions, region_values, neuron_map(map_indeces,2));
+            [shared_channels, map_indeces, ~] = intersect(neuron_map(:,1), channels);
+            labeled_neurons.(unique_regions{region}) = horzcat(shared_channels, region_names(1:length(shared_channels)), region_values(1:length(shared_channels)), neuron_map(map_indeces,2));
         end
 
         save(file, 'event_struct', 'total_neurons', 'neuron_map', 'events', 'event_strings', 'labeled_neurons');
