@@ -1,4 +1,4 @@
-function [] = label_neurons(animal_path, psth_path)
+function [unique_regions] = label_neurons(animal_path, psth_path)
     %% Grabs all the psth formatted files
     psth_mat_path = strcat(psth_path, '/*.mat');
     psth_files = dir(psth_mat_path);
