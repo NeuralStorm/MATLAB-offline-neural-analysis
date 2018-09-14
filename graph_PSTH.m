@@ -50,24 +50,39 @@ function [] = graph_PSTH(psth_path, animal_name, total_bins, total_trials, total
                     mkdir(day_path, event_name);
                 end
                 %% Creating the PSTH graphs
-                for neuron = 1: total_neurons
+                for neuron = 1:total_neurons
                     current_neuron = raster(((1:total_bins) + ((neuron-1) * total_bins)));
+                    current_neuron_name = neuron_map{neuron};
                     figure('visible','off');                 
                     %% Graphs determined threshold from receptive field analysis
                     if rf_analysis
-                        hold on;
-                        bar(smooth(current_neuron, span));
+                        %% Load receptive field data
                         rf_file = [rf_path, '/', psth_files(h).name];
                         [rf_path, rf_filename, ~] = fileparts(rf_file);
                         rf_filename = strrep(rf_filename, 'PSTH', 'REC');
                         rf_filename = strrep(rf_filename, 'format', 'FIELD');
                         rf_matfile = fullfile(rf_path, [rf_filename, '.mat']);
                         load(rf_matfile, 'receptive_analysis');
+                        %% Find region of current neuron since the receptive field struct is now nested 
+                        region_names = fieldnames(labeled_neurons);
+                        for region = 1:length(region_names)
+                            region_str = region_names{region}; 
+                            region_neuron_names = fieldnames(receptive_analysis.(region_str));
+                            for region_neuron = 1:length(region_neuron_names)
+                                region_neuron_str = region_neuron_names{region_neuron};
+                                if contains(region_neuron_str, current_neuron_name)
+                                    current_region = region_str;
+                                    break;
+                                end
+                            end
+                        end
+                        hold on;
+                        bar(smooth(current_neuron, span));
                         try
                             %% Get the receptive field struct fields
-                            event_thresholds = getfield(receptive_analysis, [neuron_map{neuron}, '_threshold']);
-                            event_first = getfield(receptive_analysis, [neuron_map{neuron}, '_first_latency']);
-                            event_last = getfield(receptive_analysis, [neuron_map{neuron}, '_last_latency']);
+                            event_thresholds = getfield(receptive_analysis.(current_region), [current_neuron_name, '_threshold']);
+                            event_first = getfield(receptive_analysis.(current_region), [current_neuron_name, '_first_latency']);
+                            event_last = getfield(receptive_analysis.(current_region), [current_neuron_name, '_last_latency']);
                             %% Gets info from cell array
                             current_threshold = find(strcmp(event_name, event_thresholds(:,1)));
                             current_threshold = event_thresholds{current_threshold, 2};
@@ -88,11 +103,11 @@ function [] = graph_PSTH(psth_path, animal_name, total_bins, total_trials, total
                     end
                     x_values = get(gca, 'XTick');
                     set(gca, 'XTick', x_values, 'XTickLabel', ((x_values*2)/1000) - pre_time);
-                    text=[neuron_map{neuron}, ' Normalized Histogram for Event ', current_event ' on ', current_day, ' for ', animal_name];
+                    text=[current_neuron_name, ' Normalized Histogram for Event ', current_event ' on ', current_day, ' for ', animal_name];
                     title(text);
                     xlabel('Time (s)');
                     ylabel('Count');
-                    filename = [neuron_map{neuron}, '_event_', current_event, '.png'];
+                    filename = [current_neuron_name, '_event_', current_event, '.png'];
                     saveas(gcf, fullfile(event_path, filename));
                 end
             end
