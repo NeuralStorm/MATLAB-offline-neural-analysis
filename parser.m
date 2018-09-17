@@ -24,6 +24,19 @@ function [parsed_path] = parser(dir_path, animal_name, total_trials, total_event
        delete([failed_path, '/*']);
        rmdir(failed_path);
     end
+
+    %% Grabs label file and creates labels
+    animal_csv_path = [dir_path, '/*.csv'];
+    csv_files = dir(animal_csv_path);
+    for csv = 1:length(csv_files)
+        csv_file = fullfile(dir_path, csv_files(csv).name);
+        if contains(csv_files(csv).name, 'labels.csv')
+            labels = readtable(csv_file);
+            unique_regions = unique(labels.(2));
+        else
+            error('%s labels file is missing.');
+        end
+    end
     
     % Runs through all of the .plx files in the selected directory
     for h = 1: length(plx_files)
@@ -150,6 +163,9 @@ function [parsed_path] = parser(dir_path, animal_name, total_trials, total_event
                 end
             end
             neuron_map = [neuron_map, all_spikes'];
+
+            %% Creates labeled neurons
+            [labeled_neurons, unique_regions] = label_neurons(dir_path, labels, neuron_map, unique_regions);
             
             fprintf('Finished parsing for %s\n', current_day);
             %% Saves parsed files
@@ -157,7 +173,7 @@ function [parsed_path] = parser(dir_path, animal_name, total_trials, total_event
             filename = [file_name, '.mat'];
             matfile = fullfile(parsed_path, filename);
             save(matfile, 'tscounts', 'evcounts', 'tsevs', 'events',  ...
-                    'total_neurons', 'all_spike_times', 'neuron_map');
+                    'total_neurons', 'all_spike_times', 'neuron_map', 'labeled_neurons', 'unique_regions');
         catch ME
             if ~exist(failed_path, 'dir')
                 mkdir(dir_path, 'failed');
