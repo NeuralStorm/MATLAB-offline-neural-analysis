@@ -1,4 +1,4 @@
-function [classify_path] = crude_bootstrapper(psth_path, animal_name, boot_iterations, bin_size, pre_time, post_time, wanted_events, wanted_neurons, unit_classification)
+function [classify_path] = crude_bootstrapper(psth_path, animal_name, boot_iterations, bin_size, pre_time, post_time, wanted_events, unit_classification)
     tic;
     % Grabs all the psth formatted files
     psth_mat_path = strcat(psth_path, '/*.mat');
@@ -33,7 +33,7 @@ function [classify_path] = crude_bootstrapper(psth_path, animal_name, boot_itera
                     classified_struct = struct;
 
                     % Preforms standard classification
-                    classified_struct = crude_classifier(failed_path, file_name, event_struct.all_events, neuron_map, labeled_neurons, bin_size, pre_time, post_time, unit_classification, i, classified_struct);
+                    classified_struct = crude_classifier(failed_path, file_name, event_struct.all_events, labeled_neurons, bin_size, pre_time, post_time, unit_classification, i, classified_struct);
                 else
                     % Shuffle event labels from the events matrix
                     shuffled_event_labels = events(:,1);
@@ -45,7 +45,7 @@ function [classify_path] = crude_bootstrapper(psth_path, animal_name, boot_itera
                         %% Slices out the desired trials from the events matrix (Inclusive range)
                         all_events = [all_events; event_strings{event}, {shuffled_events(shuffled_events == wanted_events(event), 2)}];
                     end
-                    classified_struct = crude_classifier(failed_path, file_name, all_events, neuron_map, labeled_neurons, bin_size, pre_time, post_time, unit_classification, i, classified_struct);
+                    classified_struct = crude_classifier(failed_path, file_name, all_events, labeled_neurons, bin_size, pre_time, post_time, unit_classification, i, classified_struct);
                 end
             end
 
