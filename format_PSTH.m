@@ -1,5 +1,5 @@
 function [psth_path] = format_PSTH(parsed_path, animal_name, total_bins, bin_size, pre_time, post_time, ...
-                            wanted_neurons, wanted_events, trial_range, total_trials)
+                            wanted_events, trial_range, total_trials)
     tic;
     % Grabs all .mat files in the parsed plx directory
     parsed_mat_path = strcat(parsed_path, '/*.mat');
@@ -37,15 +37,6 @@ function [psth_path] = format_PSTH(parsed_path, animal_name, total_bins, bin_siz
 
         try
             event_struct = struct;
-            % Updates neuron_map and total neurons
-            neurons = [];
-            if ~isempty(wanted_neurons)
-                for neuron = length(wanted_neurons)
-                    neurons = [neurons; neuron_map(wanted_neurons(neuron), :)];
-                end
-                neuron_map = neurons;
-            end
-            [total_neurons, ~] = size(neuron_map);
 
             % Truncates events to desired trial range from total_trials * total_events
             try
@@ -106,7 +97,7 @@ function [psth_path] = format_PSTH(parsed_path, animal_name, total_bins, bin_siz
             %% Saving the file
             filename = ['PSTH.format.', file_name, '.mat'];
             matfile = fullfile(psth_path, filename);
-            save(matfile, 'event_struct', 'total_neurons', 'neuron_map', 'events', 'event_strings');
+            save(matfile, 'event_struct', 'total_neurons', 'neuron_map', 'events', 'event_strings', 'labeled_neurons');
         catch ME
             if ~exist(failed_path, 'dir')
                 mkdir(parsed_path, 'failed');
