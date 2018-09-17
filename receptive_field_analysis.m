@@ -3,9 +3,6 @@ function [rf_path] = receptive_field_analysis(psth_path, animal_name, pre_time, 
     tic
     %TODO add error catching
 
-    epsilon = 0.01;
-    norm_var_scaling = (span * bin_size);
-
     if pre_time <= 0.050
         error('Pre time can not be set to 0 for receptive field analysis. Recreate the PSTH format with a different pre time.');
     end
@@ -59,13 +56,6 @@ function [rf_path] = receptive_field_analysis(psth_path, animal_name, pre_time, 
                 receptive_analysis.([current_region]).([neuron_name, '_threshold']) = [];
                 receptive_analysis.([current_region]).([neuron_name, '_total_significant_events']) = [];
             end
-
-            %% Creates the normalized variance struct
-            for event = 1:length(wanted_events)
-                current_event = event_strings{event};
-                normalized_variance.([current_region]).([current_event, '_background_rate']) = [];
-            end
-            % disp(receptive_analysis);
 
             %% Set variables used for pre window analysis
             pre_time_bins = (length([-abs(pre_time): bin_size: 0])) - 1;
@@ -143,14 +133,6 @@ function [rf_path] = receptive_field_analysis(psth_path, animal_name, pre_time, 
                         receptive_analysis.([current_region]).([neuron_name, '_corrected_response_magnitude']) = [receptive_analysis.([current_region]).([neuron_name, '_corrected_response_magnitude']); current_event, {response_magnitude - background_rate}];
                     end
                 end
-                background_mean = mean(normalized_variance.([current_region]).([current_event, '_background_rate']));
-                background_var = var(normalized_variance.([current_region]).([current_event, '_background_rate']));
-                normalized_variance.([current_region]).([current_event, '_background_mean']) = background_mean;
-                normalized_variance.([current_region]).([current_event, '_background_var']) = background_var;
-                % NV = normalized variance, c = NV scaling, BFR = background firing rate
-                % NV = c * (epsilon + var(event BFR))/((c * epsilon) + mean(event BFR))
-                norm_variance = norm_var_scaling * ((var(normalized_variance.([current_region]).([current_event, '_background_rate'])) + epsilon) / ((norm_var_scaling * epsilon) + background_mean));
-                normalized_variance.([current_region]).([current_event, '_norm_variance']) = norm_variance;
             end
             
             %% Normalize response magnitude and find primary event for each neuron
@@ -179,6 +161,6 @@ function [rf_path] = receptive_field_analysis(psth_path, animal_name, pre_time, 
         rf_filename = strrep(filename, 'PSTH', 'REC');
         rf_filename = strrep(rf_filename, 'format', 'FIELD');
         matfile = fullfile(rf_path, [rf_filename, '.mat']);
-        save(matfile, 'receptive_analysis', 'labeled_neurons', 'normalized_variance', 'event_strings');
+        save(matfile, 'receptive_analysis', 'labeled_neurons');
     end
 end
