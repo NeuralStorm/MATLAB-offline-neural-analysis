@@ -116,9 +116,6 @@ function [rf_path] = receptive_field_analysis(psth_path, animal_name, pre_time, 
                         first_latency = (smooth_above_threshold_indeces(1)) * bin_size;
                         last_latency = (smooth_above_threshold_indeces(end)) * bin_size;
 
-                        %% Stores background firing rate into a struct organized by events for normalized variance
-                        normalized_variance.([current_region]).([current_event, '_background_rate']) = [normalized_variance.([current_region]).([current_event, '_background_rate']); background_rate];
-
                         %% Stores information from significant neuron in a struct
                         receptive_analysis.([current_region]).([neuron_name, '_first_latency']) = [receptive_analysis.([current_region]).([neuron_name, '_first_latency']); current_event, {first_latency}];
                         receptive_analysis.([current_region]).([neuron_name, '_last_latency']) = [receptive_analysis.([current_region]).([neuron_name, '_last_latency']); current_event, {last_latency}];
