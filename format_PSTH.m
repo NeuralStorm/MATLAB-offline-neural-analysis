@@ -70,7 +70,7 @@ function [psth_path] = format_PSTH(parsed_path, animal_name, total_bins, bin_siz
                     % Normalize rasters by the number of events
                     event_struct.([event_strings{event}, '_normalized_raster']) = ...
                         sum(event_struct.relative_response((event_count + 1):1:(event_count + length(events_array{event})),:),1) ...
-                        /length(events_array{event});
+                        / length(events_array{event});
                     % Updates event_count to scale sum properly for next row
                     event_count = event_count + length(events_array{event});
                     %% Breaks down the PSTH into pre and post windows for receptive field analysis
@@ -97,7 +97,7 @@ function [psth_path] = format_PSTH(parsed_path, animal_name, total_bins, bin_siz
             %% Saving the file
             filename = ['PSTH.format.', file_name, '.mat'];
             matfile = fullfile(psth_path, filename);
-            save(matfile, 'event_struct', 'total_neurons', 'neuron_map', 'events', 'event_strings', 'labeled_neurons');
+            save(matfile, 'event_struct', 'total_neurons', 'neuron_map', 'events', 'event_strings', 'labeled_neurons', 'unique_regions', 'region_channels');
         catch ME
             if ~exist(failed_path, 'dir')
                 mkdir(parsed_path, 'failed');

@@ -165,7 +165,7 @@ function [parsed_path] = parser(dir_path, animal_name, total_trials, total_event
             neuron_map = [neuron_map, all_spikes'];
 
             %% Creates labeled neurons
-            [labeled_neurons, unique_regions] = label_neurons(dir_path, labels, neuron_map, unique_regions);
+            [labeled_neurons, unique_regions, region_channels] = label_neurons(dir_path, labels, neuron_map, unique_regions);
             
             fprintf('Finished parsing for %s\n', current_day);
             %% Saves parsed files
@@ -173,7 +173,7 @@ function [parsed_path] = parser(dir_path, animal_name, total_trials, total_event
             filename = [file_name, '.mat'];
             matfile = fullfile(parsed_path, filename);
             save(matfile, 'tscounts', 'evcounts', 'tsevs', 'events',  ...
-                    'total_neurons', 'all_spike_times', 'neuron_map', 'labeled_neurons', 'unique_regions');
+                    'total_neurons', 'all_spike_times', 'neuron_map', 'labeled_neurons', 'unique_regions', 'region_channels');
         catch ME
             if ~exist(failed_path, 'dir')
                 mkdir(dir_path, 'failed');

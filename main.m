@@ -12,7 +12,7 @@ function [] = main()
     % Inclusive Range
     trial_range = [1, 300];
     % Give exact directory name of the animals you want skipped
-    ignored_animals = ['LC02', 'TNC01', 'TNC14', 'TNC16', 'TNC25'];
+    ignored_animals = ['Test', 'LC02', 'TNC01', 'TNC14', 'TNC16', 'TNC25'];
     % Boolean to control classification for population or single neurons
     % Default is set to single neuron
     unit_classification = true;
@@ -33,10 +33,14 @@ function [] = main()
     sig_check = 1;
     % sig_bins determines how many consecutive bins are needed for significant response
     sig_bins = 5;
+
+
+    %% Normalized variance (nv) Analysis
+    epsilon = 0.01;
+    norm_var_scaling = (span * bin_size);
     % List of where all the nv analysis result files are stored for population analysis at the end
     nv_list = [];
 
-    
     % Get the directory with all animals and their respective .plx files
     original_path = uigetdir(pwd);
     animal_list = dir(original_path);
@@ -77,8 +81,10 @@ function [] = main()
                 %% Use code commeneted out below to skip RF analysis calculations
                 rf_path = [psth_path, '/receptive_field_analysis'];
 
-                % nv_path = normalized_variance_analysis(rf_path, animal_name, wanted_events, unique_regions);
-                % nv_list = [nv_list; {nv_path}];
+                [nv_calc_path, region_channels, event_strings] = nv_calculation(psth_path, animal_name, pre_time, post_time, bin_size, span, epsilon, norm_var_scaling);
+
+                nv_path = normalized_variance_analysis(nv_calc_path, animal_name, wanted_events, region_channels, event_strings);
+                nv_list = [nv_list; {nv_path}];
 
                 %% Run if you want to graph all of the PSTHs or comment it out to skip
                 % try
@@ -107,6 +113,7 @@ function [] = main()
             end
         end
     end
-    % population_nv(nv_list)
+    %! direct and indirect labels are hard coded as 'Right' and 'Left'
+    population_nv(nv_list)
     toc(start_time);
 end
