@@ -34,7 +34,7 @@ function [parsed_path] = parser(dir_path, animal_name, total_trials, total_event
             labels = readtable(csv_file);
             unique_regions = unique(labels.(2));
         else
-            error('%s labels file is missing.');
+            error('%s labels file is missing.', animal_name);
         end
     end
     
