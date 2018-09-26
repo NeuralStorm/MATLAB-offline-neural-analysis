@@ -12,7 +12,7 @@ function [] = main()
     % Inclusive Range
     trial_range = [1, 300];
     % Give exact directory name of the animals you want skipped
-    ignored_animals = ['Test', 'LC02', 'TNC01', 'TNC14', 'TNC16', 'TNC25'];
+    ignored_animals = [];
     % Boolean to control classification for population or single neurons
     % Default is set to single neuron
     unit_classification = true;
@@ -64,8 +64,8 @@ function [] = main()
 
                 %% Run if you want to calculate the PSTH or comment it out to skip
                 try
-                    psth_path = format_PSTH(parsed_path, animal_name, total_bins, bin_size, pre_time, post_time, ...
-                        wanted_events, trial_range, total_trials);
+                    % psth_path = format_PSTH(parsed_path, animal_name, total_bins, bin_size, pre_time, post_time, ...
+                    %     wanted_events, trial_range, total_trials);
                 end
                 %% Use code commeneted out below to skip PSTH calculations
                 psth_path = [parsed_path, '/psth'];
@@ -73,8 +73,8 @@ function [] = main()
                 %% Use to run receptive field analysis
                 if rf_analysis
                     try
-                        rf_path = receptive_field_analysis(psth_path, animal_name, pre_time, post_time, bin_size, total_bins, ...
-                            threshold_scale, sig_check, sig_bins, span, wanted_events);
+                        % rf_path = receptive_field_analysis(psth_path, animal_name, pre_time, post_time, bin_size, total_bins, ...
+                        %     threshold_scale, sig_check, sig_bins, span, wanted_events);
                     end
                 end
 
@@ -114,6 +114,7 @@ function [] = main()
         end
     end
     %! direct and indirect labels are hard coded as 'Right' and 'Left'
-    population_nv(nv_list)
+    % population_nv(nv_list)
+    graph_nv(nv_list, event_strings, original_path);
     toc(start_time);
 end
