@@ -27,6 +27,12 @@ function [nv_path] = normalized_variance_analysis(nv_calc_path, animal_name, wan
         for neuron = 1:length(region_channels.(region_name))
             neuron_name = region_channels.(region_name){neuron};
             days_norm_var.(region_name).([neuron_name, '_norm_var']) = [];
+            days_norm_var.(region_name).early_norm_var = [];
+            days_norm_var.(region_name).late_norm_var = [];
+            days_norm_var.(region_name).best_norm_var = [];
+            days_norm_var.(region_name).first_norm_var = [];
+            days_norm_var.(region_name).early_pop = [];
+            days_norm_var.(region_name).late_pop = [];
             % for event = 1:length(wanted_events)
             %     current_event = event_strings{event};
             %     days_norm_var.(region_name).([neuron_name, '_', current_event, '_left_early_late_results']) = [];
@@ -60,7 +66,43 @@ function [nv_path] = normalized_variance_analysis(nv_calc_path, animal_name, wan
             region_fields = fieldnames(nv_analysis.(region_name));
             for field = 1:length(region_fields)
                 field_name = region_fields{field};
-                if contains(field_name, '_norm_var')
+                if contains(field_name, 'pop')
+                    pop_norm_vars = getfield(nv_analysis.(region_name), region_fields{field});
+                    pop_avg_norm_var = [];
+
+                    for event = 1:length(pop_norm_vars(1, :))
+                        pop_event_avg = mean([pop_norm_vars{:, event}]);
+                        pop_avg_norm_var = [pop_avg_norm_var, pop_event_avg];
+                    end
+                    if day_num >= 1 && day_num <= 5
+                        days_norm_var.(region_name).early_norm_var = [days_norm_var.(region_name).early_norm_var;  pop_avg_norm_var];
+                        days_norm_var.(region_name).early_pop = [days_norm_var.(region_name).early_pop; pop_norm_vars];
+                    elseif day_num >= 21 && day_num <= 25
+                        days_norm_var.(region_name).late_norm_var = [days_norm_var.(region_name).late_norm_var;  pop_avg_norm_var];
+                        days_norm_var.(region_name).late_pop = [days_norm_var.(region_name).late_pop; pop_norm_vars];
+                    end
+
+                    %% Best day NV separation
+                    if day_num == 1
+                        days_norm_var.(region_name).first_norm_var = [days_norm_var.(region_name).first_norm_var; pop_avg_norm_var];
+                    elseif strcmpi(animal_name, 'lc02') && day_num == 22
+                        days_norm_var.(region_name).best_norm_var = pop_avg_norm_var;
+                    elseif strcmpi(animal_name, 'prac03') && day_num == 25
+                        days_norm_var.(region_name).best_norm_var = pop_avg_norm_var;
+                    elseif strcmpi(animal_name, 'ravi19') && day_num == 22
+                        days_norm_var.(region_name).best_norm_var = pop_avg_norm_var;
+                    elseif strcmpi(animal_name, 'ravi20') && day_num == 21
+                        days_norm_var.(region_name).best_norm_var = pop_avg_norm_var;
+                    elseif strcmpi(animal_name, 'tnc06') && day_num == 22
+                        days_norm_var.(region_name).best_norm_var = pop_avg_norm_var;
+                    elseif strcmpi(animal_name, 'tnc12') && day_num == 23
+                        days_norm_var.(region_name).best_norm_var = pop_avg_norm_var;
+                    elseif strcmpi(animal_name, 'tnc16') && day_num == 23
+                        days_norm_var.(region_name).best_norm_var = pop_avg_norm_var;
+                    elseif strcmpi(animal_name, 'tnc25') && day_num == 23
+                        days_norm_var.(region_name).best_norm_var = pop_avg_norm_var;
+                    end
+                elseif contains(field_name, '_norm_var')
                     split_field = strsplit(field_name, '_');
                     neuron_name = split_field{1};
                     event_norm_vars = getfield(nv_analysis.(region_name), region_fields{field});
@@ -68,6 +110,7 @@ function [nv_path] = normalized_variance_analysis(nv_calc_path, animal_name, wan
                     days_norm_var.(region_name).([neuron_name, '_norm_var']) = [days_norm_var.(region_name).([neuron_name, '_norm_var']); [day_num, norm_var]];
                 end
             end
+            %% Sort days
         end
     end
 
@@ -119,5 +162,5 @@ function [nv_path] = normalized_variance_analysis(nv_calc_path, animal_name, wan
     end
 
     matfile = fullfile(nv_path, [animal_name '_norm_var_results.mat']);
-    save(matfile, 'nv_analysis', 'unique_regions', 'days_norm_var');
+    save(matfile, 'nv_analysis', 'unique_regions', 'days_norm_var', 'event_strings');
 end

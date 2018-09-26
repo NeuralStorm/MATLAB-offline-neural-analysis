@@ -35,6 +35,7 @@ function [nv_calc_path, region_channels, event_strings] = nv_calculation(psth_pa
         load(current_file);
 
         %% Preallocate nv struct with the neurons separated into their respective regions
+        nv_analysis = struct;
         for region = 1:length(unique_regions)
             region_name = unique_regions{region};
             region_neurons = labeled_neurons.(region_name)(:, 1);
@@ -42,6 +43,7 @@ function [nv_calc_path, region_channels, event_strings] = nv_calculation(psth_pa
                 neuron_name = region_neurons{neuron};
                 nv_analysis.(region_name).([neuron_name, '_background_rate']) = [];
             end
+            nv_analysis.(region_name).pop = [];
         end
 
         all_events = event_struct.all_events(:,2);
@@ -94,6 +96,7 @@ function [nv_calc_path, region_channels, event_strings] = nv_calculation(psth_pa
         %% Calculate nv for each event for each neuron
         % nv = c * (epsilon + var(event bfr))/ (c * epsilon + mean(event bfr))
         for region = 1:length(unique_regions)
+            pop_norm_var = [];
             region_name = unique_regions{region};
             region_fields = fieldnames(nv_analysis.(region_name));
             for field = 1:length(region_fields)
@@ -114,8 +117,10 @@ function [nv_calc_path, region_channels, event_strings] = nv_calculation(psth_pa
                         event_norm_vars= [event_norm_vars; event_strings{event}, {norm_var}];
                     end
                     nv_analysis.(region_name).([neuron_name, '_norm_var']) = event_norm_vars;
+                    pop_norm_var = [pop_norm_var; event_norm_vars(:, end)'];
                 end
             end
+            nv_analysis.(region_name).pop = pop_norm_var;
         end
 
         %% Save analysis results
