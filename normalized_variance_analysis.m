@@ -1,8 +1,6 @@
 function [nv_path] = normalized_variance_analysis(nv_calc_path, animal_name, wanted_events, region_channels, event_strings)
     % nv = normalized variance
     %% Grab receptive field files from receptive field folder
-    %! The ttest2 for indirect and direct (left and right) is hard coded -- dont think this can be avoided :(
-    %! When we move over to python and data is formatted in a JSON file this can probably be avoided though :)
 
     nv_calc_mat_path = [nv_calc_path, '/*.mat'];
     nv_calc_files = dir(nv_calc_mat_path);
@@ -33,15 +31,7 @@ function [nv_path] = normalized_variance_analysis(nv_calc_path, animal_name, wan
             days_norm_var.(region_name).first_norm_var = [];
             days_norm_var.(region_name).early_pop = [];
             days_norm_var.(region_name).late_pop = [];
-            % for event = 1:length(wanted_events)
-            %     current_event = event_strings{event};
-            %     days_norm_var.(region_name).([neuron_name, '_', current_event, '_left_early_late_results']) = [];
-            %     days_norm_var.(region_name).([neuron_name, '_', current_event, '_right_early_late_results']) = [];
-            %     days_norm_var.(region_name).([neuron_name, '_', current_event, '_early_left_right_results']) = [];
-            %     days_norm_var.(region_name).([neuron_name, '_', current_event, '_late_left_right_results']) = [];
-            %     days_norm_var.(region_name).([neuron_name, '_', current_event, '_left_early_late_change']) = [];
-            %     days_norm_var.(region_name).([neuron_name, '_', current_event, '_right_early_late_change']) = [];
-            % end
+            days_norm_var.(region_name).overall_pop = [];
         end
     end
 
@@ -82,6 +72,8 @@ function [nv_path] = normalized_variance_analysis(nv_calc_path, animal_name, wan
                         days_norm_var.(region_name).late_pop = [days_norm_var.(region_name).late_pop; pop_norm_vars];
                     end
 
+                    days_norm_var.(region_name).all_days_avg_norm_var = [days_norm_var.(region_name).overall_pop; [day_num, pop_avg_norm_var]];
+
                     %% Best day NV separation
                     if day_num == 1
                         days_norm_var.(region_name).first_norm_var = [days_norm_var.(region_name).first_norm_var; pop_avg_norm_var];
@@ -111,47 +103,9 @@ function [nv_path] = normalized_variance_analysis(nv_calc_path, animal_name, wan
                 end
             end
             %% Sort days
+            days_norm_var.(region_name).overall_pop = sortrows(days_norm_var.(region_name).all_days_avg_norm_var, 1);
         end
     end
-
-    %% Early late neuron comparison
-
-    % left = getfield(days_norm_var.Left, 'norm_var');
-    % right = getfield(days_norm_var.Right, 'norm_var');
-    % left_events = left(:, 2:end);
-    % right_events = right(:, 2:end);
-
-    
-    % early_left_events = [];
-    % early_right_events = [];
-    % late_left_events = [];
-    % late_right_events = [];
-    % for days = 1:length(left(:,1))
-    %     if (left(days, 1) >= 1) && (left(days, 1) <= 5)
-    %         early_left_events = [early_left_events; left_events(days, :)];
-    %         early_right_events = [early_right_events; right_events(days, :)];
-    %     elseif left(days, 1) >= 21
-    %         late_left_events = [late_left_events; left_events(days, :)];
-    %         late_right_events = [late_right_events; right_events(days, :)];
-    %     end
-    % end
-    
-    % %% Goes through all events and does the respective ttests
-    % % This didnt need to be in a for loop but for clarity of variables
-    % % I put it in a for loop so that event strings could be appended to the data
-    % for event = 1:length(wanted_events)
-    %     current_event = event_strings{event};
-    %     days_norm_var.([current_event, '_left_early_late_results']) = [days_norm_var.([current_event, '_left_early_late_results']); ttest(early_left_events(:, event), late_left_events(:, event))];
-    %     days_norm_var.([current_event, '_right_early_late_results']) = [days_norm_var.([current_event, '_right_early_late_results']); ttest(early_right_events(:, event), late_right_events(:, event))];
-    %     days_norm_var.([current_event, '_early_left_right_results']) = [days_norm_var.([current_event, '_early_left_right_results']); ttest2(early_left_events(:, event), early_right_events(:, event))];
-    %     days_norm_var.([current_event, '_late_left_right_results']) = [days_norm_var.([current_event, '_late_left_right_results']); ttest2(late_left_events(:, event), late_right_events(:, event))];
-    %     left_early_avg = mean(early_left_events(:, event));
-    %     right_early_avg = mean(early_right_events(:, event));
-    %     left_late_avg = mean(late_left_events(:, event));
-    %     right_late_avg = mean(late_right_events(:, event));
-    %     days_norm_var.([current_event, '_left_early_late_change']) = left_early_avg - left_late_avg;
-    %     days_norm_var.([current_event, '_right_early_late_change']) = right_early_avg - right_late_avg;
-    % end
 
     %% Remove empty fields
     for region = 1:length(region_names)
