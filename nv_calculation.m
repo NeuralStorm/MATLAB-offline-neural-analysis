@@ -25,11 +25,17 @@ function [nv_calc_path, region_channels, event_strings] = nv_calculation(psth_pa
     post_time_bins = (length([0:bin_size:post_time])) - 1;
 
     for file = 1:length(psth_files)
+        % NV.analysis.TNC.04.ClosedLoop.Day04.120715
         failed_rf = {};
         current_file = [psth_path, '/', psth_files(file).name];
         [file_path, filename, file_extension] = fileparts(current_file);
         split_name = strsplit(filename, '.');
         current_day = split_name{6};
+        day_num = regexp(current_day,'\d*','Match');
+        day_num = str2num(day_num{1});
+        exp_date = split_name{end};
+        current_animal = split_name{3};
+        current_animal_id = split_name{4};
         fprintf('Normalized variance calculation for %s on %s\n', animal_name, current_day);
 
         load(current_file);
@@ -44,6 +50,7 @@ function [nv_calc_path, region_channels, event_strings] = nv_calculation(psth_pa
                 nv_analysis.(region_name).([neuron_name, '_background_rate']) = [];
             end
             nv_analysis.(region_name).pop = [];
+            nv_analysis.(region_name).labeled_nv = [];
         end
 
         all_events = event_struct.all_events(:,2);
@@ -99,6 +106,7 @@ function [nv_calc_path, region_channels, event_strings] = nv_calculation(psth_pa
             pop_norm_var = [];
             region_name = unique_regions{region};
             region_fields = fieldnames(nv_analysis.(region_name));
+            neuron_labels = {};
             for field = 1:length(region_fields)
                 field_name = region_fields{field};
                 % disp(field_name);
@@ -116,18 +124,27 @@ function [nv_calc_path, region_channels, event_strings] = nv_calculation(psth_pa
                         norm_var = norm_var_scaling * (epsilon + bfr_var)/(norm_var_scaling * epsilon + avg_bfr);
                         event_norm_vars= [event_norm_vars; event_strings{event}, {norm_var}];
                     end
+                    neuron_labels = [neuron_labels; cellstr(neuron_name)];
                     nv_analysis.(region_name).([neuron_name, '_norm_var']) = event_norm_vars;
                     pop_norm_var = [pop_norm_var; event_norm_vars(:, end)'];
                 end
             end
+            repeat_labels_length = length(pop_norm_var(:,1));
             nv_analysis.(region_name).pop = pop_norm_var;
+            % disp(length(repmat({animal_name}, [repeat_labels_length, 1])));
+            % disp(length(neuron_labels));
+            % disp(length(pop_norm_var));
+            % pre_time, post_time, bin_size, span, epsilon, norm_var_scaling
+            nv_analysis.(region_name).labeled_nv = [repmat({current_animal}, [repeat_labels_length, 1]), repmat({current_animal_id}, [repeat_labels_length, 1]), repmat({exp_date}, [repeat_labels_length, 1]), repmat({day_num}, [repeat_labels_length, 1]),  ...
+                    repmat({pre_time}, [repeat_labels_length, 1]), repmat({post_time}, [repeat_labels_length, 1]), repmat({bin_size}, [repeat_labels_length, 1]), repmat({norm_var_scaling}, [repeat_labels_length, 1]), repmat({epsilon}, ...
+                    [repeat_labels_length, 1]), neuron_labels, pop_norm_var];
         end
 
         %% Save analysis results
         nv_filename = strrep(filename, 'PSTH', 'NV');
         nv_filename = strrep(nv_filename, 'format', 'analysis');
         matfile = fullfile(nv_calc_path, [nv_filename, '.mat']);
-        save(matfile, 'nv_analysis', 'unique_regions', 'event_strings', 'labeled_neurons', 'region_channels');
+        save(matfile, 'nv_analysis', 'unique_regions', 'event_strings', 'labeled_neurons', 'region_channels', 'pre_time', 'post_time', 'bin_size', 'span', 'epsilon', 'norm_var_scaling');
     end
 
 end

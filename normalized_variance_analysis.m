@@ -32,6 +32,8 @@ function [nv_path] = normalized_variance_analysis(nv_calc_path, animal_name, wan
             days_norm_var.(region_name).early_pop = [];
             days_norm_var.(region_name).late_pop = [];
             days_norm_var.(region_name).overall_pop = [];
+            days_norm_var.(region_name).all_nv_info = [];
+            days_norm_var.(region_name).all_days_avg_norm_var = [];
         end
     end
 
@@ -45,6 +47,9 @@ function [nv_path] = normalized_variance_analysis(nv_calc_path, animal_name, wan
         day_num = regexp(current_day,'\d*','Match');
         day_num = str2num(day_num{1});
         days = [days; day_num];
+        exp_date = split_filename{end};
+        current_animal = split_filename{3};
+        current_animal_id = split_filename{4};
         fprintf('Normalized variance analysis for %s on %s\n', animal_name, current_day);
         
         load(current_file);
@@ -53,6 +58,7 @@ function [nv_path] = normalized_variance_analysis(nv_calc_path, animal_name, wan
         %% Gathers all the normalized variance data across all days
         for region = 1:length(region_names)
             region_name = region_names{region};
+            days_norm_var.(region_name).all_nv_info = [days_norm_var.(region_name).all_nv_info; nv_analysis.(region_name).labeled_nv];
             region_fields = fieldnames(nv_analysis.(region_name));
             for field = 1:length(region_fields)
                 field_name = region_fields{field};
@@ -72,7 +78,12 @@ function [nv_path] = normalized_variance_analysis(nv_calc_path, animal_name, wan
                         days_norm_var.(region_name).late_pop = [days_norm_var.(region_name).late_pop; pop_norm_vars];
                     end
 
-                    days_norm_var.(region_name).all_days_avg_norm_var = [days_norm_var.(region_name).overall_pop; [day_num, pop_avg_norm_var]];
+                    repeat_length = length(pop_avg_norm_var(:,1));
+
+                    days_norm_var.(region_name).all_days_avg_norm_var = [days_norm_var.(region_name).all_days_avg_norm_var; repmat({current_animal}, [repeat_length, 1]), repmat({current_animal_id}, [repeat_length, 1]), repmat({exp_date}, [repeat_length, 1]), repmat({day_num}, [repeat_length, 1]),  ...
+                        repmat({pre_time}, [repeat_length, 1]), repmat({post_time}, [repeat_length, 1]), repmat({bin_size}, [repeat_length, 1]), repmat({norm_var_scaling}, [repeat_length, 1]), repmat({epsilon}, ...    
+                        [repeat_length, 1]), num2cell([pop_avg_norm_var])];
+                    days_norm_var.(region_name).overall_pop = [days_norm_var.(region_name).overall_pop; [day_num, pop_avg_norm_var]];
 
                     %% Best day NV separation
                     if day_num == 1
@@ -103,7 +114,7 @@ function [nv_path] = normalized_variance_analysis(nv_calc_path, animal_name, wan
                 end
             end
             %% Sort days
-            days_norm_var.(region_name).overall_pop = sortrows(days_norm_var.(region_name).all_days_avg_norm_var, 1);
+            days_norm_var.(region_name).overall_pop = sortrows(days_norm_var.(region_name).overall_pop, 1);
         end
     end
 

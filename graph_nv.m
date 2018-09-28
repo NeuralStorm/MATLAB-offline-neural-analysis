@@ -43,6 +43,9 @@ function [] = graph_nv(nv_list, event_strings, original_path)
     indirect_non_learning_fig = figure('visible', 'on');
     title('Indirect non learning')
 
+    csv_data = [];
+    pop_csv_data = [];
+
 
     %% Preallocate fields
     for event = 1:length(event_strings)
@@ -86,6 +89,20 @@ function [] = graph_nv(nv_list, event_strings, original_path)
         current_animal = split_file_path{end - 4};
         current_file = fullfile(current_file_path, [current_animal, '_norm_var_results.mat']);
         load(current_file);
+
+        for region = 1:length(unique_regions)
+            region_name = unique_regions{region};
+            repeat_length = length(days_norm_var.(region_name).all_nv_info);
+            pop_repeat_length = length(days_norm_var.(region_name).all_days_avg_norm_var);
+            % pop_nv = getfield(days_norm_var.(region_name), all_days_avg_norm_var
+            if (contains(right_direct, current_animal) && strcmpi('Right', region_name)) || (contains(left_direct, current_animal) && strcmpi('Left', region_name))
+                region_type = 'Direct';
+            else
+                region_type = 'Indirect';
+            end
+            csv_data = [csv_data; days_norm_var.(region_name).all_nv_info, repmat({region_name}, [repeat_length, 1]), repmat({region_type}, [repeat_length, 1])];
+            pop_csv_data = [pop_csv_data; days_norm_var.(region_name).all_days_avg_norm_var, repmat({region_name}, [pop_repeat_length, 1]), repmat({region_type}, [pop_repeat_length, 1])];
+        end
 
         %% Skip control animals
         if contains(control, current_animal)
@@ -494,7 +511,15 @@ function [] = graph_nv(nv_list, event_strings, original_path)
     figure(indirect_non_learning_fig)
     legend
 
+    spreadsheet_table = cell2table(csv_data, 'VariableNames',{'Animal' 'Animal_ID' 'exp_date' 'exp_day' 'pre_time' 'post_time', 'bin_size' 'norm_var_constant' 'epsilon' 'channel' 'event_1_nv' 'event_2_nv' 'event_3_nv' 'event_4_nv' 'region' 'region_type'});
+    matfile = fullfile(original_path, 'unit_nv_analysis.csv');
+    writetable(spreadsheet_table, matfile, 'Delimiter', ',');
+
+    pop_spreadsheet_table = cell2table(pop_csv_data, 'VariableNames',{'Animal' 'Animal_ID' 'exp_date' 'exp_day' 'pre_time' 'post_time', 'bin_size' 'norm_var_constant' 'epsilon' 'event_1_nv' 'event_2_nv' 'event_3_nv' 'event_4_nv' 'region' 'region_type'});
+    matfile = fullfile(original_path, 'pop_nv_analysis.csv');
+    writetable(pop_spreadsheet_table, matfile, 'Delimiter', ',');
+
     matfile = fullfile(original_path, 'test.mat');
-    save(matfile, 'nv_event_graphs', 'early_direct_learn_non_learn', 'late_direct_learn_non_learn', 'early_indirect_learn_non_learn', 'late_indirect_learn_non_learn', ...
+    save(matfile, 'csv_data', 'nv_event_graphs', 'early_direct_learn_non_learn', 'late_direct_learn_non_learn', 'early_indirect_learn_non_learn', 'late_indirect_learn_non_learn', ...
     'late_direct_learn_non_learn_p_value', 'late_direct_learn_non_learn_ci', 'late_direct_learn_non_learn_stats', 'early_indirect_learn_non_learn_p_value', 'early_indirect_learn_non_learn_ci', 'early_indirect_learn_non_learn_stats');
 end
