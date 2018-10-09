@@ -34,6 +34,7 @@ function [nv_path] = normalized_variance_analysis(nv_calc_path, animal_name, wan
             days_norm_var.(region_name).overall_pop = [];
             days_norm_var.(region_name).all_nv_info = [];
             days_norm_var.(region_name).all_days_avg_norm_var = [];
+            days_norm_var.(region_name).early_late_bar_info = [];
         end
     end
 
@@ -65,11 +66,20 @@ function [nv_path] = normalized_variance_analysis(nv_calc_path, animal_name, wan
                 if contains(field_name, 'pop')
                     pop_norm_vars = getfield(nv_analysis.(region_name), region_fields{field});
                     pop_avg_norm_var = [];
+                    pop_std_dev = [];
+                    pop_std_err = [];
 
+                    %% Find population normalized variance, standard deviation, and standard error for each event
                     for event = 1:length(pop_norm_vars(1, :))
                         pop_event_avg = mean([pop_norm_vars{:, event}]);
+                        pop_event_std_dev = std([pop_norm_vars{:, event}]);
+                        pop_event_std_err = pop_event_std_dev / (sqrt(length([pop_norm_vars{:, event}])));
                         pop_avg_norm_var = [pop_avg_norm_var, pop_event_avg];
+                        pop_std_dev = [pop_std_dev, pop_event_std_dev];
+                        pop_std_err = [pop_std_err, pop_event_std_err];
                     end
+
+                    % Handles creating the early versus late population analysis
                     if day_num >= 1 && day_num <= 5
                         days_norm_var.(region_name).early_norm_var = [days_norm_var.(region_name).early_norm_var;  pop_avg_norm_var];
                         days_norm_var.(region_name).early_pop = [days_norm_var.(region_name).early_pop; pop_norm_vars];
@@ -82,7 +92,7 @@ function [nv_path] = normalized_variance_analysis(nv_calc_path, animal_name, wan
 
                     days_norm_var.(region_name).all_days_avg_norm_var = [days_norm_var.(region_name).all_days_avg_norm_var; repmat({current_animal}, [repeat_length, 1]), repmat({current_animal_id}, [repeat_length, 1]), repmat({exp_date}, [repeat_length, 1]), repmat({day_num}, [repeat_length, 1]),  ...
                         repmat({pre_time}, [repeat_length, 1]), repmat({post_time}, [repeat_length, 1]), repmat({bin_size}, [repeat_length, 1]), repmat({norm_var_scaling}, [repeat_length, 1]), repmat({epsilon}, ...    
-                        [repeat_length, 1]), num2cell([pop_avg_norm_var])];
+                        [repeat_length, 1]), num2cell([pop_avg_norm_var]), num2cell([pop_std_dev]), num2cell([pop_std_err])];
                     days_norm_var.(region_name).overall_pop = [days_norm_var.(region_name).overall_pop; [day_num, pop_avg_norm_var]];
 
                     %% Best day NV separation
@@ -118,9 +128,15 @@ function [nv_path] = normalized_variance_analysis(nv_calc_path, animal_name, wan
         end
     end
 
+    
     %% Remove empty fields
     for region = 1:length(region_names)
         region_name = region_names{region};
+
+        repeat_length = length(days_norm_var.(region_name).early_norm_var(:,1));
+        days_norm_var.(region_name).early_late_bar_info = [days_norm_var.(region_name).early_late_bar_info; repmat({current_animal}, [repeat_length, 1]), repmat({current_animal_id}, [repeat_length, 1]), ...
+            num2cell([days_norm_var.(region_name).early_norm_var]), num2cell([days_norm_var.(region_name).late_norm_var])];
+
         region_neurons = fieldnames(days_norm_var.(region_name));
         empty = cellfun(@(x) isempty(days_norm_var.(region_name).(x)), region_neurons);
         days_norm_var.(region_name) = rmfield(days_norm_var.(region_name), region_neurons(empty));
