@@ -27,8 +27,6 @@ function [nv_path] = normalized_variance_analysis(nv_calc_path, animal_name, wan
             days_norm_var.(region_name).([neuron_name, '_norm_var']) = [];
             days_norm_var.(region_name).early_norm_var = [];
             days_norm_var.(region_name).late_norm_var = [];
-            days_norm_var.(region_name).best_norm_var = [];
-            days_norm_var.(region_name).first_norm_var = [];
             days_norm_var.(region_name).early_pop = [];
             days_norm_var.(region_name).late_pop = [];
             days_norm_var.(region_name).overall_pop = [];
@@ -94,27 +92,6 @@ function [nv_path] = normalized_variance_analysis(nv_calc_path, animal_name, wan
                         repmat({pre_time}, [repeat_length, 1]), repmat({post_time}, [repeat_length, 1]), repmat({bin_size}, [repeat_length, 1]), repmat({norm_var_scaling}, [repeat_length, 1]), repmat({epsilon}, ...    
                         [repeat_length, 1]), num2cell([pop_avg_norm_var]), num2cell([pop_std_dev]), num2cell([pop_std_err])];
                     days_norm_var.(region_name).overall_pop = [days_norm_var.(region_name).overall_pop; [day_num, pop_avg_norm_var]];
-
-                    %% Best day NV separation
-                    if day_num == 1
-                        days_norm_var.(region_name).first_norm_var = [days_norm_var.(region_name).first_norm_var; pop_avg_norm_var];
-                    elseif strcmpi(animal_name, 'lc02') && day_num == 22
-                        days_norm_var.(region_name).best_norm_var = pop_avg_norm_var;
-                    elseif strcmpi(animal_name, 'prac03') && day_num == 25
-                        days_norm_var.(region_name).best_norm_var = pop_avg_norm_var;
-                    elseif strcmpi(animal_name, 'ravi19') && day_num == 22
-                        days_norm_var.(region_name).best_norm_var = pop_avg_norm_var;
-                    elseif strcmpi(animal_name, 'ravi20') && day_num == 21
-                        days_norm_var.(region_name).best_norm_var = pop_avg_norm_var;
-                    elseif strcmpi(animal_name, 'tnc06') && day_num == 22
-                        days_norm_var.(region_name).best_norm_var = pop_avg_norm_var;
-                    elseif strcmpi(animal_name, 'tnc12') && day_num == 23
-                        days_norm_var.(region_name).best_norm_var = pop_avg_norm_var;
-                    elseif strcmpi(animal_name, 'tnc16') && day_num == 23
-                        days_norm_var.(region_name).best_norm_var = pop_avg_norm_var;
-                    elseif strcmpi(animal_name, 'tnc25') && day_num == 23
-                        days_norm_var.(region_name).best_norm_var = pop_avg_norm_var;
-                    end
                 elseif contains(field_name, '_norm_var')
                     split_field = strsplit(field_name, '_');
                     neuron_name = split_field{1};
