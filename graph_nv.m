@@ -1,4 +1,4 @@
-function [] = graph_nv(nv_list, event_strings, original_path)
+function [matfile] = graph_nv(nv_list, event_strings, original_path)
 
     %% Colors
     max_color = 255;
@@ -45,6 +45,7 @@ function [] = graph_nv(nv_list, event_strings, original_path)
 
     csv_data = [];
     pop_csv_data = [];
+    early_late_bar_info = [];
 
 
     %% Preallocate fields
@@ -94,14 +95,28 @@ function [] = graph_nv(nv_list, event_strings, original_path)
             region_name = unique_regions{region};
             repeat_length = length(days_norm_var.(region_name).all_nv_info);
             pop_repeat_length = length(days_norm_var.(region_name).all_days_avg_norm_var);
-            % pop_nv = getfield(days_norm_var.(region_name), all_days_avg_norm_var
+            %% Labels regions as direct or indirect
             if (contains(right_direct, current_animal) && strcmpi('Right', region_name)) || (contains(left_direct, current_animal) && strcmpi('Left', region_name))
                 region_type = 'Direct';
             else
                 region_type = 'Indirect';
             end
-            csv_data = [csv_data; days_norm_var.(region_name).all_nv_info, repmat({region_name}, [repeat_length, 1]), repmat({region_type}, [repeat_length, 1])];
-            pop_csv_data = [pop_csv_data; days_norm_var.(region_name).all_days_avg_norm_var, repmat({region_name}, [pop_repeat_length, 1]), repmat({region_type}, [pop_repeat_length, 1])];
+            %% Labels animal as learning, non learning, or control
+            if contains(control, current_animal)
+                animal_type = 'Control';
+            elseif contains(learning, current_animal)
+                animal_type = 'Learning';
+            else
+                animal_type = 'Non-learning';
+            end
+
+            csv_data = [csv_data; days_norm_var.(region_name).all_nv_info, repmat({region_name}, [repeat_length, 1]), repmat({region_type}, [repeat_length, 1]), repmat({animal_type}, [repeat_length, 1])];
+            pop_csv_data = [pop_csv_data; days_norm_var.(region_name).all_days_avg_norm_var, repmat({region_name}, [pop_repeat_length, 1]), repmat({region_type}, [pop_repeat_length, 1]), ...
+                repmat({animal_type}, [pop_repeat_length, 1])];
+
+
+            repeat_length = length(days_norm_var.(region_name).early_late_bar_info(:,1));
+            early_late_bar_info = [early_late_bar_info; days_norm_var.(region_name).early_late_bar_info, repmat({region_name}, [repeat_length, 1]), repmat({region_type}, [repeat_length, 1]), repmat({animal_type}, [repeat_length, 1])];
         end
 
         %% Skip control animals
@@ -257,56 +272,56 @@ function [] = graph_nv(nv_list, event_strings, original_path)
         %%              NV time fn                 %%
         %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
         
-        if ~contains(control, current_animal) 
-            figure(all_animals_fig)
-            hold on
-            plot(dir_pop(:, 1), dir_pop(:, 2), 'DisplayName', current_animal);
-            hold off
+        % if ~contains(control, current_animal) 
+        %     figure(all_animals_fig)
+        %     hold on
+        %     plot(dir_pop(:, 1), dir_pop(:, 2), 'DisplayName', current_animal);
+        %     hold off
 
             
-            figure('visible', 'on');
-            disp(current_event);
-            plot(dir_pop(:, 1), dir_pop(:, 2));
-            if contains(learning, current_animal)
-                title([current_animal, 'Learning direct NV time function']);
-                graph_file = fullfile(original_path, [current_animal, '_learning_dir_nv_time_fn']);
+        %     figure('visible', 'on');
+        %     disp(current_event);
+        %     plot(dir_pop(:, 1), dir_pop(:, 2));
+        %     if contains(learning, current_animal)
+        %         title([current_animal, 'Learning direct NV time function']);
+        %         graph_file = fullfile(original_path, [current_animal, '_learning_dir_nv_time_fn']);
                 
-                figure(direct_learning_fig)
-                hold on
-                plot(dir_pop(:, 1), dir_pop(:, 2), 'DisplayName', current_animal);
-                hold off
+        %         figure(direct_learning_fig)
+        %         hold on
+        %         plot(dir_pop(:, 1), dir_pop(:, 2), 'DisplayName', current_animal);
+        %         hold off
                 
-                figure(indirect_learning_fig)
-                hold on
-                plot(indir_pop(:, 1), indir_pop(:, 2), 'DisplayName', current_animal);
-                hold off
-            else
-                title([current_animal, 'Non-learning direct NV time function']);
-                graph_file = fullfile(original_path, [current_animal, '_non_learning_dir_nv_time_fn']);
+        %         figure(indirect_learning_fig)
+        %         hold on
+        %         plot(indir_pop(:, 1), indir_pop(:, 2), 'DisplayName', current_animal);
+        %         hold off
+        %     else
+        %         title([current_animal, 'Non-learning direct NV time function']);
+        %         graph_file = fullfile(original_path, [current_animal, '_non_learning_dir_nv_time_fn']);
 
-                figure(direct_non_learning_fig)
-                hold on
-                plot(dir_pop(:, 1), dir_pop(:, 2), 'DisplayName', current_animal);
-                hold off
+        %         figure(direct_non_learning_fig)
+        %         hold on
+        %         plot(dir_pop(:, 1), dir_pop(:, 2), 'DisplayName', current_animal);
+        %         hold off
 
-                figure(indirect_non_learning_fig)
-                hold on
-                plot(indir_pop(:, 1), indir_pop(:, 2), 'DisplayName', current_animal);
-                hold off
-            end
-            saveas(gcf, graph_file);
+        %         figure(indirect_non_learning_fig)
+        %         hold on
+        %         plot(indir_pop(:, 1), indir_pop(:, 2), 'DisplayName', current_animal);
+        %         hold off
+        %     end
+        %     saveas(gcf, graph_file);
 
-            figure('visible', 'on');
-            plot(indir_pop(:, 1), indir_pop(:, 2));
-            if contains(learning, current_animal)
-                title([current_animal, 'Learning indirect NV time function']);
-                graph_file = fullfile(original_path, [current_animal, '_learning_indir_nv_time_fn']);
-            else
-                title([current_animal, 'Non-learning indirect NV time function']);
-                graph_file = fullfile(original_path, [current_animal, '_non_learning_indir_nv_time_fn']);
-            end
-            saveas(gcf, graph_file);
-        end
+        %     figure('visible', 'on');
+        %     plot(indir_pop(:, 1), indir_pop(:, 2));
+        %     if contains(learning, current_animal)
+        %         title([current_animal, 'Learning indirect NV time function']);
+        %         graph_file = fullfile(original_path, [current_animal, '_learning_indir_nv_time_fn']);
+        %     else
+        %         title([current_animal, 'Non-learning indirect NV time function']);
+        %         graph_file = fullfile(original_path, [current_animal, '_non_learning_indir_nv_time_fn']);
+        %     end
+        %     saveas(gcf, graph_file);
+        % end
 
 
     end
@@ -511,15 +526,35 @@ function [] = graph_nv(nv_list, event_strings, original_path)
     figure(indirect_non_learning_fig)
     legend
 
-    spreadsheet_table = cell2table(csv_data, 'VariableNames',{'Animal' 'Animal_ID' 'exp_date' 'exp_day' 'pre_time' 'post_time', 'bin_size' 'norm_var_constant' 'epsilon' 'channel' 'event_1_nv' 'event_2_nv' 'event_3_nv' 'event_4_nv' 'region' 'region_type'});
+    spreadsheet_table = cell2table(csv_data, 'VariableNames',{'Animal' 'Animal_ID' 'exp_date' 'exp_day' 'pre_time' 'post_time', 'bin_size' 'norm_var_constant' 'epsilon' ...
+        'channel' 'event_1_nv' 'event_2_nv' 'event_3_nv' 'event_4_nv' 'region' 'region_type' 'animal_type'});
     matfile = fullfile(original_path, 'unit_nv_analysis.csv');
     writetable(spreadsheet_table, matfile, 'Delimiter', ',');
 
-    pop_spreadsheet_table = cell2table(pop_csv_data, 'VariableNames',{'Animal' 'Animal_ID' 'exp_date' 'exp_day' 'pre_time' 'post_time', 'bin_size' 'norm_var_constant' 'epsilon' 'event_1_nv' 'event_2_nv' 'event_3_nv' 'event_4_nv' 'region' 'region_type'});
+    pop_spreadsheet_table = cell2table(pop_csv_data, 'VariableNames',{'Animal' 'Animal_ID' 'exp_date' 'exp_day' 'pre_time' 'post_time', 'bin_size' 'norm_var_constant' 'epsilon' ...
+        'event_1_nv' 'event_2_nv' 'event_3_nv' 'event_4_nv' 'event_1_std' 'event_2_std' 'event_3_std' 'event_4_std' 'event_1_std_err' 'event_2_std_err' 'event_3_std_err' ...
+        'event_4_std_err' 'region' 'region_type' 'animal_type'});
     matfile = fullfile(original_path, 'pop_nv_analysis.csv');
     writetable(pop_spreadsheet_table, matfile, 'Delimiter', ',');
 
-    matfile = fullfile(original_path, 'test.mat');
-    save(matfile, 'csv_data', 'nv_event_graphs', 'early_direct_learn_non_learn', 'late_direct_learn_non_learn', 'early_indirect_learn_non_learn', 'late_indirect_learn_non_learn', ...
-    'late_direct_learn_non_learn_p_value', 'late_direct_learn_non_learn_ci', 'late_direct_learn_non_learn_stats', 'early_indirect_learn_non_learn_p_value', 'early_indirect_learn_non_learn_ci', 'early_indirect_learn_non_learn_stats');
+    early_late_raw_info = cell2table(early_late_bar_info, 'VariableNames', {'Animal' 'Animal_ID' 'early_event_1_nv' 'early_event_2_nv' 'early_event_3_nv' 'early_event_4_nv' ...
+        'late_event_1_nv' 'late_event_2_nv' 'late_event_3_nv' 'late_event_4_nv' 'region' 'region_type' 'animal_type'});
+
+    %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+    %%            Group NV Graph               %%
+    %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+    day_nv_table = varfun(@(x) mean(x, 'omitnan'), pop_spreadsheet_table, 'GroupingVariables', {'exp_day', 'animal_type', 'region_type'}, ...
+        'InputVariables', {'event_1_nv', 'event_1_std', 'event_1_std_err'});
+    
+    mystats = @(x)[mean(x, 'omitnan') std(x, 'omitnan') (std(x, 'omitnan')/sqrt(length(x)))];
+    
+    test_day_nv_table = varfun(mystats, pop_spreadsheet_table, 'GroupingVariables', {'exp_day', 'animal_type', 'region_type'}, ...
+        'InputVariables', 'event_1_nv')
+        
+    early_late_table = varfun(mystats, early_late_raw_info, 'GroupingVariables', {'animal_type', 'region_type'}, ...
+        'InputVariables', {'early_event_1_nv', 'early_event_2_nv', 'early_event_3_nv', 'early_event_4_nv', 'late_event_1_nv', 'late_event_2_nv', 'late_event_3_nv', 'late_event_4_nv'})
+
+    matfile = fullfile(original_path, 'group_nv_results.mat');
+    save(matfile, 'csv_data', 'nv_event_graphs', 'day_nv_table', 'test_day_nv_table', 'early_late_bar_info', 'early_late_table');
 end
