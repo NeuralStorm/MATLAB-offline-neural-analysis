@@ -62,6 +62,9 @@ function [] = main()
                 %% Use the code commented out below to skip parsing
                 parsed_path = [animal_path, '/parsed_plx'];
 
+                %% Creates labeled neurons
+                label_neurons(animal_path, animal_name, parsed_path);
+
                 %% Run if you want to calculate the PSTH or comment it out to skip
                 try
                     % psth_path = format_PSTH(parsed_path, animal_name, total_bins, bin_size, pre_time, post_time, ...
@@ -113,8 +116,7 @@ function [] = main()
             end
         end
     end
-    %! direct and indirect labels are hard coded as 'Right' and 'Left'
-    % population_nv(nv_list)
-    graph_nv(nv_list, event_strings, original_path);
+    group_nv_path = graph_nv(nv_list, event_strings, original_path);
+    group_nv_graphs(group_nv_path)
     toc(start_time);
 end
