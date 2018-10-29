@@ -1,4 +1,4 @@
-function [matfile] = graph_nv(nv_list, event_strings, original_path)
+function matfile = graph_nv(nv_list, event_strings, original_path)
     % NV = norm_var = normalized variance
 
     %% Animal categories
@@ -19,9 +19,11 @@ function [matfile] = graph_nv(nv_list, event_strings, original_path)
     indirect_non_learning_fig = figure('visible', 'on');
     title('Indirect non learning')
 
-    csv_data = [];
+    unit_csv_data = [];
     pop_csv_data = [];
     early_late_bar_info = [];
+    z_early_late_bar_info = [];
+    z_csv_data = [];
 
 
     %% Preallocate fields
@@ -64,7 +66,7 @@ function [matfile] = graph_nv(nv_list, event_strings, original_path)
 
         for region = 1:length(unique_regions)
             region_name = unique_regions{region};
-            repeat_length = length(days_norm_var.(region_name).all_nv_info);
+            repeat_length = length(days_norm_var.(region_name).unit_nv_info);
             pop_repeat_length = length(days_norm_var.(region_name).all_days_avg_norm_var);
             %% Labels regions as direct or indirect
             if (contains(right_direct, current_animal) && strcmpi('Right', region_name)) || (contains(left_direct, current_animal) && strcmpi('Left', region_name))
@@ -81,13 +83,19 @@ function [matfile] = graph_nv(nv_list, event_strings, original_path)
                 animal_type = 'Non-learning';
             end
 
-            csv_data = [csv_data; days_norm_var.(region_name).all_nv_info, repmat({region_name}, [repeat_length, 1]), repmat({region_type}, [repeat_length, 1]), repmat({animal_type}, [repeat_length, 1])];
+            unit_csv_data = [unit_csv_data; days_norm_var.(region_name).unit_nv_info, repmat({region_name}, [repeat_length, 1]), repmat({region_type}, [repeat_length, 1]), repmat({animal_type}, [repeat_length, 1])];
             pop_csv_data = [pop_csv_data; days_norm_var.(region_name).all_days_avg_norm_var, repmat({region_name}, [pop_repeat_length, 1]), repmat({region_type}, [pop_repeat_length, 1]), ...
+                repmat({animal_type}, [pop_repeat_length, 1])];
+
+            z_csv_data = [z_csv_data; days_norm_var.(region_name).z_score, repmat({region_name}, [pop_repeat_length, 1]), repmat({region_type}, [pop_repeat_length, 1]), ...
                 repmat({animal_type}, [pop_repeat_length, 1])];
 
 
             repeat_length = length(days_norm_var.(region_name).early_late_bar_info(:,1));
             early_late_bar_info = [early_late_bar_info; days_norm_var.(region_name).early_late_bar_info, repmat({region_name}, [repeat_length, 1]), repmat({region_type}, [repeat_length, 1]), repmat({animal_type}, [repeat_length, 1])];
+
+            repeat_length = length(days_norm_var.(region_name).z_early_late_bar_info(:,1));
+            z_early_late_bar_info = [z_early_late_bar_info; days_norm_var.(region_name).z_early_late_bar_info, repmat({region_name}, [repeat_length, 1]), repmat({region_type}, [repeat_length, 1]), repmat({animal_type}, [repeat_length, 1])];
         end
 
         %% Skip control animals
@@ -254,10 +262,10 @@ function [matfile] = graph_nv(nv_list, event_strings, original_path)
     figure(indirect_non_learning_fig)
     legend
 
-    spreadsheet_table = cell2table(csv_data, 'VariableNames',{'Animal' 'Animal_ID' 'exp_date' 'exp_day' 'pre_time' 'post_time', 'bin_size' 'norm_var_constant' 'epsilon' ...
-        'channel' 'event_1_nv' 'event_2_nv' 'event_3_nv' 'event_4_nv' 'region' 'region_type' 'animal_type'});
+    unit_table = cell2table(unit_csv_data, 'VariableNames',{'complete_animal_name' 'animal' 'animal_id' 'exp_date' 'exp_day' 'pre_time' 'post_time', 'bin_size' 'norm_var_constant' 'epsilon' ...
+        'channel' 'norm_var' 'region' 'region_type' 'animal_type'});
     matfile = fullfile(original_path, 'unit_nv_analysis.csv');
-    writetable(spreadsheet_table, matfile, 'Delimiter', ',');
+    writetable(unit_table, matfile, 'Delimiter', ',');
 
     pop_spreadsheet_table = cell2table(pop_csv_data, 'VariableNames',{'Animal' 'Animal_ID' 'exp_date' 'exp_day' 'pre_time' 'post_time', 'bin_size' 'norm_var_constant' 'epsilon' ...
         'event_1_nv' 'event_2_nv' 'event_3_nv' 'event_4_nv' 'event_1_std' 'event_2_std' 'event_3_std' 'event_4_std' 'event_1_std_err' 'event_2_std_err' 'event_3_std_err' ...
@@ -265,8 +273,16 @@ function [matfile] = graph_nv(nv_list, event_strings, original_path)
     matfile = fullfile(original_path, 'pop_nv_analysis.csv');
     writetable(pop_spreadsheet_table, matfile, 'Delimiter', ',');
 
+    pop_z_score_table = cell2table(z_csv_data, 'VariableNames',{'Animal' 'Animal_ID' 'exp_date' 'exp_day' 'pre_time' 'post_time', 'bin_size' 'norm_var_constant' 'epsilon' ...
+        'z_score_event_1' 'z_score_event_2' 'z_score_event_3' 'z_score_event_4' 'region' 'region_type' 'animal_type'});
+    matfile = fullfile(original_path, 'pop_z_score_analysis.csv');
+    writetable(pop_spreadsheet_table, matfile, 'Delimiter', ',');
+
     early_late_raw_info = cell2table(early_late_bar_info, 'VariableNames', {'Animal' 'Animal_ID' 'early_event_1_nv' 'early_event_2_nv' 'early_event_3_nv' 'early_event_4_nv' ...
         'late_event_1_nv' 'late_event_2_nv' 'late_event_3_nv' 'late_event_4_nv' 'region' 'region_type' 'animal_type'});
+
+    z_early_late_raw_info = cell2table(z_early_late_bar_info, 'VariableNames', {'Animal' 'Animal_ID' 'z_early_event_1_nv' 'z_early_event_2_nv' 'z_early_event_3_nv' 'z_early_event_4_nv' ...
+        'z_late_event_1_nv' 'z_late_event_2_nv' 'z_late_event_3_nv' 'z_late_event_4_nv' 'region' 'region_type' 'animal_type'});
 
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
     %%            Group NV Graph               %%
@@ -278,12 +294,19 @@ function [matfile] = graph_nv(nv_list, event_strings, original_path)
     mystats = @(x)[mean(x, 'omitnan') std(x, 'omitnan') (std(x, 'omitnan')/sqrt(length(x)))];
     
     all_day_nv_table = varfun(mystats, pop_spreadsheet_table, 'GroupingVariables', {'exp_day', 'animal_type', 'region_type'}, ...
-        'InputVariables', 'event_1_nv')
+        'InputVariables', 'event_1_nv');
         
     early_late_table = varfun(mystats, early_late_raw_info, 'GroupingVariables', {'animal_type', 'region_type'}, ...
-        'InputVariables', {'early_event_1_nv', 'early_event_2_nv', 'early_event_3_nv', 'early_event_4_nv', 'late_event_1_nv', 'late_event_2_nv', 'late_event_3_nv', 'late_event_4_nv'})
+        'InputVariables', {'early_event_1_nv', 'early_event_2_nv', 'early_event_3_nv', 'early_event_4_nv', 'late_event_1_nv', 'late_event_2_nv', 'late_event_3_nv', 'late_event_4_nv'});
+
+    z_score_table = varfun(mystats, pop_z_score_table, 'GroupingVariables', {'exp_day', 'animal_type', 'region_type'}, ...
+        'InputVariables', 'z_score_event_1')
+
+    z_early_late_table = varfun(mystats, z_early_late_raw_info, 'GroupingVariables', {'animal_type', 'region_type'}, ...
+        'InputVariables', {'z_early_event_1_nv' 'z_early_event_2_nv' 'z_early_event_3_nv' 'z_early_event_4_nv' ...
+        'z_late_event_1_nv' 'z_late_event_2_nv' 'z_late_event_3_nv' 'z_late_event_4_nv'})
 
     matfile = fullfile(original_path, 'group_nv_results.mat');
-    save(matfile, 'csv_data', 'nv_event_graphs', 'day_nv_table', 'all_day_nv_table', 'early_late_bar_info', 'early_late_table', 'early_direct_learn_non_learn_ttest', ...
-        'late_direct_learn_non_learn_ttest', 'early_indirect_learn_non_learn_ttest', 'late_indirect_learn_non_learn_ttest');
+    save(matfile, 'unit_table', 'nv_event_graphs', 'day_nv_table', 'all_day_nv_table', 'early_late_bar_info', 'early_late_table', 'early_direct_learn_non_learn_ttest', ...
+        'late_direct_learn_non_learn_ttest', 'early_indirect_learn_non_learn_ttest', 'late_indirect_learn_non_learn_ttest', 'z_score_table', 'z_early_late_table', 'unique_regions');
 end
