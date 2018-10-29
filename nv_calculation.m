@@ -138,6 +138,22 @@ function [nv_calc_path, region_channels, event_strings] = nv_calculation(psth_pa
             nv_analysis.(region_name).labeled_nv = [repmat({current_animal}, [repeat_labels_length, 1]), repmat({current_animal_id}, [repeat_labels_length, 1]), repmat({exp_date}, [repeat_labels_length, 1]), repmat({day_num}, [repeat_labels_length, 1]),  ...
                     repmat({pre_time}, [repeat_labels_length, 1]), repmat({post_time}, [repeat_labels_length, 1]), repmat({bin_size}, [repeat_labels_length, 1]), repmat({norm_var_scaling}, [repeat_labels_length, 1]), repmat({epsilon}, ...
                     [repeat_labels_length, 1]), neuron_labels, pop_norm_var];
+
+            transposed_pop_norm = pop_norm_var';
+            % combined events is oorganized by numerical order still so
+            % each group of 4 would be ordered event 1, event 3, event 4, event 6
+            combined_events = transposed_pop_norm(:);
+            repeat_labels_length = length(combined_events);
+
+            if length(neuron_labels) == 1
+                repeated_neuron_labels = repelem(neuron_labels, 4)';
+            else
+                repeated_neuron_labels = repelem(neuron_labels, 4);
+            end
+
+            nv_analysis.(region_name).combined_event_nv = [repmat({[current_animal, current_animal_id]}, [repeat_labels_length, 1]), repmat({current_animal}, [repeat_labels_length, 1]), repmat({current_animal_id}, [repeat_labels_length, 1]), repmat({exp_date}, [repeat_labels_length, 1]), repmat({day_num}, [repeat_labels_length, 1]),  ...
+                repmat({pre_time}, [repeat_labels_length, 1]), repmat({post_time}, [repeat_labels_length, 1]), repmat({bin_size}, [repeat_labels_length, 1]), repmat({norm_var_scaling}, [repeat_labels_length, 1]), repmat({epsilon}, ...
+                [repeat_labels_length, 1]), repeated_neuron_labels, combined_events];
         end
 
         %% Save analysis results
