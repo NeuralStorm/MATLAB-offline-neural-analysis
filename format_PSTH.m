@@ -19,7 +19,7 @@ function [psth_path] = format_PSTH(parsed_path, animal_name, total_bins, bin_siz
        rmdir(failed_path);
     end
 
-    % Creates a cell array of strings with the naes of all the desired events
+    % Creates a cell array of strings with the names of all the desired events
     event_strings = {};
     for i = 1: length(wanted_events)
         event_strings{end+1} = ['event_', num2str(wanted_events(i))];
