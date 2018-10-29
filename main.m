@@ -22,7 +22,7 @@ function [] = main()
     append_spreadsheet = false;
 
     %% Receptive Field Analysis
-    rf_analysis = true;
+    rf_analysis = false;
     % Span is the number of bins, centered on the current bin the moving average filter will be applied to
     span = 3;
     % threshold_scale determines how the threshold is scaled
@@ -63,7 +63,7 @@ function [] = main()
                 parsed_path = [animal_path, '/parsed_plx'];
 
                 %% Creates labeled neurons
-                label_neurons(animal_path, animal_name, parsed_path);
+                % label_neurons(animal_path, animal_name, parsed_path);
 
                 %% Run if you want to calculate the PSTH or comment it out to skip
                 try
@@ -87,6 +87,8 @@ function [] = main()
                 [nv_calc_path, region_channels, event_strings] = nv_calculation(psth_path, animal_name, pre_time, post_time, bin_size, span, epsilon, norm_var_scaling);
 
                 nv_path = normalized_variance_analysis(nv_calc_path, animal_name, wanted_events, region_channels, event_strings);
+                % nv_calc_path = [psth_path, '/normalized_variance_analysis'];
+                % nv_path = [nv_calc_path, '/nv_results'];
                 nv_list = [nv_list; {nv_path}];
 
                 %% Run if you want to graph all of the PSTHs or comment it out to skip
@@ -117,6 +119,6 @@ function [] = main()
         end
     end
     group_nv_path = graph_nv(nv_list, event_strings, original_path);
-    group_nv_graphs(group_nv_path)
+    graph_z_score_nv(group_nv_path);
     toc(start_time);
 end
