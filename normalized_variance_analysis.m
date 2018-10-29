@@ -31,8 +31,11 @@ function [nv_path] = normalized_variance_analysis(nv_calc_path, animal_name, wan
             days_norm_var.(region_name).late_pop = [];
             days_norm_var.(region_name).overall_pop = [];
             days_norm_var.(region_name).all_nv_info = [];
+            days_norm_var.(region_name).unit_nv_info = [];
             days_norm_var.(region_name).all_days_avg_norm_var = [];
             days_norm_var.(region_name).early_late_bar_info = [];
+            days_norm_var.(region_name).z_score = [];
+            days_norm_var.(region_name).z_early_late_bar_info = [];
         end
     end
 
@@ -58,6 +61,7 @@ function [nv_path] = normalized_variance_analysis(nv_calc_path, animal_name, wan
         for region = 1:length(region_names)
             region_name = region_names{region};
             days_norm_var.(region_name).all_nv_info = [days_norm_var.(region_name).all_nv_info; nv_analysis.(region_name).labeled_nv];
+            days_norm_var.(region_name).unit_nv_info = [days_norm_var.(region_name).unit_nv_info; nv_analysis.(region_name).combined_event_nv];
             region_fields = fieldnames(nv_analysis.(region_name));
             for field = 1:length(region_fields)
                 field_name = region_fields{field};
@@ -78,7 +82,10 @@ function [nv_path] = normalized_variance_analysis(nv_calc_path, animal_name, wan
                     end
 
                     % Handles creating the early versus late population analysis
-                    if day_num >= 1 && day_num <= 5
+                    if day_num == 0
+                        days_norm_var.(region_name).baseline_avg = pop_avg_norm_var;
+                        days_norm_var.(region_name).baseline_std_dev = pop_std_dev;
+                    elseif day_num >= 1 && day_num <= 5
                         days_norm_var.(region_name).early_norm_var = [days_norm_var.(region_name).early_norm_var;  pop_avg_norm_var];
                         days_norm_var.(region_name).early_pop = [days_norm_var.(region_name).early_pop; pop_norm_vars];
                     elseif day_num >= 21 && day_num <= 25
@@ -88,7 +95,8 @@ function [nv_path] = normalized_variance_analysis(nv_calc_path, animal_name, wan
 
                     repeat_length = length(pop_avg_norm_var(:,1));
 
-                    days_norm_var.(region_name).all_days_avg_norm_var = [days_norm_var.(region_name).all_days_avg_norm_var; repmat({current_animal}, [repeat_length, 1]), repmat({current_animal_id}, [repeat_length, 1]), repmat({exp_date}, [repeat_length, 1]), repmat({day_num}, [repeat_length, 1]),  ...
+                    days_norm_var.(region_name).all_days_avg_norm_var = [days_norm_var.(region_name).all_days_avg_norm_var; repmat({current_animal}, [repeat_length, 1]), ...
+                        repmat({current_animal_id}, [repeat_length, 1]), repmat({exp_date}, [repeat_length, 1]), repmat({day_num}, [repeat_length, 1]),  ...
                         repmat({pre_time}, [repeat_length, 1]), repmat({post_time}, [repeat_length, 1]), repmat({bin_size}, [repeat_length, 1]), repmat({norm_var_scaling}, [repeat_length, 1]), repmat({epsilon}, ...    
                         [repeat_length, 1]), num2cell([pop_avg_norm_var]), num2cell([pop_std_dev]), num2cell([pop_std_err])];
                     days_norm_var.(region_name).overall_pop = [days_norm_var.(region_name).overall_pop; [day_num, pop_avg_norm_var]];
@@ -102,6 +110,7 @@ function [nv_path] = normalized_variance_analysis(nv_calc_path, animal_name, wan
             end
             %% Sort days
             days_norm_var.(region_name).overall_pop = sortrows(days_norm_var.(region_name).overall_pop, 1);
+            days = sortrows(days, 1);
         end
     end
 
@@ -110,8 +119,25 @@ function [nv_path] = normalized_variance_analysis(nv_calc_path, animal_name, wan
     for region = 1:length(region_names)
         region_name = region_names{region};
 
+        repeat_length = length(days);
+        sorted_pop = days_norm_var.(region_name).overall_pop(:, 2:end);
+        pop_z_score = (sorted_pop - days_norm_var.(region_name).baseline_avg) ./ days_norm_var.(region_name).baseline_std_dev;
+        days_norm_var.(region_name).z_score = [repmat({current_animal}, [repeat_length, 1]), ...
+            repmat({current_animal_id}, [repeat_length, 1]), repmat({exp_date}, [repeat_length, 1]),  num2cell([days]), ...
+            repmat({pre_time}, [repeat_length, 1]), repmat({post_time}, [repeat_length, 1]), repmat({bin_size}, [repeat_length, 1]), repmat({norm_var_scaling}, [repeat_length, 1]), repmat({epsilon}, [repeat_length, 1]), ...
+            num2cell([pop_z_score])];
+
+
+        %% Z-Score bar info
+        % days_norm_var.(region_name).z_score_early_late_bar_info = [];
+        z_early_norm = (days_norm_var.(region_name).early_norm_var - days_norm_var.(region_name).baseline_avg) ./ days_norm_var.(region_name).baseline_std_dev;
+        z_late_norm = (days_norm_var.(region_name).late_norm_var - days_norm_var.(region_name).baseline_avg) ./ days_norm_var.(region_name).baseline_std_dev;
+
         repeat_length = length(days_norm_var.(region_name).early_norm_var(:,1));
         days_norm_var.(region_name).early_late_bar_info = [days_norm_var.(region_name).early_late_bar_info; repmat({current_animal}, [repeat_length, 1]), repmat({current_animal_id}, [repeat_length, 1]), ...
+            num2cell([days_norm_var.(region_name).early_norm_var]), num2cell([days_norm_var.(region_name).late_norm_var])];
+
+        days_norm_var.(region_name).z_early_late_bar_info = [days_norm_var.(region_name).z_early_late_bar_info; repmat({current_animal}, [repeat_length, 1]), repmat({current_animal_id}, [repeat_length, 1]), ...
             num2cell([days_norm_var.(region_name).early_norm_var]), num2cell([days_norm_var.(region_name).late_norm_var])];
 
         region_neurons = fieldnames(days_norm_var.(region_name));
