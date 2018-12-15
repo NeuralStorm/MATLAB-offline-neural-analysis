@@ -1,7 +1,7 @@
 function [] = main()
     start_time = tic;
     %% Initialize global variables
-    bin_size = 0.002;
+    bin_size = 0.020;
     total_trials = 100;
     total_events = 4;
     pre_time = 0.2;
@@ -9,6 +9,11 @@ function [] = main()
     total_bins = (length([-abs(pre_time):bin_size:abs(post_time)]) - 1);
     % Requires for all events to be in array. IF empty it will skip all events
     wanted_events = [1, 3, 4, 6];
+        % Creates a cell array of strings with the names of all the desired events
+    event_strings = {};
+    for i = 1: length(wanted_events)
+        event_strings{end+1} = ['event_', num2str(wanted_events(i))];
+    end
     % Inclusive Range
     trial_range = [1, 300];
     % Give exact directory name of the animals you want skipped
@@ -41,9 +46,20 @@ function [] = main()
     % List of where all the nv analysis result files are stored for population analysis at the end
     nv_list = [];
 
+    %% gpfa
+    optimize_state_dimension = false;
+    state_dimension = 2;
+    prediction_error_dimensions = [3 6 9];
+    % Max number of trials plotted on trajectory
+    plot_trials = 10;
+    % How many dimensions should be used to plot trajectories (2 or 3 dimensions)
+    plot_dimensions = 2;
+    %% Controls which factors are used in the plot
+    dimsToPlot = 1:2;
+
     % Get the directory with all animals and their respective .plx files
     original_path = uigetdir(pwd);
-    animal_list = dir(original_path);
+    animal_list = dir(original_path);   
     % Starts at index 3 since dir returns '.' and '..'
     if length(animal_list) > 2
         first_iteration = true;
@@ -72,24 +88,29 @@ function [] = main()
                 end
                 %% Use code commeneted out below to skip PSTH calculations
                 psth_path = [parsed_path, '/psth'];
+                %% Euclidian function call
+                euclidian_path = unit_euclidian_psth(original_path, psth_path, animal_name, first_iteration);
+                %% Trajectory analysis
+                % neural_trajectory_analysis(original_path, animal_name, psth_path, bin_size, total_trials, total_bins, pre_time, post_time, ...
+                %     event_strings, optimize_state_dimension, state_dimension, prediction_error_dimensions, plot_trials, plot_dimensions, dimsToPlot);
 
                 %% Use to run receptive field analysis
-                if rf_analysis
-                    try
+                % if rf_analysis
+                %     try
                         % rf_path = receptive_field_analysis(psth_path, animal_name, pre_time, post_time, bin_size, total_bins, ...
                         %     threshold_scale, sig_check, sig_bins, span, wanted_events);
-                    end
-                end
+                %     end
+                % end
 
                 %% Use code commeneted out below to skip RF analysis calculations
                 rf_path = [psth_path, '/receptive_field_analysis'];
 
-                [nv_calc_path, region_channels, event_strings] = nv_calculation(psth_path, animal_name, pre_time, post_time, bin_size, span, epsilon, norm_var_scaling);
+                % [nv_calc_path, region_channels, event_strings] = nv_calculation(psth_path, animal_name, pre_time, post_time, bin_size, span, epsilon, norm_var_scaling);
 
-                nv_path = normalized_variance_analysis(nv_calc_path, animal_name, wanted_events, region_channels, event_strings);
+                % nv_path = normalized_variance_analysis(nv_calc_path, animal_name, wanted_events, region_channels, event_strings);
                 % nv_calc_path = [psth_path, '/normalized_variance_analysis'];
                 % nv_path = [nv_calc_path, '/nv_results'];
-                nv_list = [nv_list; {nv_path}];
+                % nv_list = [nv_list; {nv_path}];
 
                 %% Run if you want to graph all of the PSTHs or comment it out to skip
                 % try
@@ -102,7 +123,7 @@ function [] = main()
 
                 %% To skip bootstrapping
                 classified_path = [psth_path, '/classifier'];
-
+                % neural_trajectory_analysis(original_path, animal_name, psth_path, spreadsheet_name, bin_size, total_trials, total_bins, pre_time, post_time, event_strings);
                 %% Run for synergy redundancy calculation
                 % Checks to make sure that both population and unit information exists
                 % unit_path = [classified_path, '/unit'];
@@ -114,11 +135,12 @@ function [] = main()
                 % % %% Write to spreadsheet
                 % csv_export(classified_path, original_path, total_events, wanted_events, pre_time, post_time, bin_size, first_iteration, ...
                 %     trial_range, boot_iterations, animal_name, total_trials, unit_classification, spreadsheet_name, append_spreadsheet);
-                % first_iteration = false;
+                first_iteration = false;
             end
         end
     end
-    group_nv_path = graph_nv(nv_list, event_strings, original_path);
-    graph_z_score_nv(group_nv_path);
+    % group_nv_path = graph_nv(nv_list, event_strings, original_path);
+    % graph_z_score_nv(group_nv_path);
+    % graph_euclidian_psth(original_path, euclidian_path);
     toc(start_time);
 end
