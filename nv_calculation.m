@@ -1,5 +1,5 @@
 function [nv_calc_path, region_channels, event_strings] = nv_calculation(psth_path, animal_name, pre_time, post_time, bin_size, span, epsilon, norm_var_scaling)
-    % nv = normalized variance, bfr = background firing rate
+    % nv = normalized variance, bfr = background firing rate, rf = receptive field
 
     if pre_time <= 0.050
         error('Pre time can not be set to 0 for normalized variance analysis. Recreate the PSTH format with a different pre time.');
@@ -8,7 +8,6 @@ function [nv_calc_path, region_channels, event_strings] = nv_calculation(psth_pa
     psth_mat_path = [psth_path, '/*.mat'];
     psth_files = dir(psth_mat_path);
 
-    % rf = receptive field
     nv_calc_path = [psth_path, '/normalized_variance_analysis'];
     if ~exist(nv_calc_path, 'dir')
         mkdir(psth_path, 'normalized_variance_analysis');
@@ -83,7 +82,6 @@ function [nv_calc_path, region_channels, event_strings] = nv_calculation(psth_pa
                         break;
                     end
                 end
-                % TODO pull out the pretime window, calculate background rate, and store in struct per neuron
                 current_pre = relative_response(last_trial_index:event_end_indeces(event), (pre_index - pre_time_bins + 1 ):pre_index);
                 % Calculate background rate
                 background_rate = sum(current_pre, 2) / (pre_time * 1000);

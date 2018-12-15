@@ -169,8 +169,8 @@ function [] = graph_z_score_nv(group_nv_path)
 
     title('Learning Z-Score NV');
 
-    ylim([-0.50 15.5]);
-    yticks([-0.50, 0, 15.5]);
+    ylim([-0.50 14.5]);
+    yticks([-0.50, 0, 14.5]);
     ytickformat('%.2f')
     hold off
     graph_name = 'line_Z_learn.png';
@@ -229,8 +229,8 @@ function [] = graph_z_score_nv(group_nv_path)
     lg.Orientation = 'Horizontal';
 
     title('Non Learning Z-Score NV');
-    ylim([-0.50 15.5]);
-    yticks([-0.50, 0, 15.5]);
+    ylim([-0.50 14.5]);
+    yticks([-0.50, 0, 14.5]);
     ytickformat('%.2f')
     hold off
     graph_name = 'line_Z_non_learn.png';
@@ -284,8 +284,8 @@ function [] = graph_z_score_nv(group_nv_path)
     ylabel('Normalized Variance');
     % ylim(ax, [floor(learning_ylim(1)) ceil(learning_ylim(2))]);
     % yticks(ax, [floor(learning_ylim(1)) 0 ceil(learning_ylim(2))]);
-    ylim([-0.50 15.5]);
-    yticks([-0.50, 0, 15.5]);
+    ylim([-0.50 14.5]);
+    yticks([-0.50, 0, 14.5]);
     ytickformat('%.2f')
     hold off;
     graph_name = 'bar_z_learn.png';
@@ -339,8 +339,8 @@ function [] = graph_z_score_nv(group_nv_path)
     ylabel('Normalized Variance');
     % ylim(ax, [-0.50 (non_learning_ylims(2))]);
     % yticks(ax, [-0.50 0 (non_learning_ylims(2))]);
-    ylim([-0.50 15.5]);
-    yticks([-0.50, 0, 15.5]);
+    ylim([-0.50 14.5]);
+    yticks([-0.50, 0, 14.5]);
     ytickformat('%.2f')
     hold off;
     graph_name = 'bar_z_non_learn.png';

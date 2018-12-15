@@ -13,8 +13,8 @@ function [classify_path] = crude_bootstrapper(psth_path, animal_name, boot_itera
     % Deletes the failed directory if it already exists
     failed_path = [classify_path, '/failed'];
     if exist(failed_path, 'dir') == 7
-    delete([failed_path, '/*']);
-    rmdir(failed_path);
+        delete([failed_path, '/*']);
+        rmdir(failed_path);
     end
 
     %% Iterates through all the psth formated files and passes them into the clasifier
