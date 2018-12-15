@@ -151,19 +151,19 @@ function [estParams, seq, LL, iterTime] = em(currentParams, seq, varargin)
     iterTime = [iterTime tEnd];
 
     % Display the most recent likelihood that was evaluated
-    if verbose
-      if getLL
-        fprintf('       lik %g (%.1f sec)\n', LLi, tEnd);
-      else
-        fprintf('\n');
-      end
-    else
-      if getLL
-        fprintf('       lik %g\r', LLi);
-      else
-        fprintf('\r');
-      end
-    end
+    % if verbose
+    %   if getLL
+    %     fprintf('       lik %g (%.1f sec)\n', LLi, tEnd);
+    %   else
+    %     fprintf('\n');
+    %   end
+    % else
+    %   if getLL
+    %     fprintf('       lik %g\r', LLi);
+    %   else
+    %     fprintf('\r');
+    %   end
+    % end
     
     % Verify that likelihood is growing monotonically
     if i<=2
