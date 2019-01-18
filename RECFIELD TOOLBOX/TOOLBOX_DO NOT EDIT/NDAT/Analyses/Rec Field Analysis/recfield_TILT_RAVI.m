@@ -372,9 +372,11 @@ Index1=aboveThreshBins(1);
 Index2=aboveThreshBins(end);
 
 % response magnitude
+%! why is the background firing rate not subtracted?
 RMSpikes = sum(CurrMatrix(Index1:Index2));  % # of spikes per trial (within response window)
 
 % peak response
+%! why is the background firing rate not subtracted?
 PRSpikes =  max(CurrMatrix(Index1:Index2));% in spikes per trial in one bin
 PRIndex = find(CurrMatrix(Index1:Index2)==PRSpikes, 1, 'last' );
 

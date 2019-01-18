@@ -1,5 +1,5 @@
 function [nv_calc_path, region_channels, event_strings] = nv_calculation(psth_path, animal_name, pre_time, post_time, bin_size, span, epsilon, norm_var_scaling)
-    % nv = normalized variance, bfr = background firing rate
+    % nv = normalized variance, bfr = background firing rate, rf = receptive field
 
     if pre_time <= 0.050
         error('Pre time can not be set to 0 for normalized variance analysis. Recreate the PSTH format with a different pre time.');
@@ -8,7 +8,6 @@ function [nv_calc_path, region_channels, event_strings] = nv_calculation(psth_pa
     psth_mat_path = [psth_path, '/*.mat'];
     psth_files = dir(psth_mat_path);
 
-    % rf = receptive field
     nv_calc_path = [psth_path, '/normalized_variance_analysis'];
     if ~exist(nv_calc_path, 'dir')
         mkdir(psth_path, 'normalized_variance_analysis');
@@ -83,7 +82,6 @@ function [nv_calc_path, region_channels, event_strings] = nv_calculation(psth_pa
                         break;
                     end
                 end
-                % TODO pull out the pretime window, calculate background rate, and store in struct per neuron
                 current_pre = relative_response(last_trial_index:event_end_indeces(event), (pre_index - pre_time_bins + 1 ):pre_index);
                 % Calculate background rate
                 background_rate = sum(current_pre, 2) / (pre_time * 1000);
@@ -138,6 +136,22 @@ function [nv_calc_path, region_channels, event_strings] = nv_calculation(psth_pa
             nv_analysis.(region_name).labeled_nv = [repmat({current_animal}, [repeat_labels_length, 1]), repmat({current_animal_id}, [repeat_labels_length, 1]), repmat({exp_date}, [repeat_labels_length, 1]), repmat({day_num}, [repeat_labels_length, 1]),  ...
                     repmat({pre_time}, [repeat_labels_length, 1]), repmat({post_time}, [repeat_labels_length, 1]), repmat({bin_size}, [repeat_labels_length, 1]), repmat({norm_var_scaling}, [repeat_labels_length, 1]), repmat({epsilon}, ...
                     [repeat_labels_length, 1]), neuron_labels, pop_norm_var];
+
+            transposed_pop_norm = pop_norm_var';
+            % combined events is oorganized by numerical order still so
+            % each group of 4 would be ordered event 1, event 3, event 4, event 6
+            combined_events = transposed_pop_norm(:);
+            repeat_labels_length = length(combined_events);
+
+            if length(neuron_labels) == 1
+                repeated_neuron_labels = repelem(neuron_labels, 4)';
+            else
+                repeated_neuron_labels = repelem(neuron_labels, 4);
+            end
+
+            nv_analysis.(region_name).combined_event_nv = [repmat({[current_animal, current_animal_id]}, [repeat_labels_length, 1]), repmat({current_animal}, [repeat_labels_length, 1]), repmat({current_animal_id}, [repeat_labels_length, 1]), repmat({exp_date}, [repeat_labels_length, 1]), repmat({day_num}, [repeat_labels_length, 1]),  ...
+                repmat({pre_time}, [repeat_labels_length, 1]), repmat({post_time}, [repeat_labels_length, 1]), repmat({bin_size}, [repeat_labels_length, 1]), repmat({norm_var_scaling}, [repeat_labels_length, 1]), repmat({epsilon}, ...
+                [repeat_labels_length, 1]), repeated_neuron_labels, combined_events];
         end
 
         %% Save analysis results

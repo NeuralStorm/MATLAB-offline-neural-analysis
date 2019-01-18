@@ -1,5 +1,5 @@
 function [psth_path] = format_PSTH(parsed_path, animal_name, total_bins, bin_size, pre_time, post_time, ...
-                            wanted_events, trial_range, total_trials)
+        wanted_events, trial_range, total_trials)
     tic;
     % Grabs all .mat files in the parsed plx directory
     parsed_mat_path = strcat(parsed_path, '/*.mat');
@@ -19,13 +19,15 @@ function [psth_path] = format_PSTH(parsed_path, animal_name, total_bins, bin_siz
        rmdir(failed_path);
     end
 
-    % Creates a cell array of strings with the naes of all the desired events
+    % Creates a cell array of strings with the names of all the desired events
     event_strings = {};
     for i = 1: length(wanted_events)
         event_strings{end+1} = ['event_', num2str(wanted_events(i))];
     end
     
-    
+    pre_time_bins = (length([-abs(pre_time): bin_size: 0])) - 1;
+    post_time_bins = (length([0:bin_size:post_time])) - 1;
+
     for h = 1: length(parsed_files)
         failed_calculating = {};
         file = [parsed_path, '/', parsed_files(h).name];
@@ -39,65 +41,73 @@ function [psth_path] = format_PSTH(parsed_path, animal_name, total_bins, bin_siz
             event_struct = struct;
 
             % Truncates events to desired trial range from total_trials * total_events
-            try
-                events = events(trial_range(1):trial_range(2), :);
-            catch ME
-                warning('Error: %s\n', ME.message);
-                warning('Animal does not have enough trials for the decided trial range. Truncating to the length of events it has.');
-                events = events(trial_range(1):length(events), :);
+            if ~isempty(trial_range)
+                try
+                    events = events(trial_range(1):trial_range(2), :);
+                catch ME
+                    warning('Error: %s\n', ME.message);
+                    warning('Animal does not have enough trials for the decided trial range. Truncating to the length of events it has.');
+                    events = events(trial_range(1):length(events), :);
+                end
             end
             
             event_struct.all_events = {};
             for i = 1: length(wanted_events)
                 %% Slices out the desired trials from the events matrix (Inclusive range)
                 event_struct.all_events = [event_struct.all_events; event_strings{i}, {events(events == wanted_events(i), 2)}];
-                event_struct.([event_strings{i}, '_normalized_raster']) = [];
-                event_struct.([event_strings{i}, '_pre_time_activity']) = [];
-                event_struct.([event_strings{i}, '_post_time_activity']) = [];
-                event_struct.([event_strings{i}, '_norm_pre_time_activity']) = [];
-                event_struct.([event_strings{i}, '_norm_post_time_activity']) = [];
             end
 
-            %% Creates the PSTH 
+            %% Creates the PSTH
+            %! Update normalized variance calculation so this can be removed
             event_struct.relative_response = event_spike_times(neuron_map(:,2), event_struct.all_events(:,2), ...
                 total_trials, total_bins, bin_size, pre_time, post_time);
             event_struct.event_count = tabulate(events(:,1));
 
+            for region = 1:length(unique_regions)
+                region_name = unique_regions{region};
+                labeled_map = labeled_neurons.(region_name)(:,4);
+                event_struct.(region_name).relative_response = event_spike_times(labeled_map, event_struct.all_events(:,2), ...
+                    total_trials, total_bins, bin_size, pre_time, post_time);
+            end
+
             try
                 events_array = event_struct.all_events(:,2);
                 event_count = 0;
-                for event = 1: length(events_array)
-                    % Normalize rasters by the number of events
-                    event_struct.([event_strings{event}, '_normalized_raster']) = ...
-                        sum(event_struct.relative_response((event_count + 1):1:(event_count + length(events_array{event})),:),1) ...
-                        / length(events_array{event});
+                for event = 1:length(events_array)
+                    %% get normalized raster for regions
+                    for region = 1:length(unique_regions(:,1))
+                        region_name = unique_regions{region};
+                        total_region_neurons = length(labeled_neurons.(region_name)(:,1));
+                        current_norm_raster = sum(event_struct.(region_name).relative_response((event_count + 1):1:(event_count + length(events_array{event})),:),1) ...
+                            / length(events_array{event});
+                        % normalized raster is the normalized psth
+                        event_struct.(region_name).([event_strings{event}, '_normalized_raster']) = current_norm_raster;
+                        [pre_time_activity, post_time_activity] = split_psth(current_norm_raster, pre_time, pre_time_bins, post_time_bins);
+                        event_struct.(region_name).([event_strings{event}, '_norm_pre_time_activity']) = pre_time_activity;
+                        event_struct.(region_name).([event_strings{event}, '_norm_post_time_activity']) = post_time_activity;
+                    end
                     % Updates event_count to scale sum properly for next row
                     event_count = event_count + length(events_array{event});
-                    %% Breaks down the PSTH into pre and post windows for receptive field analysis
-                    if pre_time ~= 0
-                        pre_time_bins = (length([-abs(pre_time): bin_size: 0])) - 1;
-                        post_time_bins = (length([0:bin_size:post_time])) - 1;
-                        normalized_raster = getfield(event_struct, [event_strings{event}, '_normalized_raster']);
-                        pre = pre_time_bins;
-                        post = pre_time_bins + post_time_bins;  
-                        while pre < length(normalized_raster)
-                            event_struct.([event_strings{event}, '_norm_pre_time_activity']) = [event_struct.([event_strings{event}, '_norm_pre_time_activity']); normalized_raster((pre - pre_time_bins + 1 ): pre)];
-                            event_struct.([event_strings{event}, '_norm_post_time_activity']) = [event_struct.([event_strings{event}, '_norm_post_time_activity']); normalized_raster((post - post_time_bins + 1): post)];
-                            % Update pre and post counters
-                            pre = pre + post_time_bins + pre_time_bins;
-                            post = post + pre_time_bins + pre_time_bins;
-                        end
-                    end
                 end
             catch ME
+                if ~exist(failed_path, 'dir')
+                    mkdir(parsed_path, 'failed');
+                end
+                failed_calculating{end + 1} = file_name;
+                failed_calculating{end, 2} = ME;
+                filename = ['FAILED.', file_name, '.mat'];
+                warning('%s failed to calculate\n', file_name);
                 warning('Error: %s\n', ME.message);
+                matfile = fullfile(failed_path, filename);
+                save(matfile, 'failed_calculating');
             end
             
             fprintf('Finished PSTH for %s\n', current_day);
             %% Saving the file
             filename = ['PSTH.format.', file_name, '.mat'];
             matfile = fullfile(psth_path, filename);
-            save(matfile, 'event_struct', 'total_neurons', 'neuron_map', 'events', 'event_strings', 'labeled_neurons', 'unique_regions', 'region_channels');
+            save(matfile, 'event_struct', 'total_neurons', 'neuron_map', 'events', 'event_strings', ...
+                'labeled_neurons', 'unique_regions', 'region_channels', 'original_neuron_map');
         catch ME
             if ~exist(failed_path, 'dir')
                 mkdir(parsed_path, 'failed');
@@ -112,4 +122,27 @@ function [psth_path] = format_PSTH(parsed_path, animal_name, total_bins, bin_siz
         end
     end
     toc;
+end
+
+function [pre_time_activity, post_time_activity] = split_psth(normalized_raster, pre_time, pre_time_bins, post_time_bins)
+    pre_time_activity = [];
+    post_time_activity = [];
+    %% Breaks down the PSTH into pre and post windows for receptive field analysis
+    if pre_time ~= 0
+        pre = pre_time_bins;
+        post = pre_time_bins + post_time_bins;  
+        while pre < length(normalized_raster)
+            pre_time_activity = [pre_time_activity; ...
+                normalized_raster((pre - pre_time_bins + 1 ): pre)];
+                post_time_activity = [post_time_activity; ...
+                    normalized_raster((post - post_time_bins + 1): post)];
+            % Update pre and post counters
+            pre = pre + post_time_bins + pre_time_bins;
+            post = post + pre_time_bins + pre_time_bins;
+        end
+    else
+        warning('Since the pre time is set to 0, there will not be a psth generated with only the pre time activity.\n');
+        pre_time_activity = [];
+        post_time_activity = normalized_raster;
+    end
 end

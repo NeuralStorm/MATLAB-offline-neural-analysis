@@ -1,4 +1,6 @@
-function result = neuralTraj(runIdx, dat, varargin)
+% function result = neuralTraj(runIdx, dat, varargin)
+function result = neuralTraj(runDir, dat, varargin)
+  %Changed runIdk to a path where the files will be saved
 %
 % result = neuralTraj(runIdx, dat, ...)
 %
@@ -37,19 +39,24 @@ function result = neuralTraj(runIdx, dat, varargin)
   numFolds      = 0;
   xDim          = 8;
   extraOpts     = assignopts(who, varargin);
+  % disp(xDim)
 
-  fprintf('\n---------------------------------------\n');
-  if ~isdir('mat_results')
-    mkdir('mat_results');
-  end
+  % fprintf('\n---------------------------------------\n');
+  % if ~isdir('mat_results')
+  %   mkdir('mat_results');
+  % end
   % Make a directory for this runIdx if it doesn't already exist
-  runDir = sprintf('mat_results/run%03d', runIdx);
-  if isdir(runDir)
-    fprintf('Using existing directory %s...\n', runDir);
-  else
-    fprintf('Making directory %s...\n', runDir);
-    mkdir(runDir);
-  end
+  % runDir = char(strcat('mat_results/run', runIdx));
+  % runDir = ['mat_results/run0', num2str(runIdx)];
+  % disp(runDir)
+  % if isdir(runDir)
+  %   fprintf('Using existing directory %s...\n', runDir);
+  % else
+  %   fprintf('Making directory %s...\n', runDir);
+  %   mkdir (runDir);
+  % end
+  % disp(path(runDir))
+  % error()
 
   % Obtain binned spike counts
   seq  = getSeq(dat, binWidth, extraOpts{:});
@@ -71,6 +78,7 @@ function result = neuralTraj(runIdx, dat, varargin)
 
     % Specify filename where results will be saved
     fname = sprintf('%s/%s_xDim%02d', runDir, method, xDim);
+    % disp(fname)
     if cvf > 0
       fname = sprintf('%s_cv%02d', fname, cvf);
     end
@@ -117,7 +125,8 @@ function result = neuralTraj(runIdx, dat, varargin)
       fprintf('ERROR: Observation covariance matrix is rank deficient.\n');
       fprintf('Possible causes: repeated units, not enough observations.\n');
       fprintf('Exiting...\n');
-      return
+      % ME = MException('MATLAB:rankDeficient','MATLAB:rankDeficient');
+      % throw(ME)
     end
     
     fprintf('Number of training trials: %d\n', length(seqTrain));
@@ -148,4 +157,6 @@ function result = neuralTraj(runIdx, dat, varargin)
   result = [];  
   if (nargout == 1) & (numFolds == 0) & exist([fname '.mat'], 'file')
     result = load(fname);
+    disp(result.estParams.C)
+    % error('error description', A1)
   end

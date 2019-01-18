@@ -1,14 +1,5 @@
-function [] = graph_nv(nv_list, event_strings, original_path)
-
-    %% Colors
-    max_color = 255;
-    dark_green = [0 (102/max_color) 0];
-    light_green = [(102/max_color) (153/max_color) 0];
-    black = [0 0 0];
-    burgandy = [(102/max_color) 0 0]; % burgandy
-    orange = [(255/max_color) (51/max_color) 0]; % orange
-    % purple = [(102/max_color) 0 (255/max_color)];
-    % lavender = [(153/max_color) (153/max_color) (255/max_color)];    
+function matfile = graph_nv(nv_list, event_strings, original_path)
+    % NV = norm_var = normalized variance
 
     %% Animal categories
     learning = ['PRAC03', 'TNC16', 'RAVI19', 'RAVI20'];
@@ -16,21 +7,6 @@ function [] = graph_nv(nv_list, event_strings, original_path)
     control = ['TNC01', 'TNC03', 'TNC04', 'TNC14'];
     right_direct = ['RAVI19', 'PRAC03', 'LC02', 'TNC12'];
     left_direct = ['RAVI20', 'TNC16', 'TNC25', 'TNC06'];
-
-    learn_avg_late_direct_nv = [];
-    learn_avg_early_direct_nv = [];
-    learn_std_late_direct_nv = [];
-    learn_std_early_direct_nv = [];
-
-    nonlearn_avg_late_direct_nv = [];
-    nonlearn_avg_early_direct_nv = [];
-    nonlearn_std_late_direct_nv = [];
-    nonlearn_std_early_direct_nv = [];
-
-    non_learn_nv = [];
-    non_learn_names = [];
-    learn_nv = [];
-    learn_names = [];
 
     all_animals_fig = figure('visible', 'on');
     title('All animals')
@@ -43,8 +19,11 @@ function [] = graph_nv(nv_list, event_strings, original_path)
     indirect_non_learning_fig = figure('visible', 'on');
     title('Indirect non learning')
 
-    csv_data = [];
+    unit_csv_data = [];
     pop_csv_data = [];
+    early_late_bar_info = [];
+    z_early_late_bar_info = [];
+    z_csv_data = [];
 
 
     %% Preallocate fields
@@ -60,11 +39,6 @@ function [] = graph_nv(nv_list, event_strings, original_path)
         nv_event_graphs.([current_event, '_indir_learning_std_err']) = [];
         nv_event_graphs.([current_event, '_indir_non_learning_std_err']) = [];
         nv_event_graphs.([current_event, '_indir_non_learning_std_err']) = [];
-        %% Best and first
-        nv_event_graphs.([current_event, '_dir_learning_bf']) = [];
-        nv_event_graphs.([current_event, '_dir_non_learning_bf']) = [];
-        nv_event_graphs.([current_event, '_indir_learning_bf']) = [];
-        nv_event_graphs.([current_event, '_indir_non_learning_bf']) = [];
         %% T-test
         nv_event_graphs.([current_event, '_early_dir_learning_pop']) = [];
         nv_event_graphs.([current_event, '_early_indir_learning_pop']) = [];
@@ -92,16 +66,36 @@ function [] = graph_nv(nv_list, event_strings, original_path)
 
         for region = 1:length(unique_regions)
             region_name = unique_regions{region};
-            repeat_length = length(days_norm_var.(region_name).all_nv_info);
+            repeat_length = length(days_norm_var.(region_name).unit_nv_info);
             pop_repeat_length = length(days_norm_var.(region_name).all_days_avg_norm_var);
-            % pop_nv = getfield(days_norm_var.(region_name), all_days_avg_norm_var
+            %% Labels regions as direct or indirect
             if (contains(right_direct, current_animal) && strcmpi('Right', region_name)) || (contains(left_direct, current_animal) && strcmpi('Left', region_name))
                 region_type = 'Direct';
             else
                 region_type = 'Indirect';
             end
-            csv_data = [csv_data; days_norm_var.(region_name).all_nv_info, repmat({region_name}, [repeat_length, 1]), repmat({region_type}, [repeat_length, 1])];
-            pop_csv_data = [pop_csv_data; days_norm_var.(region_name).all_days_avg_norm_var, repmat({region_name}, [pop_repeat_length, 1]), repmat({region_type}, [pop_repeat_length, 1])];
+            %% Labels animal as learning, non learning, or control
+            if contains(control, current_animal)
+                animal_type = 'Control';
+            elseif contains(learning, current_animal)
+                animal_type = 'Learning';
+            else
+                animal_type = 'Non-learning';
+            end
+
+            unit_csv_data = [unit_csv_data; days_norm_var.(region_name).unit_nv_info, repmat({region_name}, [repeat_length, 1]), repmat({region_type}, [repeat_length, 1]), repmat({animal_type}, [repeat_length, 1])];
+            pop_csv_data = [pop_csv_data; days_norm_var.(region_name).all_days_avg_norm_var, repmat({region_name}, [pop_repeat_length, 1]), repmat({region_type}, [pop_repeat_length, 1]), ...
+                repmat({animal_type}, [pop_repeat_length, 1])];
+
+            z_csv_data = [z_csv_data; days_norm_var.(region_name).z_score, repmat({region_name}, [pop_repeat_length, 1]), repmat({region_type}, [pop_repeat_length, 1]), ...
+                repmat({animal_type}, [pop_repeat_length, 1])];
+
+
+            repeat_length = length(days_norm_var.(region_name).early_late_bar_info(:,1));
+            early_late_bar_info = [early_late_bar_info; days_norm_var.(region_name).early_late_bar_info, repmat({region_name}, [repeat_length, 1]), repmat({region_type}, [repeat_length, 1]), repmat({animal_type}, [repeat_length, 1])];
+
+            repeat_length = length(days_norm_var.(region_name).z_early_late_bar_info(:,1));
+            z_early_late_bar_info = [z_early_late_bar_info; days_norm_var.(region_name).z_early_late_bar_info, repmat({region_name}, [repeat_length, 1]), repmat({region_type}, [repeat_length, 1]), repmat({animal_type}, [repeat_length, 1])];
         end
 
         %% Skip control animals
@@ -118,58 +112,26 @@ function [] = graph_nv(nv_list, event_strings, original_path)
             indirect_region = 'Right';
         end
 
-            %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-            %%              Population                 %%
-            %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-        %% Direct
-        direct_first_nv = getfield(days_norm_var.(direct_region), 'first_norm_var');
-        direct_best_nv = getfield(days_norm_var.(direct_region), 'best_norm_var');
-        %% Indirect
-        indirect_first_nv = getfield(days_norm_var.(indirect_region), 'first_norm_var');
-        indirect_best_nv = getfield(days_norm_var.(indirect_region), 'best_norm_var');
+        % Contains all events for the first (early) and last (late) 5 days
 
-        % Contains all events for the last 5 days
-        early_direct_nv = getfield(days_norm_var.(direct_region), 'early_norm_var');
-        late_direct_nv = getfield(days_norm_var.(direct_region), 'late_norm_var');
-        early_indirect_nv = getfield(days_norm_var.(indirect_region), 'early_norm_var');
-        late_indirect_nv = getfield(days_norm_var.(indirect_region), 'late_norm_var');
+        %% Early/Late NV with mean of neurons per day ((AVG NV * 5 days) X events)
+        early_direct_nv = days_norm_var.(direct_region).early_norm_var;
+        late_direct_nv = days_norm_var.(direct_region).late_norm_var;
+        early_indirect_nv = days_norm_var.(indirect_region).early_norm_var;
+        late_indirect_nv = days_norm_var.(indirect_region).late_norm_var;
 
-            %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-            %%              first v best               %%
-            %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+        %% Early/Late with all neurons ((neurons NV * 5 days) X events)
+        dir_early_pop = days_norm_var.(direct_region).early_pop;
+        dir_late_pop = days_norm_var.(direct_region).late_pop;
+        indir_early_pop = days_norm_var.(indirect_region).early_pop;
+        indir_late_pop = days_norm_var.(indirect_region).late_pop;
 
-        dir_first_nv = getfield(days_norm_var.(direct_region), 'first_norm_var');
-        dir_best_nv = getfield(days_norm_var.(direct_region), 'best_norm_var');
-        indir_first_nv = getfield(days_norm_var.(indirect_region), 'first_norm_var');
-        indir_best_nv = getfield(days_norm_var.(indirect_region), 'best_norm_var');
-
-            %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-            %%                 T-test                  %%
-            %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
-        dir_early_pop = getfield(days_norm_var.(direct_region), 'early_pop');
-        dir_late_pop = getfield(days_norm_var.(direct_region), 'late_pop');
-        indir_early_pop = getfield(days_norm_var.(indirect_region), 'early_pop');
-        indir_late_pop = getfield(days_norm_var.(indirect_region), 'late_pop');
-
-            %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-            %%              Population                 %%
-            %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
-        dir_pop = getfield(days_norm_var.(direct_region), 'overall_pop');
-        indir_pop = getfield(days_norm_var.(indirect_region), 'overall_pop');
+        %% Entire neuron NV population across days ((AVG NV * total days) x (day num and events)
+        dir_pop = days_norm_var.(direct_region).overall_pop;
+        indir_pop = days_norm_var.(indirect_region).overall_pop;
 
         for event = 1:length(early_direct_nv(1,:))
             current_event = event_strings{event};
-
-            %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-            %%              first v best               %%
-            %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
-            dir_first = dir_first_nv(:, event);
-            dir_best = dir_first_nv(:, event);
-            indir_first = indir_first_nv(:, event);
-            indir_best = indir_first_nv(:, event);
 
             %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
             %%              Population                 %%
@@ -181,16 +143,12 @@ function [] = graph_nv(nv_list, event_strings, original_path)
             avg_early_direct_event = mean(early_direct_event);
             std_early_direct_event = std(early_direct_event);
             std_err_early_direct_event = std_early_direct_event / (sqrt(length(early_direct_event)));
-            % avg_early_nv = mean(early_direct_nv);
-            % std_early_nv = std(early_direct_nv);
             
             %% Late direct
             late_direct_event = late_direct_nv(:, event);
             avg_late_direct_event = mean(late_direct_event);
             std_late_direct_event = std(late_direct_event);
             std_err_late_direct_event = std_late_direct_event / (sqrt(length(late_direct_event)));
-            % avg_late_nv = mean(late_direct_nv);
-            % std_late_nv = std(late_direct_nv);
 
             %% Early indirect
             early_indirect_event = early_indirect_nv(:, event);
@@ -212,15 +170,9 @@ function [] = graph_nv(nv_list, event_strings, original_path)
                 %% Direct
                 nv_event_graphs.([current_event, '_learning_nv']) = [nv_event_graphs.([current_event, '_learning_nv']), avg_early_direct_event, avg_late_direct_event];
                 nv_event_graphs.([current_event, '_learning_std_err']) = [nv_event_graphs.([current_event, '_learning_std_err']), std_err_early_direct_event, std_err_late_direct_event];
-                % learn_nv = [learn_nv, avg_early_nv, avg_late_nv];
                 %% Indirect
                 nv_event_graphs.([current_event, '_indir_learning_nv']) = [nv_event_graphs.([current_event, '_indir_learning_nv']), avg_early_indirect_event, avg_late_indirect_event];
                 nv_event_graphs.([current_event, '_indir_learning_std_err']) = [nv_event_graphs.([current_event, '_indir_learning_std_err']), std_err_early_indirect_event, std_err_late_indirect_event];
-                learn_names = [learn_names, {current_animal}];
-                %% Best and first
-                nv_event_graphs.([current_event, '_dir_learning_bf']) = [nv_event_graphs.([current_event, '_dir_learning_bf']), dir_first, dir_best];
-                nv_event_graphs.([current_event, '_indir_learning_bf']) = [nv_event_graphs.([current_event, '_indir_learning_bf']), dir_first, dir_best];
-                %% T-test
                 nv_event_graphs.([current_event, '_early_dir_learning_pop']) = [nv_event_graphs.([current_event, '_early_dir_learning_pop']); dir_early_pop];
                 nv_event_graphs.([current_event, '_early_indir_learning_pop']) = [nv_event_graphs.([current_event, '_early_indir_learning_pop']); indir_early_pop];
                 nv_event_graphs.([current_event, '_late_dir_learning_pop']) = [nv_event_graphs.([current_event, '_late_dir_learning_pop']); dir_late_pop];
@@ -232,15 +184,9 @@ function [] = graph_nv(nv_list, event_strings, original_path)
                 %% Direct
                 nv_event_graphs.([current_event, '_non_learning_nv']) = [nv_event_graphs.([current_event, '_non_learning_nv']), avg_early_direct_event, avg_late_direct_event];
                 nv_event_graphs.([current_event, '_non_learning_std_err']) = [nv_event_graphs.([current_event, '_non_learning_std_err']), std_err_early_direct_event, std_err_late_direct_event];
-                % non_learn_nv = [non_learn_nv, avg_early_nv, avg_late_nv];
                 %% Indirect
                 nv_event_graphs.([current_event, '_indir_non_learning_nv']) = [nv_event_graphs.([current_event, '_indir_non_learning_nv']), avg_early_indirect_event, avg_late_indirect_event];
                 nv_event_graphs.([current_event, '_indir_non_learning_std_err']) = [nv_event_graphs.([current_event, '_indir_non_learning_std_err']), std_err_early_indirect_event, std_err_late_indirect_event];
-                non_learn_names = [non_learn_names, {current_animal}];
-                %% Best and first
-                nv_event_graphs.([current_event, '_dir_non_learning_bf']) = [nv_event_graphs.([current_event, '_indir_non_learning_bf']), indir_first, indir_best];
-                nv_event_graphs.([current_event, '_indir_non_learning_bf']) = [nv_event_graphs.([current_event, '_indir_non_learning_bf']), indir_first, indir_best];
-                %% T-test
                 nv_event_graphs.([current_event, '_early_dir_non_learning_pop']) = [nv_event_graphs.([current_event, '_early_dir_non_learning_pop']); dir_early_pop];
                 nv_event_graphs.([current_event, '_early_indir_non_learning_pop']) = [nv_event_graphs.([current_event, '_early_indir_non_learning_pop']); indir_early_pop];
                 nv_event_graphs.([current_event, '_late_dir_non_learning_pop']) = [nv_event_graphs.([current_event, '_late_dir_non_learning_pop']); dir_late_pop];
@@ -254,7 +200,7 @@ function [] = graph_nv(nv_list, event_strings, original_path)
         end
         
         %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-        %%              NV time fn                 %%
+        %%           NV time fn Graphs             %%
         %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
         
         if ~contains(control, current_animal) 
@@ -263,14 +209,7 @@ function [] = graph_nv(nv_list, event_strings, original_path)
             plot(dir_pop(:, 1), dir_pop(:, 2), 'DisplayName', current_animal);
             hold off
 
-            
-            figure('visible', 'on');
-            disp(current_event);
-            plot(dir_pop(:, 1), dir_pop(:, 2));
             if contains(learning, current_animal)
-                title([current_animal, 'Learning direct NV time function']);
-                graph_file = fullfile(original_path, [current_animal, '_learning_dir_nv_time_fn']);
-                
                 figure(direct_learning_fig)
                 hold on
                 plot(dir_pop(:, 1), dir_pop(:, 2), 'DisplayName', current_animal);
@@ -281,9 +220,6 @@ function [] = graph_nv(nv_list, event_strings, original_path)
                 plot(indir_pop(:, 1), indir_pop(:, 2), 'DisplayName', current_animal);
                 hold off
             else
-                title([current_animal, 'Non-learning direct NV time function']);
-                graph_file = fullfile(original_path, [current_animal, '_non_learning_dir_nv_time_fn']);
-
                 figure(direct_non_learning_fig)
                 hold on
                 plot(dir_pop(:, 1), dir_pop(:, 2), 'DisplayName', current_animal);
@@ -294,210 +230,25 @@ function [] = graph_nv(nv_list, event_strings, original_path)
                 plot(indir_pop(:, 1), indir_pop(:, 2), 'DisplayName', current_animal);
                 hold off
             end
-            saveas(gcf, graph_file);
-
-            figure('visible', 'on');
-            plot(indir_pop(:, 1), indir_pop(:, 2));
-            if contains(learning, current_animal)
-                title([current_animal, 'Learning indirect NV time function']);
-                graph_file = fullfile(original_path, [current_animal, '_learning_indir_nv_time_fn']);
-            else
-                title([current_animal, 'Non-learning indirect NV time function']);
-                graph_file = fullfile(original_path, [current_animal, '_non_learning_indir_nv_time_fn']);
-            end
-            saveas(gcf, graph_file);
         end
 
 
     end
-
     
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-    %%               Graphing                  %%
+    %%                 T-test                  %%
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-    
+    % ttest2 can also return p-value, ci, and the stats struct results
+    % Add those to the outputs and save them at the end to see desired stat results
     for event = 1:length(event_strings)
-        %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-        %%                 T-test                  %%
-        %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-        [early_direct_learn_non_learn, early_direct_learn_non_learn_p_value, early_direct_learn_non_learn_ci, early_direct_learn_non_learn_stats] = ttest2(cell2mat(nv_event_graphs.([current_event, '_early_dir_learning_pop'])), cell2mat(nv_event_graphs.([current_event, '_early_dir_non_learning_pop'])));
-        [late_direct_learn_non_learn, late_direct_learn_non_learn_p_value, late_direct_learn_non_learn_ci, late_direct_learn_non_learn_stats] = ttest2(cell2mat(nv_event_graphs.([current_event, '_late_dir_learning_pop'])), cell2mat(nv_event_graphs.([current_event, '_late_dir_non_learning_pop'])));
-        [early_indirect_learn_non_learn, early_indirect_learn_non_learn_p_value, early_indirect_learn_non_learn_ci, early_indirect_learn_non_learn_stats] = ttest2(cell2mat(nv_event_graphs.([current_event, '_early_indir_learning_pop'])), cell2mat(nv_event_graphs.([current_event, '_early_indir_non_learning_pop'])));
-        [late_indirect_learn_non_learn, late_indirect_learn_non_learn_p_value, late_indirect_learn_non_learn_ci, late_indirect_learn_non_learn_stats] = ttest2(cell2mat(nv_event_graphs.([current_event, '_late_indir_learning_pop'])), cell2mat(nv_event_graphs.([current_event, '_late_indir_non_learning_pop'])));
-        
-        
-        %     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-        %     %%              NV time fn                 %%
-        %     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-        % figure('visible', 'on');
-        % current_event = event_strings{event};
-        % disp(current_event);
-        % % plot(test_pop(:, 1), test_pop(:, 2))
-        % plot(nv_event_graphs.([current_event, '_learning_time_fn'])(:, 1), nv_event_graphs.([current_event, '_learning_time_fn'])(:, event));
-        % graph_file = fullfile(original_path, [current_event, '_direct_learning_v_non_learning.png']);
-        % saveas(gcf, graph_file);
-        
-        % %% Direct
-        % figure('visible','on');
-        % current_event = event_strings{event};
-        % disp(current_event);
-        % all_means = [nv_event_graphs.([current_event, '_learning_nv']); nv_event_graphs.([current_event, '_non_learning_nv'])];
-        % all_std_error = [nv_event_graphs.([current_event, '_learning_std_err']); nv_event_graphs.([current_event, '_non_learning_std_err'])];
-        % disp(all_means);
-        % ax = axes;
-        % b = bar(all_means, 'BarWidth', 1);
-        % xticks(ax,[1 2]);
-        % xticklabels(ax,{ 'Learning', 'Non-learning'});
-        % hold on;
-
-        % %% Adds error bars
-        % groups = size(all_means, 1);
-        % bars = size(all_means, 2);
-        % groupwidth = min(0.8, bars/(bars + 1.5));
-        % for k = 1:bars
-        %     center = (1:groups) - groupwidth/2 + (2*k-1) * groupwidth / (2*bars);
-        %     errorbar(center, all_means(:,k), all_std_error(:,k), 'k', 'linestyle', 'none');
-        % end
-        % current_graph = gca;
-        % current_graph.Clipping = 'off';
-
-        % for k = 1:size(all_means,2)
-        %     if mod(k, 2) == 0
-        %         b(k).FaceColor = dark_green;
-        %         b(k-1).FaceColor = light_green;
-        %     end
-        % end
-
-
-        % title([current_event, 'direct normalized variance between learning and non learning animals']);
-
-
-        % %% Creates Legends
-        % lg = legend('Early','Late');
-        % legend('boxoff');
-        % lg.Location = 'BestOutside';
-        % lg.Orientation = 'Horizontal';
-        % graph_file = fullfile(original_path, [current_event, '_direct_learning_v_non_learning.png']);
-        % saveas(gcf, graph_file);
-        % hold off;
-
-        % %% Indirect
-        % figure('visible','on');
-        % current_event = event_strings{event};
-        % disp(current_event);
-        % all_means = [nv_event_graphs.([current_event, '_indir_learning_nv']); nv_event_graphs.([current_event, '_indir_non_learning_nv'])];
-        % disp(all_means);
-        % ax = axes;
-        % b = bar(all_means, 'BarWidth', 1);
-        % xticks(ax,[1 2]);
-        % xticklabels(ax,{ 'Learning', 'Non-learning'});
-        % hold on;
-
-        % %% Adds error bars
-        % groups = size(all_means, 1);
-        % bars = size(all_means, 2);
-        % groupwidth = min(0.8, bars/(bars + 1.5));
-        % for k = 1:bars
-        %     center = (1:groups) - groupwidth/2 + (2*k-1) * groupwidth / (2*bars);
-        %     errorbar(center, all_means(:,k), all_std_error(:,k), 'k', 'linestyle', 'none');
-        % end
-        % current_graph = gca;
-        % current_graph.Clipping = 'off';
-
-        % for k = 1:size(all_means,2)
-        %     if mod(k, 2) == 0
-        %         b(k).FaceColor = dark_green;
-        %         b(k-1).FaceColor = light_green;
-        %     end
-        % end
-
-
-        % title([current_event, 'indirect normalized variance between learning and non learning animals']);
-
-
-        % %% Creates Legends
-        % lg = legend('Early','Late');
-        % legend('boxoff');
-        % lg.Location = 'BestOutside';
-        % lg.Orientation = 'Horizontal';
-        % hold off;
-
-        % graph_file = fullfile(original_path, [current_event, '_indirect_learning_v_non_learning.png']);
-        % saveas(gcf, graph_file);
-
-        % %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-        % %%              first v best               %%
-        % %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-        % %% direct
-        % figure('visible','on');
-        % current_event = event_strings{event};
-        % disp(current_event);
-        % all_means = [nv_event_graphs.([current_event, '_dir_learning_bf']); nv_event_graphs.([current_event, '_dir_non_learning_bf'])];
-        % disp(all_means);
-        % ax = axes;
-        % b = bar(all_means, 'BarWidth', 1);
-        % xticks(ax,[1 2]);
-        % xticklabels(ax,{ 'Learning', 'Non-learning'});
-        % hold on;
-
-        % current_graph = gca;
-        % current_graph.Clipping = 'off';
-
-        % for k = 1:size(all_means,2)
-        %     if mod(k, 2) == 0
-        %         b(k).FaceColor = [1 0 0]; % red
-        %         b(k-1).FaceColor = [0 0 1]; % blue
-        %     end
-        % end
-
-
-        % title([current_event, 'direct first vs best']);
-
-
-        % %% Creates Legends
-        % lg = legend('first','best');
-        % legend('boxoff');
-        % lg.Location = 'BestOutside';
-        % lg.Orientation = 'Horizontal';
-        % graph_file = fullfile(original_path, [current_event, '_direct_first_v_best.png']);
-        % saveas(gcf, graph_file);
-        % hold off;
-        
-        % %% indirect
-        % figure('visible','on');
-        % current_event = event_strings{event};
-        % disp(current_event);
-        % all_means = [nv_event_graphs.([current_event, '_indir_learning_bf']); nv_event_graphs.([current_event, '_indir_non_learning_bf'])];
-        % disp(all_means);
-        % ax = axes;
-        % b = bar(all_means, 'BarWidth', 1);
-        % xticks(ax,[1 2]);
-        % xticklabels(ax,{ 'Learning', 'Non-learning'});
-        % hold on;
-
-        % current_graph = gca;
-        % current_graph.Clipping = 'off';
-
-        % for k = 1:size(all_means,2)
-        %     if mod(k, 2) == 0
-        %         b(k).FaceColor = [1 0 0]; % red
-        %         b(k-1).FaceColor = [0 0 1]; % blue
-        %     end
-        % end
-
-
-        % title([current_event, 'indirect first vs best']);
-
-
-        % %% Creates Legends
-        % lg = legend('first','best');
-        % legend('boxoff');
-        % lg.Location = 'BestOutside';
-        % lg.Orientation = 'Horizontal';
-        % graph_file = fullfile(original_path, [current_event, '_indirect_first_v_best.png']);
-        % saveas(gcf, graph_file);
-        % hold off;
-
+        early_direct_learn_non_learn_ttest = ...
+            ttest2(cell2mat(nv_event_graphs.([current_event, '_early_dir_learning_pop'])), cell2mat(nv_event_graphs.([current_event, '_early_dir_non_learning_pop'])));
+        late_direct_learn_non_learn_ttest = ...
+            ttest2(cell2mat(nv_event_graphs.([current_event, '_late_dir_learning_pop'])), cell2mat(nv_event_graphs.([current_event, '_late_dir_non_learning_pop'])));
+        early_indirect_learn_non_learn_ttest = ...
+            ttest2(cell2mat(nv_event_graphs.([current_event, '_early_indir_learning_pop'])), cell2mat(nv_event_graphs.([current_event, '_early_indir_non_learning_pop'])));
+        late_indirect_learn_non_learn_ttest = ...
+            ttest2(cell2mat(nv_event_graphs.([current_event, '_late_indir_learning_pop'])), cell2mat(nv_event_graphs.([current_event, '_late_indir_non_learning_pop'])));
     end
 
     figure(all_animals_fig)
@@ -511,15 +262,51 @@ function [] = graph_nv(nv_list, event_strings, original_path)
     figure(indirect_non_learning_fig)
     legend
 
-    spreadsheet_table = cell2table(csv_data, 'VariableNames',{'Animal' 'Animal_ID' 'exp_date' 'exp_day' 'pre_time' 'post_time', 'bin_size' 'norm_var_constant' 'epsilon' 'channel' 'event_1_nv' 'event_2_nv' 'event_3_nv' 'event_4_nv' 'region' 'region_type'});
+    unit_table = cell2table(unit_csv_data, 'VariableNames',{'complete_animal_name' 'animal' 'animal_id' 'exp_date' 'exp_day' 'pre_time' 'post_time', 'bin_size' 'norm_var_constant' 'epsilon' ...
+        'channel' 'norm_var' 'region' 'region_type' 'animal_type'});
     matfile = fullfile(original_path, 'unit_nv_analysis.csv');
-    writetable(spreadsheet_table, matfile, 'Delimiter', ',');
+    writetable(unit_table, matfile, 'Delimiter', ',');
 
-    pop_spreadsheet_table = cell2table(pop_csv_data, 'VariableNames',{'Animal' 'Animal_ID' 'exp_date' 'exp_day' 'pre_time' 'post_time', 'bin_size' 'norm_var_constant' 'epsilon' 'event_1_nv' 'event_2_nv' 'event_3_nv' 'event_4_nv' 'region' 'region_type'});
+    pop_spreadsheet_table = cell2table(pop_csv_data, 'VariableNames',{'Animal' 'Animal_ID' 'exp_date' 'exp_day' 'pre_time' 'post_time', 'bin_size' 'norm_var_constant' 'epsilon' ...
+        'event_1_nv' 'event_2_nv' 'event_3_nv' 'event_4_nv' 'event_1_std' 'event_2_std' 'event_3_std' 'event_4_std' 'event_1_std_err' 'event_2_std_err' 'event_3_std_err' ...
+        'event_4_std_err' 'region' 'region_type' 'animal_type'});
     matfile = fullfile(original_path, 'pop_nv_analysis.csv');
     writetable(pop_spreadsheet_table, matfile, 'Delimiter', ',');
 
-    matfile = fullfile(original_path, 'test.mat');
-    save(matfile, 'csv_data', 'nv_event_graphs', 'early_direct_learn_non_learn', 'late_direct_learn_non_learn', 'early_indirect_learn_non_learn', 'late_indirect_learn_non_learn', ...
-    'late_direct_learn_non_learn_p_value', 'late_direct_learn_non_learn_ci', 'late_direct_learn_non_learn_stats', 'early_indirect_learn_non_learn_p_value', 'early_indirect_learn_non_learn_ci', 'early_indirect_learn_non_learn_stats');
+    pop_z_score_table = cell2table(z_csv_data, 'VariableNames',{'Animal' 'Animal_ID' 'exp_date' 'exp_day' 'pre_time' 'post_time', 'bin_size' 'norm_var_constant' 'epsilon' ...
+        'z_score_event_1' 'z_score_event_2' 'z_score_event_3' 'z_score_event_4' 'region' 'region_type' 'animal_type'});
+    matfile = fullfile(original_path, 'pop_z_score_analysis.csv');
+    writetable(pop_spreadsheet_table, matfile, 'Delimiter', ',');
+
+    early_late_raw_info = cell2table(early_late_bar_info, 'VariableNames', {'Animal' 'Animal_ID' 'early_event_1_nv' 'early_event_2_nv' 'early_event_3_nv' 'early_event_4_nv' ...
+        'late_event_1_nv' 'late_event_2_nv' 'late_event_3_nv' 'late_event_4_nv' 'region' 'region_type' 'animal_type'});
+
+    z_early_late_raw_info = cell2table(z_early_late_bar_info, 'VariableNames', {'Animal' 'Animal_ID' 'z_early_event_1_nv' 'z_early_event_2_nv' 'z_early_event_3_nv' 'z_early_event_4_nv' ...
+        'z_late_event_1_nv' 'z_late_event_2_nv' 'z_late_event_3_nv' 'z_late_event_4_nv' 'region' 'region_type' 'animal_type'});
+
+    %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+    %%            Group NV Graph               %%
+    %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+    day_nv_table = varfun(@(x) mean(x, 'omitnan'), pop_spreadsheet_table, 'GroupingVariables', {'exp_day', 'animal_type', 'region_type'}, ...
+        'InputVariables', {'event_1_nv', 'event_1_std', 'event_1_std_err'});
+    
+    mystats = @(x)[mean(x, 'omitnan') std(x, 'omitnan') (std(x, 'omitnan')/sqrt(length(x)))];
+    
+    all_day_nv_table = varfun(mystats, pop_spreadsheet_table, 'GroupingVariables', {'exp_day', 'animal_type', 'region_type'}, ...
+        'InputVariables', 'event_1_nv');
+        
+    early_late_table = varfun(mystats, early_late_raw_info, 'GroupingVariables', {'animal_type', 'region_type'}, ...
+        'InputVariables', {'early_event_1_nv', 'early_event_2_nv', 'early_event_3_nv', 'early_event_4_nv', 'late_event_1_nv', 'late_event_2_nv', 'late_event_3_nv', 'late_event_4_nv'});
+
+    z_score_table = varfun(mystats, pop_z_score_table, 'GroupingVariables', {'exp_day', 'animal_type', 'region_type'}, ...
+        'InputVariables', 'z_score_event_1')
+
+    z_early_late_table = varfun(mystats, z_early_late_raw_info, 'GroupingVariables', {'animal_type', 'region_type'}, ...
+        'InputVariables', {'z_early_event_1_nv' 'z_early_event_2_nv' 'z_early_event_3_nv' 'z_early_event_4_nv' ...
+        'z_late_event_1_nv' 'z_late_event_2_nv' 'z_late_event_3_nv' 'z_late_event_4_nv'})
+
+    matfile = fullfile(original_path, 'group_nv_results.mat');
+    save(matfile, 'unit_table', 'nv_event_graphs', 'day_nv_table', 'all_day_nv_table', 'early_late_bar_info', 'early_late_table', 'early_direct_learn_non_learn_ttest', ...
+        'late_direct_learn_non_learn_ttest', 'early_indirect_learn_non_learn_ttest', 'late_indirect_learn_non_learn_ttest', 'z_score_table', 'z_early_late_table', 'unique_regions');
 end
