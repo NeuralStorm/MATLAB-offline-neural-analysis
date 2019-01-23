@@ -1,16 +1,17 @@
-function [final_table] = readVariables(varargin)
+function [] = readVariables(original_path,varargin)
 
 
- for number_of_variables=1:nargin
+ for number_of_variables=2:nargin
    
-     variable_names{number_of_variables}=inputname(number_of_variables); %getting each variable name from main function
+     variable_names{number_of_variables-1}=inputname(number_of_variables); %getting each variable name from main function
     
  end
  
- variable_names= char(variable_names);  %converting variable names to character
+ variable_names= char(variable_names)  %converting variable names to character
 
+ empty_values=cellfun(@(x) ~isnumeric(x),varargin)  %look at values imported and check all the variables that are not numbers
 
-empty_values=cellfun('isempty',varargin);  %look at values imported and check all the empty variables
+%empty_values=cellfun('isempty',varargin);  %look at values imported and check all the empty variables
 varargin(empty_values)=[];     % if no value is assigned to a variable, we remove the variable from our table
 
 available_values=transpose(~empty_values);   
@@ -31,9 +32,11 @@ values=transpose(varargin)
 table_of_variables=array2table(transpose(new_variable_names))   %create a table for variable names
 
 table_of_values=table(values)      %create a table for the values
+
+ table_path=fullfile(original_path,'/Variable Names and Values.csv'); 
  
 final_table=[table_of_variables,table_of_values]   %concatenate table's together
-writetable(final_table,'tableVariable.csv')     %export the table to .csv file
+writetable(final_table,table_path)     %export the table to .csv file
 
 
  
