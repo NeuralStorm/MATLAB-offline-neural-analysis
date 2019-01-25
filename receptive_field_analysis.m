@@ -140,7 +140,7 @@ function [rf_path] = receptive_field_analysis(original_path, psth_path, animal_n
                         % Puts NaN for non significant neurons
                         non_sig_neurons = [non_sig_neurons; {current_region}, {neuron_name}, {current_event}, {0}, ...
                             {background_rate}, {background_std}, {smoothed_threshold}, {NaN}, {NaN}, {NaN}, {NaN}, {NaN}, ...
-                            {NaN}, {NaN}, {NaN}, {NaN}, {NaN}, {NaN}, {notes}];
+                            {NaN}, {NaN}, {NaN}, {NaN}, {strings}, {NaN}, {notes}];
                     end
                 end
             end
