@@ -1,8 +1,30 @@
-function [nv_calc_path, region_channels, event_strings] = nv_calculation(psth_path, animal_name, pre_time, post_time, bin_size, span, epsilon, norm_var_scaling)
+function [nv_calc_path, csv_path] = ...
+    nv_calculation(original_path, psth_path, animal_name, pre_time, post_time, ...
+    bin_size, epsilon, norm_var_scaling, first_iteration, separate_events)
     % nv = normalized variance, bfr = background firing rate, rf = receptive field
 
     if pre_time <= 0.050
         error('Pre time can not be set to 0 for normalized variance analysis. Recreate the PSTH format with a different pre time.');
+    end
+
+    %% Animal categories
+    learning = ['PRAC03', 'TNC16', 'RAVI19', 'RAVI20', 'RAVI019', 'RAVI020'];
+    non_learning = ['LC02', 'TNC06', 'TNC12', 'TNC25'];
+    control = ['TNC01', 'TNC03', 'TNC04', 'TNC14'];
+    right_direct = ['RAVI19', 'RAVI019', 'PRAC03', 'LC02', 'TNC12'];
+    left_direct = ['RAVI20', 'RAVI020', 'TNC16', 'TNC25', 'TNC06'];
+
+    column_names = {'animal', 'group', 'day', 'region', 'region_type', ...
+        'event', 'channel', 'avg_bfr', 'bfr_var', 'norm_var', 'fano'};
+
+    if contains(learning, animal_name)
+        animal_type = 'learning';
+    elseif contains(non_learning, animal_name)
+        animal_type = 'non_learning';
+    elseif contains(control, animal_name)
+        animal_type = 'control';
+    else
+        error([animal_name, ' does not fall into learning, non learning, or control groups']);
     end
 
     psth_mat_path = [psth_path, '/*.mat'];
@@ -23,6 +45,18 @@ function [nv_calc_path, region_channels, event_strings] = nv_calculation(psth_pa
     pre_time_bins = (length([-abs(pre_time): bin_size: 0])) - 1;
     post_time_bins = (length([0:bin_size:post_time])) - 1;
 
+    %% CSV export set up
+    csv_path = fullfile(original_path, 'single_unit_nv.csv');
+    if ~exist(csv_path, 'file') && first_iteration
+        nv_table = table([], [], [], [], [], [], [], [], [], [], [], 'VariableNames', column_names);
+    elseif exist(csv_path, 'file') && first_iteration
+        delete(csv_path);
+        nv_table = table([], [], [], [], [], [], [], [], [], [], [], 'VariableNames', column_names);
+    else
+        nv_table = readtable(csv_path);
+    end
+
+    nv_data = [];
     for file = 1:length(psth_files)
         % NV.analysis.TNC.04.ClosedLoop.Day04.120715
         failed_rf = {};
@@ -39,126 +73,73 @@ function [nv_calc_path, region_channels, event_strings] = nv_calculation(psth_pa
 
         load(current_file);
 
-        %% Preallocate nv struct with the neurons separated into their respective regions
-        nv_analysis = struct;
-        for region = 1:length(unique_regions)
-            region_name = unique_regions{region};
-            region_neurons = labeled_neurons.(region_name)(:, 1);
-            for neuron = 1:length(region_neurons)
-                neuron_name = region_neurons{neuron};
-                nv_analysis.(region_name).([neuron_name, '_background_rate']) = [];
-            end
-            nv_analysis.(region_name).pop = [];
-            nv_analysis.(region_name).labeled_nv = [];
-        end
-
+        % Gets the end indeces of events for separation
         all_events = event_struct.all_events(:,2);
         event_end_indeces = [];
         for event = 1:length(all_events)
             event_end_indeces = [event_end_indeces, length(all_events{event})];
         end
         event_end_indeces = cumsum(event_end_indeces);
-        % Relative response is trials x (neurons * bins)
-        relative_response = event_struct.relative_response;
-        [trials, unit_bins] = size(relative_response);
-
-        %% Separates out the pre time window for each neuron from the relative response matrix
-        last_trial_index = 1;
-        event = 1;
-        while event <= length(event_end_indeces)
-            % Starts at the end of the pre time window and grabs the number of pre time bins before it to help prevent seg faults
-            pre_index = pre_time_bins;
-            % neuron is used as an index for the neuron map to get the neuron name for the given index
-            neuron = 1;
-            
-            %% Isolates the current neuron's pre time window for current trial and calculates background firing rate
-            while pre_index < unit_bins
-                neuron_name = neuron_map{neuron};              
-                %% Find the region the current neuron belongs to
-                for region = 1:length(unique_regions)
-                    region_name = unique_regions{region};
-                    region_neurons = labeled_neurons.(region_name)(:, 1);
-                    if any(strcmpi(region_neurons, neuron_name))
-                        break;
-                    end
-                end
-                current_pre = relative_response(last_trial_index:event_end_indeces(event), (pre_index - pre_time_bins + 1 ):pre_index);
-                % Calculate background rate
-                background_rate = sum(current_pre, 2) / (pre_time * 1000);
-                nv_analysis.(region_name).([neuron_name, '_background_rate']) = [nv_analysis.(region_name).([neuron_name, '_background_rate']); event_strings{event}, {background_rate}];
-
-                %% Update indeces
-                pre_index = pre_index + post_time_bins + pre_time_bins;
-                neuron = neuron + 1;
-            end
-
-            %% Resets the index for the next trial
-            pre_index = pre_time_bins;
-            last_trial_index = event_end_indeces(event) + 1;
-            event = event + 1;
-        end
-
-        %% Calculate nv for each event for each neuron
-        % nv = c * (epsilon + var(event bfr))/ (c * epsilon + mean(event bfr))
+        
+        neuron_activity = struct;
         for region = 1:length(unique_regions)
-            pop_norm_var = [];
-            region_name = unique_regions{region};
-            region_fields = fieldnames(nv_analysis.(region_name));
-            neuron_labels = {};
-            for field = 1:length(region_fields)
-                field_name = region_fields{field};
-                % disp(field_name);
-                % Grabs bfr for given neuron
-                if contains(field_name, '_background_rate')
-                    split_field = strsplit(field_name, '_');
-                    neuron_name = split_field{1};
-                    event_bfrs = getfield(nv_analysis.(region_name), region_fields{field});
-                    event_norm_vars = [];
-                    for event = 1:length(all_events)
-                        current_event = event_strings{event};
-                        current_bfr = event_bfrs{event, 2};
-                        avg_bfr = mean(current_bfr);
-                        bfr_var = var(current_bfr);
+            current_region = unique_regions{region};
+            region_neurons = labeled_neurons.(current_region)(:, 1);
+            if (contains(right_direct, animal_name) && strcmpi('Right', current_region)) || (contains(left_direct, animal_name) && strcmpi('Left', current_region))
+                region_type = 'Direct';
+            else
+                region_type = 'Indirect';
+            end
+
+            relative_response = event_struct.(current_region).relative_response;
+            if separate_events
+                last_trial_index = 1;
+                for event = 1:length(event_strings)
+                    current_event = event_strings{event};
+                    pre_index = pre_time_bins;
+                    for neuron = 1:length(region_neurons)
+                        current_neuron = region_neurons{neuron};
+                        current_pre = relative_response(last_trial_index:event_end_indeces(event), (pre_index - pre_time_bins + 1 ):pre_index);
+                        neuron_activity.(current_region).([current_event, '_', current_neuron, '_background_rate']) = current_pre;
+                        pre_index = pre_index + post_time_bins + pre_time_bins;
+                        %% Calculate NV for each event
+                        bfr = sum(current_pre, 2) / (pre_time * 1000);
+                        avg_bfr = mean(bfr);
+                        bfr_var = var(bfr);
                         norm_var = norm_var_scaling * (epsilon + bfr_var)/(norm_var_scaling * epsilon + avg_bfr);
-                        event_norm_vars= [event_norm_vars; event_strings{event}, {norm_var}];
+                        fano = avg_bfr / bfr_var;
+                        nv_data = [nv_data; {animal_name}, {animal_type}, {day_num}, {current_region}, {region_type}, ...
+                            {current_event}, {current_neuron}, {avg_bfr}, {bfr_var}, {norm_var}, {fano}];
                     end
-                    neuron_labels = [neuron_labels; cellstr(neuron_name)];
-                    nv_analysis.(region_name).([neuron_name, '_norm_var']) = event_norm_vars;
-                    pop_norm_var = [pop_norm_var; event_norm_vars(:, end)'];
+                    pre_index = pre_time_bins;
+                    last_trial_index = event_end_indeces(event) + 1;
+                end
+            else
+                pre_index = pre_time_bins;
+                for neuron = 1:length(region_neurons)
+                    current_neuron = region_neurons{neuron};
+                    %% Grabs all trials for given neuron
+                    neuron_pre_activity = relative_response(:, (pre_index - pre_time_bins + 1 ):pre_index);
+                    bfr = sum(neuron_pre_activity, 2) / (pre_time * 1000);
+                    avg_bfr = mean(bfr);
+                    bfr_var = var(bfr);
+                    norm_var = norm_var_scaling * (epsilon + bfr_var)/(norm_var_scaling * epsilon + avg_bfr);
+                    fano = avg_bfr / bfr_var;
+                    nv_data = [nv_data; {animal_name}, {animal_type}, {day_num}, {current_region}, {region_type}, ...
+                        {'all_events'}, {current_neuron}, {avg_bfr}, {bfr_var}, {norm_var}, {fano}];
+                    pre_index = pre_index + post_time_bins + pre_time_bins;
                 end
             end
-            repeat_labels_length = length(pop_norm_var(:,1));
-            nv_analysis.(region_name).pop = pop_norm_var;
-            % disp(length(repmat({animal_name}, [repeat_labels_length, 1])));
-            % disp(length(neuron_labels));
-            % disp(length(pop_norm_var));
-            % pre_time, post_time, bin_size, span, epsilon, norm_var_scaling
-            nv_analysis.(region_name).labeled_nv = [repmat({current_animal}, [repeat_labels_length, 1]), repmat({current_animal_id}, [repeat_labels_length, 1]), repmat({exp_date}, [repeat_labels_length, 1]), repmat({day_num}, [repeat_labels_length, 1]),  ...
-                    repmat({pre_time}, [repeat_labels_length, 1]), repmat({post_time}, [repeat_labels_length, 1]), repmat({bin_size}, [repeat_labels_length, 1]), repmat({norm_var_scaling}, [repeat_labels_length, 1]), repmat({epsilon}, ...
-                    [repeat_labels_length, 1]), neuron_labels, pop_norm_var];
-
-            transposed_pop_norm = pop_norm_var';
-            % combined events is oorganized by numerical order still so
-            % each group of 4 would be ordered event 1, event 3, event 4, event 6
-            combined_events = transposed_pop_norm(:);
-            repeat_labels_length = length(combined_events);
-
-            if length(neuron_labels) == 1
-                repeated_neuron_labels = repelem(neuron_labels, 4)';
-            else
-                repeated_neuron_labels = repelem(neuron_labels, 4);
-            end
-
-            nv_analysis.(region_name).combined_event_nv = [repmat({[current_animal, current_animal_id]}, [repeat_labels_length, 1]), repmat({current_animal}, [repeat_labels_length, 1]), repmat({current_animal_id}, [repeat_labels_length, 1]), repmat({exp_date}, [repeat_labels_length, 1]), repmat({day_num}, [repeat_labels_length, 1]),  ...
-                repmat({pre_time}, [repeat_labels_length, 1]), repmat({post_time}, [repeat_labels_length, 1]), repmat({bin_size}, [repeat_labels_length, 1]), repmat({norm_var_scaling}, [repeat_labels_length, 1]), repmat({epsilon}, ...
-                [repeat_labels_length, 1]), repeated_neuron_labels, combined_events];
         end
 
         %% Save analysis results
         nv_filename = strrep(filename, 'PSTH', 'NV');
         nv_filename = strrep(nv_filename, 'format', 'analysis');
         matfile = fullfile(nv_calc_path, [nv_filename, '.mat']);
-        save(matfile, 'nv_analysis', 'unique_regions', 'event_strings', 'labeled_neurons', 'region_channels', 'pre_time', 'post_time', 'bin_size', 'span', 'epsilon', 'norm_var_scaling');
+        save(matfile, 'labeled_neurons', 'neuron_activity');
     end
+    new_nv_table = cell2table(nv_data, 'VariableNames', column_names);
+    nv_table = [nv_table; new_nv_table];
+    writetable(nv_table, csv_path, 'Delimiter', ',');
 
 end
