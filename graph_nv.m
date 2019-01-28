@@ -2,11 +2,11 @@ function matfile = graph_nv(nv_list, event_strings, original_path)
     % NV = norm_var = normalized variance
 
     %% Animal categories
-    learning = ['PRAC03', 'TNC16', 'RAVI19', 'RAVI20'];
+    learning = ['PRAC03', 'TNC16', 'RAVI19', 'RAVI019', 'RAVI20', 'RAVI020'];
     non_learning = ['LC02', 'TNC06', 'TNC12', 'TNC25'];
     control = ['TNC01', 'TNC03', 'TNC04', 'TNC14'];
-    right_direct = ['RAVI19', 'PRAC03', 'LC02', 'TNC12'];
-    left_direct = ['RAVI20', 'TNC16', 'TNC25', 'TNC06'];
+    right_direct = ['RAVI19', 'RAVI019', 'PRAC03', 'LC02', 'TNC12'];
+    left_direct = ['RAVI20', 'RAVI020', 'TNC16', 'TNC25', 'TNC06'];
 
     all_animals_fig = figure('visible', 'on');
     title('All animals')

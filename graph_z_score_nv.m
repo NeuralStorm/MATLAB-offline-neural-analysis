@@ -34,6 +34,9 @@ function [] = graph_z_score_nv(group_nv_path)
         avg_day_z = mean(z_score_values, 'omitnan');
         std_err_day_z = std(z_score_values, 'omitnan') / sqrt(length(z_score_values));
         learning_direct_z = [learning_direct_z; current_day, avg_day_z, std_err_day_z];
+        disp('------------------------------')
+        disp(length(z_score_values))
+        disp('------------------------------')
 
         z_score_values = new_unit_table.all_z_norm_var(strcmpi(new_unit_table.animal_type, 'learning') & strcmpi(new_unit_table.region_type, 'indirect') & new_unit_table.exp_day == current_day);
         avg_day_z = mean(z_score_values, 'omitnan');
@@ -169,8 +172,8 @@ function [] = graph_z_score_nv(group_nv_path)
 
     title('Learning Z-Score NV');
 
-    ylim([-0.50 14.5]);
-    yticks([-0.50, 0, 14.5]);
+    ylim([-0.50 1.5]);
+    yticks([-0.50, 0, 1.5]);
     ytickformat('%.2f')
     hold off
     graph_name = 'line_Z_learn.png';
@@ -229,8 +232,8 @@ function [] = graph_z_score_nv(group_nv_path)
     lg.Orientation = 'Horizontal';
 
     title('Non Learning Z-Score NV');
-    ylim([-0.50 14.5]);
-    yticks([-0.50, 0, 14.5]);
+    ylim([-0.50 1.5]);
+    yticks([-0.50, 0, 1.5]);
     ytickformat('%.2f')
     hold off
     graph_name = 'line_Z_non_learn.png';
@@ -284,8 +287,8 @@ function [] = graph_z_score_nv(group_nv_path)
     ylabel('Normalized Variance');
     % ylim(ax, [floor(learning_ylim(1)) ceil(learning_ylim(2))]);
     % yticks(ax, [floor(learning_ylim(1)) 0 ceil(learning_ylim(2))]);
-    ylim([-0.50 14.5]);
-    yticks([-0.50, 0, 14.5]);
+    ylim([-0.50 1.5]);
+    yticks([-0.50, 0, 1.5]);
     ytickformat('%.2f')
     hold off;
     graph_name = 'bar_z_learn.png';
@@ -339,8 +342,8 @@ function [] = graph_z_score_nv(group_nv_path)
     ylabel('Normalized Variance');
     % ylim(ax, [-0.50 (non_learning_ylims(2))]);
     % yticks(ax, [-0.50 0 (non_learning_ylims(2))]);
-    ylim([-0.50 14.5]);
-    yticks([-0.50, 0, 14.5]);
+    ylim([-0.50 1.5]);
+    yticks([-0.50, 0, 1.5]);
     ytickformat('%.2f')
     hold off;
     graph_name = 'bar_z_non_learn.png';
