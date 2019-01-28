@@ -1,7 +1,7 @@
 function [] = main()
     start_time = tic;
     %% Initialize global variables
-    % bin_size = 0.020;
+    % bin_size = 0.002;
     % total_trials = 100;
     % total_events = 4;
     % pre_time = 0.2;
@@ -49,9 +49,8 @@ function [] = main()
     
     %% Normalized variance (nv) Analysis
     epsilon = 0.01;
-    norm_var_scaling = (span * bin_size);
-    % List of where all the nv analysis result files are stored for population analysis at the end
-    nv_list = [];
+    norm_var_scaling = .2;
+    separate_events = false;
     
     %% gpfa
     optimize_state_dimension = false;
@@ -95,10 +94,10 @@ function [] = main()
                 
                 %% Run if you want to calculate the PSTH or comment it out to skip
                 psth_path = format_PSTH(parsed_path, animal_name, total_bins, bin_size, pre_time, post_time, ...
-                wanted_events, trial_range, total_trials);
+                    wanted_events, trial_range, total_trials);
                 %% Use code commeneted out below to skip PSTH calculations
                 psth_path = [parsed_path, '/psth'];
-                
+
                 %% Use to run receptive field analysis
                 if rf_analysis
                     rf_path = receptive_field_analysis(original_path, psth_path, animal_name, pre_time, post_time, bin_size, ...
@@ -134,12 +133,9 @@ function [] = main()
                 
                 
                 %% NV analysis
-                % [nv_calc_path, region_channels, event_strings] = nv_calculation(psth_path, animal_name, pre_time, post_time, bin_size, span, epsilon, norm_var_scaling);
-                % nv_path = normalized_variance_analysis(nv_calc_path, animal_name, wanted_events, region_channels, event_strings);
-                % nv_calc_path = [psth_path, '/normalized_variance_analysis'];
-                % nv_path = [nv_calc_path, '/nv_results'];
-                % nv_list = [nv_list; {nv_path}];
-
+                % nv_csv_path = fullfile(original_path, 'single_unit_nv.csv');
+                % [nv_calc_path, nv_csv_path] = nv_calculation(original_path, psth_path, animal_name, pre_time, post_time, ...
+                %     bin_size, epsilon, norm_var_scaling, first_iteration, separate_events);
 
                 %% Misc Functions
                 % intertrial_anlysis(original_path, animal_name, psth_path, bin_size, pre_time, post_time, first_iteration)
@@ -153,8 +149,7 @@ function [] = main()
             end
         end
     end
-    % group_nv_path = graph_nv(nv_list, event_strings, original_path);
-    % graph_z_score_nv(group_nv_path);
+    % z_score_nv(nv_csv_path, pre_time, post_time, bin_size, epsilon, norm_var_scaling)
     % euclidian_path = fullfile(original_path, 'euclidian.csv');
     % graph_euclidian_psth(original_path, euclidian_path);
     toc(start_time);
