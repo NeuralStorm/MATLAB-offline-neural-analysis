@@ -34,7 +34,7 @@ function [rf_path] = receptive_field_analysis(original_path, psth_path, animal_n
     csv_path = fullfile(original_path, 'receptive_field_results.csv');
     if ~exist(csv_path, 'file') && first_iteration
         rf_table = table([], [], [], [], [], [], [], [], [], [], [], [], [], [], [], [], [], [], [], ...
-            [], [], [], [], [], [], [], [], [], [], [], column_names);
+            [], [], [], [], [], [], [], [], [], [], [], 'VariableNames', column_names);
     elseif exist(csv_path, 'file') && first_iteration
         delete(csv_path);
         rf_table = table([], [], [], [], [], [], [], [], [], [], [], [], [], [], [], [], [], [], [], ...
