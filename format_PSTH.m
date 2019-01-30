@@ -93,13 +93,15 @@ function [psth_path] = format_PSTH(parsed_path, animal_name, total_bins, bin_siz
                 if ~exist(failed_path, 'dir')
                     mkdir(parsed_path, 'failed');
                 end
-                failed_calculating{end + 1} = file_name;
-                failed_calculating{end, 2} = ME;
+                if ~exist(failed_path, 'dir')
+                    mkdir(parsed_path, 'failed');
+                end
+
                 filename = ['FAILED.', file_name, '.mat'];
-                warning('%s failed to calculate\n', file_name);
-                warning('Error: %s\n', ME.message);
+                error_message = getReport( ME, 'extended', 'hyperlinks', 'on');
+                warning(error_message);
                 matfile = fullfile(failed_path, filename);
-                save(matfile, 'failed_calculating');
+                save(matfile, 'ME');
             end
             
             fprintf('Finished PSTH for %s\n', current_day);
@@ -112,13 +114,12 @@ function [psth_path] = format_PSTH(parsed_path, animal_name, total_bins, bin_siz
             if ~exist(failed_path, 'dir')
                 mkdir(parsed_path, 'failed');
             end
-            failed_calculating{end + 1} = file_name;
-            failed_calculating{end, 2} = ME;
+
             filename = ['FAILED.', file_name, '.mat'];
-            warning('%s failed to calculate\n', file_name);
-            warning('Error: %s\n', ME.message);
+            error_message = getReport( ME, 'extended', 'hyperlinks', 'on');
+            warning(error_message);
             matfile = fullfile(failed_path, filename);
-            save(matfile, 'failed_calculating');
+            save(matfile, 'ME');
         end
     end
     toc;
@@ -127,22 +128,22 @@ end
 function [pre_time_activity, post_time_activity] = split_psth(normalized_raster, pre_time, pre_time_bins, post_time_bins)
     pre_time_activity = [];
     post_time_activity = [];
-    %% Breaks down the PSTH into pre and post windows for receptive field analysis
+    %% Breaks down the PSTH into pre psth
     if pre_time ~= 0
         pre = pre_time_bins;
-        post = pre_time_bins + post_time_bins;  
         while pre < length(normalized_raster)
-            pre_time_activity = [pre_time_activity; ...
-                normalized_raster((pre - pre_time_bins + 1 ): pre)];
-                post_time_activity = [post_time_activity; ...
-                    normalized_raster((post - post_time_bins + 1): post)];
-            % Update pre and post counters
+            pre_time_activity = [pre_time_activity; normalized_raster((pre - pre_time_bins + 1 ): pre)];
+            % Update counter
             pre = pre + post_time_bins + pre_time_bins;
-            post = post + pre_time_bins + pre_time_bins;
         end
     else
         warning('Since the pre time is set to 0, there will not be a psth generated with only the pre time activity.\n');
         pre_time_activity = [];
         post_time_activity = normalized_raster;
+    end
+    post = pre_time_bins + post_time_bins; 
+    while post <= length(normalized_raster)
+        post_time_activity = [post_time_activity; normalized_raster((post - post_time_bins + 1): post)];
+        post = post + pre_time_bins + post_time_bins;
     end
 end
