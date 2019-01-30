@@ -1,24 +1,80 @@
 function [] = main()
     start_time = tic;
+
     %% Initialize global variables
+    % bin_size - sets the bin size for the PSTH
+    % total_trials - Acts as a lower bound to help cut off repetitive timestamps
+    % total_events - Tells the code how many events to look for
+    % pre_time & post_time - time window for before and after event, they do not have to be equal
+    % wanted_events - Requires for all events to be in array. IF empty it will skip all events
+    % trial_range - Inclusive Range, if left empty it will use all available events
+    %               Cuts all trials in given session afterwards
+    %               ex: [1 300] would look at trials 1 through 300 and ignore any trials afterwards
+    % ignored_animals - Give exact name of directory inside of data directory that you want skipped
+
+    %% Nate's tilt project parameters
     % bin_size = 0.002;
-    % total_trials = 100;
-    % total_events = 4;
     % pre_time = 0.2;
     % post_time = 0.2;
+    % total_events = 4;
     % wanted_events = [1, 3, 4, 6];
-    %% Pain
+    % total_trials = 100;
+    % trial_range = [1 300];
+    % ignored_animals = [];
+
+    %% Pain Project parameters
     bin_size = 0.005;
-    total_trials = 100;
-    total_events = 2;
     pre_time = 0.2;
-    post_time = 0.2;
-    % Requires for all events to be in array. IF empty it will skip all events
-    wanted_events = [1, 3];
-    % Inclusive Range, if left empty it will use all available events
+    post_time = 0.1;
+    total_events = 1;
+    wanted_events = [1];
+    total_trials = 100;
     trial_range = [];
-    % Give exact directory name of the animals you want skipped
     ignored_animals = [];
+
+    %% Francois
+    % bin_size = 0.002;
+    % pre_time = 0.2;
+    % post_time = 0.2;
+    % total_events = 4;
+    % wanted_events = [1, 3, 4, 6];
+    % total_trials = 100;
+    % trial_range = [];
+    % ignored_animals = [];
+
+    %% Receptive Field Analysis
+    % Controls if receptive field analysis is ran
+    rf_analysis = true;
+    % Span is the number of bins, centered on the current bin the moving average filter will be applied to
+    span = 1;
+    % threshold_scale determines how the threshold is scaled
+    % avg background activity + threshold_scale * standard deviation(background activity)
+    threshold_scale = 3;
+    % sig_bins determines how many consecutive bins are needed for significant response
+    sig_bins = 1;
+    % Significant response first checks if there are enough consecutive bins and then applies one of the two tests below
+    % 0 = no statistical testing
+    % 1 = two-sample t test on pre and post psth; 2 =  unpaired two-sample Kolmogorov-Smirnov test on pre and post psth
+    sig_check = 0;
+
+    %% PSTH graphing
+    % controls if plots are made
+    % If rf_analysis is also true then it will plot the event start, first and last bin latency
+    % and the threshold for significant neurons
+    make_psth_graphs = true;
+    % controls if a single fig is made containing all the units from a given region is made
+    % sub_plot requires the scrollsubplot function to be on your matlab path
+    % this dependency can be found here: https://www.mathworks.com/matlabcentral/fileexchange/7730-scrollsubplot
+    sub_plot = true;
+    % determines how many columns are in the subplot
+    sub_columns = 2;
+
+    %% Normalized variance (nv) Analysis
+    epsilon = 0.01;
+    norm_var_scaling = .2;
+    separate_events = true;
+
+    %% Information Analysis
     % Boolean to control classification for population or single neurons
     % Default is set to single neuron
     unit_classification = true;
@@ -27,33 +83,8 @@ function [] = main()
     spreadsheet_name = 'unit_20ms_spreadsheet.csv';
     append_spreadsheet = false;
     
-    %% Receptive Field Analysis
-    rf_analysis = true;
-    % Span is the number of bins, centered on the current bin the moving average filter will be applied to
-    span = 1;
-    % threshold_scale determines how the threshold is scaled
-    % avg background activity + threshold_scale * standard deviation(background activity)
-    threshold_scale = 3;
-    % Significant response first checks if there are enough consecutive bins and then applies one of the two tests below
-    % 0 = no statistical testing
-    % 1 = two-sample t test on pre and post psth; 2 =  unpaired two-sample Kolmogorov-Smirnov test on pre and post psth
-    sig_check = 0;
-    % sig_bins determines how many consecutive bins are needed for significant response
-    sig_bins = 1;
-
-    %% PSTH graphing
-    % If rf_analysis is also true then it will plot the event start, first and last bin latency
-    % and the threshold for significant neurons
-    make_psth_graphs = true;
-    
-    
-    %% Normalized variance (nv) Analysis
-    epsilon = 0.01;
-    norm_var_scaling = .2;
-    separate_events = false;
-    
     %% gpfa
-    optimize_state_dimension = false;
+    optimize_state_dimension = true;
     state_dimension = 2;
     prediction_error_dimensions = [3 6 9];
     % Max number of trials plotted on trajectory
@@ -108,7 +139,7 @@ function [] = main()
                 %% Run if you want to graph all of the PSTHs or comment it out to skip
                 if make_psth_graphs
                     graph_PSTH(psth_path, animal_name, total_bins, bin_size, ...
-                        pre_time, post_time, rf_analysis, rf_path)
+                        pre_time, post_time, rf_analysis, rf_path, sub_plot, sub_columns)
                 end
                 
                 %% Information Analysis
@@ -133,7 +164,7 @@ function [] = main()
                 
                 
                 %% NV analysis
-                % nv_csv_path = fullfile(original_path, 'single_unit_nv.csv');
+                nv_csv_path = fullfile(original_path, 'single_unit_nv.csv');
                 % [nv_calc_path, nv_csv_path] = nv_calculation(original_path, psth_path, animal_name, pre_time, post_time, ...
                 %     bin_size, epsilon, norm_var_scaling, first_iteration, separate_events);
 
@@ -149,7 +180,8 @@ function [] = main()
             end
         end
     end
-    % z_score_nv(nv_csv_path, pre_time, post_time, bin_size, epsilon, norm_var_scaling)
+    % z_nv_path = z_score_nv(nv_csv_path, pre_time, post_time, bin_size, epsilon, norm_var_scaling);
+    % graph_z_nv(z_nv_path);
     % euclidian_path = fullfile(original_path, 'euclidian.csv');
     % graph_euclidian_psth(original_path, euclidian_path);
     toc(start_time);
