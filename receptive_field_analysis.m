@@ -65,13 +65,13 @@ function [rf_path] = receptive_field_analysis(original_path, psth_path, animal_n
         region_names = fieldnames(labeled_neurons);
         for region = 1:length(region_names)
             current_region = region_names{region};
-            region_neurons = [labeled_neurons.(current_region)(:,1), labeled_neurons.(current_region)(:,end)];
+            region_neurons = [labeled_neurons.(current_region)(:,1)];
 
             for event = 1:length(wanted_events)
                 current_event = event_strings{event};
                 norm_pre_window = event_struct.(current_region).([current_event, '_norm_pre_time_activity']);
                 norm_post_window = event_struct.(current_region).([current_event, '_norm_post_time_activity']);
-                for neuron = 1:length(region_neurons(:,1))
+                for neuron = 1:length(region_neurons)
                     neuron_name = region_neurons{neuron};
                     general_info = [general_info; {animal_name}, {current_group}, current_date, ...
                         day_num, pre_time, post_time, bin_size, sig_check, sig_bins, span, threshold_scale];
