@@ -34,7 +34,17 @@ function [parsed_path] = parser(dir_path, animal_name, total_trials, total_event
         current_day = seperated_file_name{4};
         % Take the spike times and event times
         try
-            [tscounts, wfcounts, evcounts, slowcounts] = plx_info(file,1);
+            try
+                [tscounts, wfcounts, evcounts, slowcounts] = plx_info(file,1);
+            catch ME
+                if (strcmpi(ME.identifier,'MATLAB:TooManyOutputs'))
+                    msg = ['Old version of plexon matlab sdk on path -- please remove and use the ', ...
+                        'most recent version of the matlab offline sdk.'];
+                    causeException = MException('MATLAB:myCode:depricatedSoftware', msg);
+                    ME = addCause(ME,causeException);
+                end
+                rethrow(ME);
+            end
             fprintf('Parsing for %s on %s\n', animal_name, current_day);
             
             [nunits1, nchannels1] = size(tscounts); 
@@ -145,7 +155,9 @@ function [parsed_path] = parser(dir_path, animal_name, total_trials, total_event
                 p = find(time_stamp_copy(:,i));
                 if length(p)>=1
                     for j = 1:length(p)
-                        neuron_map(end+1,1) = cellstr([spk_names(i-1,:),subchan(p(j))]);
+                        channel = deblank(spk_names(i-1, :));
+                        neuron_map(end+1,1) = cellstr([channel,subchan(p(j))]);
+                        % neuron_map(end+1,1) = cellstr([spk_names(i-1,:),subchan(p(j))]);
                     end
                 end
             end
@@ -162,13 +174,11 @@ function [parsed_path] = parser(dir_path, animal_name, total_trials, total_event
             if ~exist(failed_path, 'dir')
                 mkdir(dir_path, 'failed');
             end
-            failed_parsing{end + 1} = file_name;
-            failed_parsing{end, 2} = ME;
             filename = ['FAILED.', file_name, '.mat'];
-            warning('%s failed to parse\n', file_name);
-            warning('Error: %s\n', ME.message);
+            error_message = getReport( ME, 'extended', 'hyperlinks', 'on');
+            warning(error_message);
             matfile = fullfile(failed_path, filename);
-            save(matfile, 'failed_parsing');
+            save(matfile, 'ME');
         end
     end
     toc;
