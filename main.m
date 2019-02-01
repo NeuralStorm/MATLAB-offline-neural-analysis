@@ -3,14 +3,22 @@ function [] = main()
 
     %% Initialize global variables
     % bin_size - sets the bin size for the PSTH
-    % total_trials - Acts as a lower bound to help cut off repetitive timestamps
+    % total_trials - How many times an event was repeated 
+    %              --> going to be depricated (still used in neural_trajectories)
     % total_events - Tells the code how many events to look for
     % pre_time & post_time - time window for before and after event, they do not have to be equal
     % wanted_events - Requires for all events to be in array. IF empty it will skip all events
     % trial_range - Inclusive Range, if left empty it will use all available events
     %               Cuts all trials in given session afterwards
     %               ex: [1 300] would look at trials 1 through 300 and ignore any trials afterwards
+    % trial_lower_bound - Acts as a lower bound when finding events in the parser --> event channels
+    %                     with less than the lower bound will be skipped
     % ignored_animals - Give exact name of directory inside of data directory that you want skipped
+    % is_non_strobed_and_strobed - Used to tell the parser if there is both strobed and non strobed animals in the animal set
+    %                              If animal set is only strobed -> will use strobed event values
+    %                              If animal set is only non-strobed -> will use event channel to label events
+    % event_map - Used to map non strobbed animal events to strobed event values -> assumes event channels are in categorical order
+    
 
     %% Nate's tilt project parameters
     % bin_size = 0.002;
@@ -20,17 +28,23 @@ function [] = main()
     % wanted_events = [1, 3, 4, 6];
     % total_trials = 100;
     % trial_range = [1 300];
+    % trial_lower_bound = 80;
     % ignored_animals = [];
+    % is_non_strobed_and_strobed = true;
+    % event_map = [1, 3, 4, 6];
 
     %% Pain Project parameters
     bin_size = 0.005;
     pre_time = 0.2;
     post_time = 0.1;
     total_events = 1;
-    wanted_events = [1];
+    wanted_events = [2];
     total_trials = 100;
+    trial_lower_bound = 50;
     trial_range = [];
     ignored_animals = [];
+    is_non_strobed_and_strobed = false;
+    event_map = [];
 
     %% Francois
     % bin_size = 0.002;
@@ -39,8 +53,11 @@ function [] = main()
     % total_events = 4;
     % wanted_events = [1, 3, 4, 6];
     % total_trials = 100;
+    % trial_lower_bound = 50;
     % trial_range = [];
     % ignored_animals = [];
+    % is_non_strobed_and_strobed = false;
+    % event_map = [];
 
     %% Receptive Field Analysis
     % Controls if receptive field analysis is ran
@@ -67,7 +84,7 @@ function [] = main()
     % this dependency can be found here: https://www.mathworks.com/matlabcentral/fileexchange/7730-scrollsubplot
     sub_plot = true;
     % determines how many columns are in the subplot
-    sub_columns = 2;
+    sub_columns = 3;
 
     %% Normalized variance (nv) Analysis
     epsilon = 0.01;
@@ -116,7 +133,8 @@ function [] = main()
                 continue;
             elseif isfolder(animal_path)
                 %% Run if you want to parse .plx or comment out to skip
-                parsed_path = parser(animal_path, animal_name, total_trials, total_events);
+                parsed_path = parser(animal_path, animal_name, total_trials, total_events, trial_lower_bound, ...
+                    is_non_strobed_and_strobed, event_map);
                 %% Use the code commented out below to skip parsing
                 parsed_path = [animal_path, '/parsed_plx'];
                 
@@ -125,7 +143,7 @@ function [] = main()
                 
                 %% Run if you want to calculate the PSTH or comment it out to skip
                 psth_path = format_PSTH(parsed_path, animal_name, total_bins, bin_size, pre_time, post_time, ...
-                    wanted_events, trial_range, total_trials);
+                    wanted_events, trial_range);
                 %% Use code commeneted out below to skip PSTH calculations
                 psth_path = [parsed_path, '/psth'];
 
