@@ -1,4 +1,4 @@
-function [population_response] = event_spike_times(neurons, all_events, total_trials, total_bins, bin_size, pre_time, post_time)
+function [population_response] = event_spike_times(neurons, all_events, total_bins, bin_size, pre_time, post_time)
     %   spikes - rows are units(neurons) x columns are timestamps
     %   Converts the spikes into binned spike times in which each set of 100 columns
     %   is 1 neuron, and each row is a trial.

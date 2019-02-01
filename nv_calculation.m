@@ -58,7 +58,6 @@ function [nv_calc_path, csv_path] = ...
 
     nv_data = [];
     for file = 1:length(psth_files)
-        % NV.analysis.TNC.04.ClosedLoop.Day04.120715
         failed_rf = {};
         current_file = [psth_path, '/', psth_files(file).name];
         [file_path, filename, file_extension] = fileparts(current_file);
