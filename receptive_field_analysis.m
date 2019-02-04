@@ -1,5 +1,5 @@
 function [rf_path] = receptive_field_analysis(original_path, psth_path, animal_name, pre_time, post_time, bin_size, ...
-        threshold_scale, sig_check, sig_bins, span, wanted_events, first_iteration)
+        threshold_scale, sig_check, sig_bins, span, first_iteration)
     tic
     %TODO add error catching
 
@@ -67,7 +67,7 @@ function [rf_path] = receptive_field_analysis(original_path, psth_path, animal_n
             current_region = region_names{region};
             region_neurons = [labeled_neurons.(current_region)(:,1)];
 
-            for event = 1:length(wanted_events)
+            for event = 1:length(event_strings(1,:))
                 current_event = event_strings{event};
                 norm_pre_window = event_struct.(current_region).([current_event, '_norm_pre_time_activity']);
                 norm_post_window = event_struct.(current_region).([current_event, '_norm_post_time_activity']);

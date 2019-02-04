@@ -37,8 +37,8 @@ function [] = main()
     bin_size = 0.005;
     pre_time = 0.2;
     post_time = 0.1;
-    total_events = 1;
-    wanted_events = [2];
+    total_events = 2;
+    wanted_events = [];
     total_trials = 100;
     trial_lower_bound = 50;
     trial_range = [];
@@ -47,11 +47,11 @@ function [] = main()
     event_map = [];
 
     %% Francois
-    % bin_size = 0.002;
+    % bin_size = 0.005;
     % pre_time = 0.2;
-    % post_time = 0.2;
-    % total_events = 4;
-    % wanted_events = [1, 3, 4, 6];
+    % post_time = 0.1;
+    % total_events = 2;
+    % wanted_events = [193, 194, 195, 196];
     % total_trials = 100;
     % trial_lower_bound = 50;
     % trial_range = [];
@@ -112,11 +112,6 @@ function [] = main()
     dimsToPlot = 1:2;
     
     %% Automatic Variable Creation DO NOT CHANGE
-    % Creates a cell array of strings with the names of all the desired events
-    event_strings = {};
-    for i = 1: length(wanted_events)
-        event_strings{end+1} = ['event_', num2str(wanted_events(i))];
-    end
     total_bins = (length([-abs(pre_time):bin_size:abs(post_time)]) - 1);
     % Get the directory with all animals and their respective .plx files
     original_path = uigetdir(pwd);
@@ -150,7 +145,7 @@ function [] = main()
                 %% Use to run receptive field analysis
                 if rf_analysis
                     rf_path = receptive_field_analysis(original_path, psth_path, animal_name, pre_time, post_time, bin_size, ...
-                        threshold_scale, sig_check, sig_bins, span, wanted_events, first_iteration);
+                        threshold_scale, sig_check, sig_bins, span, first_iteration);
                 end
                 rf_path = [psth_path, '/receptive_field_analysis'];
                 
@@ -167,7 +162,6 @@ function [] = main()
                 
                 %% To skip bootstrapping
                 classified_path = [psth_path, '/classifier'];
-                % neural_trajectory_analysis(original_path, animal_name, psth_path, spreadsheet_name, bin_size, total_trials, total_bins, pre_time, post_time, event_strings);
                 %% Run for synergy redundancy calculation
                 % Checks to make sure that both population and unit information exists
                 % unit_path = [classified_path, '/unit'];
@@ -191,6 +185,7 @@ function [] = main()
                 %% Euclidian function call
                 % euclidian_path = unit_euclidian_psth(original_path, psth_path, animal_name, pre_time, post_time, total_bins, first_iteration);
                 %% Trajectory analysis
+                %TODO remove event strings parameter
                 % neural_trajectory_analysis(original_path, animal_name, psth_path, bin_size, total_trials, total_bins, pre_time, post_time, ...
                 %     event_strings, optimize_state_dimension, state_dimension, prediction_error_dimensions, plot_trials, plot_dimensions, dimsToPlot);
                 

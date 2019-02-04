@@ -19,12 +19,6 @@ function [psth_path] = format_PSTH(parsed_path, animal_name, total_bins, bin_siz
        rmdir(failed_path);
     end
 
-    % Creates a cell array of strings with the names of all the desired events
-    event_strings = {};
-    for i = 1: length(wanted_events)
-        event_strings{end+1} = ['event_', num2str(wanted_events(i))];
-    end
-    
     pre_time_bins = (length([-abs(pre_time): bin_size: 0])) - 1;
     post_time_bins = (length([0:bin_size:post_time])) - 1;
 
@@ -38,6 +32,14 @@ function [psth_path] = format_PSTH(parsed_path, animal_name, total_bins, bin_siz
         load(file);
 
         try
+            % Creates a cell array of strings with the names of all the desired events
+            event_strings = {};
+            if isempty(wanted_events)
+                wanted_events = unique(events(:,1));
+            end
+            for i = 1: length(wanted_events)
+                event_strings{end+1} = ['event_', num2str(wanted_events(i))];
+            end
             event_struct = struct;
 
             % Truncates events to desired trial range from total_trials * total_events
