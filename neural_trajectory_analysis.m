@@ -1,5 +1,5 @@
 function [] = neural_trajectory_analysis(original_path, animal_name, psth_path, bin_size, total_trials, total_bins, pre_time, post_time, ...
-    event_strings, optimize_state_dimension, state_dimension, prediction_error_dimensions, plot_trials, plot_dimensions, dimsToPlot)
+    optimize_state_dimension, state_dimension, prediction_error_dimensions, plot_trials, plot_dimensions, dimsToPlot)
 % ! TODO SKIP EVENTS WITH TOO FEW CORRECT TRIALS (<10 for right now)
 
     %% Animal categories
@@ -14,10 +14,10 @@ function [] = neural_trajectory_analysis(original_path, animal_name, psth_path, 
     psth_files = dir(psth_mat_path);
 
     % Checks if a classify graph directory exists and if not it creates it
-    trajectory_path = [psth_path, '/', num2str(plot_dimensions), 'd_trajectory_analysis'];
+    trajectory_path = [psth_path, '/trajectory_analysis'];
     if ~exist(trajectory_path, 'dir')
         % mkdir(region_path, ['/', current_event]);
-        mkdir(psth_path, ['/', num2str(plot_dimensions), 'd_trajectory_analysis']);
+        mkdir(psth_path, ['/trajectory_analysis']);
     end
 
     % Deletes the failed directory if it already exists
@@ -159,7 +159,7 @@ function [] = neural_trajectory_analysis(original_path, animal_name, psth_path, 
                         mkdir(event_path, '/plots');
                     end
                     [estParams, seqTrain] = postprocess(result, 'kernSD', kernSD);
-                    plot3D(seqTrain, 'xorth', plot_dimensions, 'dimsToPlot', dimsToPlot, 'nPlotMax', plot_trials);
+                    plot3D(seqTrain, 'xorth', 'dimsToPlot', dimsToPlot, 'nPlotMax', plot_trials);
                     legend({'Neural Trajectory', 'Start of Tilt', 'Decision Made', 'End of Tilt'},'TextColor', 'black');
                     % title(legend, current_event);
                     set(gcf, 'Name', runIdx, 'NumberTitle', 'off');

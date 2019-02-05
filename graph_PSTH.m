@@ -1,5 +1,5 @@
 function [] = graph_PSTH(psth_path, animal_name, total_bins, bin_size, ...
-                pre_time, post_time, rf_analysis, rf_path, sub_plot, sub_columns)
+                pre_time, post_time, rf_analysis, rf_path, make_region_subplot, sub_columns)
     %% Graphs each PSTH for every Neuron for every event
     tic;
     % Grabs all the psth formatted files
@@ -58,7 +58,6 @@ function [] = graph_PSTH(psth_path, animal_name, total_bins, bin_size, ...
                     mkdir(day_path, current_region);
                 end
 
-                
                 region_struct_names = fieldnames(event_struct.(current_region));
                 for region_field = 1:length(region_struct_names)
                     if contains(region_struct_names{region_field}, '_normalized_raster')
@@ -74,7 +73,7 @@ function [] = graph_PSTH(psth_path, animal_name, total_bins, bin_size, ...
                             mkdir(region_path, event_name);
                         end
 
-                        if sub_plot
+                        if make_region_subplot
                             region_figure = figure('visible', 'off');
                             sub_rows = ceil(total_region_neurons / sub_columns);
                             if sub_columns > total_region_neurons
@@ -111,7 +110,7 @@ function [] = graph_PSTH(psth_path, animal_name, total_bins, bin_size, ...
                                     line([event_last event_last], ylim, 'Color', 'red', 'LineWidth', 0.75);
                                     line([pre_time_bins pre_time_bins], ylim, 'Color', 'black', 'LineWidth', 0.75);
                                     hold off
-                                    if sub_plot
+                                    if make_region_subplot
                                         figure(region_figure);
                                         scrollsubplot(sub_rows, sub_cols, neuron);
                                         hold on
@@ -131,7 +130,7 @@ function [] = graph_PSTH(psth_path, animal_name, total_bins, bin_size, ...
                                     plot(xlim,[event_threshold event_threshold], 'r', 'LineWidth', 0.75);
                                     line([pre_time_bins pre_time_bins], ylim, 'Color', 'black', 'LineWidth', 0.75);
                                     hold off
-                                    if sub_plot
+                                    if make_region_subplot
                                         figure(region_figure)
                                         scrollsubplot(sub_rows, sub_cols, neuron);
                                         hold on
@@ -156,7 +155,7 @@ function [] = graph_PSTH(psth_path, animal_name, total_bins, bin_size, ...
                             filename = [current_neuron_name, '_event_', current_event, '.fig'];
                             savefig(gcf, fullfile(event_path, filename));
                         end
-                        if sub_plot
+                        if make_region_subplot
                             figure(region_figure);
                             filename = ['region_units_event_', current_event, '.fig'];
                             savefig(gcf, fullfile(event_path, filename));
