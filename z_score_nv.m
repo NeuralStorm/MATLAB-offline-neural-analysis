@@ -42,13 +42,13 @@ function [z_filename] = z_score_nv(csv_path, pre_time, post_time, bin_size, epsi
                     {pre_time}, {post_time}, {bin_size}, {norm_var_scaling}, {epsilon}, ...
                     {current_region}, {current_region_type}];
                 general_info = repmat(general_info, [length(channels(:,1)), 1]);
-                z_score_data = [z_score_data; general_info, channels, num2cell(unit_z_nv), num2cell(unit_z_fano)];
+                z_score_data = [z_score_data; general_info, channels, num2cell(current_nv_data), num2cell(unit_z_nv), num2cell(unit_z_fano)];
             end
         end
     end
     z_score_table = cell2table(z_score_data, 'VariableNames', {'animal', 'group', 'day', ...
         'pre_time', 'post_time', 'bin_size', 'norm_var_constant', 'epsilon', 'region', ...
-        'region_type', 'channel', 'unit_z_nv', 'unit_z_fano'});
+        'region_type', 'channel', 'unit_nv', 'unit_z_nv', 'unit_z_fano'});
     [z_csv_path, ~, ~] = fileparts(csv_path);
     z_filename = fullfile(z_csv_path, 'pop_z.csv');
     writetable(z_score_table, z_filename, 'Delimiter', ',');
