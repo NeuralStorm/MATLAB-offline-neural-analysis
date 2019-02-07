@@ -13,6 +13,12 @@ function [] = main()
     %%      Global Variables      %%
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
+    % label_channels - labels channels after files are finished being parsed. If the parser is ran, 
+    %                  then this must also be true, but this can be ran to relabel the channels
+    %                  as long as the parsed files exist
+    %                  - label_channels = true: labels channels according to labels csv (must also be true
+    %                                           if parse_files is true)
+    %                  - label_channels = false: does not label channels
     % bin_size - sets the bin size for the PSTH
     % pre_time - time window before the event, pre and post times do not have to be equal
     % post_time - time window after event, pre and post times do not have to be equal
@@ -22,8 +28,11 @@ function [] = main()
     %%           Parser           %%
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
+    % parse_files - Controls if the raw .plx files are parsed -> should only need to parse files once
+    %                  - parse_files = true: parses .plx files (label_channels MUST also be true)
+    %                  - parse_files = false: skips parsing
     % total_trials - How many times an event was repeated 
-    %              --> going to be depricated (still used in neural_trajectories)
+    %                going to be depricated (still used in neural_trajectories)
     % total_events - Tells the code how many events to look for
     % trial_lower_bound - Acts as a lower bound when finding events in the parser --> event channels
     %                     with less than the lower bound will be skipped
@@ -36,6 +45,9 @@ function [] = main()
     %%        Format PSTH         %%
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
+    % create_psth - Controls if format_PSTH is ran 
+    %                  - create_psth = true: creates PSTH
+    %                  - create_psth = false: does not create the PSTH
     % wanted_events - If left empty, wanted_events will default to all events above lower threshold.
     %                 To select specific events, you must know the specific channel the event happened in
     % trial_range - Inclusive Range, if left empty it will use all available events
@@ -75,27 +87,30 @@ function [] = main()
 
     % See Churchland et al. 2006: "Neural Variability in Premotor Cortex Provides a Signature ofMotor Preparation"
     % For more details about how to choose epsilon and norm_var_scaling (or c in equatioon 2)
+
+    % nv_analysis - Controls if normalized variance is calculated
+    %                  - nv_analysis = true: calculates the normalized variance
+    %                  - nv_analysis = false: does not do calculate the normalized variance
     % epsilon - Used to prevent accidental division by 0
     % norm_var_scaling - Used to scale the normalized variance depending on filter
     % separate_events - Determines whether or not the event sets are combined or not for the normalized variance
-    %                 - typically you will want to keep events separated
-
-    %%%%%%%%%%%%%%%%%%%%%%%
-    %%   NOT READY YET   %%
-    %%%%%%%%%%%%%%%%%%%%%%%
+    %                   typically you will want to keep events separated
 
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
     %%    Information Analysis    %%
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
+    % info_analysis - Controls if bootstrapping and other forms of information analysis is ran
+    %                  - info_analysis = true: bootstraps data
+    %                  - info_analysis = false: does not do the information analysis
     % unit_classification - Controls population or single unit classification
     %                     - True: unit classification
     %                     - False: population classification
     % boot_iterations - Sets how many bootstrap iterations are done (1 = classification only)
-    % spreadsheet_name - sets the spreadsheet name
-    % append_spreadhsheet - controls if previous data set is appended overwritten if same file exists
-    %                     - True: Appends new data to existing spreadsheet
-    %                     - False: Overwrites existing spreadsheet
+
+    %%%%%%%%%%%%%%%%%%%%%%%
+    %%   NOT READY YET   %%
+    %%%%%%%%%%%%%%%%%%%%%%%
 
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
     %%            GPFA            %%
@@ -110,21 +125,24 @@ function [] = main()
 
     %% Nate's tilt project parameters
     %%  Global
-    % bin_size = 0.002;
-    % pre_time = 0.2;
+    % label_channels = false;
+    % bin_size = 0.02;
+    % pre_time = 0;
     % post_time = 0.2;
     % ignored_animals = [];
     % %% Parser
+    % parse_files = false;
     % total_trials = 100;
     % trial_lower_bound = 80;
-    % total_events = 4;
     % is_non_strobed_and_strobed = true;
+    % total_events = 4;
     % event_map = [1, 3, 4, 6];
     % %% Format PSTH
+    % create_psth = false;
     % trial_range = [1 300];
-    % wanted_events = [];
+    % wanted_events = [1, 3, 4, 6];
     % %% Receptive Field Analysis
-    % rf_analysis = true;
+    % rf_analysis = false;
     % span = 3;
     % threshold_scale = 1.65;
     % sig_bins = 3;
@@ -134,17 +152,18 @@ function [] = main()
     % make_region_subplot = true;
     % sub_columns = 4;
     % %% Normalized Variance
+    % nv_analysis = false;
     % epsilon = 0.01;
     % norm_var_scaling = .2;
     % separate_events = true;
-    %%%%%%%%%%%%%%%%%%%%%%%
-    %%   NOT READY YET   %%
-    %%%%%%%%%%%%%%%%%%%%%%%
     % %% Information Analysis
-    % unit_classification = true;
-    % boot_iterations = 1;
-    % spreadsheet_name = 'unit_20ms_spreadsheet.csv';
-    % append_spreadsheet = false;
+    % info_analysis = true;
+    % unit_classification = false;
+    % boot_iterations = 5;
+    % %%%%%%%%%%%%%%%%%%%%%%%
+    % %%   NOT READY YET   %%
+    % %%%%%%%%%%%%%%%%%%%%%%%
+    % %% GPFA
     % optimize_state_dimension = true;
     % prediction_error_dimensions = [3 6 9];
     % state_dimension = 2;
@@ -153,17 +172,23 @@ function [] = main()
 
 
     %% Pain Project parameters
+    %% Global
+    label_channels = true;
     bin_size = 0.005;
     pre_time = 0.2;
     post_time = 0.1;
-    total_events = 2;
-    wanted_events = [];
+    ignored_animals = [];
+    %% Parser
+    parse_files = true;
     total_trials = 100;
     trial_lower_bound = 50;
-    trial_range = [];
-    ignored_animals = [];
+    total_events = 2;
     is_non_strobed_and_strobed = false;
     event_map = [];
+    %% Format PSTH
+    create_psth = true;
+    trial_range = [];
+    wanted_events = [];
     %% Receptive Field Analysis
     rf_analysis = true;
     span = 1;
@@ -174,18 +199,18 @@ function [] = main()
     make_psth_graphs = true;
     make_region_subplot = true;
     sub_columns = 3;
-    % %% Normalized Variance
-    % epsilon = 0.01;
-    % norm_var_scaling = .2;
-    % separate_events = true;
+    %% Normalized Variance
+    nv_analysis = false;
+    epsilon = 0.01;
+    norm_var_scaling = .2;
+    separate_events = true;
     %%%%%%%%%%%%%%%%%%%%%%%
     %%   NOT READY YET   %%
     %%%%%%%%%%%%%%%%%%%%%%%
     % %% Information Analysis
+    % info_analysis = false;
     % unit_classification = true;
     % boot_iterations = 1;
-    % spreadsheet_name = 'unit_20ms_spreadsheet.csv';
-    % append_spreadsheet = false;
     % optimize_state_dimension = true;
     % prediction_error_dimensions = [3 6 9];
     % state_dimension = 2;
@@ -194,17 +219,23 @@ function [] = main()
 
 
     %% Francois
+    % Global
+    % label_channels = true;
     % bin_size = 0.005;
     % pre_time = 0.2;
     % post_time = 0.1;
-    % total_events = 2;
-    % wanted_events = [193, 194, 195, 196];
+    % ignored_animals = [];
+    % Parser
+    % parse_files = true;
     % total_trials = 100;
     % trial_lower_bound = 50;
-    % trial_range = [];
-    % ignored_animals = [];
     % is_non_strobed_and_strobed = false;
+    % total_events = 2;
     % event_map = [];
+    % Format PSTH
+    % create_psth = true;
+    % trial_range = [];
+    % wanted_events = [193, 194, 195, 196];
     % %% Receptive Field Analysis
     % rf_analysis = true;
     % span = 1;
@@ -216,6 +247,7 @@ function [] = main()
     % make_region_subplot = true;
     % sub_columns = 3;
     % %% Normalized Variance
+    % nv_analysis = false;
     % epsilon = 0.01;
     % norm_var_scaling = .2;
     % separate_events = true;
@@ -223,10 +255,10 @@ function [] = main()
     %%   NOT READY YET   %%
     %%%%%%%%%%%%%%%%%%%%%%%
     % %% Information Analysis
+    % info_analysis = false;
     % unit_classification = true;
     % boot_iterations = 1;
-    % spreadsheet_name = 'unit_20ms_spreadsheet.csv';
-    % append_spreadsheet = false;
+    % %%GPFA
     % optimize_state_dimension = true;
     % prediction_error_dimensions = [3 6 9];
     % state_dimension = 2;
@@ -256,42 +288,71 @@ function [] = main()
             % Skips animals we want to ignore
             if ~isempty(ignored_animals) && contains(ignored_animals, animal_name)
                 continue;
+            %TODO add check to see if isfolder is a valid function -> if not have it tell people to change to isdir
             elseif isfolder(animal_path)
-                %% Run if you want to parse .plx or comment out to skip
-                % parsed_path = parser(animal_path, animal_name, total_trials, total_events, trial_lower_bound, ...
-                %     is_non_strobed_and_strobed, event_map);
-                %% Use the code commented out below to skip parsing
-                parsed_path = [animal_path, '/parsed_plx'];
-                
-                %% Creates labeled neurons
-                % label_neurons(animal_path, animal_name, parsed_path);
-                
-                %% Run if you want to calculate the PSTH or comment it out to skip
-                psth_path = format_PSTH(parsed_path, animal_name, total_bins, bin_size, pre_time, post_time, ...
-                    wanted_events, trial_range);
-                %% Use code commeneted out below to skip PSTH calculations
-                psth_path = [parsed_path, '/psth'];
 
-                %% Use to run receptive field analysis
+                %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+                %%           Parser           %%
+                %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+                parsed_path = [animal_path, '/parsed_plx'];
+                if parse_files
+                    parsed_path = parser(animal_path, animal_name, total_trials, total_events, trial_lower_bound, ...
+                        is_non_strobed_and_strobed, event_map);
+                end
+
+                %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+                %%       Label Channels       %%
+                %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+                if label_channels
+                    label_neurons(animal_path, animal_name, parsed_path);
+                end
+
+                %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+                %%        Format PSTH         %%
+                %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+                psth_path = [parsed_path, '/psth'];
+                if create_psth
+                    psth_path = format_PSTH(parsed_path, animal_name, total_bins, bin_size, pre_time, post_time, ...
+                        wanted_events, trial_range);
+                end
+
+                %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+                %%  Receptive Field Analysis  %%
+                %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+                rf_path = [psth_path, '/receptive_field_analysis'];
                 if rf_analysis
                     rf_path = receptive_field_analysis(original_path, psth_path, animal_name, pre_time, post_time, bin_size, ...
                         threshold_scale, sig_check, sig_bins, span, first_iteration);
                 end
-                rf_path = [psth_path, '/receptive_field_analysis'];
-                
-                %% Run if you want to graph all of the PSTHs or comment it out to skip
+
+                %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+                %%         Graph PSTH         %%
+                %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
                 if make_psth_graphs
                     graph_PSTH(psth_path, animal_name, total_bins, bin_size, ...
                         pre_time, post_time, rf_analysis, rf_path, make_region_subplot, sub_columns)
                 end
-                
-                %% Information Analysis
-                %% Run for bootstrapping
-                % classified_path = crude_bootstrapper(psth_path, animal_name, boot_iterations, bin_size, pre_time, ...
-                %     post_time, wanted_events, unit_classification);
-                
-                %% To skip bootstrapping
+
+                %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+                %%     Normalized Variance    %%
+                %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+                nv_csv_path = fullfile(original_path, 'single_unit_nv.csv');
+                if nv_analysis
+                    [nv_calc_path, nv_csv_path] = nv_calculation(original_path, psth_path, animal_name, pre_time, post_time, ...
+                    bin_size, epsilon, norm_var_scaling, first_iteration, separate_events);
+                end
+
+                %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+                %%    Information Analysis    %%
+                %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
                 classified_path = [psth_path, '/classifier'];
+                if info_analysis
+                    classified_path = crude_bootstrapper(original_path, first_iteration, psth_path, animal_name, boot_iterations, bin_size, pre_time, ...
+                        post_time, unit_classification);
+                end
+
+                %TODO Reimplement synergy redundancy calculation
+                %% Misc Functions
                 %% Run for synergy redundancy calculation
                 % Checks to make sure that both population and unit information exists
                 % unit_path = [classified_path, '/unit'];
@@ -299,23 +360,11 @@ function [] = main()
                 % if (exist(unit_path, 'dir') == 7) && (exist(pop_path, 'dir') == 7)
                 %     synergy_redundancy(classified_path, animal_name);
                 % end
-                
-                % % %% Write to spreadsheet
-                % csv_export(classified_path, original_path, total_events, wanted_events, pre_time, post_time, bin_size, first_iteration, ...
-                %     trial_range, boot_iterations, animal_name, total_trials, unit_classification, spreadsheet_name, append_spreadsheet);
-                
-                
-                %% NV analysis
-                nv_csv_path = fullfile(original_path, 'single_unit_nv.csv');
-                [nv_calc_path, nv_csv_path] = nv_calculation(original_path, psth_path, animal_name, pre_time, post_time, ...
-                    bin_size, epsilon, norm_var_scaling, first_iteration, separate_events);
 
-                %% Misc Functions
                 % intertrial_anlysis(original_path, animal_name, psth_path, bin_size, pre_time, post_time, first_iteration)
                 %% Euclidian function call
                 % euclidian_path = unit_euclidian_psth(original_path, psth_path, animal_name, pre_time, post_time, total_bins, first_iteration);
                 %% Trajectory analysis
-                %TODO remove event strings parameter
                 % neural_trajectory_analysis(original_path, animal_name, psth_path, bin_size, total_trials, total_bins, pre_time, post_time, ...
                 %     optimize_state_dimension, state_dimension, prediction_error_dimensions, plot_trials, dimsToPlot);
                 
@@ -323,8 +372,8 @@ function [] = main()
             end
         end
     end
-    z_nv_path = z_score_nv(nv_csv_path, pre_time, post_time, bin_size, epsilon, norm_var_scaling);
-    graph_z_nv(z_nv_path);
+    % z_nv_path = z_score_nv(nv_csv_path, pre_time, post_time, bin_size, epsilon, norm_var_scaling);
+    % graph_z_nv(z_nv_path);
     % euclidian_path = fullfile(original_path, 'euclidian.csv');
     % graph_euclidian_psth(original_path, euclidian_path);
     toc(start_time);
