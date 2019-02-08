@@ -219,28 +219,28 @@ function [] = main()
 
 
     %% Francois
-    % Global
+    %% Global
     % label_channels = true;
-    % bin_size = 0.005;
-    % pre_time = 0.2;
+    % bin_size = 0.002;
+    % pre_time = .1;
     % post_time = 0.1;
     % ignored_animals = [];
-    % Parser
+    % %% Parser
     % parse_files = true;
     % total_trials = 100;
     % trial_lower_bound = 50;
     % is_non_strobed_and_strobed = false;
-    % total_events = 2;
+    % total_events = 4;
     % event_map = [];
-    % Format PSTH
+    % %% Format PSTH
     % create_psth = true;
     % trial_range = [];
-    % wanted_events = [193, 194, 195, 196];
+    % wanted_events = [];
     % %% Receptive Field Analysis
     % rf_analysis = true;
-    % span = 1;
+    % span = 2;
     % threshold_scale = 3;
-    % sig_bins = 1;
+    % sig_bins = 2;
     % sig_check = 0;
     % %% Graph PSTH
     % make_psth_graphs = true;
@@ -251,9 +251,9 @@ function [] = main()
     % epsilon = 0.01;
     % norm_var_scaling = .2;
     % separate_events = true;
-    %%%%%%%%%%%%%%%%%%%%%%%
-    %%   NOT READY YET   %%
-    %%%%%%%%%%%%%%%%%%%%%%%
+    % %%%%%%%%%%%%%%%%%%%%%%%
+    % %%   NOT READY YET   %%
+    % %%%%%%%%%%%%%%%%%%%%%%%
     % %% Information Analysis
     % info_analysis = false;
     % unit_classification = true;
@@ -312,7 +312,7 @@ function [] = main()
                 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
                 psth_path = [parsed_path, '/psth'];
                 if create_psth
-                    psth_path = format_PSTH(parsed_path, animal_name, total_bins, bin_size, pre_time, post_time, ...
+                    psth_path = format_PSTH(parsed_path, animal_name, bin_size, pre_time, post_time, ...
                         wanted_events, trial_range);
                 end
 
@@ -365,7 +365,7 @@ function [] = main()
                 %% Euclidian function call
                 % euclidian_path = unit_euclidian_psth(original_path, psth_path, animal_name, pre_time, post_time, total_bins, first_iteration);
                 %% Trajectory analysis
-                % neural_trajectory_analysis(original_path, animal_name, psth_path, bin_size, total_trials, total_bins, pre_time, post_time, ...
+                % neural_trajectory_analysis(original_path, animal_name, psth_path, bin_size, total_trials, pre_time, post_time, ...
                 %     optimize_state_dimension, state_dimension, prediction_error_dimensions, plot_trials, dimsToPlot);
                 
                 first_iteration = false;
