@@ -3,7 +3,6 @@ function [parsed_path] = parser(dir_path, animal_name, total_trials, total_event
     tic;
     %% Select Directory for debugging purposes
     % dir_path = uigetdir(pwd);
-    
     % Necessary for plx_info to run correctly (if the path does not end
     % with / when called in that function, it causes the program to crash)
     original_path = strcat(dir_path, '/');
@@ -12,7 +11,10 @@ function [parsed_path] = parser(dir_path, animal_name, total_trials, total_event
     % *.plx
     num_plx = strcat(dir_path, '/*.plx');
     plx_files = dir(num_plx);
-    
+
+  readVariables(original_path,animal_name, total_trials, total_events, trial_lower_bound, ...
+                           is_non_strobed_and_strobed, event_map)  % readVariable function reads the parameters from parser.m  
+                                                                   % then outputs them to an excel file
     % Create parsed directory if it does not already exist    
     parsed_path = strcat(dir_path, '/parsed_plx');
     if ~exist(parsed_path, 'dir')
@@ -136,4 +138,5 @@ function [parsed_path] = parser(dir_path, animal_name, total_trials, total_event
         end
     end
     toc;
+    
 end 

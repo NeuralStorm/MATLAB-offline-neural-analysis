@@ -1,42 +1,44 @@
 function [] = readVariables(original_path,varargin)
 
 
- for number_of_variables=2:nargin
+%set the name of columns of table
+array_values=["Variable Name","Value"];
+
+array_values=cellstr(string(array_values));
+
+
+for number_of_variables=2:nargin
    
      variable_names{number_of_variables-1}=inputname(number_of_variables); %getting each variable name from main function
-    
- end
- 
- variable_names= char(variable_names)  %converting variable names to character
+     
+     %checks the number of arguments in each variable
+     %if it is anything other than 1, must turn into a joined string to be
+     %accepted into the table
+        if numel(varargin{number_of_variables-1}) ~=1
+            
+            varargin{number_of_variables-1}=join(string(varargin{number_of_variables-1}));
+        end
+     
+     %checks if any of the variable values is empty
+     %if it is, the empty brackets is replaced with the string "empty"
+     %This must be included because table does not accept empty values
+        
+        if isempty(varargin{number_of_variables-1})
+            
+            varargin{number_of_variables-1}="empty";
+        end
+     
+     array_values = [array_values; variable_names(number_of_variables-1), cellstr(string(varargin(number_of_variables-1)))]
+end
 
- empty_values=cellfun(@(x) ~isnumeric(x),varargin)  %look at values imported and check all the variables that are not numbers
+%creates a table from an array
+table_of_values=table(array_values) ;
 
-%empty_values=cellfun('isempty',varargin);  %look at values imported and check all the empty variables
-varargin(empty_values)=[];     % if no value is assigned to a variable, we remove the variable from our table
+ %adds name of excel file to path 
+table_path=fullfile(original_path,'/Variable Names and Values.csv');
 
-available_values=transpose(~empty_values);   
-new_variable_names=variable_names.*available_values; %new_variable_names now becomes the array with same number of variables but the variables with no value become empty
-
-new_variable_names=char(new_variable_names);
-empty_variables=isempty(new_variable_names);      
-new_variable_names(empty_variables)=[];             
-
-new_variable_names=string(new_variable_names)
-new_variable_names=deblank(new_variable_names)
-new_variable_names(cellfun('isempty',new_variable_names)) = []    %remove the empty strings to give accurate array size corresponding to values
-new_variable_names=transpose(new_variable_names)
-
-
-
-values=transpose(varargin)
-table_of_variables=array2table(transpose(new_variable_names))   %create a table for variable names
-
-table_of_values=table(values)      %create a table for the values
-
- table_path=fullfile(original_path,'/Variable Names and Values.csv'); 
- 
-final_table=[table_of_variables,table_of_values]   %concatenate table's together
-writetable(final_table,table_path)     %export the table to .csv file
+%export the table to .csv file
+writetable(table_of_values,table_path) ;    
 
 
  

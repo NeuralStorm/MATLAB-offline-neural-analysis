@@ -7,8 +7,6 @@ function [labeled_neurons, unique_regions, region_channels] = label_neurons(anim
         csv_file = fullfile(animal_path, csv_files(csv).name);
         if contains(csv_files(csv).name, 'labels.csv')
             labels = readtable(csv_file);
-        else
-            error('%s labels file is missing.', animal_name);
         end
     end
     

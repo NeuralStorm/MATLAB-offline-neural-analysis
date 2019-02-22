@@ -18,7 +18,10 @@ function [psth_path] = format_PSTH(parsed_path, animal_name, total_bins, bin_siz
        delete([failed_path, '/*']);
        rmdir(failed_path);
     end
-
+  readVariables(parsed_path, animal_name, total_bins, bin_size, pre_time, post_time, ...
+        wanted_events, trial_range)  % readVariable function reads the parameters from format_PSTH.m  
+                                     % then outputs them to an excel file
+    
     if pre_time > 0
         pre_time_bins = (length([-abs(pre_time): bin_size: 0])) - 1;
     else

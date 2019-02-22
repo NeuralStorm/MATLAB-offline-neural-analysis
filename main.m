@@ -290,7 +290,9 @@ function [] = main()
                 continue;
             %TODO add check to see if isfolder is a valid function -> if not have it tell people to change to isdir
             elseif isfolder(animal_path)
-
+readVariables(original_path, label_channels, pre_time, post_time,bin_size, ignored_animals) % readVariable function reads the parameters from main.m  
+                                                                                            % then outputs them to an excel file
+                
                 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
                 %%           Parser           %%
                 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
