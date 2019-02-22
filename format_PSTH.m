@@ -1,4 +1,4 @@
-function [psth_path] = format_PSTH(parsed_path, animal_name, total_bins, bin_size, pre_time, post_time, ...
+function [psth_path] = format_PSTH(parsed_path, animal_name, bin_size, pre_time, post_time, ...
         wanted_events, trial_range)
     tic;
     % Grabs all .mat files in the parsed plx directory
@@ -71,7 +71,7 @@ function [psth_path] = format_PSTH(parsed_path, animal_name, total_bins, bin_siz
                 region_name = unique_regions{region};
                 labeled_map = labeled_neurons.(region_name)(:,4);
                 event_struct.(region_name).relative_response = event_spike_times(labeled_map, event_struct.all_events(:,2), ...
-                    total_bins, bin_size, pre_time, post_time);
+                    bin_size, pre_time, post_time);
             end
 
             try

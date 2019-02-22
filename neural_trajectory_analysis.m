@@ -1,4 +1,4 @@
-function [] = neural_trajectory_analysis(original_path, animal_name, psth_path, bin_size, total_trials, total_bins, pre_time, post_time, ...
+function [] = neural_trajectory_analysis(original_path, animal_name, psth_path, bin_size, total_trials, pre_time, post_time, ...
     optimize_state_dimension, state_dimension, prediction_error_dimensions, plot_trials, plot_dimensions, dimsToPlot)
 % ! TODO SKIP EVENTS WITH TOO FEW CORRECT TRIALS (<10 for right now)
 
@@ -76,7 +76,7 @@ function [] = neural_trajectory_analysis(original_path, animal_name, psth_path, 
             label_counts = tabulate(correct_labels);
             %! Raw data passed into trajectory code needs 1ms bin size
             relative_response = event_spike_times(labeled_neurons.(region_name)(:, end), event_struct.all_events(:,2), ...
-                total_trials, total_bins, .001, 0, post_time);
+                total_trials, .001, 0, post_time);
             correct_response = [];
             for i = 1:length(correct_trials)
                 if correct_trials(i)
