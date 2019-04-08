@@ -1,4 +1,4 @@
-vfunction [parameterStruct] = parameterStructOutput(original_path)
+function [parameterStruct] = import_config(original_path)
     original_path = uigetdir(pwd);
     parameter_csv_path=[original_path, '/*.csv'];
     parameter_csv_file=dir(parameter_csv_path);
