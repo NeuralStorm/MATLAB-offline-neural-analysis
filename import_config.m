@@ -1,32 +1,53 @@
-function [parameterStruct] = import_config(original_path)
-    original_path = uigetdir(pwd);
-    parameter_csv_path=[original_path, '/*.csv'];
-    parameter_csv_file=dir(parameter_csv_path);
-    for csv=1:length(parameter_csv_file)
-        csv_file=fullfile(original_path, parameter_csv_file(csv).name);
-        if contains(parameter_csv_file(csv).name, 'Variable Names and Values.csv')
-            ParameterCsvValues = readtable(csv_file);  
+function [config] = import_config(animal_path, config_names)
+
+    %% Grabs config file and creates labels
+    animal_csv_path = [animal_path, '/*.csv'];
+    csv_files = dir(animal_csv_path);
+    for csv = 1:length(csv_files)
+        csv_file = fullfile(animal_path, csv_files(csv).name);
+        if contains(csv_files(csv).name, 'config.csv')
+            config_table = readtable(csv_file);
         end
-    end 
-    % Check main.m line 279 -> enforce that the csv is on that path
-    %coverts second column of cell to table
-    parameterValues = table2cell( ParameterCsvValues(:,2)); 
-    arrayOfParameterNames = table2array( ParameterCsvValues(:, 1)); 
+    end
+    config = struct;
 
-    %function input variables -> moved to main
-    parameterNames = ["total_trials", "total_events", "trial_lower_bound", "is_non_strobed_and_strobed",...
-        "event_map", "bin_size", "pre_time", "post_time", "wanted_events", "trial_range"];
-
-    [~,parameterNameIndex,parameterValueIndex] = intersect(parameterNames, arrayOfParameterNames);
-    %indexing the values for the names and corresponding values that is to
-    %be outputed to the struct
-    structOutputValue = parameterValues(parameterValueIndex);
-    structOutputName = parameterNames(parameterNameIndex);
-    %Create a parameter struct by equating each parameter name to corresponding
-    %parameter value 
-    for parameterStructIndex = 1:length(structOutputName)
-        parameterStruct.(structOutputName( parameterStructIndex )) = structOutputValue( parameterStructIndex );
-    end 
-        
+    [~, config_name_index, config_table_index] = intersect(config_names, config_table.key);
+    for index = 1:length(config_name_index)
+        current_name = config_table.key{index};
+        current_value = config_table.value{index};
+        if contains(current_value, ' ') || contains(current_value, ',')
+            if contains(current_value, ' ')
+                split_values = strsplit(current_value, ' ');
+            else
+                split_values = strsplit(current_value, ',');
+            end
+            value = [];
+            for sub_value = 1:length(split_values)
+                current_sub_value = split_values{sub_value};
+                value = [value, convert_string(current_sub_value)];
+            end
+        elseif contains(current_value, ';')
+            split_values = strsplit(current_value, ';');
+            value = [];
+            for sub_value = 1:length(split_values)
+                current_sub_value = split_values{sub_value};
+                value = [value, convert_string(current_sub_value)];
+            end
+        else
+            value = convert_string(current_value);
+        end
+        config.(current_name) = value;
+    end
 end
 
+function [value] = convert_string(string_value)
+    if all(ismember(string_value, '0123456789+-.eEdD'))
+        value = str2num(string_value);
+    elseif strcmpi(string_value, 'true')
+        value = true;
+    elseif strcmpi(string_value, 'false')
+        value = false;
+    else
+        value = string_value;
+    end
+end
