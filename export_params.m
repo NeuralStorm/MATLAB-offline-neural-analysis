@@ -1,4 +1,4 @@
-function [] = utilizedParameterValues(original_path,varargin)
+function [] = export_params(original_path,varargin)
 
     parameter_array_values = ["Parameter Name", "Parameter Value"];
     parameter_array_values = cellstr(string(parameter_array_values));
