@@ -12,9 +12,6 @@ function [parsed_path] = parser(dir_path, animal_name, total_trials, total_event
     num_plx = strcat(dir_path, '/*.plx');
     plx_files = dir(num_plx);
 
-  readVariables(original_path,animal_name, total_trials, total_events, trial_lower_bound, ...
-                           is_non_strobed_and_strobed, event_map)  % readVariable function reads the parameters from parser.m  
-                                                                   % then outputs them to an excel file
     % Create parsed directory if it does not already exist    
     parsed_path = strcat(dir_path, '/parsed_plx');
     if ~exist(parsed_path, 'dir')
@@ -27,6 +24,9 @@ function [parsed_path] = parser(dir_path, animal_name, total_trials, total_event
        delete([failed_path, '/*']);
        rmdir(failed_path);
     end
+
+    export_params(parsed_path, 'parsed', failed_path, animal_name, total_trials, total_events, trial_lower_bound, ...
+        is_non_strobed_and_strobed, event_map);
 
     % Runs through all of the .plx files in the selected directory
     for h = 1: length(plx_files)

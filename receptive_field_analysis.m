@@ -43,6 +43,9 @@ function [rf_path] = receptive_field_analysis(original_path, psth_path, animal_n
         rf_table = readtable(csv_path);
     end
 
+    export_params(rf_path, 'rec_field', failed_path, csv_path, animal_name, pre_time, post_time, bin_size, ...
+        threshold_scale, sig_check, sig_bins, span, first_iteration);
+
     %% Iterates through all psth formatted files and performs the recfield analysis
     for file = 1: length(psth_files)
         current_file = [psth_path, '/', psth_files(file).name];
@@ -90,6 +93,7 @@ function [rf_path] = receptive_field_analysis(original_path, psth_path, animal_n
                     smooth_above_threshold_indeces = find(smoothed_response > smoothed_threshold);
                     smooth_above_threshold = smoothed_response(smooth_above_threshold_indeces);
                     %% Determines if there was a significant response
+                    %! Check to see if consecutive bin check is with smoothed or non smoothed post time
                     [consecutive, ~] = is_consecutive(smooth_above_threshold_indeces, sig_bins);
                     if consecutive
                         if sig_check == 1
