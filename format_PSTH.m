@@ -18,21 +18,21 @@ function [psth_path] = format_PSTH(parsed_path, animal_name, bin_size, pre_time,
        delete([failed_path, '/*']);
        rmdir(failed_path);
     end
-  readVariables(parsed_path, animal_name, total_bins, bin_size, pre_time, post_time, ...
-        wanted_events, trial_range)  % readVariable function reads the parameters from format_PSTH.m  
-                                     % then outputs them to an excel file
-    
+
     if pre_time > 0
         pre_time_bins = (length([-abs(pre_time): bin_size: 0])) - 1;
     else
         pre_time_bins = 0;
     end
-    post_time_bins = (length([0:bin_size:post_time])) - 1;
+    post_time_bins = (length(0:bin_size:post_time)) - 1;
+
+    export_params(psth_path, 'format_psth', parsed_path, failed_path, animal_name, bin_size, pre_time, post_time, ...
+        wanted_events, trial_range);
 
     for h = 1: length(parsed_files)
         failed_calculating = {};
         file = [parsed_path, '/', parsed_files(h).name];
-        [file_path, file_name, file_extension] = fileparts(file);
+        [~, file_name, ~] = fileparts(file);
         seperated_file_name = strsplit(file_name, '.');
         current_day = seperated_file_name{4};
         fprintf('Calculating PSTH for %s on %s\n', animal_name, current_day);
@@ -78,17 +78,20 @@ function [psth_path] = format_PSTH(parsed_path, animal_name, bin_size, pre_time,
                 events_array = event_struct.all_events(:,2);
                 event_count = 0;
                 for event = 1:length(events_array)
+                    current_event = event_strings{event};
                     %% get normalized raster for regions
                     for region = 1:length(unique_regions(:,1))
                         region_name = unique_regions{region};
-                        total_region_neurons = length(labeled_neurons.(region_name)(:,1));
-                        current_norm_raster = sum(event_struct.(region_name).relative_response((event_count + 1):1:(event_count + length(events_array{event})),:),1) ...
+                        event_relative_response = event_struct.(region_name).relative_response( ...
+                            (event_count + 1): 1: (event_count + length(events_array{event})), :);
+                        current_norm_raster = sum(event_relative_response, 1) ...
                             / length(events_array{event});
                         % normalized raster is the normalized psth
-                        event_struct.(region_name).([event_strings{event}, '_normalized_raster']) = current_norm_raster;
+                        event_struct.(region_name).([current_event, '_normalized_raster']) = current_norm_raster;
                         [pre_time_activity, post_time_activity] = split_psth(current_norm_raster, pre_time, pre_time_bins, post_time_bins);
-                        event_struct.(region_name).([event_strings{event}, '_norm_pre_time_activity']) = pre_time_activity;
-                        event_struct.(region_name).([event_strings{event}, '_norm_post_time_activity']) = post_time_activity;
+                        event_struct.(region_name).([current_event, '_norm_pre_time_activity']) = pre_time_activity;
+                        event_struct.(region_name).([current_event, '_norm_post_time_activity']) = post_time_activity;
+                        event_struct.(region_name).([current_event, '_relative_response']) = event_relative_response;
                     end
                     % Updates event_count to scale sum properly for next row
                     event_count = event_count + length(events_array{event});
