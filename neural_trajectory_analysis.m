@@ -1,11 +1,9 @@
-function [] = neural_trajectory_analysis(original_path, animal_name, psth_path, bin_size, total_trials, pre_time, post_time, ...
-    optimize_state_dimension, state_dimension, prediction_error_dimensions, plot_trials, plot_dimensions, dimsToPlot)
 % ! TODO SKIP EVENTS WITH TOO FEW CORRECT TRIALS (<10 for right now)
+function [] = neural_trajectory_analysis(animal_name, psth_path, bin_size, total_trials, pre_time, post_time, ...
+                                        optimize_state_dimension, state_dimension, prediction_error_dimensions, ...
+                                        plot_trials, dimsToPlot)
 
     %% Animal categories
-    learning = ['PRAC03', 'TNC16', 'RAVI19', 'RAVI20', 'RAVI019', 'RAVI020'];
-    non_learning = ['LC02', 'TNC06', 'TNC12', 'TNC25'];
-    control = ['TNC01', 'TNC03', 'TNC04', 'TNC14'];
     right_direct = ['RAVI19', 'PRAC03', 'LC02', 'TNC12'];
     left_direct = ['RAVI20', 'TNC16', 'TNC25', 'TNC06'];
 
@@ -17,7 +15,7 @@ function [] = neural_trajectory_analysis(original_path, animal_name, psth_path, 
     trajectory_path = [psth_path, '/trajectory_analysis'];
     if ~exist(trajectory_path, 'dir')
         % mkdir(region_path, ['/', current_event]);
-        mkdir(psth_path, ['/trajectory_analysis']);
+        mkdir(psth_path, '/trajectory_analysis');
     end
 
     % Deletes the failed directory if it already exists
@@ -27,14 +25,12 @@ function [] = neural_trajectory_analysis(original_path, animal_name, psth_path, 
         rmdir(failed_path);
     end
 
-    pre_time_bins = (length([-abs(pre_time): bin_size: 0])) - 1;
-    post_time_bins = (length([0:bin_size:post_time])) - 1;
     gpfa_post_time_bins = (length([-abs(0):0.001:post_time])) - 1;
 
     %% Iterates through all the psth formated files
     for file = 1: length(psth_files)
         current_file = [psth_path, '/', psth_files(file).name];
-        [file_path, filename, file_extension] = fileparts(current_file);
+        [~, filename, ~] = fileparts(current_file);
         split_name = strsplit(filename, '.');
         current_day = split_name{6};
         day_num = regexp(current_day,'\d*','Match');
@@ -75,7 +71,7 @@ function [] = neural_trajectory_analysis(original_path, animal_name, psth_path, 
             correct_labels = region_decoder_output.Event(correct_trials);
             label_counts = tabulate(correct_labels);
             %! Raw data passed into trajectory code needs 1ms bin size
-            relative_response = event_spike_times(labeled_neurons.(region_name)(:, end), event_struct.all_events(:,2), ...
+            relative_response = create_relative_response(labeled_neurons.(region_name)(:, end), event_struct.all_events(:,2), ...
                 total_trials, .001, 0, post_time);
             correct_response = [];
             for i = 1:length(correct_trials)

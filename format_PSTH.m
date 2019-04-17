@@ -70,7 +70,7 @@ function [psth_path] = format_PSTH(parsed_path, animal_name, bin_size, pre_time,
             for region = 1:length(unique_regions)
                 region_name = unique_regions{region};
                 labeled_map = labeled_neurons.(region_name)(:,4);
-                event_struct.(region_name).relative_response = event_spike_times(labeled_map, event_struct.all_events(:,2), ...
+                event_struct.(region_name).relative_response = create_relative_response(labeled_map, event_struct.all_events(:,2), ...
                     bin_size, pre_time, post_time);
             end
 
