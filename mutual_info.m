@@ -67,6 +67,7 @@ function [] = mutual_info(psth_path)
                     [unique_timings, ~, unique_timing_indices] = unique(event_relative_response, 'rows');
                     current_prob_timing = tabulate(unique_timing_indices);
                     current_prob_timing = current_prob_timing(:, end) / 100;
+                    current_prob_timing(current_prob_timing == 0) = [];
 
                     %% Timing entropy
                     timing_entropy = 0;
@@ -96,6 +97,7 @@ function [] = mutual_info(psth_path)
                 [unique_bin_combos, ~, unique_bin_combos_indices] = unique(event_bin_counts, 'rows');
                 event_prob_count = tabulate(unique_bin_combos_indices);
                 event_prob_count = event_prob_count(:, end) / 100;
+                event_prob_count(event_prob_count == 0) = [];
                 prob_struct.(current_region).([current_event, '_overall_probability_count']) = ...
                     [unique_bin_combos, event_prob_count];
                 joint_unique_bin_combos = unique([joint_unique_bin_combos; unique_bin_combos], 'rows');
