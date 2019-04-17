@@ -1,4 +1,4 @@
-function [config] = import_config(animal_path, config_names)
+function [config] = import_config(animal_path)
 
     %% Grabs config file and creates labels
     animal_csv_path = [animal_path, '/*.csv'];
@@ -9,12 +9,11 @@ function [config] = import_config(animal_path, config_names)
             config_table = readtable(csv_file);
         end
     end
-    config = struct;
 
-    [~, config_name_index, config_table_index] = intersect(config_names, config_table.key);
-    for index = 1:length(config_name_index)
-        current_name = config_table.key{index};
-        current_value = config_table.value{index};
+    config = struct;
+    for i = 1:height(config_table)
+        current_name = config_table.key{i};
+        current_value = config_table.value{i};
         if contains(current_value, ' ') || contains(current_value, ',')
             if contains(current_value, ' ')
                 split_values = strsplit(current_value, ' ');
