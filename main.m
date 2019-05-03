@@ -11,7 +11,7 @@
 % bin_size - sets the bin size for the PSTH
 % pre_time - time window before the event, pre and post times do not have to be equal
 % post_time - time window after event, pre and post times do not have to be equal
-% ignored_animals - Give exact name of directory inside of data directory that you want skipped
+% ignore_animal - Boolean set in config file to ignore animal or not
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%           Parser           %%
@@ -132,10 +132,10 @@ function [] = main()
         config = import_config(animal_path);
         export_params(animal_path, 'main', config);
         % Skips animals we want to ignore
-        if ~isempty(config.ignored_animals) && contains(config.ignored_animals, animal_name)
+        if config.ignore_animal
             continue;
         else
-            total_bins = (length([-abs(config.pre_time):config.bin_size:abs(config.post_time)]) - 1);
+            total_bins = (length(-abs(config.pre_time):config.bin_size:abs(config.post_time)) - 1);
             %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
             %%           Parser           %%
             %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -183,7 +183,7 @@ function [] = main()
             %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
             nv_csv_path = fullfile(original_path, 'single_unit_nv.csv');
             if config.nv_analysis
-                [nv_calc_path, nv_csv_path] = nv_calculation(original_path, psth_path, animal_name, config.pre_time, config.post_time, ...
+                nv_csv_path = nv_calculation(original_path, psth_path, animal_name, config.pre_time, config.post_time, ...
                 config.bin_size, config.epsilon, config.norm_var_scaling, first_iteration, config.separate_events);
             end
 
