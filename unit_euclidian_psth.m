@@ -82,10 +82,10 @@ function [euclidian_path] = unit_euclidian_psth(original_path, psth_path, animal
                 day_num == 24 || day_num == 25)))
                     continue
             end
-            right_fast = event_struct.(region_name).event_1_normalized_raster;
-            right_slow = event_struct.(region_name).event_3_normalized_raster;
-            left_fast = event_struct.(region_name).event_4_normalized_raster;
-            left_slow = event_struct.(region_name).event_6_normalized_raster;
+            right_fast = event_struct.(region_name).event_1_psth;
+            right_slow = event_struct.(region_name).event_3_psth;
+            left_fast = event_struct.(region_name).event_4_psth;
+            left_slow = event_struct.(region_name).event_6_psth;
             fast_right_left = [];
             slow_right_left = [];
             right_fast_slow = [];

@@ -60,12 +60,12 @@ function [] = graph_PSTH(psth_path, animal_name, total_bins, bin_size, ...
 
                 region_struct_names = fieldnames(event_struct.(current_region));
                 for region_field = 1:length(region_struct_names)
-                    if contains(region_struct_names{region_field}, '_normalized_raster')
-                        % Getting the current event we are graphing (format: event_#_raster)
-                        split_raster = strsplit(region_struct_names{region_field}, '_');
-                        current_event = split_raster{2};
-                        % Get the raster matrix
-                        raster = getfield(event_struct.(current_region), region_struct_names{region_field});
+                    if contains(region_struct_names{region_field}, '_psth')
+                        % Getting the current event we are graphing (format: event_#_psth)
+                        split_psth = strsplit(region_struct_names{region_field}, '_');
+                        current_event = split_psth{2};
+                        % Get the psth matrix
+                        psth = getfield(event_struct.(current_region), region_struct_names{region_field});
                         %% Create the event directories
                         event_path = [region_path, '/event_', current_event, '/'];
                         event_name = ['event_', current_event];
@@ -84,7 +84,7 @@ function [] = graph_PSTH(psth_path, animal_name, total_bins, bin_size, ...
                         end
                         %% Creating the PSTH graphs
                         for neuron = 1:total_region_neurons
-                            current_neuron = raster(((1:total_bins) + ((neuron-1) * total_bins)));
+                            current_neuron = psth(((1:total_bins) + ((neuron-1) * total_bins)));
                             current_neuron_name = region_neurons{neuron};
                             unit_figure = figure('visible','off');
                             bar(current_neuron,'BarWidth', 1);

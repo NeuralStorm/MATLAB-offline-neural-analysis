@@ -20,7 +20,7 @@ function [psth_path] = format_PSTH(parsed_path, animal_name, bin_size, pre_time,
     end
 
     if pre_time > 0
-        pre_time_bins = (length([-abs(pre_time): bin_size: 0])) - 1;
+        pre_time_bins = (length(-abs(pre_time): bin_size: 0)) - 1;
     else
         pre_time_bins = 0;
     end
@@ -30,7 +30,6 @@ function [psth_path] = format_PSTH(parsed_path, animal_name, bin_size, pre_time,
         wanted_events, trial_range);
 
     for h = 1: length(parsed_files)
-        failed_calculating = {};
         file = [parsed_path, '/', parsed_files(h).name];
         [~, file_name, ~] = fileparts(file);
         seperated_file_name = strsplit(file_name, '.');
@@ -79,16 +78,16 @@ function [psth_path] = format_PSTH(parsed_path, animal_name, bin_size, pre_time,
                 event_count = 0;
                 for event = 1:length(events_array)
                     current_event = event_strings{event};
-                    %% get normalized raster for regions
+                    %% get normalized psth for regions
                     for region = 1:length(unique_regions(:,1))
                         region_name = unique_regions{region};
                         event_relative_response = event_struct.(region_name).relative_response( ...
                             (event_count + 1): 1: (event_count + length(events_array{event})), :);
-                        current_norm_raster = sum(event_relative_response, 1) ...
+                        current_psth = sum(event_relative_response, 1) ...
                             / length(events_array{event});
-                        % normalized raster is the normalized psth
-                        event_struct.(region_name).([current_event, '_normalized_raster']) = current_norm_raster;
-                        [pre_time_activity, post_time_activity] = split_psth(current_norm_raster, pre_time, pre_time_bins, post_time_bins);
+                        % normalized psth is the normalized psth
+                        event_struct.(region_name).([current_event, '_psth']) = current_psth;
+                        [pre_time_activity, post_time_activity] = split_psth(current_psth, pre_time, pre_time_bins, post_time_bins);
                         event_struct.(region_name).([current_event, '_norm_pre_time_activity']) = pre_time_activity;
                         event_struct.(region_name).([current_event, '_norm_post_time_activity']) = post_time_activity;
                         event_struct.(region_name).([current_event, '_relative_response']) = event_relative_response;
@@ -123,7 +122,7 @@ function [psth_path] = format_PSTH(parsed_path, animal_name, bin_size, pre_time,
             end
 
             filename = ['FAILED.', file_name, '.mat'];
-            error_message = getReport( ME, 'extended', 'hyperlinks', 'on');
+            error_message = getReport(ME, 'extended', 'hyperlinks', 'on');
             warning(error_message);
             matfile = fullfile(failed_path, filename);
             save(matfile, 'ME');
@@ -132,27 +131,27 @@ function [psth_path] = format_PSTH(parsed_path, animal_name, bin_size, pre_time,
     toc;
 end
 
-function [pre_time_activity, post_time_activity] = split_psth(normalized_raster, pre_time, pre_time_bins, post_time_bins)
+function [pre_time_activity, post_time_activity] = split_psth(psth, pre_time, pre_time_bins, post_time_bins)
     pre_time_activity = [];
     post_time_activity = [];
     %% Breaks down the PSTH into pre psth
     if pre_time ~= 0
         %% Creates pre time PSTH
         pre = pre_time_bins;
-        while pre < length(normalized_raster)
-            pre_time_activity = [pre_time_activity; normalized_raster((pre - pre_time_bins + 1 ): pre)];
+        while pre < length(psth)
+            pre_time_activity = [pre_time_activity; psth((pre - pre_time_bins + 1 ): pre)];
             % Update counter
             pre = pre + post_time_bins + pre_time_bins;
         end
         %% Creates post time PSTH
         post = pre_time_bins + post_time_bins; 
-        while post <= length(normalized_raster)
-            post_time_activity = [post_time_activity; normalized_raster((post - post_time_bins + 1): post)];
+        while post <= length(psth)
+            post_time_activity = [post_time_activity; psth((post - post_time_bins + 1): post)];
             post = post + pre_time_bins + post_time_bins;
         end
     else
         warning('Since the pre time is set to 0, there will not be a psth generated with only the pre time activity.\n');
         pre_time_activity = NaN;
-        post_time_activity = normalized_raster;
+        post_time_activity = psth;
     end
 end
