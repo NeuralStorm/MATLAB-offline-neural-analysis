@@ -1,4 +1,4 @@
-function [classified_struct] = crude_classifer(classify_path, failed_path, file_name, all_events, labeled_neurons, bin_size, pre_time, post_time, unit_classification, iteration, classified_struct)
+function [classified_struct] = crude_classifier(classify_path, failed_path, file_name, all_events, labeled_neurons, bin_size, pre_time, post_time, unit_classification, iteration, classified_struct)
     %% Crude classifier
     if pre_time ~= 0
         warning('The classifier will try and classify on the time period before the event took place. Consider changing pre time to 0');

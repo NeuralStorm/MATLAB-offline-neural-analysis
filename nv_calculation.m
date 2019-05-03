@@ -1,4 +1,4 @@
-function [nv_calc_path, csv_path] = ...
+function csv_path = ...
     nv_calculation(original_path, psth_path, animal_name, pre_time, post_time, ...
     bin_size, epsilon, norm_var_scaling, first_iteration, separate_events)
     % nv = normalized variance, bfr = background firing rate, rf = receptive field
@@ -42,8 +42,8 @@ function [nv_calc_path, csv_path] = ...
         rmdir(failed_path);
     end
 
-    pre_time_bins = (length([-abs(pre_time): bin_size: 0])) - 1;
-    post_time_bins = (length([0:bin_size:post_time])) - 1;
+    pre_time_bins = (length(-abs(pre_time): bin_size: 0)) - 1;
+    post_time_bins = (length(0:bin_size:post_time)) - 1;
 
     %% CSV export set up
     csv_path = fullfile(original_path, 'single_unit_nv.csv');
@@ -58,9 +58,8 @@ function [nv_calc_path, csv_path] = ...
 
     nv_data = [];
     for file = 1:length(psth_files)
-        failed_rf = {};
         current_file = [psth_path, '/', psth_files(file).name];
-        [file_path, filename, file_extension] = fileparts(current_file);
+        [~, filename, ~] = fileparts(current_file);
         split_name = strsplit(filename, '.');
         current_day = split_name{6};
         day_num = regexp(current_day,'\d*','Match');

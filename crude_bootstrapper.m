@@ -133,8 +133,7 @@ function [classify_path] = crude_bootstrapper(original_path, first_iteration, ps
                 end
                 info_filename = strrep(filename, 'PSTH', 'unit');
                 info_filename = strrep(info_filename, 'format', 'classified');
-                matfile = fullfile(unit_path, [info_filename, '.mat']);
-                save(matfile, 'classified_struct', 'neuron_map', 'all_events', 'total_neurons', 'labeled_neurons');
+                matfile = fullfile(unit_path, ['NEW_', info_filename, '.mat']);
             else
                 pop_path = [classify_path, '/population'];
                 if ~exist(pop_path, 'dir')
@@ -142,9 +141,9 @@ function [classify_path] = crude_bootstrapper(original_path, first_iteration, ps
                 end
                 info_filename = strrep(filename, 'PSTH', 'pop');
                 info_filename = strrep(info_filename, 'format', 'classified');
-                matfile = fullfile(pop_path, [info_filename, '.mat']);
-                save(matfile, 'classified_struct', 'neuron_map', 'all_events', 'total_neurons', 'labeled_neurons');
+                matfile = fullfile(pop_path, ['NEW_', info_filename, '.mat']);
             end
+            save(matfile, 'classified_struct', 'neuron_map', 'all_events', 'total_neurons', 'labeled_neurons');
         catch ME
             if ~exist(failed_path, 'dir')
                 mkdir(classify_path, 'failed');
