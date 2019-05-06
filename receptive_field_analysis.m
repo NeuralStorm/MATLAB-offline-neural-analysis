@@ -72,8 +72,8 @@ function [rf_path] = receptive_field_analysis(original_path, psth_path, animal_n
 
             for event = 1:length(event_strings(1,:))
                 current_event = event_strings{event};
-                norm_pre_window = event_struct.(current_region).([current_event, '_norm_pre_time_activity']);
-                norm_post_window = event_struct.(current_region).([current_event, '_norm_post_time_activity']);
+                norm_pre_window = event_struct.(current_region).(current_event).norm_pre_time_activity;
+                norm_post_window = event_struct.(current_region).(current_event).norm_post_time_activity;
                 for neuron = 1:length(region_neurons)
                     neuron_name = region_neurons{neuron};
                     general_info = [general_info; {animal_name}, {current_group}, current_date, ...

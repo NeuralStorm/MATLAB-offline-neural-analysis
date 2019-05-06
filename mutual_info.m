@@ -45,7 +45,7 @@ function [] = mutual_info(psth_path)
                 %% Iterate through channel keys
                 for unit = 1:length(neuron_names)
                     current_unit = neuron_names{unit};
-                    event_relative_response = event_struct.(current_region).([current_event, '_relative_response']);
+                    event_relative_response = event_struct.(current_region).(current_event).relative_response;
 
                     %% Count probability
                     bin_counts = sum(event_relative_response, 2);

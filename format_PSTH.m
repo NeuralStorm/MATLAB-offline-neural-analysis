@@ -86,11 +86,11 @@ function [psth_path] = format_PSTH(parsed_path, animal_name, bin_size, pre_time,
                         current_psth = sum(event_relative_response, 1) ...
                             / length(events_array{event});
                         % normalized psth is the normalized psth
-                        event_struct.(region_name).([current_event, '_psth']) = current_psth;
+                        event_struct.(region_name).(current_event).psth = current_psth;
                         [pre_time_activity, post_time_activity] = split_psth(current_psth, pre_time, pre_time_bins, post_time_bins);
-                        event_struct.(region_name).([current_event, '_norm_pre_time_activity']) = pre_time_activity;
-                        event_struct.(region_name).([current_event, '_norm_post_time_activity']) = post_time_activity;
-                        event_struct.(region_name).([current_event, '_relative_response']) = event_relative_response;
+                        event_struct.(region_name).(current_event).norm_pre_time_activity = pre_time_activity;
+                        event_struct.(region_name).(current_event).norm_post_time_activity = post_time_activity;
+                        event_struct.(region_name).(current_event).relative_response = event_relative_response;
                     end
                     % Updates event_count to scale sum properly for next row
                     event_count = event_count + length(events_array{event});
