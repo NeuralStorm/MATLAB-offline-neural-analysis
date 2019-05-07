@@ -22,7 +22,13 @@ function [labeled_neurons, unique_regions, region_channels] = label_neurons(anim
         session_num = regexp(current_session,'\d*','Match');
         session_num = str2num(session_num{1});
         fprintf('Labeling neurons for %s on %s\n', animal_name, current_session);
-        load(file);
+        try
+            load(file, 'tscounts', 'evcounts', 'events', 'total_neurons', ...
+            'neuron_map');
+            event_ts = events;
+        catch
+            load(file);
+        end
         
         % Used to update the neuron map to remove any overlapping neurons
         new_neuron_map = [];
@@ -61,7 +67,7 @@ function [labeled_neurons, unique_regions, region_channels] = label_neurons(anim
         labeled_neurons = rmfield(labeled_neurons, struct_names(empty));
         unique_regions = fieldnames(labeled_neurons);
         total_neurons = length(neuron_map);
-        save(file, 'tscounts', 'evcounts', 'events', 'total_neurons', ...
+        save(file, 'tscounts', 'evcounts', 'event_ts', 'total_neurons', ...
             'neuron_map', 'labeled_neurons', 'unique_regions', ...
             'region_channels', 'original_neuron_map');
     end

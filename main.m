@@ -130,15 +130,16 @@ function [] = main()
         animal_name = animal_names{animal};
         animal_path = fullfile(animal_list(strcmpi(animal_names{animal}, {animal_list.name})).folder, animal_name);
         config = import_config(animal_path);
+        total_bins = (length(-abs(config.pre_time):config.bin_size:abs(config.post_time)) - 1);
         export_params(animal_path, 'main', config);
         % Skips animals we want to ignore
         if config.ignore_animal
             continue;
         else
-            total_bins = (length(-abs(config.pre_time):config.bin_size:abs(config.post_time)) - 1);
             %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
             %%           Parser           %%
             %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+            %! Needs to stay as is so that file paths for plx files are able to be passed into plexon offline sdk
             parsed_path = [animal_path, '/parsed_plx'];
             if config.parse_files
                 parsed_path = parser(animal_path, animal_name, config.total_trials, config.total_events, config.trial_lower_bound, ...
@@ -157,8 +158,48 @@ function [] = main()
             %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
             psth_path = [parsed_path, '/psth'];
             if config.create_psth
-                psth_path = format_PSTH(parsed_path, animal_name, config.bin_size, config.pre_time, config.post_time, ...
-                    config.wanted_events, config.trial_range);
+                %% Grabs all .mat files in the parsed plx directory
+                parsed_mat_path = strcat(parsed_path, '/*.mat');
+                parsed_files = dir(parsed_mat_path);
+                
+                %% Checks and creates a psth directory if it does not exists
+                psth_path = strcat(parsed_path, '/psth');
+                if ~exist(psth_path, 'dir')
+                    mkdir(parsed_path, 'psth');
+                end
+
+                %% Deletes the failed directory if it already exists
+                failed_path = [parsed_path, '/failed'];
+                if exist(failed_path, 'dir') == 7
+                    delete([failed_path, '/*']);
+                    rmdir(failed_path);
+                end
+
+                fprintf('Calculating PSTH for %s \n', animal_name);
+                %% Goes through all the files and creates PSTHs according to the parameters set in config
+                for h = 1: length(parsed_files)
+                    file = [parsed_path, '/', parsed_files(h).name];
+                    [~, file_name, ~] = fileparts(file);
+                    load(file, 'event_ts', 'labeled_neurons');
+                    try
+                        [event_struct, event_ts, event_strings, labeled_neurons] = ...
+                            format_PSTH(event_ts, labeled_neurons, config.bin_size, config.pre_time, config.post_time, ...
+                            config.wanted_events, config.trial_range);
+                        filename = ['PSTH.format.', file_name, '.mat'];
+                        matfile = fullfile(psth_path, filename);
+                        save(matfile, 'event_struct', 'event_ts', 'event_strings', 'labeled_neurons');
+                        export_params(psth_path, 'format_psth', parsed_path, failed_path, animal_name, config);
+                    catch ME
+                        if ~exist(failed_path, 'dir')
+                            mkdir(parsed_path, 'failed');
+                        end
+                        filename = ['FAILED.', file_name, '.mat'];
+                        error_message = getReport(ME, 'extended', 'hyperlinks', 'on');
+                        warning(error_message);
+                        matfile = fullfile(failed_path, filename);
+                        save(matfile, 'ME');
+                    end
+                end
             end
 
             %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
