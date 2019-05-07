@@ -45,6 +45,7 @@ function [] = neural_trajectory_analysis(animal_name, psth_path, bin_size, total
         neuro_traj_struct = struct;
         neuro_traj_table = table();
         all_events = event_struct.all_events;
+        unique_regions = fieldnames(labeled_neurons);
         for region = 1:length(unique_regions)
             region_name = unique_regions{region};
             %% Create region directory

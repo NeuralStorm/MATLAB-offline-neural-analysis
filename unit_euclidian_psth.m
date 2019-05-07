@@ -66,6 +66,7 @@ function [euclidian_path] = unit_euclidian_psth(original_path, psth_path, animal
         end
         
         load(current_file);
+        unique_regions = fieldnames(labeled_neurons);
         for region = 1:length(unique_regions)
             region_name = unique_regions{region};
             total_region_neurons = length(labeled_neurons.(region_name)(:,1));

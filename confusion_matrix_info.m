@@ -15,11 +15,11 @@ function [] = confusion_matrix_info(classified_path, animal_name, total_events)
 
     for h = 1: length(classified_files)
         file = [classified_path, '/', classified_files(h).name];
-        [file_path, file_name, file_extension] = fileparts(file);
+        [~, file_name, ~] = fileparts(file);
         split_name = strsplit(file_name, '.');
         current_day = split_name{6};
         fprintf('Classifying PSTH for %s on %s\n', animal_name, current_day);
-        load(file, 'classified_struct', 'neuron_map', 'all_events');
+        load(file, 'classified_struct', 'all_events');
         
         struct_names = fieldnames(classified_struct);
         for i = 1: length(struct_names)
@@ -60,7 +60,7 @@ function [] = confusion_matrix_info(classified_path, animal_name, total_events)
                     (h_a + h_b - h_a_b);
             end
         end
-        save(file, 'classified_struct', 'neuron_map', 'all_events');
+        save(file, 'classified_struct', 'all_events');
     end
     toc;
 end

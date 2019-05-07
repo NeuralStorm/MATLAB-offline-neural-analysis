@@ -13,7 +13,7 @@ function [] = mutual_info(psth_path)
         % Load file
         current_path = [psth_path, '/', psth_files(file_path).name];
         [~, filename, ~] = fileparts(current_path);
-        load(current_path, 'event_strings', 'event_struct', 'labeled_neurons', 'unique_regions');
+        load(current_path, 'event_strings', 'event_struct', 'labeled_neurons');
 
         all_events = event_struct.all_events;
         total_trials = 0;
@@ -23,6 +23,7 @@ function [] = mutual_info(psth_path)
 
         mi_results = struct;
         prob_struct = struct;
+        unique_regions = fieldnames(labeled_neurons);
         for region = 1:length(unique_regions)
             current_region = unique_regions{region};
             neuron_names = unique(labeled_neurons.(current_region)(:, 1));

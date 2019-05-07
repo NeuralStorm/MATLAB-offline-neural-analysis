@@ -40,6 +40,6 @@ function [] = synergy_redundancy(classified_path, animal_name)
             classified_struct.([region_names{region}, '_syn_red']) = region_syn_red;
             classified_struct.([region_names{region}, '_syn_red_bool']) = region_syn_red > 0;
         end
-        save(pop_file, 'classified_struct', 'neuron_map', 'all_events', 'total_neurons', 'labeled_neurons');
+        save(pop_file, 'classified_struct', 'all_events', 'labeled_neurons');
     end
 end

@@ -75,15 +75,16 @@ function [classify_path] = crude_bootstrapper(original_path, first_iteration, ps
                     % Preforms standard classification
                     classified_struct = crude_classifier(classify_path, failed_path, filename, event_struct.all_events, labeled_neurons, bin_size, pre_time, post_time, unit_classification, i, classified_struct);
                 else
-                    % Shuffle event labels from the events matrix
-                    shuffled_event_labels = events(:,1);
+                    % Shuffle event labels from the event_ts matrix
+                    shuffled_event_labels = event_ts(:,1);
                     shuffled_event_labels = shuffled_event_labels(randperm(length(shuffled_event_labels)));
-                    shuffled_events = [shuffled_event_labels, events(:,2)];
+                    shuffled_events = [shuffled_event_labels, event_ts(:,2)];
+                    unique_events = unique(event_ts(:,1));
                     % Recreate the event cell array for PSTH object
                     all_events = {};
-                    for event = 1: length(wanted_events)
-                        %% Slices out the desired trials from the events matrix (Inclusive range)
-                        all_events = [all_events; event_strings{event}, {shuffled_events(shuffled_events == wanted_events(event), 2)}];
+                    for event = 1: length(unique_events)
+                        %% Slices out the desired trials from the event_ts matrix (Inclusive range)
+                        all_events = [all_events; event_strings{event}, {shuffled_events(shuffled_events == unique_events(event), 2)}];
                     end
                     classified_struct = crude_classifier(classify_path, failed_path, filename, all_events, labeled_neurons, bin_size, pre_time, post_time, unit_classification, i, classified_struct);
                 end
@@ -91,6 +92,7 @@ function [classify_path] = crude_bootstrapper(original_path, first_iteration, ps
 
             % Goes through all the struct fields in the classified struct
             % And corrects the info by subtracting the bootstrapped info off of the original info
+            unique_regions = fieldnames(labeled_neurons);
             for region = 1:length(unique_regions)
                 current_region = unique_regions{region};
                 if (contains(right_direct, animal_name) && strcmpi('Right', current_region)) || (contains(left_direct, animal_name) && strcmpi('Left', current_region))
@@ -143,7 +145,7 @@ function [classify_path] = crude_bootstrapper(original_path, first_iteration, ps
                 info_filename = strrep(info_filename, 'format', 'classified');
                 matfile = fullfile(pop_path, ['NEW_', info_filename, '.mat']);
             end
-            save(matfile, 'classified_struct', 'neuron_map', 'all_events', 'total_neurons', 'labeled_neurons');
+            save(matfile, 'classified_struct', 'all_events', 'labeled_neurons');
         catch ME
             if ~exist(failed_path, 'dir')
                 mkdir(classify_path, 'failed');

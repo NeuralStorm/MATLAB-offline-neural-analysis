@@ -80,6 +80,7 @@ function csv_path = ...
         event_end_indeces = cumsum(event_end_indeces);
         
         neuron_activity = struct;
+        unique_regions = fieldnames(labeled_neurons);
         for region = 1:length(unique_regions)
             current_region = unique_regions{region};
             region_neurons = labeled_neurons.(current_region)(:, 1);
