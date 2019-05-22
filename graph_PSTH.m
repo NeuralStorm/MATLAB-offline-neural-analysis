@@ -115,7 +115,8 @@ function [] = graph_PSTH(psth_path, animal_name, total_bins, bin_size, ...
                                 title(current_neuron_name);
                                 hold off
                             end
-                        elseif ~isempty(non_sig_neurons)
+                        elseif ~isempty(non_sig_neurons) && ~isempty(non_sig_neurons.channel(strcmpi(non_sig_neurons.channel, current_neuron_name) & ...
+                            strcmpi(non_sig_neurons.event, current_event)))
                             figure(unit_figure);
                             hold on
                             event_threshold = non_sig_neurons.threshold(strcmpi(non_sig_neurons.channel, current_neuron_name) & ...

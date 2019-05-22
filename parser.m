@@ -1,12 +1,9 @@
 function [parsed_path] = parser(dir_path, animal_name, total_trials, total_events, trial_lower_bound, ...
                             is_non_strobed_and_strobed, event_map);
-    tic;
+    parse_start = tic;
     %% Select Directory for debugging purposes
     % dir_path = uigetdir(pwd);
-    % Necessary for plx_info to run correctly (if the path does not end
-    % with / when called in that function, it causes the program to crash)
-    original_path = strcat(dir_path, '/');
-    
+
     % Creates a list of all the files in the given directory ending with
     % *.plx
     num_plx = strcat(dir_path, '/*.plx');
@@ -29,12 +26,10 @@ function [parsed_path] = parser(dir_path, animal_name, total_trials, total_event
         is_non_strobed_and_strobed, event_map);
 
     % Runs through all of the .plx files in the selected directory
-    for h = 1: length(plx_files)
-        failed_parsing = {};
-        file = [dir_path, '/', plx_files(h).name];
-        [file_path, file_name, file_extension] = fileparts(file);
-        seperated_file_name = strsplit(file, '.');
-        current_day = seperated_file_name{4};
+    fprintf('Parsing for %s\n', animal_name);
+    for file_index = 1: length(plx_files)
+        file = [dir_path, '/', plx_files(file_index).name];
+        [~, file_name, ~] = fileparts(file);
         % Take the spike times and event times
         try
             try
@@ -49,7 +44,6 @@ function [parsed_path] = parser(dir_path, animal_name, total_trials, total_event
                 end
                 rethrow(ME);
             end
-            fprintf('Parsing for %s on %s\n', animal_name, current_day);
 
             [~, channel_names] = plx_chan_names(file);
             [total_channels, ~] = plx_chanmap(file);
@@ -137,6 +131,6 @@ function [parsed_path] = parser(dir_path, animal_name, total_trials, total_event
             save(matfile, 'ME');
         end
     end
-    toc;
-    
-end 
+    fprintf('Finished parsing for %s. It took %s\n', ...
+        animal_name, num2str(toc(parse_start)));
+end

@@ -1,5 +1,5 @@
 function [labeled_neurons, unique_regions, region_channels] = label_neurons(animal_path, animal_name, parsed_path)
-
+    label_start = tic;
     %% Grabs label file and creates labels
     animal_csv_path = [animal_path, '/*.csv'];
     csv_files = dir(animal_csv_path);
@@ -14,14 +14,14 @@ function [labeled_neurons, unique_regions, region_channels] = label_neurons(anim
     parsed_mat_path = strcat(parsed_path, '/*.mat');
     parsed_files = dir(parsed_mat_path);
     
+    fprintf('Labeling neurons for %s\n', animal_name);
     for h = 1:length(parsed_files)
         file = [parsed_path, '/', parsed_files(h).name];
-        [file_path, file_name, file_extension] = fileparts(file);
+        [~, file_name, ~] = fileparts(file);
         seperated_file_name = strsplit(file_name, '.');
         current_session = seperated_file_name{4};
         session_num = regexp(current_session,'\d*','Match');
         session_num = str2num(session_num{1});
-        fprintf('Labeling neurons for %s on %s\n', animal_name, current_session);
         load(file);
 
         % Used to update the neuron map to remove any overlapping neurons
@@ -29,8 +29,6 @@ function [labeled_neurons, unique_regions, region_channels] = label_neurons(anim
         unique_regions = unique(labels.(2));
         %% Creates the label struct for each file
         for region = 1:length(unique_regions)
-            % Seperate out specific region index in table. IE: only indeces for left neurons in the .csv
-            region_name_indeces = strcmpi(labels.(2), unique_regions{region});
             %% Finds all the indeces in the table that matches 
             % current region and current recording session
             region_indeces = (strcmpi(labels.(2), unique_regions{region}) & labels.(4) == session_num);
@@ -65,4 +63,6 @@ function [labeled_neurons, unique_regions, region_channels] = label_neurons(anim
             'neuron_map', 'labeled_neurons', 'unique_regions', ...
             'region_channels', 'original_neuron_map');
     end
+    fprintf('Finished labeling for %s. It took %s\n', ...
+        animal_name, num2str(toc(label_start)));
 end
