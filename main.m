@@ -162,22 +162,7 @@ function [] = main()
             psth_path = [parsed_path, '/psth'];
             if config.create_psth
                 psth_start = tic;
-                %% Grabs all .mat files in the parsed plx directory
-                parsed_mat_path = strcat(parsed_path, '/*.mat');
-                parsed_files = dir(parsed_mat_path);
-                
-                %% Checks and creates a psth directory if it does not exists
-                psth_path = strcat(parsed_path, '/psth');
-                if ~exist(psth_path, 'dir')
-                    mkdir(parsed_path, 'psth');
-                end
-
-                %% Deletes the failed directory if it already exists
-                failed_path = [parsed_path, '/failed'];
-                if exist(failed_path, 'dir') == 7
-                    delete([failed_path, '/*']);
-                    rmdir(failed_path);
-                end
+                [parsed_files, psth_path, failed_path] = create_dir(parsed_path, 'psth', '.mat');
 
                 fprintf('Calculating PSTH for %s \n', animal_name);
                 %% Goes through all the files and creates PSTHs according to the parameters set in config
@@ -189,19 +174,12 @@ function [] = main()
                         [event_struct, event_ts, event_strings] = ...
                             format_PSTH(event_ts, labeled_neurons, config.bin_size, config.pre_time, ...
                             config.post_time, config.wanted_events, config.trial_range);
-                        filename = ['PSTH.format.', file_name, '.mat'];
+                        filename = ['PSTH_format_', file_name, '.mat'];
                         matfile = fullfile(psth_path, filename);
                         save(matfile, 'event_struct', 'event_ts', 'event_strings', 'labeled_neurons');
                         export_params(psth_path, 'format_psth', parsed_path, failed_path, animal_name, config);
                     catch ME
-                        if ~exist(failed_path, 'dir')
-                            mkdir(parsed_path, 'failed');
-                        end
-                        filename = ['FAILED.', file_name, '.mat'];
-                        error_message = getReport(ME, 'extended', 'hyperlinks', 'on');
-                        warning(error_message);
-                        matfile = fullfile(failed_path, filename);
-                        save(matfile, 'ME');
+                        handle_ME(ME, failed_path, file_name);
                     end
                 end
                 fprintf('Finished calculating PSTH for %s. It took %s \n', ...
@@ -217,22 +195,7 @@ function [] = main()
                     error('Pre time ~= 0 for receptive field analysis. Create psth with pre time > 0.');
                 end
                 rf_start = tic;
-                %% Grabs all .mat files in the psth directory
-                psth_mat_path = strcat(psth_path, '/*.mat');
-                psth_files = dir(psth_mat_path);
-                
-                %% Checks and creates a rf directory if it does not exists
-                rf_path = strcat(psth_path, '/receptive_field_analysis');
-                if ~exist(rf_path, 'dir')
-                    mkdir(psth_path, 'receptive_field_analysis');
-                end
-
-                %% Deletes the failed directory if it already exists
-                failed_path = [psth_path, '/failed_rf'];
-                if exist(failed_path, 'dir') == 7
-                    delete([failed_path, '/*']);
-                    rmdir(failed_path);
-                end
+                [psth_files, rf_path, failed_path] = create_dir(psth_path, 'receptive_field_analysis', '.mat');
 
                 fprintf('Receptive field analysis for %s \n', animal_name);
                 all_neurons = [];
@@ -240,16 +203,10 @@ function [] = main()
                 for file_index = 1:length(psth_files)
                     %% pull info from filename and set up file path for analysis
                     file = fullfile(psth_path, psth_files(file_index).name);
-                    [~, file_name, ~] = fileparts(file);
-                    % Here until file name conversion has been standardized
-                    file_name = strrep(file_name, '.', '_');
-                    split_name = strsplit(file_name, '_');
-                    current_day = split_name{4};
-                    day_num = regexp(current_day,'\d*','Match');
-                    day_num = str2num(day_num{1});
-                    current_date = split_name{end - 1};
-                    current_date = str2num(current_date);
-                    current_group = split_name{3};
+                    [~, filename, ~] = fileparts(file);
+                    filename = erase(filename, 'PSTH_format_');
+                    filename = erase(filename, 'PSTH.format.');
+                    [animal_id, experimental_group, ~, session_num, session_date, ~] = get_filename_info(filename);
 
                     try
                         %% Load needed variables from psth and does the receptive field analysis
@@ -260,8 +217,8 @@ function [] = main()
 
                         %% Capture data to save to csv from current day
                         all_neurons = [all_neurons; sig_neurons; non_sig_neurons];
-                        current_general_info = [{animal_name}, {current_group}, current_date, ...
-                            day_num, config.pre_time, config.post_time, config.bin_size, ...
+                        current_general_info = [{animal_id}, {experimental_group}, session_date, ...
+                            session_num, config.pre_time, config.post_time, config.bin_size, ...
                             config.sig_check, config.sig_bins, config.span, config.threshold_scale];
                         total_neurons = height([sig_neurons; non_sig_neurons]);
                         current_general_info = repmat(current_general_info, [total_neurons, 1]);
@@ -271,22 +228,12 @@ function [] = main()
                         general_info = [general_info; current_general_info];
 
                         %% Save receptive field matlab output
-                        rf_filename = strrep(filename, 'PSTH', 'REC');
-                        rf_filename = strrep(rf_filename, 'format', 'FIELD');
-                        matfile = fullfile(rf_path, rf_filename);
+                        matfile = fullfile(rf_path, ['rec_field_', filename, '.mat']);
                         save(matfile, 'labeled_neurons', 'sig_neurons', 'non_sig_neurons');
                         export_params(rf_path, 'receptive_field_analysis', rf_path, failed_path, ...
                             animal_name, config);
                     catch ME
-                        %% Error handling, saves exception in a failed directory
-                        if ~exist(failed_path, 'dir')
-                            mkdir(psth_path, 'failed_rf');
-                        end
-                        filename = ['FAILED.', file_name, '.mat'];
-                        error_message = getReport(ME, 'extended', 'hyperlinks', 'on');
-                        warning(error_message);
-                        matfile = fullfile(failed_path, filename);
-                        save(matfile, 'ME');
+                        handle_ME(ME, failed_path, file_name);
                     end
                 end
                 %% CSV export set up
@@ -301,9 +248,7 @@ function [] = main()
                 rf_table = table([], [], [], [], [], [], [], [], [], [], [], [], [], [], [], [], [], [], [], ...
                     [], [], [], [], [], [], [], [], [], [], [], 'VariableNames', column_names);
                 % Load table from previous animals or delete old csv from previous batch analysis
-                if exist(csv_path, 'file') && animal == 1
-                    delete(csv_path);
-                elseif animal > 1
+                if exist(csv_path, 'file')
                     rf_table = readtable(csv_path);
                 end
 
@@ -329,8 +274,59 @@ function [] = main()
             %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
             nv_csv_path = fullfile(original_path, 'single_unit_nv.csv');
             if config.nv_analysis
-                nv_csv_path = nv_calculation(original_path, psth_path, animal_name, config.pre_time, config.post_time, ...
-                config.bin_size, config.epsilon, config.norm_var_scaling, first_iteration, config.separate_events);
+                if config.pre_time <= 0.050
+                    error('Pre time ~= 0 for receptive field analysis. Create psth with pre time > 0.');
+                end
+                nv_start = tic;
+                [psth_files, nv_path, failed_path] = create_dir(psth_path, 'normalized_variance_analysis', '.mat');
+
+                fprintf('Normalized variance analysis for %s \n', animal_name);
+                all_neurons = [];
+                general_info = table;
+                for file_index = 1:length(psth_files)
+                    %% pull info from filename and set up file path for analysis
+                    file = fullfile(psth_path, psth_files(file_index).name);
+                    [~, filename, ~] = fileparts(file);
+                    filename = erase(filename, 'PSTH_format_');
+                    filename = erase(filename, 'PSTH.format.');
+                    [animal_id, experimental_group, ~, session_num, session_date, ~] = get_filename_info(filename);
+
+                    try
+                        load(file, 'labeled_neurons', 'event_struct');
+                        %TODO return info to create csv
+                        neuron_activity = nv_calculation(labeled_neurons, event_struct, config.pre_time, config.post_time, ...
+                            config.bin_size, config.epsilon, config.norm_var_scaling, config.separate_events);
+
+                        all_neurons = [all_neurons; neuron_activity];
+                        current_general_info = [{animal_name}, {experimental_group}, session_date, session_num];
+                        total_neurons = height(neuron_activity);
+                        current_general_info = repmat(current_general_info, [total_neurons, 1]);
+                        current_general_info = cell2table(current_general_info, 'VariableNames', ...
+                            {'animal', 'group', 'date', 'record_session'});
+                        general_info = [general_info; current_general_info];
+
+                        %% Save analysis results
+                        matfile = fullfile(nv_path, ['NV_analysis_', filename, '.mat']);
+                        save(matfile, 'labeled_neurons', 'neuron_activity');
+                    catch ME
+                        handle_ME(ME, failed_path, file_name);
+                    end
+                end
+                column_names = {'animal', 'group', 'date', 'record_session', 'event', ...
+                    'region', 'channel', 'avg_background_rate', 'background_var', 'norm_var', 'fano'};
+                %% CSV export set up
+                csv_path = fullfile(original_path, 'single_unit_nv.csv');
+                nv_table = table([], [], [], [], [], [], [], [], [], [], [], 'VariableNames', column_names);
+                if exist(csv_path, 'file')
+                    nv_table = readtable(csv_path);
+                end
+
+                new_nv_table = [general_info all_neurons];
+                nv_table = [nv_table; new_nv_table];
+                writetable(nv_table, csv_path, 'Delimiter', ',');
+
+                fprintf('Finished receptive field analysis for %s. It took %s \n', ...
+                    animal_name, num2str(toc(nv_start)));
             end
 
             %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
