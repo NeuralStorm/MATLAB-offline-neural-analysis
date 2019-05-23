@@ -20,18 +20,15 @@ function [] = graph_PSTH(psth_path, animal_name, total_bins, bin_size, ...
         % Creates file with absolute path to file location
         file = [psth_path, '/', psth_files(h).name];
         [~, name_str, ~] = fileparts(file);
-        % Creates day directory if it does not already exist
-        % Since the name format is consistent I use the direct index in
-        % split_name for the directory name to speed up this portion of the
-        % code instead of searching for the day string in the cell array.
-        % This can be changed though if it turns out to be a problem
-        split_name = strsplit(name_str, '.');
-        current_day = split_name{6};
-        day_path = [graph_path, '/', current_day];
-        fprintf('Graphing PSTH for %s on %s\n', animal_name, current_day);
+        name_str = erase(name_str, 'PSTH_format_');
+        name_str = erase(name_str, 'PSTH.format.');
+        [~, ~, ~, session_num, ~, ~] = get_filename_info(name_str);
+
+        day_path = [graph_path, '/', num2str(session_num)];
+        fprintf('Graphing PSTH for %s on %d\n', animal_name, session_num);
         % Creates the day directory if it does not already exist
         if ~exist(day_path, 'dir')
-            mkdir(graph_path, current_day);
+            mkdir(graph_path, num2str(session_num));
         end
 
         load(file);
@@ -140,7 +137,7 @@ function [] = graph_PSTH(psth_path, animal_name, total_bins, bin_size, ...
                     x_values = get(gca, 'XTick');
                     xtickformat('%.2f')
                     set(gca, 'XTick', x_values, 'XTickLabel', (x_values * bin_size - abs(pre_time)));
-                    text=[current_neuron_name, ' Normalized Histogram for ', current_event ' on ', current_day, ' for ', animal_name];
+                    text=['Animal: ', animal_name, 'Normalized Histogram: ', current_neuron_name, ' event: ', current_event, ' Session: ', num2str(session_num)];
                     title(text);
                     xlabel('Time (s)');
                     ylabel('Count');
@@ -156,7 +153,7 @@ function [] = graph_PSTH(psth_path, animal_name, total_bins, bin_size, ...
                 end
             end
         end
-        fprintf('Finished graphing for %s\n', current_day);
+        fprintf('Finished graphing for %d\n', session_num);
         close all
     end
     toc;

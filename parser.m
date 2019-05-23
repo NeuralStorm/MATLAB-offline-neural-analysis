@@ -1,26 +1,12 @@
 function [parsed_path] = parser(dir_path, animal_name, total_trials, total_events, trial_lower_bound, ...
-                            is_non_strobed_and_strobed, event_map);
+                            is_non_strobed_and_strobed, event_map)
     parse_start = tic;
     %% Select Directory for debugging purposes
     % dir_path = uigetdir(pwd);
 
     % Creates a list of all the files in the given directory ending with
     % *.plx
-    num_plx = strcat(dir_path, '/*.plx');
-    plx_files = dir(num_plx);
-
-    % Create parsed directory if it does not already exist    
-    parsed_path = strcat(dir_path, '/parsed_plx');
-    if ~exist(parsed_path, 'dir')
-       mkdir(dir_path, 'parsed_plx');
-    end
-
-    % Deletes the failed directory if it already exists
-    failed_path = [dir_path, '/failed'];
-    if exist(failed_path, 'dir') == 7
-       delete([failed_path, '/*']);
-       rmdir(failed_path);
-    end
+    [plx_files, parsed_path, failed_path] = create_dir(dir_path, 'parsed_plx', '.plx');
 
     export_params(parsed_path, 'parsed', failed_path, animal_name, total_trials, total_events, trial_lower_bound, ...
         is_non_strobed_and_strobed, event_map);
@@ -121,14 +107,7 @@ function [parsed_path] = parser(dir_path, animal_name, total_trials, total_event
             save(matfile, 'tscounts', 'evcounts', 'event_ts',  ...
                     'total_neurons', 'neuron_map');
         catch ME
-            if ~exist(failed_path, 'dir')
-                mkdir(dir_path, 'failed');
-            end
-            filename = ['FAILED.', file_name, '.mat'];
-            error_message = getReport( ME, 'extended', 'hyperlinks', 'on');
-            warning(error_message);
-            matfile = fullfile(failed_path, filename);
-            save(matfile, 'ME');
+            handle_ME(ME, failed_path, file_name);
         end
     end
     fprintf('Finished parsing for %s. It took %s\n', ...

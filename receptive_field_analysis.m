@@ -1,7 +1,7 @@
 function [sig_neurons, non_sig_neurons] = receptive_field_analysis(labeled_neurons, ...
         event_struct, bin_size, threshold_scale, sig_check, sig_bins, span)
 
-    event_strings = event_struct.all_events(:,1);
+    event_strings = event_struct.all_events(:,1)';
     sig_neurons = [];
     non_sig_neurons = [];
     region_names = fieldnames(labeled_neurons);
