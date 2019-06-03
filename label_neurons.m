@@ -18,10 +18,7 @@ function [labeled_neurons, unique_regions, region_channels] = label_neurons(anim
     for h = 1:length(parsed_files)
         file = [parsed_path, '/', parsed_files(h).name];
         [~, file_name, ~] = fileparts(file);
-        seperated_file_name = strsplit(file_name, '.');
-        current_session = seperated_file_name{4};
-        session_num = regexp(current_session,'\d*','Match');
-        session_num = str2num(session_num{1});
+        [~, ~, ~, session_num, ~, ~] = get_filename_info(file_name);
         load(file);
 
         % Used to update the neuron map to remove any overlapping neurons
