@@ -162,6 +162,7 @@ function [] = main()
             psth_path = [parsed_path, '/psth'];
             if config.create_psth
                 psth_start = tic;
+                % warning('Since the pre time is set to 0, there will not be a psth generated with only the pre time activity.\n');
                 [parsed_files, psth_path, failed_path] = create_dir(parsed_path, 'psth', '.mat');
 
                 fprintf('Calculating PSTH for %s \n', animal_name);
@@ -173,7 +174,7 @@ function [] = main()
                     try
                         [event_struct, event_ts, event_strings] = ...
                             format_PSTH(event_ts, labeled_neurons, config.bin_size, config.pre_time, ...
-                            config.post_time, config.wanted_events, config.trial_range);
+                            config.post_time, config.wanted_events, config.trial_range, config.trial_lower_bound);
                         filename = ['PSTH_format_', file_name, '.mat'];
                         matfile = fullfile(psth_path, filename);
                         save(matfile, 'event_struct', 'event_ts', 'event_strings', 'labeled_neurons');
@@ -237,6 +238,7 @@ function [] = main()
                     end
                 end
                 %% CSV export set up
+                % TODO rework csv logic for reading and writing
                 column_names = {'animal', 'group', 'date', 'record_session', 'pre_time', 'post_time', ...
                     'bin_size', 'sig_check', 'sig_bins', 'span', 'threshold_scale', 'region', 'channel', ...
                     'event', 'significant', 'background_rate', 'background_std', 'threshold', ...
@@ -275,7 +277,7 @@ function [] = main()
             nv_csv_path = fullfile(original_path, 'single_unit_nv.csv');
             if config.nv_analysis
                 if config.pre_time <= 0.050
-                    error('Pre time ~= 0 for receptive field analysis. Create psth with pre time > 0.');
+                    error('Pre time ~= 0 for normalized variance analysis. Create psth with pre time > 0.');
                 end
                 nv_start = tic;
                 [psth_files, nv_path, failed_path] = create_dir(psth_path, 'normalized_variance_analysis', '.mat');
@@ -315,6 +317,7 @@ function [] = main()
                 column_names = {'animal', 'group', 'date', 'record_session', 'event', ...
                     'region', 'channel', 'avg_background_rate', 'background_var', 'norm_var', 'fano'};
                 %% CSV export set up
+                % TODO rework csv logic for reading and writing
                 csv_path = fullfile(original_path, 'single_unit_nv.csv');
                 nv_table = table([], [], [], [], [], [], [], [], [], [], [], 'VariableNames', column_names);
                 if exist(csv_path, 'file')
@@ -329,15 +332,83 @@ function [] = main()
                     animal_name, num2str(toc(nv_start)));
             end
 
-            %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-            %%    Information Analysis    %%
-            %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-            classified_path = [psth_path, '/classifier'];
+            %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+            %    Information Analysis    %%
+            %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+            classify_path = [psth_path, '/classifier'];
+            % TODO make this all about mutual info and synergy redundancy
             if config.info_analysis
-                classified_path = crude_bootstrapper(original_path, first_iteration, psth_path, animal_name, config.boot_iterations, config.bin_size, config.pre_time, ...
-                    config.post_time, config.unit_classification);
+                classifier_start = tic;
+                [psth_files, classify_path, failed_path] = create_dir(psth_path, 'classifier', '.mat');
+
+                fprintf('PSTH classification for %s \n', animal_name);
+                general_info = table;
+                all_info = [];
+                for file_index = 1:length(psth_files)
+                    %% pull info from filename and set up file path for analysis
+                    file = fullfile(psth_path, psth_files(file_index).name);
+                    [~, filename, ~] = fileparts(file);
+                    filename = erase(filename, 'PSTH_format_');
+                    filename = erase(filename, 'PSTH.format.');
+                    [animal_id, experimental_group, ~, session_num, session_date, ~] = get_filename_info(filename);
+
+                    try
+                        load(file, 'labeled_neurons', 'event_struct', 'event_ts');
+                        %TODO return info to create csv
+                        [classified_struct, results_table] = psth_bootstrapper(labeled_neurons, event_struct, ...
+                            event_ts, config.boot_iterations, config.unit_classification, config.bin_size, ...
+                            config.pre_time, config.post_time);
+
+                        all_info = [all_info; results_table];
+                        current_general_info = [{animal_name}, {experimental_group}, session_date, session_num, ...
+                            config.bin_size, config.pre_time, config.post_time, config.boot_iterations];
+                        total_rows = height(results_table);
+                        current_general_info = repmat(current_general_info, [total_rows, 1]);
+                        current_general_info = cell2table(current_general_info, 'VariableNames', ...
+                            {'animal', 'group', 'date', 'record_session', 'bin_size', 'pre_time', ...
+                            'post_time', 'boot_iterations'});
+                        general_info = [general_info; current_general_info];
+
+                        matfile = fullfile(classify_path, ['psth_classifier_', filename, '.mat']);
+                        save(matfile, 'results_table', 'classified_struct');
+                    catch ME
+                        handle_ME(ME, failed_path, file_name);
+                    end
+                end
+
+                column_names = {'animal', 'group', 'date', 'record_session', 'bin_size', 'pre_time', ...
+                    'post_time', 'boot_iterations', 'region', 'channel', 'performance', 'mutual_info', ...
+                    'bootstrapped_info', 'corrected_info'};
+                %% CSV export set up
+                % TODO rework csv logic for reading and writing
+                if config.unit_classification
+                    csv_path = fullfile(original_path, 'unit_psth_classification_info.csv');
+                else
+                    csv_path = fullfile(original_path, 'population_psth_classification_info.csv');
+                end
+
+                info_table = table([], [], [], [], [], [], [], [], [], [], [], [], [], [], 'VariableNames', column_names);
+                if exist(csv_path, 'file')
+                    info_table = readtable(csv_path);
+                end
+
+                new_info_table = [general_info all_info];
+                info_table = [info_table; new_info_table];
+                writetable(info_table, csv_path, 'Delimiter', ',');
+                fprintf('Finished PSTH classifier for %s. It took %s \n', ...
+                    animal_name, num2str(toc(classifier_start)));
             end
-            mutual_info(psth_path)
+
+            % %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+            % %    Information Analysis    %%
+            % %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+            % classified_path = [psth_path, '/classifier'];
+            % TODO make this all about mutual info and synergy redundancy
+            % if config.info_analysis
+            %     classified_path = crude_bootstrapper(original_path, first_iteration, psth_path, animal_name, config.boot_iterations, config.bin_size, config.pre_time, ...
+            %         config.post_time, config.unit_classification);
+            %         mutual_info(psth_path)
+            % end
 
             %TODO Reimplement synergy redundancy calculation
             %% Misc Functions
