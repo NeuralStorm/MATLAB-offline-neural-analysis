@@ -1,5 +1,5 @@
 function [event_struct, event_ts, event_strings] = format_PSTH(...
-        event_ts, labeled_neurons, bin_size, pre_time, post_time, wanted_events, trial_range)
+        event_ts, labeled_neurons, bin_size, pre_time, post_time, wanted_events, trial_range, trial_lower_bound)
     if pre_time > 0
         pre_time_bins = (length(-abs(pre_time): bin_size: 0)) - 1;
     else
@@ -17,6 +17,17 @@ function [event_struct, event_ts, event_strings] = format_PSTH(...
     end
     event_struct = struct;
 
+    %% Double checks that event timestamps taken from parser is abve the threshold
+    event_count_table = tabulate(event_ts(:,1));
+    for event = 1:length(event_count_table(:,1))
+        event_num = event_count_table(event, 1);
+        event_count = event_count_table(event, 2);
+        if event_count < trial_lower_bound
+            % current_prob_timing(current_prob_timing == 0) = [];
+            event_ts(event_ts(:,1) == event_num, :) = [];
+        end
+    end
+
     % Truncates events to desired trial range from total_trials * total_events
     if ~isempty(trial_range)
         try
@@ -29,46 +40,32 @@ function [event_struct, event_ts, event_strings] = format_PSTH(...
     end
 
     event_struct.all_events = {};
-    for i = 1: length(wanted_events)
+    for event = 1: length(wanted_events)
         %% Slices out the desired trials from the events matrix (Inclusive range)
-        event_struct.all_events = [event_struct.all_events; event_strings{i}, {event_ts(event_ts == wanted_events(i), 2)}];
+        event_struct.all_events = [event_struct.all_events; event_strings{event}, {event_ts(event_ts == wanted_events(event), 2)}];
+        if isempty(event_struct.all_events{event, 2})
+            %% Remove empty events
+            event_struct.all_events(event, :) = [];
+            event_strings(event) = [];
+        end
     end
 
     %% Creates the PSTH
     unique_regions = fieldnames(labeled_neurons);
     for region = 1:length(unique_regions)
         region_name = unique_regions{region};
-        labeled_map = labeled_neurons.(region_name)(:,4);
-        event_struct.(region_name).relative_response = create_relative_response(labeled_map, event_struct.all_events(:,2), ...
+        region_neurons = [labeled_neurons.(region_name)(:,1), labeled_neurons.(region_name)(:,4)];
+        region_response = create_relative_response(region_neurons, event_struct.all_events, ...
             bin_size, pre_time, post_time);
-    end
 
-    try
-        events_array = event_struct.all_events(:,2);
-        event_count = 0;
-        for event = 1:length(events_array)
+        for event = 1:length(event_strings)
             current_event = event_strings{event};
-            %% get normalized psth for regions
-            for region = 1:length(unique_regions(:,1))
-                region_name = unique_regions{region};
-                event_relative_response = event_struct.(region_name).relative_response( ...
-                    (event_count + 1): 1: (event_count + length(events_array{event})), :);
-                current_psth = sum(event_relative_response, 1) ...
-                    / length(events_array{event});
-                % normalized psth is the normalized psth
-                event_struct.(region_name).(current_event).psth = current_psth;
-                [pre_time_activity, post_time_activity] = split_psth(current_psth, pre_time, pre_time_bins, post_time_bins);
-                event_struct.(region_name).(current_event).norm_pre_time_activity = pre_time_activity;
-                event_struct.(region_name).(current_event).norm_post_time_activity = post_time_activity;
-                event_struct.(region_name).(current_event).relative_response = event_relative_response;
-            end
-            % Updates event_count to scale sum properly for next row
-            event_count = event_count + length(events_array{event});
+            current_psth = region_response.(current_event).psth;
+            [pre_time_activity, post_time_activity] = split_psth(current_psth, pre_time, pre_time_bins, post_time_bins);
+            region_response.(current_event).norm_pre_time_activity = pre_time_activity;
+            region_response.(current_event).norm_post_time_activity = post_time_activity;
         end
-    catch ME
-        error_message = getReport( ME, 'extended', 'hyperlinks', 'on');
-        warning(error_message);
-        rethrow(ME)
+        event_struct.(region_name) = region_response;
     end
 end
 
@@ -91,7 +88,6 @@ function [pre_time_activity, post_time_activity] = split_psth(psth, pre_time, pr
             post = post + pre_time_bins + post_time_bins;
         end
     else
-        warning('Since the pre time is set to 0, there will not be a psth generated with only the pre time activity.\n');
         pre_time_activity = NaN;
         post_time_activity = psth;
     end
