@@ -1,5 +1,5 @@
 function [sig_neurons, non_sig_neurons] = receptive_field_analysis(labeled_neurons, ...
-        event_struct, bin_size, threshold_scale, sig_check, sig_bins, span)
+        event_struct, bin_size, threshold_scale, sig_check, sig_bins, span, analysis_column_names)
 
     event_strings = event_struct.all_events(:,1)';
     sig_neurons = [];
@@ -89,10 +89,7 @@ function [sig_neurons, non_sig_neurons] = receptive_field_analysis(labeled_neuro
     %% Convert cell arrays to tables for future data handeling
     % They are in try blocks in case there are only sig or non sig neurons
     if ~isempty(sig_neurons)
-        sig_neurons = cell2table(sig_neurons, 'VariableNames', {'region', 'channel', 'event', 'significant', ...
-            'background_rate', 'background_std', 'threshold', 'first_latency', 'last_latency', 'duration', ...
-            'peak_latency', 'peak_response', 'corrected_peak', 'response_magnitude', 'corrected_response_magnitude', ...
-            'total_sig_events', 'principal_event', 'norm_magnitude', 'notes'});
+        sig_neurons = cell2table(sig_neurons, 'VariableNames', analysis_column_names);
         %% Normalize response magnitude and find primary event for each neuron
         % Normalizes response magnitude on response magnitude, not response magnitude - background rate  
         for neuron = 1:length(sig_neurons.channel)
@@ -115,10 +112,6 @@ function [sig_neurons, non_sig_neurons] = receptive_field_analysis(labeled_neuro
     end
 
     if ~isempty(non_sig_neurons)
-        non_sig_neurons = cell2table(non_sig_neurons, 'VariableNames', ...
-            {'region', 'channel', 'event', 'significant', 'background_rate', 'background_std', ...
-            'threshold', 'first_latency', 'last_latency', 'duration', 'peak_latency', 'peak_response', ...
-            'corrected_peak', 'response_magnitude', 'corrected_response_magnitude', 'total_sig_events', ...
-            'principal_event', 'norm_magnitude', 'notes'});
+        non_sig_neurons = cell2table(non_sig_neurons, 'VariableNames', analysis_column_names);
     end
 end

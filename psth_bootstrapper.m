@@ -1,5 +1,5 @@
 function [unit_struct, pop_struct, pop_table, unit_table] = psth_bootstrapper(labeled_neurons, event_struct, ...
-        event_ts, boot_iterations, bootstrap_classifier, bin_size, pre_time, post_time)
+        event_ts, boot_iterations, bootstrap_classifier, bin_size, pre_time, post_time, analysis_column_names)
 
     region_names = fieldnames(labeled_neurons);
     event_strings = event_struct.all_events(:,1)';
@@ -28,10 +28,8 @@ function [unit_struct, pop_struct, pop_table, unit_table] = psth_bootstrapper(la
         pop_results = [pop_results; pop_info];
     end
 
-    unit_table = cell2table(unit_results, 'VariableNames', ...
-        {'region', 'channel', 'performance', 'mutual_info', 'boot_info', 'corrected_info'});
-    pop_table = cell2table(pop_results, 'VariableNames', ...
-        {'region', 'channel', 'performance', 'mutual_info', 'boot_info', 'corrected_info'});
+    unit_table = cell2table(unit_results, 'VariableNames', analysis_column_names);
+    pop_table = cell2table(pop_results, 'VariableNames', analysis_column_names);
 
     %% Bootstrapping
     if bootstrap_classifier

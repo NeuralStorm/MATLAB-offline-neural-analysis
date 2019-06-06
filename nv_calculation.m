@@ -1,6 +1,6 @@
 function nv_data = ...
     nv_calculation(labeled_neurons, event_struct, pre_time, post_time, ...
-    bin_size, epsilon, norm_var_scaling, separate_events)
+    bin_size, epsilon, norm_var_scaling, separate_events, analysis_column_names)
 
     pre_time_bins = (length(-abs(pre_time): bin_size: 0)) - 1;
     post_time_bins = (length(0:bin_size:post_time)) - 1;
@@ -59,6 +59,5 @@ function nv_data = ...
         end
     end
 
-    nv_data = cell2table(nv_data, 'VariableNames', {'event', 'region', 'channel', ...
-        'avg_background_rate', 'background_var', 'norm_var', 'fano'});
+    nv_data = cell2table(nv_data, 'VariableNames', analysis_column_names);
 end

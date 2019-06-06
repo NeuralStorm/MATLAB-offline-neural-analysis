@@ -197,6 +197,13 @@ function [] = main()
                 end
                 rf_start = tic;
                 [psth_files, rf_path, failed_path] = create_dir(psth_path, 'receptive_field_analysis', '.mat');
+                general_column_names = {'animal', 'group', 'date', 'record_session', 'pre_time', 'post_time', ...
+                    'bin_size', 'sig_check', 'sig_bins', 'span', 'threshold_scale'};
+                analysis_column_names = {'region', 'channel', 'event', 'significant', ...
+                    'background_rate', 'background_std', 'threshold', 'first_latency', 'last_latency', 'duration', ...
+                    'peak_latency', 'peak_response', 'corrected_peak', 'response_magnitude', 'corrected_response_magnitude', ...
+                    'total_sig_events', 'principal_event', 'norm_magnitude', 'notes'};
+                column_names = [general_column_names, analysis_column_names];
 
                 fprintf('Receptive field analysis for %s \n', animal_name);
                 all_neurons = [];
@@ -214,19 +221,15 @@ function [] = main()
                         load(file, 'labeled_neurons', 'event_struct');
                         [sig_neurons, non_sig_neurons] = receptive_field_analysis( ...
                             labeled_neurons, event_struct, config.bin_size, config.threshold_scale, ...
-                            config.sig_check, config.sig_bins, config.span);
+                            config.sig_check, config.sig_bins, config.span, analysis_column_names);
 
                         %% Capture data to save to csv from current day
-                        all_neurons = [all_neurons; sig_neurons; non_sig_neurons];
+                        session_neurons = [sig_neurons; non_sig_neurons];
                         current_general_info = [{animal_id}, {experimental_group}, session_date, ...
                             session_num, config.pre_time, config.post_time, config.bin_size, ...
                             config.sig_check, config.sig_bins, config.span, config.threshold_scale];
-                        total_neurons = height([sig_neurons; non_sig_neurons]);
-                        current_general_info = repmat(current_general_info, [total_neurons, 1]);
-                        current_general_info = cell2table(current_general_info, 'VariableNames', ...
-                            {'animal', 'group', 'date', 'record_session', 'pre_time', 'post_time', ...
-                            'bin_size', 'sig_check', 'sig_bins', 'span', 'threshold_scale'});
-                        general_info = [general_info; current_general_info];
+                        [general_info, all_neurons] = ...
+                            concat_tables(general_column_names, general_info, current_general_info, all_neurons, session_neurons);
 
                         %% Save receptive field matlab output
                         matfile = fullfile(rf_path, ['rec_field_', filename, '.mat']);
@@ -238,26 +241,9 @@ function [] = main()
                     end
                 end
                 %% CSV export set up
-                % TODO rework csv logic for reading and writing
-                column_names = {'animal', 'group', 'date', 'record_session', 'pre_time', 'post_time', ...
-                    'bin_size', 'sig_check', 'sig_bins', 'span', 'threshold_scale', 'region', 'channel', ...
-                    'event', 'significant', 'background_rate', 'background_std', 'threshold', ...
-                    'first_latency', 'last_latency', 'duration', 'peak_latency', 'peak_response', ...
-                    'corrected_peak', 'response_magnitude', 'corrected_response_magnitude', ...
-                    'total_sig_events', 'principal_event', 'norm_magnitude', 'notes'};
 
                 csv_path = fullfile(original_path, 'receptive_field_results.csv');
-                rf_table = table([], [], [], [], [], [], [], [], [], [], [], [], [], [], [], [], [], [], [], ...
-                    [], [], [], [], [], [], [], [], [], [], [], 'VariableNames', column_names);
-                % Load table from previous animals or delete old csv from previous batch analysis
-                if exist(csv_path, 'file')
-                    rf_table = readtable(csv_path);
-                end
-
-                %% Concat all receptive field information from animal, append to csv, and save csv
-                new_rf_table = [general_info all_neurons];
-                rf_table = [rf_table; new_rf_table];
-                writetable(rf_table, csv_path, 'Delimiter', ',');
+                export_csv(csv_path, column_names, general_info, all_neurons);
 
                 fprintf('Finished receptive field analysis for %s. It took %s \n', ...
                     animal_name, num2str(toc(rf_start)));
@@ -281,6 +267,10 @@ function [] = main()
                 end
                 nv_start = tic;
                 [psth_files, nv_path, failed_path] = create_dir(psth_path, 'normalized_variance_analysis', '.mat');
+                general_column_names = {'animal', 'group', 'date', 'record_session'};
+                analysis_column_names = {'event', 'region', 'channel', 'avg_background_rate', ...
+                    'background_var', 'norm_var', 'fano'};
+                column_names = [general_column_names, analysis_column_names];
 
                 fprintf('Normalized variance analysis for %s \n', animal_name);
                 all_neurons = [];
@@ -295,17 +285,12 @@ function [] = main()
 
                     try
                         load(file, 'labeled_neurons', 'event_struct');
-                        %TODO return info to create csv
                         neuron_activity = nv_calculation(labeled_neurons, event_struct, config.pre_time, config.post_time, ...
-                            config.bin_size, config.epsilon, config.norm_var_scaling, config.separate_events);
+                            config.bin_size, config.epsilon, config.norm_var_scaling, config.separate_events, analysis_column_names);
 
-                        all_neurons = [all_neurons; neuron_activity];
                         current_general_info = [{animal_name}, {experimental_group}, session_date, session_num];
-                        total_neurons = height(neuron_activity);
-                        current_general_info = repmat(current_general_info, [total_neurons, 1]);
-                        current_general_info = cell2table(current_general_info, 'VariableNames', ...
-                            {'animal', 'group', 'date', 'record_session'});
-                        general_info = [general_info; current_general_info];
+                        [general_info, all_neurons] = ...
+                            concat_tables(general_column_names, general_info, current_general_info, all_neurons, neuron_activity);
 
                         %% Save analysis results
                         matfile = fullfile(nv_path, ['NV_analysis_', filename, '.mat']);
@@ -314,19 +299,9 @@ function [] = main()
                         handle_ME(ME, failed_path, file_name);
                     end
                 end
-                column_names = {'animal', 'group', 'date', 'record_session', 'event', ...
-                    'region', 'channel', 'avg_background_rate', 'background_var', 'norm_var', 'fano'};
                 %% CSV export set up
-                % TODO rework csv logic for reading and writing
                 csv_path = fullfile(original_path, 'single_unit_nv.csv');
-                nv_table = table([], [], [], [], [], [], [], [], [], [], [], 'VariableNames', column_names);
-                if exist(csv_path, 'file')
-                    nv_table = readtable(csv_path);
-                end
-
-                new_nv_table = [general_info all_neurons];
-                nv_table = [nv_table; new_nv_table];
-                writetable(nv_table, csv_path, 'Delimiter', ',');
+                export_csv(csv_path, column_names, general_info, all_neurons);
 
                 fprintf('Finished receptive field analysis for %s. It took %s \n', ...
                     animal_name, num2str(toc(nv_start)));
@@ -341,11 +316,16 @@ function [] = main()
                 classifier_start = tic;
                 [psth_files, classify_path, failed_path] = create_dir(psth_path, 'classifier', '.mat');
 
+                general_column_names = {'animal', 'group', 'date', 'record_session', 'bin_size', 'pre_time', ...
+                    'post_time', 'bootstrap_classifier', 'boot_iterations'};
+                analysis_column_names = {'region', 'channel', 'performance', 'mutual_info', ...
+                    'boot_info', 'corrected_info'};
+                column_names = [general_column_names, analysis_column_names];
+
                 fprintf('PSTH classification for %s \n', animal_name);
-                general_info = table;
+
                 pop_config_info = table;
                 unit_config_info = table;
-                all_info = [];
                 pop_info = [];
                 unit_info = [];
                 for file_index = 1:length(psth_files)
@@ -358,29 +338,17 @@ function [] = main()
 
                     % try
                         load(file, 'labeled_neurons', 'event_struct', 'event_ts');
-                        %TODO return info to create csv
                         [unit_struct, pop_struct, pop_table, unit_table] = psth_bootstrapper(labeled_neurons, event_struct, ...
                             event_ts, config.boot_iterations, config.bootstrap_classifier, config.bin_size, ...
-                            config.pre_time, config.post_time);
+                            config.pre_time, config.post_time, analysis_column_names);
 
-                        % all_info = [all_info; results_table];
-                        pop_info = [pop_info; pop_table];
-                        unit_info = [unit_info; unit_table];
                         current_general_info = [{animal_name}, {experimental_group}, session_date, session_num, ...
                             config.bin_size, config.pre_time, config.post_time, config.bootstrap_classifier, ...
                             config.boot_iterations];
-                        pop_rows = height(pop_table);
-                        unit_rows = height(unit_table);
-                        pop_general_info = repmat(current_general_info, [pop_rows, 1]);
-                        unit_general_info = repmat(current_general_info, [unit_rows, 1]);
-                        pop_general_info = cell2table(pop_general_info, 'VariableNames', ...
-                            {'animal', 'group', 'date', 'record_session', 'bin_size', 'pre_time', ...
-                            'post_time', 'bootstrap_classifier', 'boot_iterations'});
-                        unit_general_info = cell2table(unit_general_info, 'VariableNames', ...
-                            {'animal', 'group', 'date', 'record_session', 'bin_size', 'pre_time', ...
-                            'post_time', 'bootstrap_classifier', 'boot_iterations'});
-                        pop_config_info = [pop_config_info; pop_general_info];
-                        unit_config_info = [unit_config_info; unit_general_info];
+                        [pop_config_info, pop_info] = ...
+                            concat_tables(general_column_names, pop_config_info, current_general_info, pop_info, pop_table);
+                        [unit_config_info, unit_info] = ...
+                            concat_tables(general_column_names, unit_config_info, current_general_info, unit_info, unit_table);
 
                         matfile = fullfile(classify_path, ['test_psth_classifier_', filename, '.mat']);
                         save(matfile, 'pop_struct', 'unit_struct', 'pop_table', 'unit_table');
@@ -389,39 +357,11 @@ function [] = main()
                     % end
                 end
 
-                column_names = {'animal', 'group', 'date', 'record_session', 'bin_size', 'pre_time', ...
-                    'post_time', 'bootstrap_classifier', 'boot_iterations', 'region', 'channel', 'performance', 'mutual_info', ...
-                    'boot_info', 'corrected_info'};
-                % %% CSV export set up
-                % % TODO rework csv logic for reading and writing
-                % if config.unit_classification
-                %     csv_path = fullfile(original_path, 'test_unit_psth_classification_info.csv');
-                % else
-                %     csv_path = fullfile(original_path, 'test_population_psth_classification_info.csv');
-                % end
                 unit_csv_path = fullfile(original_path, 'test_unit_psth_classification_info.csv');
                 pop_csv_path = fullfile(original_path, 'test_population_psth_classification_info.csv');
 
-                unit_info_table = table([], [], [], [], [], [], [], [], [], [], [], [], [], [], [], 'VariableNames', column_names);
-                if exist(unit_csv_path, 'file')
-                    unit_info_table = readtable(unit_csv_path);
-                end
-
-                new_unit_info_table = [unit_config_info unit_info];
-                size(new_unit_info_table)
-                size(unit_info_table)
-                
-                unit_info_table = [unit_info_table; new_unit_info_table];
-                writetable(unit_info_table, unit_csv_path, 'Delimiter', ',');
-
-                pop_info_table = table([], [], [], [], [], [], [], [], [], [], [], [], [], [], [], 'VariableNames', column_names);
-                if exist(pop_csv_path, 'file')
-                    pop_info_table = readtable(pop_csv_path);
-                end
-
-                new_pop_info_table = [pop_config_info pop_info];
-                pop_info_table = [pop_info_table; new_pop_info_table];
-                writetable(pop_info_table, pop_csv_path, 'Delimiter', ',');
+                export_csv(unit_csv_path, column_names, unit_config_info, unit_info);
+                export_csv(pop_csv_path, column_names, pop_config_info, pop_info);
 
                 fprintf('Finished PSTH classifier for %s. It took %s \n', ...
                     animal_name, num2str(toc(classifier_start)));
