@@ -343,7 +343,11 @@ function [] = main()
 
                 fprintf('PSTH classification for %s \n', animal_name);
                 general_info = table;
+                pop_config_info = table;
+                unit_config_info = table;
                 all_info = [];
+                pop_info = [];
+                unit_info = [];
                 for file_index = 1:length(psth_files)
                     %% pull info from filename and set up file path for analysis
                     file = fullfile(psth_path, psth_files(file_index).name);
@@ -352,49 +356,73 @@ function [] = main()
                     filename = erase(filename, 'PSTH.format.');
                     [animal_id, experimental_group, ~, session_num, session_date, ~] = get_filename_info(filename);
 
-                    try
+                    % try
                         load(file, 'labeled_neurons', 'event_struct', 'event_ts');
                         %TODO return info to create csv
-                        [classified_struct, results_table] = psth_bootstrapper(labeled_neurons, event_struct, ...
-                            event_ts, config.boot_iterations, config.unit_classification, config.bin_size, ...
+                        [unit_struct, pop_struct, pop_table, unit_table] = psth_bootstrapper(labeled_neurons, event_struct, ...
+                            event_ts, config.boot_iterations, config.bootstrap_classifier, config.bin_size, ...
                             config.pre_time, config.post_time);
 
-                        all_info = [all_info; results_table];
+                        % all_info = [all_info; results_table];
+                        pop_info = [pop_info; pop_table];
+                        unit_info = [unit_info; unit_table];
                         current_general_info = [{animal_name}, {experimental_group}, session_date, session_num, ...
-                            config.bin_size, config.pre_time, config.post_time, config.boot_iterations];
-                        total_rows = height(results_table);
-                        current_general_info = repmat(current_general_info, [total_rows, 1]);
-                        current_general_info = cell2table(current_general_info, 'VariableNames', ...
+                            config.bin_size, config.pre_time, config.post_time, config.bootstrap_classifier, ...
+                            config.boot_iterations];
+                        pop_rows = height(pop_table);
+                        unit_rows = height(unit_table);
+                        pop_general_info = repmat(current_general_info, [pop_rows, 1]);
+                        unit_general_info = repmat(current_general_info, [unit_rows, 1]);
+                        pop_general_info = cell2table(pop_general_info, 'VariableNames', ...
                             {'animal', 'group', 'date', 'record_session', 'bin_size', 'pre_time', ...
-                            'post_time', 'boot_iterations'});
-                        general_info = [general_info; current_general_info];
+                            'post_time', 'bootstrap_classifier', 'boot_iterations'});
+                        unit_general_info = cell2table(unit_general_info, 'VariableNames', ...
+                            {'animal', 'group', 'date', 'record_session', 'bin_size', 'pre_time', ...
+                            'post_time', 'bootstrap_classifier', 'boot_iterations'});
+                        pop_config_info = [pop_config_info; pop_general_info];
+                        unit_config_info = [unit_config_info; unit_general_info];
 
-                        matfile = fullfile(classify_path, ['psth_classifier_', filename, '.mat']);
-                        save(matfile, 'results_table', 'classified_struct');
-                    catch ME
-                        handle_ME(ME, failed_path, file_name);
-                    end
+                        matfile = fullfile(classify_path, ['test_psth_classifier_', filename, '.mat']);
+                        save(matfile, 'pop_struct', 'unit_struct', 'pop_table', 'unit_table');
+                    % catch ME
+                    %     handle_ME(ME, failed_path, file_name);
+                    % end
                 end
 
                 column_names = {'animal', 'group', 'date', 'record_session', 'bin_size', 'pre_time', ...
-                    'post_time', 'boot_iterations', 'region', 'channel', 'performance', 'mutual_info', ...
-                    'bootstrapped_info', 'corrected_info'};
-                %% CSV export set up
-                % TODO rework csv logic for reading and writing
-                if config.unit_classification
-                    csv_path = fullfile(original_path, 'unit_psth_classification_info.csv');
-                else
-                    csv_path = fullfile(original_path, 'population_psth_classification_info.csv');
+                    'post_time', 'bootstrap_classifier', 'boot_iterations', 'region', 'channel', 'performance', 'mutual_info', ...
+                    'boot_info', 'corrected_info'};
+                % %% CSV export set up
+                % % TODO rework csv logic for reading and writing
+                % if config.unit_classification
+                %     csv_path = fullfile(original_path, 'test_unit_psth_classification_info.csv');
+                % else
+                %     csv_path = fullfile(original_path, 'test_population_psth_classification_info.csv');
+                % end
+                unit_csv_path = fullfile(original_path, 'test_unit_psth_classification_info.csv');
+                pop_csv_path = fullfile(original_path, 'test_population_psth_classification_info.csv');
+
+                unit_info_table = table([], [], [], [], [], [], [], [], [], [], [], [], [], [], [], 'VariableNames', column_names);
+                if exist(unit_csv_path, 'file')
+                    unit_info_table = readtable(unit_csv_path);
                 end
 
-                info_table = table([], [], [], [], [], [], [], [], [], [], [], [], [], [], 'VariableNames', column_names);
-                if exist(csv_path, 'file')
-                    info_table = readtable(csv_path);
+                new_unit_info_table = [unit_config_info unit_info];
+                size(new_unit_info_table)
+                size(unit_info_table)
+                
+                unit_info_table = [unit_info_table; new_unit_info_table];
+                writetable(unit_info_table, unit_csv_path, 'Delimiter', ',');
+
+                pop_info_table = table([], [], [], [], [], [], [], [], [], [], [], [], [], [], [], 'VariableNames', column_names);
+                if exist(pop_csv_path, 'file')
+                    pop_info_table = readtable(pop_csv_path);
                 end
 
-                new_info_table = [general_info all_info];
-                info_table = [info_table; new_info_table];
-                writetable(info_table, csv_path, 'Delimiter', ',');
+                new_pop_info_table = [pop_config_info pop_info];
+                pop_info_table = [pop_info_table; new_pop_info_table];
+                writetable(pop_info_table, pop_csv_path, 'Delimiter', ',');
+
                 fprintf('Finished PSTH classifier for %s. It took %s \n', ...
                     animal_name, num2str(toc(classifier_start)));
             end

@@ -1,82 +1,108 @@
-function [classified_struct, results_table] = psth_bootstrapper(labeled_neurons, event_struct, ...
-        event_ts, boot_iterations, unit_classification, bin_size, pre_time, post_time)
+function [unit_struct, pop_struct, pop_table, unit_table] = psth_bootstrapper(labeled_neurons, event_struct, ...
+        event_ts, boot_iterations, bootstrap_classifier, bin_size, pre_time, post_time)
+
     region_names = fieldnames(labeled_neurons);
     event_strings = event_struct.all_events(:,1)';
-    classified_struct = struct;
-    rand_info = 0;
-    results = [];
+    unit_struct = struct;
+    pop_struct = struct;
+    unit_results = [];
+    pop_results = [];
+
     %% Standard classification
+    total_neurons = 0;
     for region = 1:length(region_names)
         current_region = region_names{region};
         region_neurons = [labeled_neurons.(current_region)(:,1), labeled_neurons.(current_region)(:,4)];
-        if unit_classification
-            for unit = 1:length(region_neurons(:,1))
-                current_unit = region_neurons{unit, 1};
-                unit_response = struct;
-                for event = 1:length(event_strings)
-                    current_event = event_strings{event};
-                    unit_response.(current_event) = event_struct.(current_region).(current_event).(current_unit);
-                end
-                [confusion_matrix, mutual_info, predicted_events, true_events, correct_trials, performance] = ...
-                    psth_classifier(unit_response, event_strings);
-                classified_struct.(current_region).(current_unit).confusion_matrix = confusion_matrix;
-                classified_struct.(current_region).(current_unit).mutual_info = mutual_info;
-                classified_struct.(current_region).(current_unit).predicted_events = predicted_events;
-                classified_struct.(current_region).(current_unit).true_events = true_events;
-                classified_struct.(current_region).(current_unit).correct_trials = correct_trials;
-                classified_struct.(current_region).(current_unit).performance = performance;
-                results = [results; {current_region}, {current_unit}, {performance}, {mutual_info}];
-            end
-        else
-            %% CLASSIFY TIME
-            % Preforms standard classification --> Does not create the relative response template
-            region_response = event_struct.(current_region);
-            [confusion_matrix, mutual_info, predicted_events, true_events, correct_trials, performance] = ...
-                psth_classifier(region_response, event_strings);
-            classified_struct.(current_region).confusion_matrix = confusion_matrix;
-            classified_struct.(current_region).mutual_info = mutual_info;
-            classified_struct.(current_region).predicted_events = predicted_events;
-            classified_struct.(current_region).true_events = true_events;
-            classified_struct.(current_region).correct_trials = correct_trials;
-            classified_struct.(current_region).performance = performance;
-            results = [results; {current_region}, {'population'}, {performance}, {mutual_info}];
-        end
+        total_neurons = total_neurons + length(region_neurons(:, 1));
+
+        %% Unit classification
+        [classify_struct, unit_info] = classify_unit(current_region, region_neurons, event_struct.(current_region), event_strings);
+        %% Store unit classification
+        unit_struct.(current_region) = classify_struct.(current_region);
+        unit_results = [unit_results; unit_info];
+
+        %% Population classification
+        [classify_struct, pop_info] = classify_pop(current_region, region_neurons, event_struct, event_strings);
+        %% Store unit classification
+        pop_struct.(current_region) = classify_struct;
+        pop_results = [pop_results; pop_info];
     end
 
-    results_table = cell2table(results, 'VariableNames', {'region', 'channel', 'performance', 'mutual_info'});
+    unit_table = cell2table(unit_results, 'VariableNames', ...
+        {'region', 'channel', 'performance', 'mutual_info', 'boot_info', 'corrected_info'});
+    pop_table = cell2table(pop_results, 'VariableNames', ...
+        {'region', 'channel', 'performance', 'mutual_info', 'boot_info', 'corrected_info'});
 
-    parfor i = 1:boot_iterations
-        %% Shuffle labels
-        shuffled_labels = shuffle_event_labels(event_ts, event_strings);
-        for region = 1:length(region_names)
-            current_region = region_names{region};
-            region_neurons = [labeled_neurons.(current_region)(:,1), labeled_neurons.(current_region)(:,4)];
-            %% Recreate relative response matrix from shuffled labels for region
-            shuffled_response = create_relative_response(region_neurons, shuffled_labels, bin_size, pre_time, post_time);
+    %% Bootstrapping
+    if bootstrap_classifier
+        unit_rand_info = cell(boot_iterations, (total_neurons * 2));
+        region_rand_info = cell(boot_iterations, (length(region_names) * 2));
+        parfor i = 1:boot_iterations
+            %% Shuffle labels
+            shuffled_labels = shuffle_event_labels(event_ts, event_strings);
+            region_shuffled_info = [];
+            region_unit_info = [];
+            for region = 1:length(region_names)
+                current_region = region_names{region};
+                region_neurons = [labeled_neurons.(current_region)(:,1), labeled_neurons.(current_region)(:,4)];
+                %% Recreate relative response matrix from shuffled labels for region
+                shuffled_response = create_relative_response(region_neurons, shuffled_labels, bin_size, pre_time, post_time);
 
-            if unit_classification
+                %% Unit classification
+                unit_shuffled_info = [];
+                [classify_struct, ~] = classify_unit(current_region, region_neurons, shuffled_response, event_strings);
                 for unit = 1:length(region_neurons(:,1))
                     current_unit = region_neurons{unit, 1};
-                    unit_response = struct;
-                    for event = 1:length(event_strings)
-                        current_event = event_strings{event};
-                        unit_response.(current_event) = shuffled_response.(current_event).(current_unit);
-                    end
-                    [~, shuffled_info, ~, ~, ~, ~] = psth_classifier(unit_response, event_strings);
+                    shuffled_info = classify_struct.(current_region).(current_unit).mutual_info;
+                    unit_shuffled_info = [unit_shuffled_info, {current_unit}, {shuffled_info}];
                 end
-            else
-                %% CLASSIFY TIME
+                region_unit_info = [region_unit_info, unit_shuffled_info];
+
+                %% Population classification
                 [~, shuffled_info, ~, ~, ~, ~] = psth_classifier(shuffled_response, event_strings);
+                region_shuffled_info = [region_shuffled_info, {current_region}, {shuffled_info}];
             end
-            rand_info = rand_info + shuffled_info;
+            unit_rand_info(i, :) = region_unit_info;
+            region_rand_info(i, :) = region_shuffled_info;
+        end
+        unit_struct.rand_info = unit_rand_info;
+        pop_struct.rand_info = region_rand_info;
+
+        for region = 1:2:length(region_rand_info(1,:))
+            %% Average region random info and correct classification info
+            current_region_column = region_rand_info(:, region);
+            %% Verify that labels are consistent before averaging random info
+            % TODO throw error but save file info
+            assert(length(unique(current_region_column)) == 1);
+            current_region = current_region_column{1};
+            avg_rand_info = mean([region_rand_info{:, region + 1}]);
+            corrected_info = pop_table.mutual_info(strcmpi(pop_table.region, current_region)) - avg_rand_info;
+
+            %% Store region population corrected info and averaged random info
+            pop_struct.(current_region).avg_rand_info = avg_rand_info;
+            pop_table.boot_info(strcmpi(pop_table.region, current_region)) = avg_rand_info;
+            pop_table.corrected_info(strcmpi(pop_table.region, current_region)) = corrected_info;
+
+            %% Average unit random info and correct classification info
+            for unit = 1:2:length(unit_rand_info(1,:))
+                current_unit_column = unit_rand_info(:, unit);
+                %% Verify that labels are consistent before averaging random info
+                % TODO throw error but save file info
+                assert(length(unique(current_unit_column)) == 1);
+                current_unit = current_unit_column{1};
+                avg_rand_info = mean([unit_rand_info{:, unit + 1}]);
+                corrected_info = unit_table.mutual_info(strcmpi(unit_table.region, current_region) ...
+                    & strcmpi(unit_table.channel, current_unit)) - avg_rand_info;
+
+                %% Store unit corrected info and averaged random info
+                unit_struct.(current_region).(current_unit).avg_rand_info = avg_rand_info;
+                unit_table.boot_info(strcmpi(unit_table.region, current_region) ...
+                    & strcmpi(unit_table.channel, current_unit)) = avg_rand_info;
+                unit_table.corrected_info(strcmpi(unit_table.region, current_region) ...
+                    & strcmpi(unit_table.channel, current_unit)) = corrected_info;
+            end
         end
     end
-
-    %% Find average random info
-    rand_info = rand_info / (boot_iterations - 1);
-    %% Subtract out random info
-    corrected_info = results_table.mutual_info - rand_info;
-    results_table = addvars(results_table, repmat(rand_info, [length(corrected_info), 1]), corrected_info, 'NewVariableNames', {'bootstrapped_info', 'corrected_info'});
 end
 
 function [all_events] = shuffle_event_labels(event_ts, event_strings)
@@ -94,4 +120,45 @@ function [all_events] = shuffle_event_labels(event_ts, event_strings)
             all_events(event, :) = [];
         end
     end
+end
+
+function [classify_struct, table_results] = classify_unit(region_name, region_neurons, event_struct, event_strings)
+    classify_struct = struct;
+    table_results = [];
+
+    %% Unit Classification
+    for unit = 1:length(region_neurons(:,1))
+        current_unit = region_neurons{unit, 1};
+        unit_response = struct;
+        for event = 1:length(event_strings)
+            current_event = event_strings{event};
+            unit_response.(current_event) = event_struct.(current_event).(current_unit);
+        end
+        [confusion_matrix, mutual_info, predicted_events, true_events, correct_trials, performance] = ...
+            psth_classifier(unit_response, event_strings);
+        classify_struct.(region_name).(current_unit).confusion_matrix = confusion_matrix;
+        classify_struct.(region_name).(current_unit).mutual_info = mutual_info;
+        classify_struct.(region_name).(current_unit).predicted_events = predicted_events;
+        classify_struct.(region_name).(current_unit).true_events = true_events;
+        classify_struct.(region_name).(current_unit).correct_trials = correct_trials;
+        classify_struct.(region_name).(current_unit).performance = performance;
+        table_results = [table_results; {region_name}, {current_unit}, {performance}, {mutual_info}, {0}, {mutual_info}];
+    end
+end
+
+function [classify_struct, table_results] = classify_pop(region_name, region_neurons, event_struct, event_strings)
+    classify_struct = struct;
+    table_results = [];
+
+    %% Population Classification
+    region_response = event_struct.(region_name);
+    [confusion_matrix, mutual_info, predicted_events, true_events, correct_trials, performance] = ...
+        psth_classifier(region_response, event_strings);
+    classify_struct.confusion_matrix = confusion_matrix;
+    classify_struct.mutual_info = mutual_info;
+    classify_struct.predicted_events = predicted_events;
+    classify_struct.true_events = true_events;
+    classify_struct.correct_trials = correct_trials;
+    classify_struct.performance = performance;
+    table_results = [table_results; {region_name}, {'population'}, {performance}, {mutual_info}, {0}, {mutual_info}];
 end
