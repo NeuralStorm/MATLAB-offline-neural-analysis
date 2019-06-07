@@ -12,7 +12,7 @@ function [unit_struct, pop_struct, pop_table, unit_table] = psth_bootstrapper(la
     total_neurons = 0;
     for region = 1:length(region_names)
         current_region = region_names{region};
-        region_neurons = [labeled_neurons.(current_region)(:,1), labeled_neurons.(current_region)(:,4)];
+        region_neurons = labeled_neurons.(current_region)(:,1);
         total_neurons = total_neurons + length(region_neurons(:, 1));
 
         %% Unit classification
@@ -22,7 +22,7 @@ function [unit_struct, pop_struct, pop_table, unit_table] = psth_bootstrapper(la
         unit_results = [unit_results; unit_info];
 
         %% Population classification
-        [classify_struct, pop_info] = classify_pop(current_region, region_neurons, event_struct, event_strings);
+        [classify_struct, pop_info] = classify_pop(current_region, event_struct, event_strings);
         %% Store unit classification
         pop_struct.(current_region) = classify_struct;
         pop_results = [pop_results; pop_info];
@@ -48,7 +48,7 @@ function [unit_struct, pop_struct, pop_table, unit_table] = psth_bootstrapper(la
 
                 %% Unit classification
                 unit_shuffled_info = [];
-                [classify_struct, ~] = classify_unit(current_region, region_neurons, shuffled_response, event_strings);
+                [classify_struct, ~] = classify_unit(current_region, region_neurons(:,1), shuffled_response, event_strings);
                 for unit = 1:length(region_neurons(:,1))
                     current_unit = region_neurons{unit, 1};
                     shuffled_info = classify_struct.(current_region).(current_unit).mutual_info;
@@ -125,7 +125,7 @@ function [classify_struct, table_results] = classify_unit(region_name, region_ne
     table_results = [];
 
     %% Unit Classification
-    for unit = 1:length(region_neurons(:,1))
+    for unit = 1:length(region_neurons)
         current_unit = region_neurons{unit, 1};
         unit_response = struct;
         for event = 1:length(event_strings)
@@ -144,7 +144,7 @@ function [classify_struct, table_results] = classify_unit(region_name, region_ne
     end
 end
 
-function [classify_struct, table_results] = classify_pop(region_name, region_neurons, event_struct, event_strings)
+function [classify_struct, table_results] = classify_pop(region_name, event_struct, event_strings)
     classify_struct = struct;
     table_results = [];
 
