@@ -321,6 +321,7 @@ function [] = main()
                 analysis_column_names = {'region', 'channel', 'performance', 'mutual_info', ...
                     'boot_info', 'corrected_info'};
                 column_names = [general_column_names, analysis_column_names];
+                pop_column_names = column_names;
 
                 fprintf('PSTH classification for %s \n', animal_name);
 
@@ -338,9 +339,17 @@ function [] = main()
 
                     % try
                         load(file, 'labeled_neurons', 'event_struct', 'event_ts');
+
+                        %% Classify and bootstrap
                         [unit_struct, pop_struct, pop_table, unit_table] = psth_bootstrapper(labeled_neurons, event_struct, ...
                             event_ts, config.boot_iterations, config.bootstrap_classifier, config.bin_size, ...
                             config.pre_time, config.post_time, analysis_column_names);
+
+                        %% PSTH synergy redundancy
+                        if config.calc_syn_red
+                            [pop_table] = synergy_redundancy(pop_table, unit_table, config.bootstrap_classifier);
+                            pop_column_names = [general_column_names, pop_table.Properties.VariableNames];
+                        end
 
                         current_general_info = [{animal_name}, {experimental_group}, session_date, session_num, ...
                             config.bin_size, config.pre_time, config.post_time, config.bootstrap_classifier, ...
@@ -361,7 +370,7 @@ function [] = main()
                 pop_csv_path = fullfile(original_path, 'test_population_psth_classification_info.csv');
 
                 export_csv(unit_csv_path, column_names, unit_config_info, unit_info);
-                export_csv(pop_csv_path, column_names, pop_config_info, pop_info);
+                export_csv(pop_csv_path, pop_column_names, pop_config_info, pop_info);
 
                 fprintf('Finished PSTH classifier for %s. It took %s \n', ...
                     animal_name, num2str(toc(classifier_start)));
