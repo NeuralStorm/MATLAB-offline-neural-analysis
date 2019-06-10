@@ -7,6 +7,7 @@ function [labeled_neurons, unique_regions, region_channels] = label_neurons(anim
         csv_file = fullfile(animal_path, csv_files(csv).name);
         if contains(csv_files(csv).name, 'labels.csv')
             labels = readtable(csv_file);
+            labels = sortrows(labels, [4,1]);
         end
     end
     
@@ -39,14 +40,14 @@ function [labeled_neurons, unique_regions, region_channels] = label_neurons(anim
             region_channels.(region_name) = channels;
             % Find the channels that overlap with the neuron map (with actual data)
             % and the listed neurons in the .csv
-            [shared_channels, map_indeces, ~] = intersect(neuron_map(:,1), channels);
+            [shared_channels, map_indeces, labels_indeces] = intersect(neuron_map(:,1), channels);
             %% Appends everything together in single matrix with all the label information
             % and data
             neuron_data = neuron_map(map_indeces,2);
             labeled_neurons.(region_name) = horzcat(shared_channels, ...
-                region_names(1:length(shared_channels)), region_values(1:length(shared_channels)), ...
-                neuron_map(map_indeces,2), region_sessions(1:length(shared_channels)), ...
-                region_notes(1:length(shared_channels)));
+                region_names(labels_indeces), region_values(labels_indeces), ...
+                neuron_map(map_indeces,2), region_sessions(labels_indeces), ...
+                region_notes(labels_indeces));
             %% Update neuron map to only include neurons from intersection
             new_neuron_map = [new_neuron_map; shared_channels, neuron_data];
         end
