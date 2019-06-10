@@ -20,7 +20,7 @@ function [parsed_path] = parser(dir_path, animal_name, total_trials, total_event
         try
             try
                 % tscounts and wfcounts dimension is actually (number of channels +1) x (max units  +1)
-                [tscounts, wfcounts, evcounts, slowcounts] = plx_info(file,1);
+                [tscounts, ~, evcounts, ~] = plx_info(file,1);
             catch ME
                 if (strcmpi(ME.identifier,'MATLAB:TooManyOutputs'))
                     msg = ['Old version of plexon matlab sdk on path -- please remove and use the ', ...
@@ -31,14 +31,12 @@ function [parsed_path] = parser(dir_path, animal_name, total_trials, total_event
                 rethrow(ME);
             end
 
-            [~, channel_names] = plx_chan_names(file);
-            [total_channels, ~] = plx_chanmap(file);
-            subchan = {'a','b','c','d'};
+            [total_channels, channel_names] = plx_chan_names(file);
+            subchan = {'i','a','b','c','d'};
             neuron_map = [];
             for channel = 1:total_channels
                 %% timestamps
-                %TODO deal with unsorted gunk
-                %% goes through the units a, b, c, d
+                % for unit = 0:5 % FOR UNSORTED
                 for unit = 1:5
                     % tscounts dimensions: (channel + 1) x (units + 1)
                     if tscounts(unit + 1, channel + 1) > 0
@@ -46,6 +44,7 @@ function [parsed_path] = parser(dir_path, animal_name, total_trials, total_event
                         % channel_names is a char array
                         current_channel = channel_names(channel, :);
                         current_channel = deblank(current_channel);
+                        % current_subchan = subchan{unit+1}; % FOR UNSORTED
                         current_subchan = subchan{unit};
                         complete_channel_name = [current_channel, current_subchan];
                         neuron_map = [neuron_map; {complete_channel_name}, {channel_timestamps}];
@@ -99,6 +98,7 @@ function [parsed_path] = parser(dir_path, animal_name, total_trials, total_event
             end
 
             event_ts = sortrows(event_ts, 2);
+            neuron_map = sortrows(neuron_map, 1);
 
             %% Saves parsed files
             % filename = ['PARSED.', file_name, '.mat'];

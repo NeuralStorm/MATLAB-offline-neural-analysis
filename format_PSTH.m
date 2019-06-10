@@ -7,14 +7,6 @@ function [event_struct, event_ts, event_strings] = format_PSTH(...
     end
     post_time_bins = (length(0:bin_size:post_time)) - 1;
 
-    event_strings = {};
-    if isempty(wanted_events)
-        wanted_events = unique(event_ts(:,1));
-    end
-    wanted_events = sort(wanted_events);
-    for i = 1: length(wanted_events)
-        event_strings{end+1} = ['event_', num2str(wanted_events(i))];
-    end
     event_struct = struct;
 
     %% Double checks that event timestamps taken from parser is abve the threshold
@@ -39,8 +31,18 @@ function [event_struct, event_ts, event_strings] = format_PSTH(...
         end
     end
 
+    if isempty(wanted_events)
+        wanted_events = unique(event_ts(:,1));
+    end
+    wanted_events = sort(wanted_events);
+
+    event_strings = {};
+    for i = 1: length(wanted_events)
+        event_strings{end+1} = ['event_', num2str(wanted_events(i))];
+    end
+
     event_struct.all_events = {};
-    for event = 1: length(wanted_events)
+    for event = 1: length(event_strings)
         %% Slices out the desired trials from the events matrix (Inclusive range)
         event_struct.all_events = [event_struct.all_events; event_strings{event}, {event_ts(event_ts == wanted_events(event), 2)}];
         if isempty(event_struct.all_events{event, 2})

@@ -15,7 +15,7 @@ function [sig_neurons, non_sig_neurons] = receptive_field_analysis(labeled_neuro
             norm_post_window = event_struct.(current_region).(current_event).norm_post_time_activity;
             for neuron = 1:length(region_neurons)
                 neuron_name = region_neurons{neuron};
-                notes = labeled_neurons.(current_region)(contains(labeled_neurons.(current_region)(:,1), ...
+                notes = labeled_neurons.(current_region)(strcmpi(labeled_neurons.(current_region)(:,1), ...
                     neuron_name), end);
                 %% Deal with pre window first
                 smoothed_pre_window = smooth(norm_pre_window(neuron, :), span);

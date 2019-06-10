@@ -262,7 +262,7 @@ function [] = main()
             %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
             nv_csv_path = fullfile(original_path, 'single_unit_nv.csv');
             if config.nv_analysis
-                if config.pre_time <= 0.050
+                if abs(config.pre_time) <= 0.050
                     error('Pre time ~= 0 for normalized variance analysis. Create psth with pre time > 0.');
                 end
                 nv_start = tic;
