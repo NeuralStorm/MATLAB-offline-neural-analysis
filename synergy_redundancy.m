@@ -1,12 +1,5 @@
 function [pop_table] = synergy_redundancy(pop_table, unit_table, bootstrap_classifier)
 
-    syn_names = {'synergy_redundancy', 'synergistic'};
-    var_types = {'double', 'logical'};
-
-    pop_rows = height(pop_table);
-    synergy_table = table('Size', [pop_rows, 2], 'VariableTypes', var_types, 'VariableNames', syn_names);
-    pop_table = [pop_table, synergy_table];
-
     unique_regions = unique(pop_table.region);
     for region = 1:length(unique_regions)
         current_region = unique_regions{region};

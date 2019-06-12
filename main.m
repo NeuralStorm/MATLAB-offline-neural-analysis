@@ -339,9 +339,8 @@ function [] = main()
                 general_column_names = {'animal', 'group', 'date', 'record_session', 'bin_size', 'pre_time', ...
                     'post_time', 'bootstrap_classifier', 'boot_iterations'};
                 analysis_column_names = {'region', 'channel', 'performance', 'mutual_info', ...
-                    'boot_info', 'corrected_info'};
+                    'boot_info', 'corrected_info', 'synergy_redundancy', 'synergistic', 'notes'};
                 column_names = [general_column_names, analysis_column_names];
-                pop_column_names = column_names;
 
                 fprintf('PSTH classification for %s \n', animal_name);
 
@@ -390,7 +389,7 @@ function [] = main()
                 pop_csv_path = fullfile(original_path, 'test_population_psth_classification_info.csv');
 
                 export_csv(unit_csv_path, column_names, unit_config_info, unit_info);
-                export_csv(pop_csv_path, pop_column_names, pop_config_info, pop_info);
+                export_csv(pop_csv_path, column_names, pop_config_info, pop_info);
 
                 fprintf('Finished PSTH classifier for %s. It took %s \n', ...
                     animal_name, num2str(toc(classifier_start)));
