@@ -153,7 +153,7 @@ function [] = main()
             %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
             %! Needs to stay as is so that file paths for plx files are able to be passed into
             %! plexon offline sdk
-            parsed_path = [animal_path, '/parsed_plx'];
+            parsed_path = [animal_path, '/parsed'];
             if config.parse_files
                 parsed_path = parser(animal_path, animal_name, config.total_trials, ...
                     config.total_events, config.trial_lower_bound, ...
