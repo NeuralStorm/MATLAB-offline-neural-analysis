@@ -30,7 +30,7 @@ function nv_data = ...
                     current_pre = relative_response(last_trial_index:event_end_indeces(event), (pre_index - pre_time_bins + 1 ):pre_index);
                     pre_index = pre_index + post_time_bins + pre_time_bins;
                     %% Calculate NV for each event for each trial for each neuron
-                    bfr = sum(current_pre, 2) / (pre_time * 1000);
+                    bfr = sum(current_pre, 2) / (abs(pre_time) * 1000);
                     avg_bfr = mean(bfr);
                     bfr_var = var(bfr);
                     norm_var = norm_var_scaling * (epsilon + bfr_var)/(norm_var_scaling * epsilon + avg_bfr);
@@ -48,7 +48,7 @@ function nv_data = ...
                 %% Grabs all trials for given neuron
                 neuron_pre_activity = relative_response(:, (pre_index - pre_time_bins + 1 ):pre_index);
                 %% Calculate NV for each trial for each neuron
-                bfr = sum(neuron_pre_activity, 2) / (pre_time * 1000);
+                bfr = sum(neuron_pre_activity, 2) / (abs(pre_time) * 1000);
                 avg_bfr = mean(bfr);
                 bfr_var = var(bfr);
                 norm_var = norm_var_scaling * (epsilon + bfr_var)/(norm_var_scaling * epsilon + avg_bfr);

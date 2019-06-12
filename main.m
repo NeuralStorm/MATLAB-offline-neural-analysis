@@ -77,25 +77,36 @@
 % See Churchland et al. 2006: "Neural Variability in Premotor Cortex Provides a Signature ofMotor Preparation"
 % For more details about how to choose epsilon and norm_var_scaling (or c in equatioon 2)
 
-% nv_analysis - Controls if normalized variance is calculated
-%                  - nv_analysis = true: calculates the normalized variance
-%                  - nv_analysis = false: does not do calculate the normalized variance
-% epsilon - Used to prevent accidental division by 0
+% nv_analysis      - Controls if normalized variance is calculated
+%                      - nv_analysis = true: calculates the normalized variance
+%                      - nv_analysis = false: does not do calculate the normalized variance
+% epsilon          - Used to prevent accidental division by 0
 % norm_var_scaling - Used to scale the normalized variance depending on filter
-% separate_events - Determines whether or not the event sets are combined or not for the normalized variance
+% separate_events  - Determines whether or not the event sets are combined or not for the normalized variance
 %                   typically you will want to keep events separated
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%%    Information Analysis    %%
+%%     PSTH Classification    %%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-% info_analysis - Controls if bootstrapping and other forms of information analysis is ran
-%                  - info_analysis = true: bootstraps data
-%                  - info_analysis = false: does not do the information analysis
-% unit_classification - Controls population or single unit classification
-%                     - True: unit classification
-%                     - False: population classification
-% boot_iterations - Sets how many bootstrap iterations are done (1 = classification only)
+% psth_classify        - Controls if psth classification is ran
+%                          - psth_classify = true: classifies region population and unit data
+%                          - psth_classify = false: does not classify the data
+% bootstrap_classifier - Controls if psth classification is ran
+%                          - True: bootstraps region population and unit data
+%                          - False: does not bootstrap the data
+% boot_iterations      - Sets how many bootstrap iterations are done (1 = classification only)
+% calc_syn_red         - Contols if synergy redundancy calculation is made based on classification
+% bootstrap_classifier - Controls if psth classification is ran
+%                          - True: uses corrected information found from bootstrapping
+%                          - False: Uses classifier information
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%    Information Analysis    %%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% info_analysis - Controls if mutual information is calculated for dataset
+%                   - True: Finds mutual info analysis
+%                   - False: Skips mutual info analysis
 
 %%%%%%%%%%%%%%%%%%%%%%%
 %%   NOT READY YET   %%
@@ -169,18 +180,28 @@ function [] = main()
                 %% Goes through all the files and creates PSTHs according to the parameters set in config
                 for file_index = 1:length(parsed_files)
                     file = [parsed_path, '/', parsed_files(file_index).name];
-                    [~, file_name, ~] = fileparts(file);
+                    [~, filename, ~] = fileparts(file);
                     load(file, 'event_ts', 'labeled_neurons');
                     try
                         [event_struct, event_ts, event_strings] = ...
                             format_PSTH(event_ts, labeled_neurons, config.bin_size, config.pre_time, ...
                             config.post_time, config.wanted_events, config.trial_range, config.trial_lower_bound);
-                        filename = ['PSTH_format_', file_name, '.mat'];
+                        filename = ['PSTH_format_', filename, '.mat'];
                         matfile = fullfile(psth_path, filename);
+
+                        % if isempty(label_neurons) || isempty(event_struct) || isempty(event_strings)
+                        %     warning('PSTH does not contain any information about units or events. Skipping File.');
+                        %     if exist(file, 2)
+                        %         delete(file);
+                        %     end
+                        %     continue
+                        % end
+
+
                         save(matfile, 'event_struct', 'event_ts', 'event_strings', 'labeled_neurons');
                         export_params(psth_path, 'format_psth', parsed_path, failed_path, animal_name, config);
                     catch ME
-                        handle_ME(ME, failed_path, file_name);
+                        handle_ME(ME, failed_path, filename);
                     end
                 end
                 fprintf('Finished calculating PSTH for %s. It took %s \n', ...
@@ -192,7 +213,7 @@ function [] = main()
             %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
             rf_path = [psth_path, '/receptive_field_analysis'];
             if config.rf_analysis
-                if config.pre_time <= 0.050
+                if abs(config.pre_time) <= 0.050
                     error('Pre time ~= 0 for receptive field analysis. Create psth with pre time > 0.');
                 end
                 rf_start = tic;
@@ -237,7 +258,7 @@ function [] = main()
                         export_params(rf_path, 'receptive_field_analysis', rf_path, failed_path, ...
                             animal_name, config);
                     catch ME
-                        handle_ME(ME, failed_path, file_name);
+                        handle_ME(ME, failed_path, filename);
                     end
                 end
                 %% CSV export set up
@@ -296,7 +317,7 @@ function [] = main()
                         matfile = fullfile(nv_path, ['NV_analysis_', filename, '.mat']);
                         save(matfile, 'labeled_neurons', 'neuron_activity');
                     catch ME
-                        handle_ME(ME, failed_path, file_name);
+                        handle_ME(ME, failed_path, filename);
                     end
                 end
                 %% CSV export set up
@@ -307,12 +328,11 @@ function [] = main()
                     animal_name, num2str(toc(nv_start)));
             end
 
-            %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-            %    Information Analysis    %%
-            %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+            %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+            %%     PSTH Classification    %%
+            %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
             classify_path = [psth_path, '/classifier'];
-            % TODO make this all about mutual info and synergy redundancy
-            if config.info_analysis
+            if config.psth_classify
                 classifier_start = tic;
                 [psth_files, classify_path, failed_path] = create_dir(psth_path, 'classifier', '.mat');
 
@@ -337,7 +357,7 @@ function [] = main()
                     filename = erase(filename, 'PSTH.format.');
                     [animal_id, experimental_group, ~, session_num, session_date, ~] = get_filename_info(filename);
 
-                    % try
+                    try
                         load(file, 'labeled_neurons', 'event_struct', 'event_ts');
 
                         %% Classify and bootstrap
@@ -361,9 +381,9 @@ function [] = main()
 
                         matfile = fullfile(classify_path, ['test_psth_classifier_', filename, '.mat']);
                         save(matfile, 'pop_struct', 'unit_struct', 'pop_table', 'unit_table');
-                    % catch ME
-                    %     handle_ME(ME, failed_path, file_name);
-                    % end
+                    catch ME
+                        handle_ME(ME, failed_path, filename);
+                    end
                 end
 
                 unit_csv_path = fullfile(original_path, 'test_unit_psth_classification_info.csv');
@@ -376,16 +396,36 @@ function [] = main()
                     animal_name, num2str(toc(classifier_start)));
             end
 
-            % %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-            % %    Information Analysis    %%
-            % %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-            % classified_path = [psth_path, '/classifier'];
-            % TODO make this all about mutual info and synergy redundancy
-            % if config.info_analysis
-            %     classified_path = crude_bootstrapper(original_path, first_iteration, psth_path, animal_name, config.boot_iterations, config.bin_size, config.pre_time, ...
-            %         config.post_time, config.unit_classification);
-            %         mutual_info(psth_path)
-            % end
+            %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+            %    Information Analysis    %%
+            %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+            if config.info_analysis
+                info_start = tic;
+                [psth_files, info_path, failed_path] = create_dir(psth_path, 'mutual_info', '.mat');
+
+                fprintf('Mutual Info for %s \n', animal_name);
+                %% Goes through all the files and calculates mutual info according to the parameters set in config
+                for file_index = 1:length(psth_files)
+                    %% pull info from filename and set up file path for analysis
+                    file = fullfile(psth_path, psth_files(file_index).name);
+                    [~, filename, ~] = fileparts(file);
+                    filename = erase(filename, 'PSTH_format_');
+                    filename = erase(filename, 'PSTH.format.');
+
+                    try
+                        load(file, 'event_struct', 'labeled_neurons');
+                        [prob_struct, mi_results] = mutual_info(event_struct, labeled_neurons);
+
+                        %% Saving the file
+                        matfile = fullfile(info_path, ['mutual_info_', filename, '.mat']);
+                        save(matfile, 'labeled_neurons', 'prob_struct', 'mi_results');
+                    catch ME
+                        handle_ME(ME, failed_path, filename);
+                    end
+                end
+                fprintf('Finished information analysis for %s. It took %s \n', ...
+                    animal_name, num2str(toc(info_start)));
+            end
 
             %TODO Reimplement synergy redundancy calculation
             %% Misc Functions

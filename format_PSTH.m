@@ -1,6 +1,6 @@
 function [event_struct, event_ts, event_strings] = format_PSTH(...
         event_ts, labeled_neurons, bin_size, pre_time, post_time, wanted_events, trial_range, trial_lower_bound)
-    if pre_time > 0
+    if abs(pre_time) > 0
         pre_time_bins = (length(-abs(pre_time): bin_size: 0)) - 1;
     else
         pre_time_bins = 0;
