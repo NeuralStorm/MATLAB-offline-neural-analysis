@@ -19,7 +19,7 @@ function [parsed_path] = parser(dir_path, animal_name, total_trials, total_event
         % Take the spike times and event times
         try
             try
-                % tscounts and wfcounts dimension is actually (number of channels +1) x (max units  +1)
+                % tscounts and wfcounts dimension padded by extra column and row
                 [tscounts, ~, evcounts, ~] = plx_info(file,1);
             catch ME
                 if (strcmpi(ME.identifier,'MATLAB:TooManyOutputs'))
@@ -31,21 +31,20 @@ function [parsed_path] = parser(dir_path, animal_name, total_trials, total_event
                 rethrow(ME);
             end
 
-            [total_channels, channel_names] = plx_chan_names(file);
+            [tot_units, tot_channels] = size(tscounts);
+            [~, channel_names] = plx_chan_names(file);
+
             subchan = {'i','a','b','c','d'};
             neuron_map = [];
-            for channel = 1:total_channels
-                %% timestamps
-                % for unit = 0:5 % FOR UNSORTED
-                for unit = 1:5
-                    % tscounts dimensions: (channel + 1) x (units + 1)
-                    if tscounts(unit + 1, channel + 1) > 0
-                        [~, channel_timestamps] = plx_ts(file, channel , unit);
+            for unit_i = 1:tot_units - 1 % Start at 0 for unsorted 
+                for channel_i = 1:tot_channels - 1
+                    if (tscounts(unit_i + 1, channel_i + 1) > 0)
+                        %% get the timestamps for this channel and unit 
+                        [~, channel_timestamps] = plx_ts(file, channel_i, unit_i);
                         % channel_names is a char array
-                        current_channel = channel_names(channel, :);
+                        current_channel = channel_names(channel_i, :);
                         current_channel = deblank(current_channel);
-                        % current_subchan = subchan{unit+1}; % FOR UNSORTED
-                        current_subchan = subchan{unit};
+                        current_subchan = subchan{unit_i + 1};
                         complete_channel_name = [current_channel, current_subchan];
                         neuron_map = [neuron_map; {complete_channel_name}, {channel_timestamps}];
                     end
