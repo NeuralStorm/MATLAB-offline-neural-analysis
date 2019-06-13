@@ -476,10 +476,8 @@ function [] = main()
                     animal_name, num2str(toc(info_start)));
             end
 
-            %% Misc Functions
-            %% Euclidian function call
-            % euclidian_path = unit_euclidian_psth(original_path, psth_path, animal_name, pre_time, post_time, total_bins, first_iteration);
-            %% Trajectory analysis
+            %% Trajectories
+            %% TODO implement
             % neural_trajectory_analysis(animal_name, psth_path, bin_size, total_trials, pre_time, post_time, ...
             %     optimize_state_dimension, state_dimension, prediction_error_dimensions, plot_trials, dimsToPlot);
         end
