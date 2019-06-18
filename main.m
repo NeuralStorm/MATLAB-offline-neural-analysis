@@ -321,7 +321,7 @@ function [] = main()
                 [psth_files, nv_path, failed_path] = create_dir(psth_path, 'normalized_variance_analysis', '.mat');
                 general_column_names = {'animal', 'group', 'date', 'record_session'};
                 analysis_column_names = {'event', 'region', 'channel', 'avg_background_rate', ...
-                    'background_var', 'norm_var', 'fano'};
+                    'background_var', 'norm_var', 'fano', 'notes'};
                 column_names = [general_column_names, analysis_column_names];
 
                 fprintf('Normalized variance analysis for %s \n', animal_name);
@@ -359,7 +359,7 @@ function [] = main()
                     end
                 end
                 %% CSV export set up
-                csv_path = fullfile(original_path, 'single_unit_nv.csv');
+                csv_path = fullfile(original_path, 'norm_var.csv');
                 export_csv(csv_path, column_names, general_info, all_neurons);
 
                 fprintf('Finished receptive field analysis for %s. It took %s \n', ...

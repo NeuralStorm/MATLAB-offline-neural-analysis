@@ -1,6 +1,6 @@
 function nv_data = ...
     nv_calculation(labeled_neurons, event_struct, pre_time, post_time, ...
-    bin_size, epsilon, norm_var_scaling, separate_events, analysis_column_names)
+        bin_size, epsilon, norm_var_scaling, separate_events, analysis_column_names)
 
     pre_time_bins = (length(-abs(pre_time): bin_size: 0)) - 1;
     post_time_bins = (length(0:bin_size:post_time)) - 1;
@@ -27,7 +27,10 @@ function nv_data = ...
                 pre_index = pre_time_bins;
                 for neuron = 1:length(region_neurons)
                     current_neuron = region_neurons{neuron};
-                    current_pre = relative_response(last_trial_index:event_end_indeces(event), (pre_index - pre_time_bins + 1 ):pre_index);
+                    notes = labeled_neurons.(current_region)(strcmpi(labeled_neurons.(current_region)(:,1), ...
+                        current_neuron), end);
+                    current_pre = relative_response(last_trial_index:event_end_indeces(event), ...
+                        (pre_index - pre_time_bins + 1 ):pre_index);
                     pre_index = pre_index + post_time_bins + pre_time_bins;
                     %% Calculate NV for each event for each trial for each neuron
                     bfr = sum(current_pre, 2) / (abs(pre_time) * 1000);
@@ -35,9 +38,9 @@ function nv_data = ...
                     bfr_var = var(bfr);
                     norm_var = norm_var_scaling * (epsilon + bfr_var)/(norm_var_scaling * epsilon + avg_bfr);
                     fano = avg_bfr / bfr_var;
-                    nv_data = [nv_data; {current_event}, {current_region}, {current_neuron}, {avg_bfr}, {bfr_var}, {norm_var}, {fano}];
+                    nv_data = [nv_data; {current_event}, {current_region}, {current_neuron}, ...
+                        {avg_bfr}, {bfr_var}, {norm_var}, {fano}, {notes}];
                 end
-                pre_index = pre_time_bins;
                 last_trial_index = event_end_indeces(event) + 1;
             end
         else
@@ -45,6 +48,8 @@ function nv_data = ...
             pre_index = pre_time_bins;
             for neuron = 1:length(region_neurons)
                 current_neuron = region_neurons{neuron};
+                notes = labeled_neurons.(current_region)(strcmpi(labeled_neurons.(current_region)(:,1), ...
+                    current_neuron), end);
                 %% Grabs all trials for given neuron
                 neuron_pre_activity = relative_response(:, (pre_index - pre_time_bins + 1 ):pre_index);
                 %% Calculate NV for each trial for each neuron
@@ -53,11 +58,12 @@ function nv_data = ...
                 bfr_var = var(bfr);
                 norm_var = norm_var_scaling * (epsilon + bfr_var)/(norm_var_scaling * epsilon + avg_bfr);
                 fano = avg_bfr / bfr_var;
-                nv_data = [nv_data; {'all_events'}, {current_region}, {current_neuron}, {avg_bfr}, {bfr_var}, {norm_var}, {fano}];
+                nv_data = [nv_data; {'all_events'}, {current_region}, {current_neuron}, ...
+                    {avg_bfr}, {bfr_var}, {norm_var}, {fano}, {notes}];
                 pre_index = pre_index + post_time_bins + pre_time_bins;
             end
         end
     end
-
+    %% Convert results to table
     nv_data = cell2table(nv_data, 'VariableNames', analysis_column_names);
 end
