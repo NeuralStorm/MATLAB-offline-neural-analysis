@@ -93,6 +93,14 @@ function [] = graph_PSTH(save_path, event_struct, labeled_neurons, sig_neurons, 
                             hold off
                         end
                     end
+                elseif make_region_subplot
+                    figure(region_figure);
+                    scrollsubplot(sub_rows, sub_cols, neuron);
+                    hold on
+                    bar(current_neuron,'BarWidth', 1);
+                    line([pre_time_bins pre_time_bins], ylim, 'Color', 'black', 'LineWidth', 0.75);
+                    title(current_neuron_name);
+                    hold off
                 end
                 figure(unit_figure);
                 x_values = get(gca, 'XTick');

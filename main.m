@@ -300,57 +300,10 @@ function [] = main()
             %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
             %%         Graph PSTH         %%
             %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-            if config.make_psth_graphsS
-                graph_start = tic;
-                [psth_files, graph_path, failed_path] = create_dir(psth_path, 'psth_graphs', '.mat');
-
-                fprintf('Graphing for %s \n', animal_name);
-                %% Goes through all the files and calculates mutual info according to the parameters set in config
-                for file_index = 1:length(psth_files)
-                    try
-                        % Creates the day directory if it does not already exist
-                        day_path = [graph_path, '/', num2str(session_num)];
-                        if ~exist(day_path, 'dir')
-                            mkdir(graph_path, num2str(session_num));
-                        end
-
-                        %% pull info from filename and set up file path for analysis
-                        file = fullfile(psth_path, psth_files(file_index).name);
-                        [~, filename, ~] = fileparts(file);
-                        filename = erase(filename, 'PSTH_format_');
-                        filename = erase(filename, 'PSTH.format.');
-                        [~, ~, ~, session_num, ~, ~] = get_filename_info(filename);
-                        load(file, 'event_struct', 'labeled_neurons');
-                        %% Check psth variables to make sure they are not empty
-                        empty_vars = check_variables(file, event_struct, labeled_neurons);
-                        if empty_vars
-                            continue
-                        end
-
-                        if config.rf_analysis
-                            %% Load receptive field data
-                            rf_file = [rf_path, '/', psth_files(file_index).name];
-                            [rf_path, rf_filename, ~] = fileparts(rf_file);
-                            rf_filename = strrep(rf_filename, 'PSTH', 'REC');
-                            rf_filename = strrep(rf_filename, 'format', 'FIELD');
-                            rf_matfile = fullfile(rf_path, [rf_filename, '.mat']);
-                            load(rf_matfile, 'sig_neurons', 'non_sig_neurons');
-                            graph_PSTH(day_path, event_struct, labeled_neurons, sig_neurons, non_sig_neurons, ...
-                                total_bins, config.bin_size, config.pre_time, config.rf_analysis, ...
-                                config.make_region_subplot, config.sub_columns)
-                        else
-                            graph_PSTH(graph_path, event_struct, labeled_neurons, NaN, NaN, total_bins, config.bin_size, ...
-                                config.pre_time, config.rf_analysis, ...
-                                config.make_region_subplot, config.sub_columns)
-                        end
-                    catch ME
-                        handle_ME(ME, failed_path, filename);
-                    end
-                end
-                fprintf('Finished graphing for %s. It took %s \n', ...
-                    animal_name, num2str(toc(graph_start)));
-                % graph_PSTH(psth_path, animal_name, total_bins, config.bin_size, ...
-                %     config.pre_time, config.post_time, config.rf_analysis, rf_path, config.make_region_subplot, config.sub_columns)
+            if config.make_psth_graphs
+                batch_graph(animal_name, psth_path, 'psth_graphs', '.mat', 'PSTH', 'format', ...
+                    total_bins, config.bin_size, config.pre_time, config.rf_analysis, rf_path, ...
+                    config.make_region_subplot, config.sub_columns);
             end
 
             %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -416,6 +369,9 @@ function [] = main()
             %%     PSTH Classification    %%
             %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
             if config.psth_classify
+                % batch_classify(animal_name, original_path, psth_path, 'classifier', '.mat', 'PSTH', 'format', ...
+                %     config.boot_iterations, config.bootstrap_classifier, config.bin_size, ...
+                %     config.pre_time, config.post_time);
                 classifier_start = tic;
 
                 %% Classifier set up
@@ -544,20 +500,28 @@ function [] = main()
             %             end
 
             %             %% PCA
-            %             [pca_struct, pca_results] = calc_pca(labeled_neurons, event_ts,  ...
+            %             [pca_struct, event_struct, event_ts] = calc_pca(labeled_neurons, event_ts,  ...
             %                 config.bin_size, config.pre_time, config.post_time, config.wanted_events, ...
             %                 config.trial_range, config.trial_lower_bound);
 
             %             %% Saving the file
             %             matfile = fullfile(pca_path, ['pc_analysis', filename, '.mat']);
-            %             check_variables(matfile, pca_struct, pca_results);
-            %             save(matfile, 'pca_struct', 'pca_results', 'labeled_neurons');
+            %             check_variables(matfile, pca_struct, event_struct);
+            %             save(matfile, 'pca_struct', 'event_struct', 'labeled_neurons', 'event_ts');
             %         catch ME
             %             handle_ME(ME, failed_path, filename);
             %         end
             %     end
             %     fprintf('Finished PCA for %s. It took %s \n', ...
             %         animal_name, num2str(toc(pca_start)));
+
+            %     batch_graph(animal_name, pca_path, 'pc_graphs', '.mat', 'pc', 'analysis', ...
+            %         total_bins, config.bin_size, config.pre_time, 0, rf_path, ...
+            %         config.make_region_subplot, config.sub_columns);
+
+            %     batch_classify(animal_name, original_path, pca_path, 'classifier', '.mat', 'pc', 'analysis', ...
+            %         config.boot_iterations, config.bootstrap_classifier, config.bin_size, ...
+            %         config.pre_time, config.post_time);
             % end
 
             %% Trajectories
