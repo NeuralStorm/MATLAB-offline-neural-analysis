@@ -369,75 +369,9 @@ function [] = main()
             %%     PSTH Classification    %%
             %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
             if config.psth_classify
-                % batch_classify(animal_name, original_path, psth_path, 'classifier', '.mat', 'PSTH', 'format', ...
-                %     config.boot_iterations, config.bootstrap_classifier, config.bin_size, ...
-                %     config.pre_time, config.post_time);
-                classifier_start = tic;
-
-                %% Classifier set up
-                [psth_files, classify_path, failed_path] = create_dir(psth_path, 'classifier', '.mat');
-
-                general_column_names = {'animal', 'group', 'date', 'record_session', 'bin_size', 'pre_time', ...
-                    'post_time', 'bootstrap_classifier', 'boot_iterations'};
-                analysis_column_names = {'region', 'channel', 'performance', 'mutual_info', ...
-                    'boot_info', 'corrected_info', 'synergy_redundancy', 'synergistic', 'notes'};
-                column_names = [general_column_names, analysis_column_names];
-
-                fprintf('PSTH classification for %s \n', animal_name);
-
-                pop_config_info = table;
-                unit_config_info = table;
-                pop_info = [];
-                unit_info = [];
-                for file_index = 1:length(psth_files)
-                    %% Run through files
-                    try
-                        %% pull info from filename and set up file path for analysis
-                        file = fullfile(psth_path, psth_files(file_index).name);
-                        [~, filename, ~] = fileparts(file);
-                        filename = erase(filename, 'PSTH_format_');
-                        filename = erase(filename, 'PSTH.format.');
-                        [~, experimental_group, ~, session_num, session_date, ~] = get_filename_info(filename);
-                        load(file, 'labeled_neurons', 'event_struct', 'event_ts');
-                        %% Check psth variables to make sure they are not empty
-                        empty_vars = check_variables(file, event_struct, labeled_neurons, event_ts);
-                        if empty_vars
-                            continue
-                        end
-
-                        %% Classify and bootstrap
-                        [unit_struct, pop_struct, pop_table, unit_table] = psth_bootstrapper(labeled_neurons, event_struct, ...
-                            event_ts, config.boot_iterations, config.bootstrap_classifier, config.bin_size, ...
-                            config.pre_time, config.post_time, analysis_column_names);
-
-                        %% PSTH synergy redundancy
-                        [pop_table] = synergy_redundancy(pop_table, unit_table, config.bootstrap_classifier);
-
-                        current_general_info = [{animal_name}, {experimental_group}, session_date, session_num, ...
-                            config.bin_size, config.pre_time, config.post_time, config.bootstrap_classifier, ...
-                            config.boot_iterations];
-                        [pop_config_info, pop_info] = ...
-                            concat_tables(general_column_names, pop_config_info, current_general_info, pop_info, pop_table);
-                        [unit_config_info, unit_info] = ...
-                            concat_tables(general_column_names, unit_config_info, current_general_info, unit_info, unit_table);
-
-                        matfile = fullfile(classify_path, ['test_psth_classifier_', filename, '.mat']);
-                        check_variables(matfile, event_struct, unit_struct, pop_struct, pop_table, unit_table);
-                        save(matfile, 'pop_struct', 'unit_struct', 'pop_table', 'unit_table');
-                    catch ME
-                        handle_ME(ME, failed_path, filename);
-                    end
-                end
-
-                %% CSV set up
-                unit_csv_path = fullfile(original_path, 'unit_psth_classification_info.csv');
-                pop_csv_path = fullfile(original_path, 'population_psth_classification_info.csv');
-
-                export_csv(unit_csv_path, column_names, unit_config_info, unit_info);
-                export_csv(pop_csv_path, column_names, pop_config_info, pop_info);
-
-                fprintf('Finished PSTH classifier for %s. It took %s \n', ...
-                    animal_name, num2str(toc(classifier_start)));
+                batch_classify(animal_name, original_path, psth_path, 'classifier', '.mat', 'PSTH', 'format', ...
+                    config.boot_iterations, config.bootstrap_classifier, config.bin_size, ...
+                    config.pre_time, config.post_time);
             end
 
             %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -481,48 +415,48 @@ function [] = main()
             % %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
             % %             PCA            %%
             % %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-            % if config.pc_analysis
-            %     pca_start = tic;
-            %     [parsed_files, pca_path, failed_path] = create_dir(parsed_path, 'pca', '.mat');
+            if config.pc_analysis
+                pca_start = tic;
+                [parsed_files, pca_path, failed_path] = create_dir(parsed_path, 'pca', '.mat');
 
-            %     fprintf('PCA for %s \n', animal_name);
-            %     %% Goes through all the files and performs pca according to the parameters set in config
-            %     for file_index = 1:length(parsed_files)
-            %         try
-            %             %% pull info from filename and set up file path for analysis
-            %             file = fullfile(parsed_path, parsed_files(file_index).name);
-            %             [~, filename, ~] = fileparts(file);
-            %             load(file, 'event_ts', 'labeled_neurons');
-            %             %% Check variables to make sure they are not empty
-            %             empty_vars = check_variables(file, event_ts, labeled_neurons);
-            %             if empty_vars
-            %                 continue
-            %             end
+                fprintf('PCA for %s \n', animal_name);
+                %% Goes through all the files and performs pca according to the parameters set in config
+                for file_index = 1:length(parsed_files)
+                    try
+                        %% pull info from filename and set up file path for analysis
+                        file = fullfile(parsed_path, parsed_files(file_index).name);
+                        [~, filename, ~] = fileparts(file);
+                        load(file, 'event_ts', 'labeled_neurons');
+                        %% Check variables to make sure they are not empty
+                        empty_vars = check_variables(file, event_ts, labeled_neurons);
+                        if empty_vars
+                            continue
+                        end
 
-            %             %% PCA
-            %             [pca_struct, pca_results, event_ts, event_struct, labeled_neurons] = calc_pca(labeled_neurons, event_ts,  ...
-            %                 config.bin_size, config.pre_time, config.post_time, config.wanted_events, ...
-            %                 config.trial_range, config.trial_lower_bound);
+                        %% PCA
+                        [pca_struct, pca_results, event_ts, event_struct, labeled_neurons] = calc_pca(labeled_neurons, event_ts,  ...
+                            config.bin_size, config.pre_time, config.post_time, config.wanted_events, ...
+                            config.trial_range, config.trial_lower_bound);
 
-            %             %% Saving the file
-            %             matfile = fullfile(pca_path, ['pc_analysis', filename, '.mat']);
-            %             check_variables(matfile, pca_struct, event_struct);
-            %             save(matfile, 'pca_struct', 'event_struct', 'labeled_neurons', 'event_ts', 'pca_results');
-            %         catch ME
-            %             handle_ME(ME, failed_path, filename);
-            %         end
-            %     end
-            %     fprintf('Finished PCA for %s. It took %s \n', ...
-            %         animal_name, num2str(toc(pca_start)));
+                        %% Saving the file
+                        matfile = fullfile(pca_path, ['pc_analysis', filename, '.mat']);
+                        check_variables(matfile, pca_struct, event_struct);
+                        save(matfile, 'pca_struct', 'event_struct', 'labeled_neurons', 'event_ts', 'pca_results');
+                    catch ME
+                        handle_ME(ME, failed_path, filename);
+                    end
+                end
+                fprintf('Finished PCA for %s. It took %s \n', ...
+                    animal_name, num2str(toc(pca_start)));
 
-            %     batch_graph(animal_name, pca_path, 'pc_graphs', '.mat', 'pc', 'analysis', ...
-            %         total_bins, config.bin_size, config.pre_time, 0, rf_path, ...
-            %         config.make_region_subplot, config.sub_columns);
+                batch_graph(animal_name, pca_path, 'pc_graphs', '.mat', 'pc', 'analysis', ...
+                    total_bins, config.bin_size, config.pre_time, 0, rf_path, ...
+                    config.make_region_subplot, config.sub_columns);
 
-            %     batch_classify(animal_name, original_path, pca_path, 'classifier', '.mat', 'pc', 'analysis', ...
-            %         config.boot_iterations, config.bootstrap_classifier, config.bin_size, ...
-            %         config.pre_time, config.post_time);
-            % end
+                batch_classify(animal_name, original_path, pca_path, 'classifier', '.mat', 'pc', 'analysis', ...
+                    config.boot_iterations, config.bootstrap_classifier, config.bin_size, ...
+                    config.pre_time, config.post_time);
+            end
 
             %% Trajectories
             %% TODO implement

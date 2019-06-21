@@ -40,22 +40,8 @@ function [pca_struct, pca_results, event_ts, event_struct, labeled_pcs] = calc_p
             pc_names{pc_index} = ['pc_', num2str(pc_index)];
         end
         labeled_pcs.(region)(:, 1) = pc_names;
+        event_struct.(region) = split_relative_response(pca_relative_response, pc_names, all_events, bin_size, pre_time, post_time);
         event_struct.(region).relative_response = pca_relative_response;
         event_struct.(region).psth = sum(pca_relative_response, 1) / tot_trials;
-
-        %% Split pca relative response into events
-        event_start = 1;
-        event_end = length(all_events{1, 2});
-        for event_index = 1:length(all_events(:, 1))
-            event = all_events{event_index, 1};
-            tot_event_trials = length(all_events{event_index, 2});
-            event_relative_response = pca_relative_response(event_start:event_end, :);
-            event_struct.(region).(event).relative_response = event_relative_response;
-            event_struct.(region).(event).psth = sum(event_relative_response, 1) / tot_event_trials;
-            event_start = event_end + 1;
-            event_end = event_end + tot_event_trials;
-        end
-
-        %% Recreate labeled_neurons to contain the transformed information
     end
 end
