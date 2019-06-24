@@ -43,6 +43,8 @@ function [parsed_path] = parser(dir_path, animal_name, total_trials, total_event
                         [~, channel_timestamps] = plx_ts(file, channel_i, unit_i);
                         % channel_names is a char array
                         current_channel = channel_names(channel_i, :);
+                        split_channel = strsplit(current_channel, ' ');
+                        current_channel = split_channel{1};
                         current_channel = deblank(current_channel);
                         current_subchan = subchan{unit_i + 1};
                         complete_channel_name = [current_channel, current_subchan];
