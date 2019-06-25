@@ -436,10 +436,10 @@ function [] = main()
                         %% PCA
                         [pca_struct, pca_results, event_ts, event_struct, labeled_neurons] = calc_pca(labeled_neurons, event_ts,  ...
                             config.bin_size, config.pre_time, config.post_time, config.wanted_events, ...
-                            config.trial_range, config.trial_lower_bound);
+                            config.trial_range, config.trial_lower_bound, config.feature_filter, config.feature_value);
 
                         %% Saving the file
-                        matfile = fullfile(pca_path, ['pc_analysis', filename, '.mat']);
+                        matfile = fullfile(pca_path, ['pc_analysis_', filename, '.mat']);
                         check_variables(matfile, pca_struct, event_struct);
                         save(matfile, 'pca_struct', 'event_struct', 'labeled_neurons', 'event_ts', 'pca_results');
                     catch ME
