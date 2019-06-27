@@ -16,7 +16,7 @@ function [pca_struct, all_events, event_ts] = create_pca_input(labeled_neurons, 
         region = unique_regions{region_index};
         region_neurons = [labeled_neurons.(region)(:,1), labeled_neurons.(region)(:,4)];
         [tot_region_neurons, ~] = size(region_neurons);
-        region_pca_input = nan((tot_bins * tot_trials), tot_region_neurons);
+        mnts = nan((tot_bins * tot_trials), tot_region_neurons);
         for neuron_index = 1:tot_region_neurons
             neuron_ts = region_neurons{neuron_index, 2};
             neuron_response = nan((tot_bins * tot_trials), 1);
@@ -30,10 +30,10 @@ function [pca_struct, all_events, event_ts] = create_pca_input(labeled_neurons, 
                 trial_start = trial_start + tot_bins;
                 trial_end = trial_end + tot_bins;
             end
-            region_pca_input(:, neuron_index) = neuron_response;
+            mnts(:, neuron_index) = neuron_response;
         end
-        z_region_pca_input = zscore(region_pca_input);
-        pca_struct.(region).region_pca_input = region_pca_input;
-        pca_struct.(region).z_region_pca_input = z_region_pca_input;
+        z_mnts = zscore(mnts);
+        pca_struct.(region).mnts = mnts;
+        pca_struct.(region).z_mnts = z_mnts;
     end
 end
