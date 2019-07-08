@@ -434,14 +434,14 @@ function [] = main()
                         end
 
                         %% Format mnts
-                        [mnts_struct, event_ts, event_strings] = format_mnts(event_ts, ...
+                        [mnts_struct, event_ts, event_strings, labeled_neurons] = format_mnts(event_ts, ...
                             labeled_neurons, config.bin_size, config.pre_time, config.post_time, config.wanted_events, ...
                             config.trial_range, config.trial_lower_bound);
 
                         %% Saving outputs
                         matfile = fullfile(mnts_path, ['mnts_format_', filename, '.mat']);
                         %% Check PSTH output to make sure there are no issues with the output
-                        empty_vars = check_variables(matfile, mnts_struct, event_ts, event_strings);
+                        empty_vars = check_variables(matfile, mnts_struct, event_ts, event_strings, labeled_neurons);
                         if empty_vars
                             continue
                         end
@@ -473,6 +473,8 @@ function [] = main()
                         %% pull info from filename and set up file path for analysis
                         file = fullfile(mnts_path, mnts_files(file_index).name);
                         [~, filename, ~] = fileparts(file);
+                        filename = erase(filename, 'mnts_format_');
+                        filename = erase(filename, 'mnts.format.');
                         load(file, 'event_ts', 'labeled_neurons', 'mnts_struct');
                         %% Check variables to make sure they are not empty
                         empty_vars = check_variables(file, event_ts, labeled_neurons, mnts_struct);
@@ -489,6 +491,7 @@ function [] = main()
                         matfile = fullfile(pca_path, ['pc_analysis_', filename, '.mat']);
                         check_variables(matfile, event_struct, pca_results, labeled_neurons);
                         save(matfile, 'event_struct', 'labeled_neurons', 'event_ts', 'pca_results');
+                        clear('event_struct', 'labeled_neurons', 'event_ts', 'pca_results');
                     catch ME
                         handle_ME(ME, failed_path, filename);
                     end
@@ -496,11 +499,11 @@ function [] = main()
                 fprintf('Finished PCA for %s. It took %s \n', ...
                     animal_name, num2str(toc(pca_start)));
 
-                batch_graph(animal_name, pca_path, 'pc_graphs', '.mat', 'pc', 'analysis', ...
+                batch_graph(animal_name, pca_path, 'pc_graphs', '.mat', 'mnts', 'format', ...
                     total_bins, config.bin_size, config.pre_time, 0, rf_path, ...
                     config.make_region_subplot, config.sub_columns);
 
-                batch_classify(animal_name, original_path, pca_path, 'classifier', '.mat', 'pc', 'analysis', ...
+                batch_classify(animal_name, original_path, pca_path, 'classifier', '.mat', 'mnts', 'format', ...
                     config.boot_iterations, config.bootstrap_classifier, config.bin_size, ...
                     config.pre_time, config.post_time);
             end
@@ -508,47 +511,51 @@ function [] = main()
             %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
             %             ICA            %%
             %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-            % if config.ic_analysis
-            %     ica_start = tic;
-            %     %TODO add option to go from raw
-            %     [pca_files, ica_path, failed_path] = create_dir(pca_path, 'ica', '.mat');
-            %     fprintf('ICA for %s \n', animal_name);
-            %     %% Goes through all the files and performs pca according to the parameters set in config
-            %     for file_index = 1:length(pca_files)
-            %         try
-            %             %% pull info from filename and set up file path for analysis
-            %             file = fullfile(pca_path, pca_files(file_index).name);
-            %             [~, filename, ~] = fileparts(file);
-            %             load(file, 'event_ts', 'labeled_neurons', 'event_struct');
-            %             %% Check variables to make sure they are not empty
-            %             empty_vars = check_variables(file, event_ts, labeled_neurons, event_struct);
-            %             if empty_vars
-            %                 continue
-            %             end
+            if config.ic_analysis
+                ica_start = tic;
+                [mnts_files, ica_path, failed_path] = create_dir(mnts_path, 'ica', '.mat');
+                fprintf('ICA for %s \n', animal_name);
+                %% Goes through all the files and performs pca according to the parameters set in config
+                for file_index = 1:length(mnts_files)
+                    try
+                        %% pull info from filename and set up file path for analysis
+                        file = fullfile(mnts_path, mnts_files(file_index).name);
+                        [~, filename, ~] = fileparts(file);
+                        filename = erase(filename, 'mnts_format_');
+                        filename = erase(filename, 'mnts.format.');
+                        load(file, 'event_ts', 'labeled_neurons', 'mnts_struct');
+                        %% Check variables to make sure they are not empty
+                        empty_vars = check_variables(file, event_ts, labeled_neurons, mnts_struct);
+                        if empty_vars
+                            continue
+                        end
 
-            %             %% PCA
-            %             [labeled_neurons, event_struct] = calc_ica(config.pre_time, config.post_time, config.bin_size, ...
-            %                 labeled_neurons, event_struct, event_ts);
+                        %% ICA
+                        [labeled_neurons, event_struct] = calc_ica(labeled_neurons, ...
+                            mnts_struct, config.pre_time, config.post_time, config.bin_size);
 
-            %             %% Saving the file
-            %             matfile = fullfile(ica_path, ['ic_analysis_', filename, '.mat']);
-            %             check_variables(matfile, labeled_neurons, event_struct);
-            %             save(matfile, 'event_struct', 'labeled_neurons', 'event_ts');
-            %         catch ME
-            %             handle_ME(ME, failed_path, filename);
-            %         end
-            %     end
-            %     fprintf('Finished ICA for %s. It took %s \n', ...
-            %         animal_name, num2str(toc(ica_start)));
+                        %% Saving the file
+                        matfile = fullfile(ica_path, ['ic_analysis_', filename, '.mat']);
+                        empty_vars = check_variables(matfile, labeled_neurons, event_struct);
+                        if empty_vars
+                            continue
+                        end
+                        save(matfile, 'event_struct', 'labeled_neurons', 'event_ts');
+                    catch ME
+                        handle_ME(ME, failed_path, filename);
+                    end
+                end
+                fprintf('Finished ICA for %s. It took %s \n', ...
+                    animal_name, num2str(toc(ica_start)));
 
-            %     batch_graph(animal_name, ica_path, 'ic_graphs', '.mat', 'ic', 'analysis', ...
-            %         total_bins, config.bin_size, config.pre_time, 0, rf_path, ...
-            %         config.make_region_subplot, config.sub_columns);
+                batch_graph(animal_name, ica_path, 'ic_graphs', '.mat', 'ic', 'analysis', ...
+                    total_bins, config.bin_size, config.pre_time, 0, rf_path, ...
+                    config.make_region_subplot, config.sub_columns);
 
-            %     batch_classify(animal_name, original_path, ica_path, 'classifier', '.mat', 'ic', 'analysis', ...
-            %         config.boot_iterations, config.bootstrap_classifier, config.bin_size, ...
-            %         config.pre_time, config.post_time);
-            % end
+                batch_classify(animal_name, original_path, ica_path, 'classifier', '.mat', 'ic', 'analysis', ...
+                    config.boot_iterations, config.bootstrap_classifier, config.bin_size, ...
+                    config.pre_time, config.post_time);
+            end
 
             %% Trajectories
             %% TODO implement
