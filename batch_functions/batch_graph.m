@@ -30,8 +30,8 @@ function [] = batch_graph(animal_name, data_path, dir_name, search_ext, filename
                 %% Load receptive field data
                 rf_file = [rf_path, '/', files(file_index).name];
                 [rf_path, rf_filename, ~] = fileparts(rf_file);
-                rf_filename = strrep(rf_filename, 'PSTH', 'REC');
-                rf_filename = strrep(rf_filename, 'format', 'FIELD');
+                rf_filename = strrep(rf_filename, filename_substring_one, 'rec');
+                rf_filename = strrep(rf_filename, filename_substring_two, 'field');
                 rf_matfile = fullfile(rf_path, [rf_filename, '.mat']);
                 load(rf_matfile, 'sig_neurons', 'non_sig_neurons');
                 graph_PSTH(day_path, event_struct, labeled_neurons, sig_neurons, non_sig_neurons, ...

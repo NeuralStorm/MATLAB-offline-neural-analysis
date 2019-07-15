@@ -228,71 +228,8 @@ function [] = main()
             %%  Receptive Field Analysis  %%
             %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
             if config.rf_analysis
-                %% Make sure rf analysis has enough pre time to determine threshold
-                if abs(config.pre_time) <= 0.050
-                    error('Pre time ~= 0 for receptive field analysis. Create psth with pre time > 0.');
-                end
-
-                rf_start = tic;
-
-                %% Rec field general set up
-                [psth_files, rf_path, failed_path] = create_dir(psth_path, 'receptive_field_analysis', '.mat');
-                general_column_names = {'animal', 'group', 'date', 'record_session', 'pre_time', 'post_time', ...
-                    'bin_size', 'sig_check', 'sig_bins', 'span', 'threshold_scale'};
-                analysis_column_names = {'region', 'channel', 'event', 'significant', ...
-                    'background_rate', 'background_std', 'threshold', 'first_latency', 'last_latency', 'duration', ...
-                    'peak_latency', 'peak_response', 'corrected_peak', 'response_magnitude', 'corrected_response_magnitude', ...
-                    'total_sig_events', 'principal_event', 'norm_magnitude', 'notes'};
-                column_names = [general_column_names, analysis_column_names];
-
-                fprintf('Receptive field analysis for %s \n', animal_name);
-                all_neurons = [];
-                general_info = table;
-                for file_index = 1:length(psth_files)
-                    try
-                        %% pull info from filename and set up file path for analysis
-                        file = fullfile(psth_path, psth_files(file_index).name);
-                        [~, filename, ~] = fileparts(file);
-                        filename = erase(filename, 'PSTH_format_');
-                        filename = erase(filename, 'PSTH.format.');
-                        [animal_id, experimental_group, ~, session_num, session_date, ~] = get_filename_info(filename);
-
-                        %% Load needed variables from psth and does the receptive field analysis
-                        load(file, 'labeled_neurons', 'event_struct');
-                        %% Check psth variables to make sure they are not empty
-                        empty_vars = check_variables(file, event_struct, labeled_neurons);
-                        if empty_vars
-                            continue
-                        end
-
-                        [sig_neurons, non_sig_neurons] = receptive_field_analysis( ...
-                            labeled_neurons, event_struct, config.bin_size, config.threshold_scale, ...
-                            config.sig_check, config.sig_bins, config.span, analysis_column_names);
-
-                        %% Capture data to save to csv from current day
-                        session_neurons = [sig_neurons; non_sig_neurons];
-                        current_general_info = [{animal_id}, {experimental_group}, session_date, ...
-                            session_num, config.pre_time, config.post_time, config.bin_size, ...
-                            config.sig_check, config.sig_bins, config.span, config.threshold_scale];
-                        [general_info, all_neurons] = ...
-                            concat_tables(general_column_names, general_info, current_general_info, all_neurons, session_neurons);
-
-                        %% Save receptive field matlab output
-                        % Does not check if variables are empty since there may/may not be significant responses in a set
-                        matfile = fullfile(rf_path, ['rec_field_', filename, '.mat']);
-                        save(matfile, 'labeled_neurons', 'sig_neurons', 'non_sig_neurons');
-                        export_params(rf_path, 'receptive_field_analysis', rf_path, failed_path, ...
-                            animal_name, config);
-                    catch ME
-                        handle_ME(ME, failed_path, filename);
-                    end
-                end
-                %% CSV export set up
-                csv_path = fullfile(original_path, 'receptive_field_results.csv');
-                export_csv(csv_path, column_names, general_info, all_neurons);
-
-                fprintf('Finished receptive field analysis for %s. It took %s \n', ...
-                    animal_name, num2str(toc(rf_start)));
+                rf_path = batch_recfield(animal_name, original_path, psth_path, 'receptive_field_analysis', ...
+                    '.mat', 'PSTH', 'format', config);
             else
                 rf_path = [psth_path, '/receptive_field_analysis'];
             end
@@ -499,11 +436,11 @@ function [] = main()
                 fprintf('Finished PCA for %s. It took %s \n', ...
                     animal_name, num2str(toc(pca_start)));
 
-                % pc_rf_path = batch_recfield(animal_name, original_path, pca_path, 'receptive_field_analysis', ...
-                %     '.mat', 'pc', 'analysis', config);
+                pc_rf_path = batch_recfield(animal_name, original_path, pca_path, 'receptive_field_analysis', ...
+                    '.mat', 'pc', 'analysis', config);
 
                 batch_graph(animal_name, pca_path, 'pc_graphs', '.mat', 'pc', 'analysis', ...
-                    total_bins, config.bin_size, config.pre_time, 0, rf_path, ...
+                    total_bins, config.bin_size, config.pre_time, config.rf_analysis, pc_rf_path, ...
                     config.make_region_subplot, config.sub_columns);
 
                 batch_classify(animal_name, original_path, pca_path, 'classifier', '.mat', 'mnts', 'format', ...
@@ -554,11 +491,12 @@ function [] = main()
                 fprintf('Finished ICA for %s. It took %s \n', ...
                     animal_name, num2str(toc(ica_start)));
 
-                % ic_rf_path = batch_recfield(animal_name, original_path, ica_path, 'receptive_field_analysis', ...
-                %     '.mat', 'ic', 'analysis', config);
+                ic_rf_path = batch_recfield(animal_name, original_path, ica_path, 'receptive_field_analysis', ...
+                    '.mat', 'ic', 'analysis', config);
+                %TODO fix rf path
 
                 batch_graph(animal_name, ica_path, 'ic_graphs', '.mat', 'ic', 'analysis', ...
-                    total_bins, config.bin_size, config.pre_time, 0, rf_path, ...
+                    total_bins, config.bin_size, config.pre_time, config.rf_analysis, ic_rf_path, ...
                     config.make_region_subplot, config.sub_columns);
 
                 batch_classify(animal_name, original_path, ica_path, 'classifier', '.mat', 'ic', 'analysis', ...
