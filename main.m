@@ -361,7 +361,7 @@ function [] = main()
                 csv_path = fullfile(original_path, 'norm_var.csv');
                 export_csv(csv_path, column_names, general_info, all_neurons);
 
-                fprintf('Finished receptive field analysis for %s. It took %s \n', ...
+                fprintf('Finished normalized variance analysis for %s. It took %s \n', ...
                     animal_name, num2str(toc(nv_start)));
             end
 
@@ -499,7 +499,10 @@ function [] = main()
                 fprintf('Finished PCA for %s. It took %s \n', ...
                     animal_name, num2str(toc(pca_start)));
 
-                batch_graph(animal_name, pca_path, 'pc_graphs', '.mat', 'mnts', 'format', ...
+                % pc_rf_path = batch_recfield(animal_name, original_path, pca_path, 'receptive_field_analysis', ...
+                %     '.mat', 'pc', 'analysis', config);
+
+                batch_graph(animal_name, pca_path, 'pc_graphs', '.mat', 'pc', 'analysis', ...
                     total_bins, config.bin_size, config.pre_time, 0, rf_path, ...
                     config.make_region_subplot, config.sub_columns);
 
@@ -531,22 +534,28 @@ function [] = main()
                         end
 
                         %% ICA
-                        [labeled_neurons, event_struct] = calc_ica(labeled_neurons, ...
-                            mnts_struct, config.pre_time, config.post_time, config.bin_size);
+                        [labeled_neurons, event_struct, ica_results] = ...
+                            calc_ica(labeled_neurons, mnts_struct, config.pre_time, config.post_time, ...
+                            config.bin_size, config.ic_pc, config.extended, config.sphering, ...
+                            config.anneal, config.anneal_deg, config.bias, config.momentum, ...
+                            config.max_steps, config.stop, config.verbose);
 
                         %% Saving the file
                         matfile = fullfile(ica_path, ['ic_analysis_', filename, '.mat']);
-                        empty_vars = check_variables(matfile, labeled_neurons, event_struct);
+                        empty_vars = check_variables(matfile, labeled_neurons, event_struct, ica_results);
                         if empty_vars
                             continue
                         end
-                        save(matfile, 'event_struct', 'labeled_neurons', 'event_ts');
+                        save(matfile, 'event_struct', 'labeled_neurons', 'event_ts', 'ica_results');
                     catch ME
                         handle_ME(ME, failed_path, filename);
                     end
                 end
                 fprintf('Finished ICA for %s. It took %s \n', ...
                     animal_name, num2str(toc(ica_start)));
+
+                % ic_rf_path = batch_recfield(animal_name, original_path, ica_path, 'receptive_field_analysis', ...
+                %     '.mat', 'ic', 'analysis', config);
 
                 batch_graph(animal_name, ica_path, 'ic_graphs', '.mat', 'ic', 'analysis', ...
                     total_bins, config.bin_size, config.pre_time, 0, rf_path, ...
