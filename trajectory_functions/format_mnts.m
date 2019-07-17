@@ -35,7 +35,6 @@ function [mnts_struct, event_ts, event_strings, labeled_neurons] = format_mnts(e
                 trial_end = trial_end + tot_bins;
             end
             mnts(:, neuron_index) = neuron_response;
-
         end
 
         %% Find responses with no spikes and removes them to prevent NAN when z scored
@@ -44,10 +43,10 @@ function [mnts_struct, event_ts, event_strings, labeled_neurons] = format_mnts(e
         for col = 1:mnts_cols
             unique_response = unique(mnts(:, col));
             if length(unique_response) == 1
-                labeled_neurons.(region)(col, :) = [];
                 remove_units = [remove_units; col];
             end
         end
+        labeled_neurons.(region)(remove_units, :) = [];
         mnts(:, remove_units) = [];
 
         z_mnts = zscore(mnts);
