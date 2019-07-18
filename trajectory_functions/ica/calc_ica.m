@@ -1,6 +1,6 @@
 function [labeled_ics, event_struct, ica_results] = calc_ica(labeled_neurons, ...
         mnts_struct, pre_time, post_time, bin_size, tot_pcs, extended, ...
-        sphering, anneal, anneal_deg, bias_switch, momentum, max_steps, stop_train, verbose)
+        sphering, anneal, anneal_deg, bias_switch, momentum, max_steps, stop_train, rnd_reset verbose)
     %TODO add option to go straight from relative response to ica with no PCA middleman
     %TODO dont forget to z score raw input
     % TODO add check to make sure ica input has enough data
@@ -32,17 +32,30 @@ function [labeled_ics, event_struct, ica_results] = calc_ica(labeled_neurons, ..
         else
             pcs = tot_pcs;
         end
+
+        if strcmpi(stop_train, 'default') && tot_channels < 33
+            stop_train = .000001;
+        else
+            stop_train = .0000001;
+        end
+
+        if strcmpi(anneal, 'default') && extended == 0
+            anneal = 0.90;
+        elseif strcmpi(anneal, 'default') && extended ~= 0
+            anneal = 0.98;
+        end
+
         %TODO make issue for pca in runica for EEGlab
         if pcs == 0
             [ica_weights, ica_sphere, compvars, bias, signs, learning_rates, activations] = ...
                 runica(ica_input, 'extended', extended, 'sphering', sphering, ...
                 'anneal', anneal, 'annealdeg', anneal_deg, 'bias', bias_switch, 'momentum', momentum, ...
-                'maxsteps', max_steps, 'stop', stop_train, 'verbose', verbose);
+                'maxsteps', max_steps, 'stop', stop_train, 'rndreset', rnd_reset, 'verbose', verbose);
         else
             [ica_weights, ica_sphere, compvars, bias, signs, learning_rates, activations] = ...
                 runica(ica_input, 'pca', pcs, 'extended', extended, 'sphering', sphering, ...
                 'anneal', anneal, 'annealdeg', anneal_deg, 'bias', bias_switch, 'momentum', momentum, ...
-                'maxsteps', max_steps, 'stop', stop_train, 'verbose', verbose);
+                'maxsteps', max_steps, 'stop', stop_train, 'rndreset', rnd_reset, 'verbose', verbose);
         end
         coeff = (ica_weights * ica_sphere)'; % Double transpose should properly line up data?
         weighted_mnts = ica_input' * coeff;
