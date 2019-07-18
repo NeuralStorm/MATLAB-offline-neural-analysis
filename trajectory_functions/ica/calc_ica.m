@@ -1,6 +1,6 @@
 function [labeled_ics, event_struct, ica_results] = calc_ica(labeled_neurons, ...
         mnts_struct, pre_time, post_time, bin_size, tot_pcs, extended, ...
-        sphering, anneal, anneal_deg, bias_switch, momentum, max_steps, stop_train, rnd_reset verbose)
+        sphering, anneal, anneal_deg, bias_switch, momentum, max_steps, stop_train, rnd_reset, verbose)
     %TODO add option to go straight from relative response to ica with no PCA middleman
     %TODO dont forget to z score raw input
     % TODO add check to make sure ica input has enough data
