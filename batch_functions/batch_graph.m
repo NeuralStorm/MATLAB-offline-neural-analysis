@@ -10,7 +10,7 @@ function [] = batch_graph(animal_name, data_path, dir_name, search_ext, filename
             %% pull info from filename and set up file path for analysis
             file = fullfile(data_path, files(file_index).name);
             [~, filename, ~] = fileparts(file);
-            filename = erase(filename, [filename_substring_one, '_', filename_substring_two, '_']);
+            filename = erase(filename, [filename_substring_one, '.', filename_substring_two, '.']);
             filename = erase(filename, [filename_substring_one, '_', filename_substring_two, '_']);
             [~, ~, ~, session_num, ~, ~] = get_filename_info(filename);
             load(file, 'event_struct', 'labeled_neurons');

@@ -25,7 +25,7 @@ function [rf_path] = batch_recfield(animal_name, original_path, data_path, dir_n
             %% pull info from filename and set up file path for analysis
             file = fullfile(data_path, files(file_index).name);
             [~, filename, ~] = fileparts(file);
-            filename = erase(filename, [filename_substring_one, '_', filename_substring_two, '_']);
+            filename = erase(filename, [filename_substring_one, '.', filename_substring_two, '.']);
             filename = erase(filename, [filename_substring_one, '_', filename_substring_two, '_']);
             [animal_id, experimental_group, ~, session_num, session_date, ~] = get_filename_info(filename);
 

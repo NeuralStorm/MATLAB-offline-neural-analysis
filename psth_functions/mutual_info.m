@@ -18,8 +18,8 @@ function [prob_struct, mi_results] = mutual_info(event_struct, labeled_neurons)
         % Pre-allocate fields
         for unit = 1:length(neuron_names)
             current_unit = neuron_names{unit};
-            prob_struct.(current_region).([current_unit, '_unique_bins']) = [];
-            prob_struct.(current_region).([current_unit, '_unique_timing']) = [];
+            prob_struct.(current_region).(current_unit).unique_bins = [];
+            prob_struct.(current_region).(current_unit).unique_timing = [];
         end
 
         %% Iterate through event keys
@@ -32,7 +32,7 @@ function [prob_struct, mi_results] = mutual_info(event_struct, labeled_neurons)
             %% Iterate through channel keys
             for unit = 1:length(neuron_names)
                 current_unit = neuron_names{unit};
-                event_relative_response = event_struct.(current_region).(current_event).relative_response;
+                event_relative_response = event_struct.(current_region).(current_event).(current_unit).relative_response;
 
                 %% Count probability
                 bin_counts = sum(event_relative_response, 2);
@@ -71,10 +71,10 @@ function [prob_struct, mi_results] = mutual_info(event_struct, labeled_neurons)
                     current_prob_timing;
                 prob_struct.(current_region).([current_unit, '_', current_event, '_overall_probability_timing']) = ...
                     [unique_timings, current_prob_timing];
-                prob_struct.(current_region).([current_unit, '_unique_bins']) = ...
-                    unique([prob_struct.(current_region).([current_unit, '_unique_bins']); unique_bin_counts]);
-                prob_struct.(current_region).([current_unit, '_unique_timing']) = ...
-                    unique([prob_struct.(current_region).([current_unit, '_unique_timing']); unique_timings], 'rows');
+                prob_struct.(current_region).(current_unit).unique_bins = ...
+                    unique([prob_struct.(current_region).(current_unit).unique_bins; unique_bin_counts]);
+                prob_struct.(current_region).(current_unit).unique_timing = ...
+                    unique([prob_struct.(current_region).(current_unit).unique_timing; unique_timings], 'rows');
 
                 %% Saves results
                 mi_results.(current_region).(current_unit).([current_event, '_count_entropy']) = count_entropy;
@@ -93,8 +93,8 @@ function [prob_struct, mi_results] = mutual_info(event_struct, labeled_neurons)
         combined_bin_mutual_info = 0;
         for unit = 1:length(neuron_names)
             current_unit = neuron_names{unit};
-            prob_count_response = zeros(length(prob_struct.(current_region).([current_unit, '_unique_bins'])), 1);
-            prob_timing_response = zeros(length(prob_struct.(current_region).([current_unit, '_unique_timing'])), 1);
+            prob_count_response = zeros(length(prob_struct.(current_region).(current_unit).unique_bins), 1);
+            prob_timing_response = zeros(length(prob_struct.(current_region).(current_unit).unique_timing), 1);
             
             %% Calculate probability of bin and timing for each unit
             for event = 1:length(event_strings)
@@ -104,7 +104,7 @@ function [prob_struct, mi_results] = mutual_info(event_struct, labeled_neurons)
                     prob_struct.(current_region).([current_unit, '_', current_event, '_overall_probability_count']);
                 %% This finds the indices of the probabilities for the unique bin combinations calculated above
                 [~, unique_bin_indices, prob_count_indices] = ...
-                    intersect(prob_struct.(current_region).([current_unit, '_unique_bins']), current_prob_count(:,1));
+                    intersect(prob_struct.(current_region).(current_unit).unique_bins, current_prob_count(:,1));
                 prob_count_response(unique_bin_indices) = prob_count_response(unique_bin_indices) + ...
                     prob_struct.(current_region).([current_event, '_prob']) * current_prob_count(prob_count_indices, end);
                 
@@ -112,7 +112,7 @@ function [prob_struct, mi_results] = mutual_info(event_struct, labeled_neurons)
                 current_prob_timing = ...
                     prob_struct.(current_region).([current_unit, '_', current_event, '_overall_probability_timing']);
                 [~, unique_timing_indices, prob_timing_indices] = ...
-                    intersect(prob_struct.(current_region).([current_unit, '_unique_timing']), ...
+                    intersect(prob_struct.(current_region).(current_unit).unique_timing, ...
                     current_prob_timing(:,1:end-1), 'rows');
                 prob_timing_response(unique_timing_indices) = prob_timing_response(unique_timing_indices) + ...
                     prob_struct.(current_region).([current_event, '_prob']) * current_prob_timing(prob_timing_indices, end);
@@ -126,7 +126,7 @@ function [prob_struct, mi_results] = mutual_info(event_struct, labeled_neurons)
                 current_prob_count = ...
                     prob_struct.(current_region).([current_unit, '_', current_event, '_overall_probability_count']);
                 [~, prob_count_indices, current_prob_count_indices] = ...
-                    intersect(prob_struct.(current_region).([current_unit, '_unique_bins']), current_prob_count(:,1));
+                    intersect(prob_struct.(current_region).(current_unit).unique_bins, current_prob_count(:,1));
                 count_mutual_info = count_mutual_info + prob_struct.(current_region).([current_event, '_prob']) * ...
                     sum(current_prob_count(current_prob_count_indices, end) .* ...
                     log2(current_prob_count(current_prob_count_indices, end) ./ prob_count_response(prob_count_indices)));
@@ -135,7 +135,7 @@ function [prob_struct, mi_results] = mutual_info(event_struct, labeled_neurons)
                 current_prob_timing = ...
                     prob_struct.(current_region).([current_unit, '_', current_event, '_overall_probability_timing']);
                 [~, prob_timing_indices, current_prob_timing_indices] = ...
-                    intersect(prob_struct.(current_region).([current_unit, '_unique_timing']), ...
+                    intersect(prob_struct.(current_region).(current_unit).unique_timing, ...
                     current_prob_timing(:,1:end-1), 'rows');
                 timing_mutual_info = timing_mutual_info + prob_struct.(current_region).([current_event, '_prob']) * ...
                     sum(current_prob_timing(current_prob_timing_indices, end) .* ...
