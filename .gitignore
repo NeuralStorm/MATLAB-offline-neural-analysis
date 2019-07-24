@@ -8,3 +8,5 @@
 Animals/*
 .vscode/*
 NeuroToolbox/*
+.DS_Store
+.idea/
