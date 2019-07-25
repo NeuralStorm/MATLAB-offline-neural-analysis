@@ -1,5 +1,7 @@
 function [event_struct] = split_relative_response(relative_response, col_labels, ...
         all_events, bin_size, pre_time, post_time)
+
+    %% Create window and edges for PSTH
     event_struct = struct;
     event_window = -(abs(pre_time)):bin_size:(abs(post_time));
     tot_bins = length(event_window) - 1;
@@ -19,17 +21,23 @@ function [event_struct] = split_relative_response(relative_response, col_labels,
     event_start = 1;
     event_end = length(all_events{1, 2});
     for event_index = 1:tot_events
+        % Event info
         event = all_events{event_index, 1};
         tot_event_trials = length(all_events{event_index, 2});
+        %% Relative response has format of T X (N * B) and assumes that the trials
+        % are grouped by event and organized alphabetically (ie: 1, 3, 4, etc)
         event_relative_response = relative_response(event_start:event_end, :);
         current_psth = sum(event_relative_response, 1) / tot_event_trials;
         [pre_time_activity, post_time_activity] = split_psth(current_psth, pre_time, pre_time_bins, post_time_bins);
+
+        %% Store relative response in event struct
         event_struct.(event).norm_pre_time_activity = pre_time_activity;
         event_struct.(event).norm_post_time_activity = post_time_activity;
         event_struct.(event).relative_response = event_relative_response;
         event_struct.(event).psth = current_psth;
         event_start = event_end + 1;
         if event_index + 1 < tot_events
+            % Check to make sure event index is not pass total events
             event_end = event_end + length(all_events{event_index + 1, 2});
         end
         %% Split columns in relative response

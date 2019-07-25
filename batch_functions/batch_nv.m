@@ -42,6 +42,7 @@ function [] = batch_nv(animal_name, original_path, data_path, dir_name, ...
 
             %% Save analysis results
             matfile = fullfile(nv_path, ['NV_analysis_', filename, '.mat']);
+            check_variables(matfile, labeled_neurons, neuron_activity);
             save(matfile, 'labeled_neurons', 'neuron_activity');
         catch ME
             handle_ME(ME, failed_path, filename);
