@@ -12,7 +12,7 @@ function [mnts_struct, event_ts, event_strings, labeled_neurons] = format_mnts(e
     mnts_struct.all_events = all_events;
 
     %% Organize event_ts to be in chronological order by event label
-    event_ts = sort(event_ts);
+    event_ts = sortrows(event_ts);
     tot_trials = length(event_ts(:, 1));
 
     unique_regions = fieldnames(labeled_neurons);
