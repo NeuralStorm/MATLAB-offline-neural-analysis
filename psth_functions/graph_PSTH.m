@@ -42,14 +42,18 @@ function [] = graph_PSTH(save_path, event_struct, labeled_neurons, sig_neurons, 
                 if rf_analysis
                     %% Plot first & last bin latency and threshold for significant neurons
                     % otherwise plots threshold on non significant neurons
-                    if ~isempty(sig_neurons) && ~isempty(sig_neurons.channel(strcmpi(sig_neurons.channel, current_neuron_name) & ...
-                        strcmpi(sig_neurons.event, current_event)))
-                            event_threshold = sig_neurons.threshold(strcmpi(sig_neurons.channel, current_neuron_name) & ...
-                                strcmpi(sig_neurons.event, current_event));
-                            event_first = sig_neurons.first_latency(strcmpi(sig_neurons.channel, current_neuron_name) & ...
-                                strcmpi(sig_neurons.event, current_event));
-                            event_last = sig_neurons.last_latency(strcmpi(sig_neurons.channel, current_neuron_name) & ...
-                                strcmpi(sig_neurons.event, current_event));
+                    if isempty(sig_neurons)
+                        continue
+                    end
+                    region_sig_neurons = sig_neurons(strcmpi(sig_neurons.region, current_region), :);
+                    if ~isempty(region_sig_neurons) && ~isempty(region_sig_neurons.channel(strcmpi(region_sig_neurons.channel, current_neuron_name) & ...
+                            strcmpi(region_sig_neurons.event, current_event)))
+                        event_threshold = region_sig_neurons.threshold(strcmpi(region_sig_neurons.channel, current_neuron_name) & ...
+                            strcmpi(region_sig_neurons.event, current_event));
+                        event_first = region_sig_neurons.first_latency(strcmpi(region_sig_neurons.channel, current_neuron_name) & ...
+                            strcmpi(region_sig_neurons.event, current_event));
+                        event_last = region_sig_neurons.last_latency(strcmpi(region_sig_neurons.channel, current_neuron_name) & ...
+                            strcmpi(region_sig_neurons.event, current_event));
                         %% Converts time to bin
                         event_first = ((event_first + abs(pre_time)) / bin_size);
                         event_last = ((event_last + abs(pre_time)) / bin_size);
@@ -74,11 +78,11 @@ function [] = graph_PSTH(save_path, event_struct, labeled_neurons, sig_neurons, 
                             hold off
                         end
                     elseif ~isempty(non_sig_neurons) && ~isempty(non_sig_neurons.channel(strcmpi(non_sig_neurons.channel, current_neuron_name) & ...
-                        strcmpi(non_sig_neurons.event, current_event)))
+                            strcmpi(non_sig_neurons.event, current_event)))
                         figure(unit_figure);
                         hold on
                         event_threshold = non_sig_neurons.threshold(strcmpi(non_sig_neurons.channel, current_neuron_name) & ...
-                            strcmpi(non_sig_neurons.event, current_event));
+                            strcmpi(non_sig_neurons.event, current_event) & strcmpi(non_sig_neurons.region, current_region));
                         plot(xlim,[event_threshold event_threshold], 'r', 'LineWidth', 0.75);
                         line([pre_time_bins pre_time_bins], ylim, 'Color', 'black', 'LineWidth', 0.75);
                         hold off
