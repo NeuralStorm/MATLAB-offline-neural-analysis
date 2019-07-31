@@ -64,13 +64,13 @@ function [] = calc_kalman_coeff(grf_responses, event_ts, event_struct, labeled_n
     trial_rates = event_struct.(region).relative_response(trial_num, :); % 1 X (N*B)
     pop_rates = reshape(trial_rates, [tot_region_units, tot_bins]); % N X B
     x = zeros(3, tot_bins);
-    mu = zeros(3,1);
-    sigmaP = (W + W.') / 2;
-    PNoise = mvnrnd(mu,sigmaP)';
+    w = diag(W);
     for bin = 2:tot_bins
-        x(:, bin) = (A * trial_measures(:, bin - 1)) + PNoise;
-
+        x(:, bin) = (A * trial_measures(:, bin - 1)) + w;
     end
+
+    q = diag(Q);
+    z = (H * x) + q;
 
     %% Prelimary check on parameters
     forelimb = figure;
