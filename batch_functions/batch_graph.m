@@ -1,5 +1,5 @@
 function [] = batch_graph(animal_name, data_path, dir_name, search_ext, filename_substring_one, filename_substring_two, ...
-                total_bins, bin_size, pre_time, rf_analysis, rf_path, make_region_subplot, sub_columns)
+                bin_size, pre_time, post_time, rf_analysis, rf_path, make_region_subplot, sub_columns, sub_rows)
     graph_start = tic;
     [files, graph_path, failed_path] = create_dir(data_path, dir_name, search_ext);
 
@@ -35,10 +35,10 @@ function [] = batch_graph(animal_name, data_path, dir_name, search_ext, filename
                 rf_matfile = fullfile(rf_path, [rf_filename, '.mat']);
                 load(rf_matfile, 'sig_neurons', 'non_sig_neurons');
                 graph_PSTH(day_path, event_struct, labeled_neurons, sig_neurons, non_sig_neurons, ...
-                    total_bins, bin_size, pre_time, rf_analysis, make_region_subplot, sub_columns)
+                    bin_size, pre_time, post_time, rf_analysis, make_region_subplot, sub_columns, sub_rows)
             else
-                graph_PSTH(day_path, event_struct, labeled_neurons, NaN, NaN, total_bins, bin_size, ...
-                    pre_time, rf_analysis, make_region_subplot, sub_columns)
+                graph_PSTH(day_path, event_struct, labeled_neurons, NaN, NaN, bin_size, ...
+                    pre_time, post_time, rf_analysis, make_region_subplot, sub_columns, sub_rows)
             end
         catch ME
             handle_ME(ME, failed_path, filename);
