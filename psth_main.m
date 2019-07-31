@@ -100,8 +100,8 @@ function [] = psth_main()
             %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
             if config.make_psth_graphs
                 batch_graph(animal_name, psth_path, 'psth_graphs', '.mat', 'PSTH', 'format', ...
-                    total_bins, config.bin_size, config.pre_time, config.rf_analysis, rf_path, ...
-                    config.make_region_subplot, config.sub_columns);
+                    config.bin_size, config.pre_time, config.post_time, config.rf_analysis, rf_path, ...
+                    config.make_region_subplot, config.sub_columns, config.sub_rows);
             end
 
             %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%

@@ -239,8 +239,8 @@ function [] = main()
             %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
             if config.make_psth_graphs
                 batch_graph(animal_name, psth_path, 'psth_graphs', '.mat', 'PSTH', 'format', ...
-                    total_bins, config.bin_size, config.pre_time, config.rf_analysis, rf_path, ...
-                    config.make_region_subplot, config.sub_columns);
+                    config.bin_size, config.pre_time, config.post_time, config.rf_analysis, rf_path, ...
+                    config.make_region_subplot, config.sub_columns, config.sub_rows);
             end
 
             %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -379,8 +379,8 @@ function [] = main()
             %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
             if config.make_psth_graphs
                 batch_graph(animal_name, pca_path, 'pc_graphs', '.mat', 'pc', 'analysis', ...
-                    total_bins, config.bin_size, config.pre_time, config.rf_analysis, pc_rf_path, ...
-                    config.make_region_subplot, config.sub_columns);
+                    config.bin_size, config.pre_time, config.post_time, config.rf_analysis, pc_rf_path, ...
+                    config.make_region_subplot, config.sub_columns, config.sub_rows);
             end
 
             %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -467,8 +467,8 @@ function [] = main()
             %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
             if config.make_psth_graphs
                 batch_graph(animal_name, ica_path, 'ic_graphs', '.mat', 'ic', 'analysis', ...
-                    total_bins, config.bin_size, config.pre_time, config.rf_analysis, ic_rf_path, ...
-                    config.make_region_subplot, config.sub_columns);
+                    config.bin_size, config.pre_time, config.post_time, config.rf_analysis, ic_rf_path, ...
+                    config.make_region_subplot, config.sub_columns, config.sub_rows);
             end
 
             %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
