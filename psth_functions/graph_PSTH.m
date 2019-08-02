@@ -25,7 +25,7 @@ function [] = graph_PSTH(save_path, event_struct, labeled_neurons, sig_neurons, 
             if ~exist(event_path, 'dir')
                 mkdir(region_path, current_event);
             end
-
+            
             if make_region_subplot
                 region_figure = figure('visible', 'off');
             end
@@ -33,14 +33,7 @@ function [] = graph_PSTH(save_path, event_struct, labeled_neurons, sig_neurons, 
             for neuron = 1:total_region_neurons
                 current_neuron = psth(((1:total_bins) + ((neuron-1) * total_bins)));
                 current_neuron_name = region_neurons{neuron};
-                %{
-                unit_figure = figure('visible','off');
-                unit_handle = bar(event_window, current_neuron,'BarWidth', 1);
-                set(unit_handle, 'EdgeAlpha', 0);
-                %}
-                 [unit_figure] = plot_PSTH(current_neuron,current_neuron_name,current_event,event_window)
-
-                
+                [unit_figure] = plot_PSTH(current_neuron,current_neuron_name,current_event,event_window)               
                 if rf_analysis
                     %% Plot first & last bin latency and threshold for significant neurons
                     % otherwise plots threshold on non significant neurons
@@ -54,64 +47,26 @@ function [] = graph_PSTH(save_path, event_struct, labeled_neurons, sig_neurons, 
                                 strcmpi(region_sig_neurons.event, current_event));
                             last_bin_latency = region_sig_neurons.last_latency(strcmpi(region_sig_neurons.channel, current_neuron_name) & ...
                                 strcmpi(region_sig_neurons.event, current_event));
-                            %% Plots elements from rec field analysis
-                            %plot_recfield
-                            %{
-                            figure(unit_figure)
-                            hold on
-                            plot(xlim,[event_threshold event_threshold], 'r', 'LineWidth', 0.75);
-                            line([event_first event_first], ylim, 'Color', 'red', 'LineWidth', 0.75);
-                            line([event_last event_last], ylim, 'Color', 'red', 'LineWidth', 0.75);
-                            line([event_onset event_onset], ylim, 'Color', 'black', 'LineWidth', 0.75);
-                            hold off
-                            %}
-                            if make_region_subplot
-                                figure(region_figure);
-                                scrollsubplot(sub_rows, sub_cols, neuron);
-                                hold on
-                                region_handle = bar(event_window, current_neuron,'BarWidth', 1);
-                                set(region_handle, 'EdgeAlpha', 0);
-                                plot(xlim,[event_threshold event_threshold], 'r', 'LineWidth', 0.75);
-                                line([first_bin_latency first_bin_latency], ylim, 'Color', 'red', 'LineWidth', 0.75);
-                                line([last_bin_latency last_bin_latency], ylim, 'Color', 'red', 'LineWidth', 0.75);
-                                line([event_onset event_onset], ylim, 'Color', 'black', 'LineWidth', 0.75);
-                                title(current_neuron_name);
-                                hold off
-                            end
                         end
                     end
                     if ~isempty(non_sig_neurons) && ~isempty(non_sig_neurons.channel(strcmpi(non_sig_neurons.channel, current_neuron_name) & ...
                             strcmpi(non_sig_neurons.event, current_event) & strcmpi(non_sig_neurons.region, current_region)))
-                        %{
-                        figure(unit_figure);
-                        hold on
-                        %}
-                        event_threshold = non_sig_neurons.threshold(strcmpi(non_sig_neurons.channel, current_neuron_name) & ...
+                            event_threshold = non_sig_neurons.threshold(strcmpi(non_sig_neurons.channel, current_neuron_name) & ...
                             strcmpi(non_sig_neurons.event, current_event) & strcmpi(non_sig_neurons.region, current_region));
-                        first_bin_latency = NaN;
-                        last_bin_latency = NaN;
-
-                       % plot_recfield
-                        %{
-                        plot(xlim,[event_threshold event_threshold], 'r', 'LineWidth', 0.75);
-                        line([event_onset event_onset], ylim, 'Color', 'black', 'LineWidth', 0.75);
-                        hold off
-                        %}
-                        if make_region_subplot
-                            figure(region_figure)
-                            scrollsubplot(sub_rows, sub_cols, neuron);
-                            hold on
-                            region_handle = bar(event_window, current_neuron,'BarWidth', 1);
-                            set(region_handle, 'EdgeAlpha', 0);
-                            plot(xlim,[event_threshold event_threshold], 'r', 'LineWidth', 0.75);
-                            line([event_onset event_onset], ylim, 'Color', 'black', 'LineWidth', 0.75);
-                            title(current_neuron_name);
-                            hold off
-                        end
+                            first_bin_latency = NaN;
+                            last_bin_latency = NaN;
                     end
-                    
-                    plot_recfield(first_bin_latency,last_bin_latency,event_threshold,event_onset,unit_figure,bin_size)
-                    
+                    %% Plots elements from rec field analysis
+                    plot_recfield(current_neuron,first_bin_latency,last_bin_latency,event_threshold,event_onset,unit_figure,bin_size,pre_time);                   
+                    if make_region_subplot
+                        figure(region_figure);
+                        scrollsubplot(sub_rows, sub_cols, neuron);
+                        hold on
+                        region_handle = bar(event_window, current_neuron,'BarWidth', 1);
+                        set(region_handle, 'EdgeAlpha', 0);
+                        plot_recfield(current_neuron, first_bin_latency,last_bin_latency,event_threshold,event_onset,region_figure,bin_size,pre_time);
+                        hold off
+                    end                    
                 end
                 if make_region_subplot && ~rf_analysis
                     figure(region_figure);
@@ -122,17 +77,8 @@ function [] = graph_PSTH(save_path, event_struct, labeled_neurons, sig_neurons, 
                     line([event_onset event_onset], ylim, 'Color', 'black', 'LineWidth', 0.75);
                     title(current_neuron_name);
                     hold off
-                end
-                 
+                end                
                 figure(unit_figure);
-                %{
-                xtickformat('%.2f')
-                text=['Normalized Histogram: ', current_neuron_name, ' event: ', current_event];
-                title(text);
-                xlabel('Time (s)');
-                ylabel('Count');
-                %}
-                
                 filename = [current_neuron_name, '_', current_event, '.png'];
                 saveas(gcf, fullfile(event_path, filename));
                 filename = [current_neuron_name, '_', current_event, '.fig'];
