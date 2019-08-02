@@ -29,6 +29,7 @@ function [] = graph_PSTH(save_path, event_struct, labeled_neurons, sig_neurons, 
             if make_region_subplot
                 region_figure = figure('visible', 'off');
             end
+            
             %% Creating the PSTH graphs
             for neuron = 1:total_region_neurons
                 current_neuron = psth(((1:total_bins) + ((neuron-1) * total_bins)));
@@ -64,8 +65,17 @@ function [] = graph_PSTH(save_path, event_struct, labeled_neurons, sig_neurons, 
                         hold on
                         region_handle = bar(event_window, current_neuron,'BarWidth', 1);
                         set(region_handle, 'EdgeAlpha', 0);
+                        
+                        if min(psth)>=0
+                            ylim([0 1.1*max(psth)+eps]);
+                        else
+                            ylim([1.1*min(psth) 1.1*max(psth)+eps]);
+                        end
+
                         plot_recfield(current_neuron, first_bin_latency,last_bin_latency,event_threshold,event_onset,region_figure,bin_size,pre_time);
+                        title(current_neuron_name);
                         hold off
+                        
                     end                    
                 end
                 if make_region_subplot && ~rf_analysis
@@ -74,6 +84,13 @@ function [] = graph_PSTH(save_path, event_struct, labeled_neurons, sig_neurons, 
                     hold on
                     region_handle = bar(event_window, current_neuron,'BarWidth', 1);
                     set(region_handle, 'EdgeAlpha', 0);
+                    
+                    if min(psth)>=0
+                        ylim([0 1.1*max(psth)+eps]);
+                    else
+                        ylim([1.1*min(psth) 1.1*max(psth)+eps]);
+                    end
+                    
                     line([event_onset event_onset], ylim, 'Color', 'black', 'LineWidth', 0.75);
                     title(current_neuron_name);
                     hold off
@@ -83,9 +100,9 @@ function [] = graph_PSTH(save_path, event_struct, labeled_neurons, sig_neurons, 
                 saveas(gcf, fullfile(event_path, filename));
                 filename = [current_neuron_name, '_', current_event, '.fig'];
                 savefig(gcf, fullfile(event_path, filename));
-            end
+            end                        
             if make_region_subplot
-                figure(region_figure);
+                figure(region_figure);              
                 filename = ['region_units_', current_event, '.fig'];
                 savefig(gcf, fullfile(event_path, filename));
             end
