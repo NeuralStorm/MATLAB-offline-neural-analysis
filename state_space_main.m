@@ -9,7 +9,6 @@ function [] = state_space_main()
         animal_path = fullfile(...
             animal_list(strcmpi(animal_names{animal}, {animal_list.name})).folder, animal_name);
         config = import_config(animal_path);
-        total_bins = (length(-abs(config.pre_time):config.bin_size:abs(config.post_time)) - 1);
         export_params(animal_path, 'main', config);
         % Skips animals we want to ignore
         if config.ignore_animal
