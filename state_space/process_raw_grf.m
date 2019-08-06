@@ -29,9 +29,3 @@ function [measurements] = process_raw_grf(raw_measurements, event_ts, pre_time, 
     measurements.Properties.VariableNames = column_names;
 
 end
-
-function [filtered_data] = butterworth(n_order, cutoff_freq, filter_type, raw_data)
-    % 2nd order Butterworth zero-phase low-pass filter, 200Hz cut off
-    [b,a] = butter(n_order, cutoff_freq, filter_type);
-    filtered_data = filtfilt(b, a, raw_data);
-end
