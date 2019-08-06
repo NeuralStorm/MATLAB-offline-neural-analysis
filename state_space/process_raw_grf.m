@@ -1,17 +1,18 @@
-function [response_table] = process_raw_grf(grf_table, event_ts, pre_time, post_time, bin_size, ...
+function [measurements] = process_raw_grf(raw_measurements, event_ts, pre_time, post_time, bin_size, ...
         sampling_rate, n_order, cutoff_freq, filter_type)
 
     %% Filter data
-    event_list = [[1:1:length(event_ts(:,1))]', event_ts];
+    %! Check to see how z-scoring data before and after butterworth affects kalman filter
+    event_list = [(1:1:length(event_ts(:,1)))', event_ts];
     event_window = -(abs(pre_time)):bin_size:(abs(post_time));
     tot_bins = length(event_window) - 1;
     event_list = repelem(event_list, tot_bins, 1);
-    filtered_table = grf_table;
-    tot_cols = width(grf_table);
+    filtered_table = raw_measurements;
+    tot_cols = width(raw_measurements);
     all_response = [];
     for column_i = 1:tot_cols
-        filtered_data = butterworth(n_order, cutoff_freq, filter_type, table2array(grf_table(:, column_i)));
-        filtered_table(:, column_i) = num2cell(filtered_data);
+        filtered_data = butterworth(n_order, cutoff_freq, filter_type, table2array(raw_measurements(:, column_i)));
+        filtered_table(:, column_i) = num2cell(zscore(filtered_data));
         column_response = [];
         for trial_index = 1:length(event_ts)
             trial_ts = event_ts(trial_index);
@@ -24,13 +25,13 @@ function [response_table] = process_raw_grf(grf_table, event_ts, pre_time, post_
     end
     response_array = num2cell([event_list, all_response]);
     column_names = ['trial_number'; 'event_label'; 'event_ts'; filtered_table.Properties.VariableNames']';
-    response_table = cell2table(response_array);
-    response_table.Properties.VariableNames = column_names;
+    measurements = cell2table(response_array);
+    measurements.Properties.VariableNames = column_names;
 
 end
 
 function [filtered_data] = butterworth(n_order, cutoff_freq, filter_type, raw_data)
     % 2nd order Butterworth zero-phase low-pass filter, 200Hz cut off
     [b,a] = butter(n_order, cutoff_freq, filter_type);
-    filtered_data = filter(b, a, raw_data);
+    filtered_data = filtfilt(b, a, raw_data);
 end

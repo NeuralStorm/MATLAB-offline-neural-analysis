@@ -93,8 +93,8 @@ function [] = state_space_main()
         filter_type = 'low';
         if process_grf
             [~, kalman_path, ~] = create_dir(parsed_path, 'kalman', '.csv');
-            measurement_path = [original_path, '/kalman_measurements'];
-            file_list = dir([original_path, [measurement_path, '/*.csv']]);
+            measurement_path = [animal_path, '/kalman_measurements'];
+            file_list = dir([measurement_path, '/*.csv']);
             for file_index = 1:length(file_list)
                 file = [measurement_path, '/', file_list(file_index).name];
                 [~, filename, ~] = fileparts(file);
@@ -104,18 +104,40 @@ function [] = state_space_main()
                 data = readtable(file);
                 grf_table = data(:, 1:3);
                 grf_table.Properties.VariableNames = {'forelimb','left_hindlimb', 'right_hindlimb'};
-                grf_responses = process_raw_grf(grf_table, event_ts, config.pre_time, config.post_time, config.bin_size, ...
+                measurements = process_raw_grf(grf_table, event_ts, config.pre_time, config.post_time, config.bin_size, ...
                     sampling_rate, n_order, cutoff_freq, filter_type);
 
                 %% Saving the file
                 matfile = fullfile(kalman_path, [filename, '.mat']);
-                empty_vars = check_variables(matfile, event_ts, grf_responses);
+                empty_vars = check_variables(matfile, event_ts, measurements);
                 if empty_vars
                     continue
                 end
-                save(matfile, 'grf_responses', 'event_ts', 'labeled_neurons', 'event_struct');
+                save(matfile, 'measurements', 'event_ts', 'labeled_neurons', 'event_struct');
             end
         end
+
+        % % %! Add variables to config
+        % is_kalman = true;
+        % if is_kalman
+        %     [file_list, closed_path, ~] = create_dir(kalman_path, 'closed_form', '.mat');
+        %     for file_index = 1:length(file_list)
+        %         file = [kalman_path, '/', file_list(file_index).name];
+        %         [~, filename, ~] = fileparts(file);
+        %         psth_filename = erase(filename, '.grf');
+        %         psth_file = fullfile(psth_path, ['psth_format_', psth_filename, '.mat']);
+        %         load(psth_file, 'event_ts', 'labeled_neurons', 'event_struct');
+
+
+        %         %% Saving the file
+        %         matfile = fullfile(kalman_path, [filename, '.mat']);
+        %         empty_vars = check_variables(matfile, event_ts, grf_responses);
+        %         if empty_vars
+        %             continue
+        %         end
+        %         save(matfile, 'grf_responses', 'event_ts', 'labeled_neurons', 'event_struct');
+        %     end
+        % end
 
 
 
