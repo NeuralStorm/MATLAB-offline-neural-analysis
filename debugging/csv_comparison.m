@@ -1,6 +1,6 @@
 original_csv = readtable('original_receptive_field_results.csv');
 new_csv = readtable('new_receptive_field_results.csv');
-original_csv = table2cell(original_csv);    
+original_csv = table2cell(original_csv);
 new_csv = table2cell(new_csv);
 precision = .000001;
 [total_row,total_col] = size(original_csv);
@@ -9,28 +9,26 @@ index_diff_col = 1;
 diff_location = struct;
 
 % read two csv files by column
- for index_col = 1:total_col   
+ for index_col = 1:total_col
      col_check(index_col) = isequaln(original_csv(:,index_col),new_csv(:,index_col));
      if col_check(index_col) == 0
          for index_row = 1:total_row
              original_value = original_csv{index_row,index_col};
              new_value = new_csv{index_row,index_col};
-             
              if (isnan(original_value) & isnan(new_value))
                  diff = 0;
              else
                  diff = original_value-new_value;
                  if  (abs(diff) > precision | isnan(diff))
-                     
                       diff_index(index_diff_row) = index_row;
                       index_diff_row = index_diff_row+1 ;
                  end
-             end   
+             end
          end
          
          if index_diff_row > 1
              if index_diff_col == 1
-                 fprintf('¡Á¡Á¡ÁThese two csv files are different. Check the ¡®diff_location¡¯ for details. \n')
+                 fprintf('ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½These two csv files are different. Check the ï¿½ï¿½diff_locationï¿½ï¿½ for details. \n')
              end
              index_diff_col = index_diff_col+1; 
          end
@@ -46,13 +44,7 @@ diff_location = struct;
          diff_index = [];
      end 
  end
- 
+
  if index_diff_col == 1
-     fprintf('¡Ì¡Ì¡ÌThese two csv files are the same. \n')
+     fprintf('ï¿½Ì¡Ì¡ï¿½These two csv files are the same. \n')
  end
-     
-
-
-
-    
-
