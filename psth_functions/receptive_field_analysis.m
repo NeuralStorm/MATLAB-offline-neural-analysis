@@ -1,20 +1,20 @@
-function [sig_neurons, non_sig_neurons] = receptive_field_analysis(labeled_neurons, ...
-        event_struct, bin_size, threshold_scale, sig_check, sig_bins, span, analysis_column_names)
+function [sig_neurons, non_sig_neurons] = receptive_field_analysis(labeled_data, ...
+        psth_struct, bin_size, threshold_scale, sig_check, sig_bins, span, analysis_column_names)
 
-    event_strings = event_struct.all_events(:,1)';
+    event_strings = psth_struct.all_events(:,1)';
     sig_neurons = [];
     non_sig_neurons = [];
-    region_names = fieldnames(labeled_neurons);
+    region_names = fieldnames(labeled_data);
     for region = 1:length(region_names)
         current_region = region_names{region};
-        region_neurons = labeled_neurons.(current_region)(:,1);
+        region_neurons = labeled_data.(current_region)(:,1);
         for event = 1:length(event_strings(1,:))
             current_event = event_strings{event};
-            pre_psth = event_struct.(current_region).(current_event).norm_pre_time_activity;
-            post_psth = event_struct.(current_region).(current_event).norm_post_time_activity;
+            pre_psth = psth_struct.(current_region).(current_event).norm_pre_time_activity;
+            post_psth = psth_struct.(current_region).(current_event).norm_post_time_activity;
             for neuron = 1:length(region_neurons)
                 neuron_name = region_neurons{neuron};
-                notes = labeled_neurons.(current_region)(strcmpi(labeled_neurons.(current_region)(:,1), ...
+                notes = labeled_data.(current_region)(strcmpi(labeled_data.(current_region)(:,1), ...
                     neuron_name), end);
                 %% Deal with pre window first
                   [smoothed_threshold,background_rate,background_std] = ...

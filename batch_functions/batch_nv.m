@@ -25,14 +25,14 @@ function [] = batch_nv(animal_name, original_path, data_path, dir_name, ...
             filename = erase(filename, [filename_substring_one, '.', filename_substring_two, '.']);
             filename = erase(filename, [filename_substring_one, '_', filename_substring_two, '_']);
             [~, experimental_group, ~, session_num, session_date, ~] = get_filename_info(filename);
-            load(file, 'labeled_neurons', 'event_struct');
+            load(file, 'labeled_data', 'psth_struct');
             %% Check psth variables to make sure they are not empty
-            empty_vars = check_variables(file, event_struct, labeled_neurons);
+            empty_vars = check_variables(file, psth_struct, labeled_data);
             if empty_vars
                 continue
             end
             %% NV analysis
-            neuron_activity = nv_calculation(labeled_neurons, event_struct, config.pre_time, config.post_time, ...
+            neuron_activity = nv_calculation(labeled_data, psth_struct, config.pre_time, config.post_time, ...
                 config.bin_size, config.epsilon, config.norm_var_scaling, config.separate_events, analysis_column_names);
 
             %% Store metadata about file
@@ -42,8 +42,8 @@ function [] = batch_nv(animal_name, original_path, data_path, dir_name, ...
 
             %% Save analysis results
             matfile = fullfile(nv_path, ['NV_analysis_', filename, '.mat']);
-            check_variables(matfile, labeled_neurons, neuron_activity);
-            save(matfile, 'labeled_neurons', 'neuron_activity');
+            check_variables(matfile, labeled_data, neuron_activity);
+            save(matfile, 'labeled_data', 'neuron_activity');
         catch ME
             handle_ME(ME, failed_path, filename);
         end

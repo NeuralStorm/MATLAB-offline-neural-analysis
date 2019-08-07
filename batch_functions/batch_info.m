@@ -12,20 +12,20 @@ function [] = batch_info(animal_name, data_path, dir_name, ...
             [~, filename, ~] = fileparts(file);
             filename = erase(filename, [filename_substring_one, '.', filename_substring_two, '.']);
             filename = erase(filename, [filename_substring_one, '_', filename_substring_two, '_']);
-            load(file, 'event_struct', 'labeled_neurons');
+            load(file, 'psth_struct', 'labeled_data');
             %% Check psth variables to make sure they are not empty
-            empty_vars = check_variables(file, event_struct, labeled_neurons);
+            empty_vars = check_variables(file, psth_struct, labeled_data);
             if empty_vars
                 continue
             end
 
             %% Mutual information
-            [prob_struct, mi_results] = mutual_info(event_struct, labeled_neurons);
+            [prob_struct, mi_results] = mutual_info(psth_struct, labeled_data);
 
             %% Saving the file
             matfile = fullfile(info_path, ['mutual_info_', filename, '.mat']);
             check_variables(matfile, prob_struct, mi_results);
-            save(matfile, 'labeled_neurons', 'prob_struct', 'mi_results');
+            save(matfile, 'labeled_data', 'prob_struct', 'mi_results');
         catch ME
             handle_ME(ME, failed_path, filename);
         end

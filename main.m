@@ -191,28 +191,28 @@ function [] = main()
                         %% Load file contents
                         file = [parsed_path, '/', parsed_files(file_index).name];
                         [~, filename, ~] = fileparts(file);
-                        load(file, 'event_ts', 'labeled_neurons');
+                        load(file, 'event_ts', 'labeled_data');
                         %% Check parsed variables to make sure they are not empty
-                        empty_vars = check_variables(file, event_ts, labeled_neurons);
+                        empty_vars = check_variables(file, event_ts, labeled_data);
                         if empty_vars
                             continue
                         end
 
                         %% Format PSTH
-                        [event_struct, event_ts, event_strings] = ...
-                            format_PSTH(event_ts, labeled_neurons, config.bin_size, config.pre_time, ...
+                        [psth_struct, event_ts, event_strings] = ...
+                            format_PSTH(event_ts, labeled_data, config.bin_size, config.pre_time, ...
                             config.post_time, config.wanted_events, config.trial_range, config.trial_lower_bound);
 
                         %% Saving outputs
                         matfile = fullfile(psth_path, ['PSTH_format_', filename, '.mat']);
                         %% Check PSTH output to make sure there are no issues with the output
-                        empty_vars = check_variables(matfile, event_struct, event_ts, event_strings);
+                        empty_vars = check_variables(matfile, psth_struct, event_ts, event_strings);
                         if empty_vars
                             continue
                         end
 
                         %% Save file if all variables are not empty
-                        save(matfile, 'event_struct', 'event_ts', 'event_strings', 'labeled_neurons');
+                        save(matfile, 'psth_struct', 'event_ts', 'event_strings', 'labeled_data');
                         export_params(psth_path, 'format_psth', parsed_path, failed_path, animal_name, config);
                     catch ME
                         handle_ME(ME, failed_path, filename);
@@ -282,28 +282,28 @@ function [] = main()
                         %% Load file contents
                         file = [parsed_path, '/', parsed_files(file_index).name];
                         [~, filename, ~] = fileparts(file);
-                        load(file, 'event_ts', 'labeled_neurons');
+                        load(file, 'event_ts', 'labeled_data');
                         %% Check parsed variables to make sure they are not empty
-                        empty_vars = check_variables(file, event_ts, labeled_neurons);
+                        empty_vars = check_variables(file, event_ts, labeled_data);
                         if empty_vars
                             continue
                         end
 
                         %% Format mnts
-                        [mnts_struct, event_ts, event_strings, labeled_neurons] = format_mnts(event_ts, ...
-                            labeled_neurons, config.bin_size, config.pre_time, config.post_time, config.wanted_events, ...
+                        [mnts_struct, event_ts, event_strings, labeled_data] = format_mnts(event_ts, ...
+                            labeled_data, config.bin_size, config.pre_time, config.post_time, config.wanted_events, ...
                             config.trial_range, config.trial_lower_bound);
 
                         %% Saving outputs
                         matfile = fullfile(mnts_path, ['mnts_format_', filename, '.mat']);
                         %% Check PSTH output to make sure there are no issues with the output
-                        empty_vars = check_variables(matfile, mnts_struct, event_ts, event_strings, labeled_neurons);
+                        empty_vars = check_variables(matfile, mnts_struct, event_ts, event_strings, labeled_data);
                         if empty_vars
                             continue
                         end
 
                         %% Save file if all variables are not empty
-                        save(matfile, 'mnts_struct', 'event_ts', 'event_strings', 'labeled_neurons');
+                        save(matfile, 'mnts_struct', 'event_ts', 'event_strings', 'labeled_data');
                         export_params(mnts_path, 'mnts_psth', parsed_path, failed_path, animal_name, config);
                     catch ME
                         handle_ME(ME, failed_path, filename);
@@ -331,23 +331,23 @@ function [] = main()
                         [~, filename, ~] = fileparts(file);
                         filename = erase(filename, 'mnts_format_');
                         filename = erase(filename, 'mnts.format.');
-                        load(file, 'event_ts', 'labeled_neurons', 'mnts_struct');
+                        load(file, 'event_ts', 'labeled_data', 'mnts_struct');
                         %% Check variables to make sure they are not empty
-                        empty_vars = check_variables(file, event_ts, labeled_neurons, mnts_struct);
+                        empty_vars = check_variables(file, event_ts, labeled_data, mnts_struct);
                         if empty_vars
                             continue
                         end
 
                         %% PCA
-                        [pca_results, event_struct, labeled_neurons] = calc_pca(labeled_neurons, ...
+                        [pca_results, psth_struct, labeled_data] = calc_pca(labeled_data, ...
                             mnts_struct, config.bin_size, config.pre_time, ...
                             config.post_time, config.feature_filter, config.feature_value);
 
                         %% Saving the file
                         matfile = fullfile(pca_path, ['pc_analysis_', filename, '.mat']);
-                        check_variables(matfile, event_struct, pca_results, labeled_neurons);
-                        save(matfile, 'event_struct', 'labeled_neurons', 'event_ts', 'pca_results');
-                        clear('event_struct', 'labeled_neurons', 'event_ts', 'pca_results');
+                        check_variables(matfile, psth_struct, pca_results, labeled_data);
+                        save(matfile, 'psth_struct', 'labeled_data', 'event_ts', 'pca_results');
+                        clear('psth_struct', 'labeled_data', 'event_ts', 'pca_results');
                     catch ME
                         handle_ME(ME, failed_path, filename);
                     end
@@ -415,27 +415,27 @@ function [] = main()
                         [~, filename, ~] = fileparts(file);
                         filename = erase(filename, 'mnts_format_');
                         filename = erase(filename, 'mnts.format.');
-                        load(file, 'event_ts', 'labeled_neurons', 'mnts_struct');
+                        load(file, 'event_ts', 'labeled_data', 'mnts_struct');
                         %% Check variables to make sure they are not empty
-                        empty_vars = check_variables(file, event_ts, labeled_neurons, mnts_struct);
+                        empty_vars = check_variables(file, event_ts, labeled_data, mnts_struct);
                         if empty_vars
                             continue
                         end
 
                         %% ICA
-                        [labeled_neurons, event_struct, ica_results] = ...
-                            calc_ica(labeled_neurons, mnts_struct, config.pre_time, config.post_time, ...
+                        [labeled_data, psth_struct, ica_results] = ...
+                            calc_ica(labeled_data, mnts_struct, config.pre_time, config.post_time, ...
                             config.bin_size, config.ic_pc, config.extended, config.sphering, ...
                             config.anneal, config.anneal_deg, config.bias, config.momentum, ...
                             config.max_steps, config.stop, config.rnd_reset, config.verbose);
 
                         %% Saving the file
                         matfile = fullfile(ica_path, ['ic_analysis_', filename, '.mat']);
-                        empty_vars = check_variables(matfile, labeled_neurons, event_struct, ica_results);
+                        empty_vars = check_variables(matfile, labeled_data, psth_struct, ica_results);
                         if empty_vars
                             continue
                         end
-                        save(matfile, 'event_struct', 'labeled_neurons', 'event_ts', 'ica_results');
+                        save(matfile, 'psth_struct', 'labeled_data', 'event_ts', 'ica_results');
                     catch ME
                         handle_ME(ME, failed_path, filename);
                     end

@@ -1,15 +1,15 @@
-function [pca_results, event_struct, labeled_pcs] = calc_pca(labeled_neurons, ...
+function [pca_results, psth_struct, labeled_pcs] = calc_pca(labeled_data, ...
     mnts_struct, bin_size, pre_time, post_time, feature_filter, feature_value)
 
     pca_results = struct;
-    event_struct = struct;
-    labeled_pcs = labeled_neurons;
+    psth_struct = struct;
+    labeled_pcs = labeled_data;
 
     event_window = -(abs(pre_time)):bin_size:(abs(post_time));
     tot_bins = length(event_window) - 1;
-    event_struct.all_events = mnts_struct.all_events;
+    psth_struct.all_events = mnts_struct.all_events;
 
-    unique_regions = fieldnames(labeled_neurons);
+    unique_regions = fieldnames(labeled_data);
     for region_index = 1:length(unique_regions)
         region = unique_regions{region_index};
         %% Grab z scored mnts format for current region and does PCA
@@ -64,10 +64,10 @@ function [pca_results, event_struct, labeled_pcs] = calc_pca(labeled_neurons, ..
         %% Reset labeled data
         labeled_pcs.(region)(:, 1) = pc_names;
         %% Store PC PSTH into event struct
-        event_struct.(region) = split_relative_response(pca_relative_response, ...
+        psth_struct.(region) = split_relative_response(pca_relative_response, ...
             pc_names, mnts_struct.all_events, bin_size, pre_time, post_time);
-        event_struct.(region).relative_response = pca_relative_response;
-        event_struct.(region).psth = sum(pca_relative_response, 1) / tot_trials;
-        event_struct.(region).mnts = pca_score;
+        psth_struct.(region).relative_response = pca_relative_response;
+        psth_struct.(region).psth = sum(pca_relative_response, 1) / tot_trials;
+        psth_struct.(region).mnts = pca_score;
     end
 end

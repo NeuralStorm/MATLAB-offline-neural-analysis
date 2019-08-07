@@ -13,9 +13,9 @@ function [] = batch_graph(animal_name, data_path, dir_name, search_ext, filename
             filename = erase(filename, [filename_substring_one, '.', filename_substring_two, '.']);
             filename = erase(filename, [filename_substring_one, '_', filename_substring_two, '_']);
             [~, ~, ~, session_num, ~, ~] = get_filename_info(filename);
-            load(file, 'event_struct', 'labeled_neurons');
+            load(file, 'psth_struct', 'labeled_data');
             %% Check psth variables to make sure they are not empty
-            empty_vars = check_variables(file, event_struct, labeled_neurons);
+            empty_vars = check_variables(file, psth_struct, labeled_data);
             if empty_vars
                 continue
             end
@@ -34,10 +34,10 @@ function [] = batch_graph(animal_name, data_path, dir_name, search_ext, filename
                 rf_filename = strrep(rf_filename, filename_substring_two, 'field');
                 rf_matfile = fullfile(rf_path, [rf_filename, '.mat']);
                 load(rf_matfile, 'sig_neurons', 'non_sig_neurons');
-                graph_PSTH(day_path, event_struct, labeled_neurons, sig_neurons, non_sig_neurons, ...
+                graph_PSTH(day_path, psth_struct, labeled_data, sig_neurons, non_sig_neurons, ...
                     bin_size, pre_time, post_time, rf_analysis, make_region_subplot, sub_columns, sub_rows)
             else
-                graph_PSTH(day_path, event_struct, labeled_neurons, NaN, NaN, bin_size, ...
+                graph_PSTH(day_path, psth_struct, labeled_data, NaN, NaN, bin_size, ...
                     pre_time, post_time, rf_analysis, make_region_subplot, sub_columns, sub_rows)
             end
         catch ME

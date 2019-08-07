@@ -1,4 +1,4 @@
-function [labeled_neurons, unique_regions, region_channels] = label_neurons(animal_path, animal_name, parsed_path)
+function [labeled_data, unique_regions, region_channels] = label_neurons(animal_path, animal_name, parsed_path)
     label_start = tic;
     %% Grabs label file and creates labels
     animal_csv_path = [animal_path, '/*.csv'];
@@ -40,27 +40,27 @@ function [labeled_neurons, unique_regions, region_channels] = label_neurons(anim
             region_channels.(region_name) = channels;
             % Find the channels that overlap with the neuron map (with actual data)
             % and the listed neurons in the .csv
-            [shared_channels, map_indeces, labels_indeces] = intersect(neuron_map(:,1), channels);
+            [shared_channels, map_indeces, labels_indeces] = intersect(channel_map(:,1), channels);
             %% Appends everything together in single matrix with all the label information
             % and data
-            neuron_data = neuron_map(map_indeces,2);
-            labeled_neurons.(region_name) = horzcat(shared_channels, ...
+            neuron_data = channel_map(map_indeces,2);
+            labeled_data.(region_name) = horzcat(shared_channels, ...
                 region_names(labels_indeces), region_values(labels_indeces), ...
-                neuron_map(map_indeces,2), region_sessions(labels_indeces), ...
+                channel_map(map_indeces,2), region_sessions(labels_indeces), ...
                 region_notes(labels_indeces));
             %% Update neuron map to only include neurons from intersection
             new_neuron_map = [new_neuron_map; shared_channels, neuron_data];
         end
-        original_neuron_map = neuron_map;
-        neuron_map = new_neuron_map;
-        struct_names = fieldnames(labeled_neurons);
-        empty = cellfun(@(x) isempty(labeled_neurons.(x)), struct_names);
-        labeled_neurons = rmfield(labeled_neurons, struct_names(empty));
-        unique_regions = fieldnames(labeled_neurons);
-        total_neurons = length(neuron_map);
+        original_channel_map = channel_map;
+        channel_map = new_neuron_map;
+        struct_names = fieldnames(labeled_data);
+        empty = cellfun(@(x) isempty(labeled_data.(x)), struct_names);
+        labeled_data = rmfield(labeled_data, struct_names(empty));
+        unique_regions = fieldnames(labeled_data);
+        total_neurons = length(channel_map);
         save(file, 'tscounts', 'evcounts', 'event_ts', 'total_neurons', ...
-            'neuron_map', 'labeled_neurons', 'unique_regions', ...
-            'region_channels', 'original_neuron_map');
+            'channel_map', 'labeled_data', 'unique_regions', ...
+            'region_channels', 'original_channel_map');
     end
     fprintf('Finished labeling for %s. It took %s\n', ...
         animal_name, num2str(toc(label_start)));

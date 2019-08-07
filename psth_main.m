@@ -52,28 +52,28 @@ function [] = psth_main()
                         %% Load file contents
                         file = [parsed_path, '/', parsed_files(file_index).name];
                         [~, filename, ~] = fileparts(file);
-                        load(file, 'event_ts', 'labeled_neurons');
+                        load(file, 'event_ts', 'labeled_data');
                         %% Check parsed variables to make sure they are not empty
-                        empty_vars = check_variables(file, event_ts, labeled_neurons);
+                        empty_vars = check_variables(file, event_ts, labeled_data);
                         if empty_vars
                             continue
                         end
 
                         %% Format PSTH
-                        [event_struct, event_ts, event_strings] = ...
-                            format_PSTH(event_ts, labeled_neurons, config.bin_size, config.pre_time, ...
+                        [psth_struct, event_ts, event_strings] = ...
+                            format_PSTH(event_ts, labeled_data, config.bin_size, config.pre_time, ...
                             config.post_time, config.wanted_events, config.trial_range, config.trial_lower_bound);
 
                         %% Saving outputs
                         matfile = fullfile(psth_path, ['PSTH_format_', filename, '.mat']);
                         %% Check PSTH output to make sure there are no issues with the output
-                        empty_vars = check_variables(matfile, event_struct, event_ts, event_strings);
+                        empty_vars = check_variables(matfile, psth_struct, event_ts, event_strings);
                         if empty_vars
                             continue
                         end
 
                         %% Save file if all variables are not empty
-                        save(matfile, 'event_struct', 'event_ts', 'event_strings', 'labeled_neurons');
+                        save(matfile, 'psth_struct', 'event_ts', 'event_strings', 'labeled_data');
                         export_params(psth_path, 'format_psth', parsed_path, failed_path, animal_name, config);
                     catch ME
                         handle_ME(ME, failed_path, filename);

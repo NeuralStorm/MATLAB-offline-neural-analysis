@@ -1,15 +1,15 @@
-function [] = graph_PSTH(save_path, event_struct, labeled_neurons, sig_response, non_sig_response, bin_size, ...
+function [] = graph_PSTH(save_path, psth_struct, labeled_data, sig_response, non_sig_response, bin_size, ...
                 pre_time, post_time, rf_analysis, make_region_subplot, sub_cols, sub_rows)
 
-    event_strings = event_struct.all_events(:,1)';
+    event_strings = psth_struct.all_events(:,1)';
     event_window = -(abs(pre_time) - bin_size):bin_size:(abs(post_time));
     total_bins = length(event_window);
     event_onset = 0;
 
-    region_names = fieldnames(labeled_neurons);
+    region_names = fieldnames(labeled_data);
     parfor region = 1:length(region_names)
         current_region = region_names{region};
-        region_neurons = labeled_neurons.(current_region)(:,1);
+        region_neurons = labeled_data.(current_region)(:,1);
         total_region_neurons = length(region_neurons);
         % Creates the region directory if it does not already exist
         region_path = [save_path, '/', current_region];
@@ -19,7 +19,7 @@ function [] = graph_PSTH(save_path, event_struct, labeled_neurons, sig_response,
 
         for event = 1:length(event_strings(1,:))
             current_event = event_strings{event};
-            event_psth = event_struct.(current_region).(current_event).psth;
+            event_psth = psth_struct.(current_region).(current_event).psth;
 
             event_max = 1.1 * max(event_psth) + eps;
             if min(event_psth) >= 0

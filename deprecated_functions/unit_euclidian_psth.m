@@ -66,10 +66,10 @@ function [euclidian_path] = unit_euclidian_psth(original_path, psth_path, animal
         end
         
         load(current_file);
-        unique_regions = fieldnames(labeled_neurons);
+        unique_regions = fieldnames(labeled_data);
         for region = 1:length(unique_regions)
             region_name = unique_regions{region};
-            total_region_neurons = length(labeled_neurons.(region_name)(:,1));
+            total_region_neurons = length(labeled_data.(region_name)(:,1));
             %% Label region as direct or indirect
             if (contains(right_direct, current_animal) && strcmpi('Right', region_name)) || (contains(left_direct, current_animal) && strcmpi('Left', region_name))
                 region_type = 'Direct';
@@ -83,10 +83,10 @@ function [euclidian_path] = unit_euclidian_psth(original_path, psth_path, animal
                 day_num == 24 || day_num == 25)))
                     continue
             end
-            right_fast = event_struct.(region_name).event_1.psth;
-            right_slow = event_struct.(region_name).event_3.psth;
-            left_fast = event_struct.(region_name).event_4.psth;
-            left_slow = event_struct.(region_name).event_6.psth;
+            right_fast = psth_struct.(region_name).event_1.psth;
+            right_slow = psth_struct.(region_name).event_3.psth;
+            left_fast = psth_struct.(region_name).event_4.psth;
+            left_slow = psth_struct.(region_name).event_6.psth;
             fast_right_left = [];
             slow_right_left = [];
             right_fast_slow = [];

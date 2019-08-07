@@ -1,24 +1,24 @@
 function nv_data = ...
-    nv_calculation(labeled_neurons, event_struct, pre_time, post_time, ...
+    nv_calculation(labeled_data, psth_struct, pre_time, post_time, ...
         bin_size, epsilon, norm_var_scaling, separate_events, analysis_column_names)
 
     pre_time_bins = (length(-abs(pre_time): bin_size: 0)) - 1;
     post_time_bins = (length(0:bin_size:post_time)) - 1;
 
     nv_data = [];
-    event_strings = event_struct.all_events(:,1);
+    event_strings = psth_struct.all_events(:,1);
 
-    all_events = event_struct.all_events(:,2);
+    all_events = psth_struct.all_events(:,2);
     event_end_indeces = [];
     for event = 1:length(all_events(:,1))
         event_end_indeces = [event_end_indeces, length(all_events{event})];
     end
     event_end_indeces = cumsum(event_end_indeces);
-    unique_regions = fieldnames(labeled_neurons);
+    unique_regions = fieldnames(labeled_data);
     for region = 1:length(unique_regions)
         current_region = unique_regions{region};
-        region_neurons = labeled_neurons.(current_region)(:, 1);
-        relative_response = event_struct.(current_region).relative_response;
+        region_neurons = labeled_data.(current_region)(:, 1);
+        relative_response = psth_struct.(current_region).relative_response;
         if separate_events
             %% Handles events as different datasets
             last_trial_index = 1;
@@ -27,7 +27,7 @@ function nv_data = ...
                 pre_index = pre_time_bins;
                 for neuron = 1:length(region_neurons)
                     current_neuron = region_neurons{neuron};
-                    notes = labeled_neurons.(current_region)(strcmpi(labeled_neurons.(current_region)(:,1), ...
+                    notes = labeled_data.(current_region)(strcmpi(labeled_data.(current_region)(:,1), ...
                         current_neuron), end);
                     current_pre = relative_response(last_trial_index:event_end_indeces(event), ...
                         (pre_index - pre_time_bins + 1 ):pre_index);
@@ -48,7 +48,7 @@ function nv_data = ...
             pre_index = pre_time_bins;
             for neuron = 1:length(region_neurons)
                 current_neuron = region_neurons{neuron};
-                notes = labeled_neurons.(current_region)(strcmpi(labeled_neurons.(current_region)(:,1), ...
+                notes = labeled_data.(current_region)(strcmpi(labeled_data.(current_region)(:,1), ...
                     current_neuron), end);
                 %% Grabs all trials for given neuron
                 neuron_pre_activity = relative_response(:, (pre_index - pre_time_bins + 1 ):pre_index);

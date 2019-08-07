@@ -30,15 +30,15 @@ function [rf_path] = batch_recfield(animal_name, original_path, data_path, dir_n
             [animal_id, experimental_group, ~, session_num, session_date, ~] = get_filename_info(filename);
 
             %% Load needed variables from psth and does the receptive field analysis
-            load(file, 'labeled_neurons', 'event_struct');
+            load(file, 'labeled_data', 'psth_struct');
             %% Check psth variables to make sure they are not empty
-            empty_vars = check_variables(file, event_struct, labeled_neurons);
+            empty_vars = check_variables(file, psth_struct, labeled_data);
             if empty_vars
                 continue
             end
 
             [sig_neurons, non_sig_neurons] = receptive_field_analysis( ...
-                labeled_neurons, event_struct, config.bin_size, config.threshold_scale, ...
+                labeled_data, psth_struct, config.bin_size, config.threshold_scale, ...
                 config.sig_check, config.sig_bins, config.span, analysis_column_names);
 
             %% Capture data to save to csv from current day
@@ -52,7 +52,7 @@ function [rf_path] = batch_recfield(animal_name, original_path, data_path, dir_n
             %% Save receptive field matlab output
             % Does not check if variables are empty since there may/may not be significant responses in a set
             matfile = fullfile(rf_path, ['rec_field_', filename, '.mat']);
-            save(matfile, 'labeled_neurons', 'sig_neurons', 'non_sig_neurons');
+            save(matfile, 'labeled_data', 'sig_neurons', 'non_sig_neurons');
             export_params(rf_path, 'receptive_field_analysis', rf_path, failed_path, ...
                 animal_name, config);
         catch ME

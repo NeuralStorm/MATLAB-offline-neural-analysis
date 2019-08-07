@@ -1,16 +1,16 @@
-function [labeled_ics, event_struct, ica_results] = calc_ica(labeled_neurons, ...
+function [labeled_ics, psth_struct, ica_results] = calc_ica(labeled_data, ...
         mnts_struct, pre_time, post_time, bin_size, tot_pcs, extended, ...
         sphering, anneal, anneal_deg, bias_switch, momentum, max_steps, stop_train, rnd_reset, verbose)
     %TODO add option to go straight from relative response to ica with no PCA middleman
     %TODO dont forget to z score raw input
     % TODO add check to make sure ica input has enough data
-    event_struct = struct;
+    psth_struct = struct;
     ica_results = struct;
-    event_struct.all_events = mnts_struct.all_events;
+    psth_struct.all_events = mnts_struct.all_events;
     event_window = -(abs(pre_time)):bin_size:(abs(post_time));
     tot_bins = length(event_window) - 1;
     labeled_ics = struct;
-    region_names = fieldnames(labeled_neurons);
+    region_names = fieldnames(labeled_data);
     tot_regions = length(region_names);
     for region_index = 1:tot_regions
         region = region_names{region_index};
@@ -64,15 +64,15 @@ function [labeled_ics, event_struct, ica_results] = calc_ica(labeled_neurons, ..
         %% Set up event struct so that analysis can go through rest of pipeline
         [ica_relative_response, ic_names] = mnts_to_psth(weighted_mnts, tot_trials, tot_cols, tot_bins, 'ic');
         repeat = [length(ic_names), 1];
-        region_num = labeled_neurons.(region){1, 3};
-        region_date = labeled_neurons.(region){1, 4};
+        region_num = labeled_data.(region){1, 3};
+        region_date = labeled_data.(region){1, 4};
         labeled_ics.(region) = [ic_names, repmat({region}, repeat), repmat({region_num}, repeat) ...
             repmat({region_date}, repeat), repmat({'IC'}, repeat)];
-        event_struct.(region) = split_relative_response(ica_relative_response, ic_names, ...
+        psth_struct.(region) = split_relative_response(ica_relative_response, ic_names, ...
             mnts_struct.all_events, bin_size, pre_time, post_time);
-        event_struct.(region).relative_response = ica_relative_response;
-        event_struct.(region).psth = sum(ica_relative_response, 1) / tot_trials;
-        event_struct.(region).mnts = weighted_mnts;
+        psth_struct.(region).relative_response = ica_relative_response;
+        psth_struct.(region).psth = sum(ica_relative_response, 1) / tot_trials;
+        psth_struct.(region).mnts = weighted_mnts;
 
         %% Store ICA results
         ica_results.(region).ica_weights = ica_weights;

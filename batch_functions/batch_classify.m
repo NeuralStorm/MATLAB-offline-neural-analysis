@@ -26,15 +26,15 @@ function [] = batch_classify(animal_name, original_path, data_path, dir_name, se
             filename = erase(filename, [filename_substring_one, '.', filename_substring_two, '.']);
             filename = erase(filename, [filename_substring_one, '_', filename_substring_two, '_']);
             [~, experimental_group, ~, session_num, session_date, ~] = get_filename_info(filename);
-            load(file, 'labeled_neurons', 'event_struct', 'event_ts');
+            load(file, 'labeled_data', 'psth_struct', 'event_ts');
             %% Check psth variables to make sure they are not empty
-            empty_vars = check_variables(file, event_struct, labeled_neurons, event_ts);
+            empty_vars = check_variables(file, psth_struct, labeled_data, event_ts);
             if empty_vars
                 continue
             end
 
             %% Classify and bootstrap
-            [unit_struct, pop_struct, pop_table, unit_table] = psth_bootstrapper(labeled_neurons, event_struct, ...
+            [unit_struct, pop_struct, pop_table, unit_table] = psth_bootstrapper(labeled_data, psth_struct, ...
                 event_ts, boot_iterations, bootstrap_classifier, bin_size, pre_time, post_time, analysis_column_names);
 
             %% PSTH synergy redundancy
@@ -49,7 +49,7 @@ function [] = batch_classify(animal_name, original_path, data_path, dir_name, se
                 concat_tables(general_column_names, unit_config_info, current_general_info, unit_info, unit_table);
 
             matfile = fullfile(classify_path, ['test_psth_classifier_', filename, '.mat']);
-            check_variables(matfile, event_struct, unit_struct, pop_struct, pop_table, unit_table);
+            check_variables(matfile, psth_struct, unit_struct, pop_struct, pop_table, unit_table);
             save(matfile, 'pop_struct', 'unit_struct', 'pop_table', 'unit_table');
         catch ME
             handle_ME(ME, failed_path, filename);
