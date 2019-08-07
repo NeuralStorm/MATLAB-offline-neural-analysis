@@ -17,5 +17,5 @@ function [psth_figure] = plot_PSTH(psth,psth_name,event,event_window)
     text=['Normalized Histogram: ', psth_name, ' event: ', event];
     title(text);
     xlabel('Time (s)');
-    ylabel('Count');    
+    ylabel('Count');
 end

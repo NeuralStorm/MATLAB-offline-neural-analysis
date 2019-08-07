@@ -8,7 +8,6 @@ function [sig_neurons, non_sig_neurons] = receptive_field_analysis(labeled_neuro
     for region = 1:length(region_names)
         current_region = region_names{region};
         region_neurons = labeled_neurons.(current_region)(:,1);
-
         for event = 1:length(event_strings(1,:))
             current_event = event_strings{event};
             pre_psth = event_struct.(current_region).(current_event).norm_pre_time_activity;
@@ -17,20 +16,19 @@ function [sig_neurons, non_sig_neurons] = receptive_field_analysis(labeled_neuro
                 neuron_name = region_neurons{neuron};
                 notes = labeled_neurons.(current_region)(strcmpi(labeled_neurons.(current_region)(:,1), ...
                     neuron_name), end);
-                %% Deal with pre window first                
+                %% Deal with pre window first
                   [smoothed_threshold,background_rate,background_std] = ...
                       pre_time_anlysis(pre_psth(neuron, :),span,threshold_scale);
 
-                
                 %% Determine if given neuron has a significant response
-                 [sig_response] = sig_response_check(pre_psth(neuron, :),post_psth(neuron, :),smoothed_threshold,span,sig_bins,sig_check);
+                 [sig_response] = sig_response_check(pre_psth(neuron, :), post_psth(neuron, :), ...
+                    smoothed_threshold, span, sig_bins, sig_check);
 
                 if sig_response
-
                     %% Finds results of the receptive field analysis
-                     [first_latency,last_latency,duration,peak_latency,peak,corrected_peak,...
-                         response_magnitude,corrected_response_magnitude] = ...
-                         post_time_analysis(background_rate,post_psth(neuron,:),smoothed_threshold,bin_size);
+                     [first_latency, last_latency, duration, peak_latency, peak, corrected_peak,...
+                         response_magnitude, corrected_response_magnitude] = ...
+                         post_time_analysis(background_rate, post_psth(neuron,:), smoothed_threshold,bin_size);
 
                     % Organizes data results into cell array
                     sig_neurons = [sig_neurons; {current_region}, {neuron_name}, {current_event}, ...

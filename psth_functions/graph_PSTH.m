@@ -20,29 +20,41 @@ function [] = graph_PSTH(save_path, event_struct, labeled_neurons, sig_response,
         for event = 1:length(event_strings(1,:))
             current_event = event_strings{event};
             event_psth = event_struct.(current_region).(current_event).psth;
+
+            event_max = 1.1 * max(event_psth) + eps;
+            if min(event_psth) >= 0
+                event_min = 0;
+            else
+                event_min = 1.1 * min(event_psth);
+            end
+
             %% Create the event directories
             event_path = [region_path, '/', current_event, '/'];
             if ~exist(event_path, 'dir')
                 mkdir(region_path, current_event);
             end
-            
             if make_region_subplot
                 region_figure = figure('visible', 'off');
+            else
+                region_figure = NaN;
             end
-            
+
             %% Creating the PSTH graphs
             for neuron = 1:total_region_neurons
                 psth = event_psth(((1:total_bins) + ((neuron-1) * total_bins)));
                 psth_name = region_neurons{neuron};
-                [unit_figure] = plot_PSTH(psth,psth_name,current_event,event_window)               
+                unit_figure = plot_PSTH(psth,psth_name,current_event,event_window)               
                 if rf_analysis
+                    threshold = NaN;
+                    first_bin_latency = NaN;
+                    last_bin_latency = NaN;
                     %% Plot first & last bin latency and threshold for significant neurons
                     % otherwise plots threshold on non significant neurons
                     if ~isempty(sig_response)
                         region_sig_neurons = sig_response(strcmpi(sig_response.region, current_region), :);
                         if ~isempty(region_sig_neurons) && ~isempty(region_sig_neurons.channel(strcmpi(region_sig_neurons.channel, psth_name) & ...
                                 strcmpi(region_sig_neurons.event, current_event)))
-                            event_threshold = region_sig_neurons.threshold(strcmpi(region_sig_neurons.channel, psth_name) & ...
+                            threshold = region_sig_neurons.threshold(strcmpi(region_sig_neurons.channel, psth_name) & ...
                                 strcmpi(region_sig_neurons.event, current_event));
                             first_bin_latency = region_sig_neurons.first_latency(strcmpi(region_sig_neurons.channel, psth_name) & ...
                                 strcmpi(region_sig_neurons.event, current_event));
@@ -50,33 +62,30 @@ function [] = graph_PSTH(save_path, event_struct, labeled_neurons, sig_response,
                                 strcmpi(region_sig_neurons.event, current_event));
                         end
                     end
-                    if ~isempty(non_sig_response) && ~isempty(non_sig_response.channel(strcmpi(non_sig_response.channel, psth_name) & ...
-                            strcmpi(non_sig_response.event, current_event) & strcmpi(non_sig_response.region, current_region)))
-                            event_threshold = non_sig_response.threshold(strcmpi(non_sig_response.channel, psth_name) & ...
-                            strcmpi(non_sig_response.event, current_event) & strcmpi(non_sig_response.region, current_region));
-                            first_bin_latency = NaN;
-                            last_bin_latency = NaN;
+                    if ~isempty(non_sig_response) && ~isempty(non_sig_response.channel( ...
+                                strcmpi(non_sig_response.channel, psth_name) & strcmpi(non_sig_response.event, current_event) ...
+                                & strcmpi(non_sig_response.region, current_region)))
+                            %% Find threshold
+                            threshold = non_sig_response.threshold(strcmpi(non_sig_response.channel, psth_name) & ...
+                                strcmpi(non_sig_response.event, current_event) & ...
+                                strcmpi(non_sig_response.region, current_region));
                     end
                     %% Plots elements from rec field analysis
-                    plot_recfield(psth,first_bin_latency,last_bin_latency,event_threshold,event_onset,unit_figure,bin_size,pre_time);                   
+                    plot_recfield(psth, first_bin_latency, last_bin_latency, threshold, ...
+                        event_onset, unit_figure, bin_size, pre_time);
                     if make_region_subplot
                         figure(region_figure);
                         scrollsubplot(sub_rows, sub_cols, neuron);
                         hold on
                         region_handle = bar(event_window, psth,'BarWidth', 1);
                         set(region_handle, 'EdgeAlpha', 0);
-                        
-                        if min(event_psth)>=0
-                            ylim([0 1.1*max(event_psth)+eps]);
-                        else
-                            ylim([1.1*min(event_psth) 1.1*max(event_psth)+eps]);
-                        end
+                        ylim([event_min event_max]);
 
-                        plot_recfield(psth, first_bin_latency,last_bin_latency,event_threshold,event_onset,region_figure,bin_size,pre_time);
+                        plot_recfield(psth, first_bin_latency, last_bin_latency, threshold, event_onset,...
+                            region_figure, bin_size, pre_time);
                         title(psth_name);
                         hold off
-                        
-                    end                    
+                    end
                 end
                 if make_region_subplot && ~rf_analysis
                     figure(region_figure);
@@ -84,25 +93,20 @@ function [] = graph_PSTH(save_path, event_struct, labeled_neurons, sig_response,
                     hold on
                     region_handle = bar(event_window, psth,'BarWidth', 1);
                     set(region_handle, 'EdgeAlpha', 0);
-                    
-                    if min(event_psth)>=0
-                        ylim([0 1.1*max(event_psth)+eps]);
-                    else
-                        ylim([1.1*min(event_psth) 1.1*max(event_psth)+eps]);
-                    end
-                    
+                    ylim([event_min event_max]);
+
                     line([event_onset event_onset], ylim, 'Color', 'black', 'LineWidth', 0.75);
                     title(psth_name);
                     hold off
-                end                
+                end
                 figure(unit_figure);
                 filename = [psth_name, '_', current_event, '.png'];
                 saveas(gcf, fullfile(event_path, filename));
                 filename = [psth_name, '_', current_event, '.fig'];
                 savefig(gcf, fullfile(event_path, filename));
-            end                        
+            end
             if make_region_subplot
-                figure(region_figure);              
+                figure(region_figure);
                 filename = ['region_units_', current_event, '.fig'];
                 savefig(gcf, fullfile(event_path, filename));
             end
