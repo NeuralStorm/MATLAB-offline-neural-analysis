@@ -1,5 +1,5 @@
-function [amplifier_data, board_dac_data, board_dig_in_data, t,...
-           sample_rate] = read_Intan_RHS2000_file(filename)
+function [amplifier_channels, amplifier_data, board_dac_channels, board_dac_data, ...
+            board_dig_in_data, t, sample_rate] = read_Intan_RHS2000_file(filename)
 
 % read_Intan_RHS2000_file
 %

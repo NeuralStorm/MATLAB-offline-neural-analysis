@@ -1,4 +1,4 @@
-function [amplifier_data, board_adc_data, board_dig_in_data, t_amplifier,...
+function [amplifier_channels,amplifier_data, board_adc_channels, board_adc_data, board_dig_in_data, t_amplifier,...
             sample_rate] = read_Intan_RHD2000_file(filename)
 
 % read_Intan_RHD2000_file
@@ -458,9 +458,9 @@ if (data_present)
 
 end
 
-% % % Move variables to base workspace.
-% % 
-% % % new for version 2.01: move filename info to base workspace
+% % % % Move variables to base workspace.
+% % % % 
+% % % % new for version 2.01: move filename info to base workspace
 % % % filename = file;
 % % % move_to_base_workspace(filename);
 % % % move_to_base_workspace(path);
