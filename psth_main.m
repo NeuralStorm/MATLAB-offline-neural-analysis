@@ -64,6 +64,11 @@ function [] = psth_main()
                             format_PSTH(event_ts, labeled_data, config.bin_size, config.pre_time, ...
                             config.post_time, config.wanted_events, config.trial_range, config.trial_lower_bound);
 
+                        %% Add analysis window
+                        [baseline_window, response_window] = create_analysis_windows(labeled_data, psth_struct, ...
+                            config.pre_time, config.pre_start, config.pre_end, config.post_time, ...
+                            config.post_start, config.post_end, config.bin_size);
+
                         %% Saving outputs
                         matfile = fullfile(psth_path, ['PSTH_format_', filename, '.mat']);
                         %% Check PSTH output to make sure there are no issues with the output
@@ -73,7 +78,7 @@ function [] = psth_main()
                         end
 
                         %% Save file if all variables are not empty
-                        save(matfile, 'psth_struct', 'event_ts', 'event_strings', 'labeled_data');
+                        save(matfile, 'psth_struct', 'event_ts', 'event_strings', 'labeled_data', 'baseline_window', 'response_window');
                         export_params(psth_path, 'format_psth', parsed_path, failed_path, animal_name, config);
                     catch ME
                         handle_ME(ME, failed_path, filename);
@@ -100,7 +105,8 @@ function [] = psth_main()
             %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
             if config.make_psth_graphs
                 batch_graph(animal_name, psth_path, 'psth_graphs', '.mat', 'PSTH', 'format', ...
-                    config.bin_size, config.pre_time, config.post_time, config.rf_analysis, rf_path, ...
+                    config.bin_size, config.pre_time, config.post_time, config.pre_start, ...
+                    config.pre_end, config.post_start, config.post_end, config.rf_analysis, rf_path, ...
                     config.make_region_subplot, config.sub_columns, config.sub_rows);
             end
 

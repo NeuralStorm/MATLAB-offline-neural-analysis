@@ -1,5 +1,5 @@
 function [] = graph_PSTH(save_path, psth_struct, labeled_data, sig_response, non_sig_response, bin_size, ...
-                pre_time, post_time, rf_analysis, make_region_subplot, sub_cols, sub_rows)
+                pre_time, post_time, pre_start, pre_end, post_start, post_end, rf_analysis, make_region_subplot, sub_cols, sub_rows)
 
     event_strings = psth_struct.all_events(:,1)';
     event_window = -(abs(pre_time) - bin_size):bin_size:(abs(post_time));
@@ -43,7 +43,8 @@ function [] = graph_PSTH(save_path, psth_struct, labeled_data, sig_response, non
             for neuron = 1:total_region_neurons
                 psth = event_psth(((1:total_bins) + ((neuron-1) * total_bins)));
                 psth_name = region_neurons{neuron};
-                unit_figure = plot_PSTH(psth,psth_name,current_event,event_window)               
+                unit_figure = plot_PSTH(psth, psth_name, current_event, event_window, ...
+                    pre_start, pre_end, post_start, post_end);
                 if rf_analysis
                     threshold = NaN;
                     first_bin_latency = NaN;
@@ -80,9 +81,13 @@ function [] = graph_PSTH(save_path, psth_struct, labeled_data, sig_response, non
                         region_handle = bar(event_window, psth,'BarWidth', 1);
                         set(region_handle, 'EdgeAlpha', 0);
                         ylim([event_min event_max]);
-
+                        
                         plot_recfield(psth, first_bin_latency, last_bin_latency, threshold, event_onset,...
                             region_figure, bin_size, pre_time);
+                        line([-abs(pre_start) -abs(pre_start)], ylim, 'Color', 'black', 'LineWidth', 0.75, 'LineStyle', '--');
+                        line([-abs(pre_end) -abs(pre_end)], ylim, 'Color', 'black', 'LineWidth', 0.75, 'LineStyle', '--');
+                        line([post_start post_start], ylim, 'Color', 'black', 'LineWidth', 0.75, 'LineStyle', '--');
+                        line([post_end post_end], ylim, 'Color', 'black', 'LineWidth', 0.75, 'LineStyle', '--');
                         title(psth_name);
                         hold off
                     end
@@ -94,8 +99,11 @@ function [] = graph_PSTH(save_path, psth_struct, labeled_data, sig_response, non
                     region_handle = bar(event_window, psth,'BarWidth', 1);
                     set(region_handle, 'EdgeAlpha', 0);
                     ylim([event_min event_max]);
-
-                    line([event_onset event_onset], ylim, 'Color', 'black', 'LineWidth', 0.75);
+                    line([-abs(pre_start) -abs(pre_start)], ylim, 'Color', 'black', 'LineWidth', 0.75, 'LineStyle', '--');
+                    line([-abs(pre_end) -abs(pre_end)], ylim, 'Color', 'black', 'LineWidth', 0.75, 'LineStyle', '--');
+                    line([post_start post_start], ylim, 'Color', 'black', 'LineWidth', 0.75, 'LineStyle', '--');
+                    line([post_end post_end], ylim, 'Color', 'black', 'LineWidth', 0.75, 'LineStyle', '--');
+                    % line([event_onset event_onset], ylim, 'Color', 'black', 'LineWidth', 0.75);
                     title(psth_name);
                     hold off
                 end

@@ -1,5 +1,6 @@
 function [rf_path] = batch_recfield(animal_name, original_path, data_path, dir_name, ...
         search_ext, filename_substring_one, filename_substring_two, config)
+    %! TODO FIX CSV NAME HANDLING
     %% Make sure rf analysis has enough pre time to determine threshold
     if abs(config.pre_time) <= 0.050
         error('Pre time ~= 0 for receptive field analysis. Create psth with pre time > 0.');
@@ -30,15 +31,15 @@ function [rf_path] = batch_recfield(animal_name, original_path, data_path, dir_n
             [animal_id, experimental_group, ~, session_num, session_date, ~] = get_filename_info(filename);
 
             %% Load needed variables from psth and does the receptive field analysis
-            load(file, 'labeled_data', 'psth_struct');
+            load(file, 'labeled_data', 'baseline_window', 'response_window');
             %% Check psth variables to make sure they are not empty
-            empty_vars = check_variables(file, psth_struct, labeled_data);
+            empty_vars = check_variables(file, baseline_window, response_window, labeled_data);
             if empty_vars
                 continue
             end
 
             [sig_neurons, non_sig_neurons] = receptive_field_analysis( ...
-                labeled_data, psth_struct, config.bin_size, config.threshold_scale, ...
+                labeled_data, baseline_window, response_window, config.bin_size, config.post_start, config.threshold_scale, ...
                 config.sig_check, config.sig_bins, config.span, analysis_column_names);
 
             %% Capture data to save to csv from current day
