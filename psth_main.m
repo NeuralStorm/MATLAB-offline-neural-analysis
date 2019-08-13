@@ -89,8 +89,7 @@ function [] = psth_main()
                 psth_path = [parsed_path, '/psth'];
             end
 
-            update_psth_windows = 1;
-            if update_psth_windows
+            if config.update_psth_windows
                 file_type = [psth_path, '/*', '.mat'];
                 file_list = dir(file_type);
                 for file_index = 1:length(file_list)
