@@ -125,7 +125,7 @@ function [] = mnts_main()
                 pca_path = [mnts_path, '/pca'];
             end
 
-            if convert_mnts_to_psth
+            if config.convert_mnts_psth
                 psth_path = batch_mnts_to_psth(animal_name, pca_path, 'psth', ...
                     '.mat', 'pc', 'analysis', 'pca_psth', config);
             end
@@ -218,7 +218,7 @@ function [] = mnts_main()
                     animal_name, num2str(toc(ica_start)));
             end
 
-            if convert_mnts_to_psth
+            if config.convert_mnts_psth
                 psth_path = batch_mnts_to_psth(animal_name, ica_path, 'psth', ...
                     '.mat', 'ic', 'analysis', 'ica_psth', config);
             end
