@@ -427,23 +427,23 @@ if (data_present)
 
     % If the software notch filter was selected during the recording, apply the
     % same notch filter to amplifier data here.
-    if (notch_filter_frequency > 0)
-        fprintf(1, 'Applying notch filter...\n');
-
-        print_increment = 10;
-        percent_done = print_increment;
-        for i=1:num_amplifier_channels
-            amplifier_data(i,:) = ...
-                notch_filter(amplifier_data(i,:), sample_rate, notch_filter_frequency, 10);
-
-            fraction_done = 100 * (i / num_amplifier_channels);
-            if (fraction_done >= percent_done)
-                fprintf(1, '%d%% done...\n', percent_done);
-                percent_done = percent_done + print_increment;
-            end
-
-        end
-    end
+% % %     if (notch_filter_frequency > 0)
+% % %         fprintf(1, 'Applying notch filter...\n');
+% % % 
+% % %         print_increment = 10;
+% % %         percent_done = print_increment;
+% % %         for i=1:num_amplifier_channels
+% % %             amplifier_data(i,:) = ...
+% % %                 notch_filter(amplifier_data(i,:), sample_rate, notch_filter_frequency, 10);
+% % % 
+% % %             fraction_done = 100 * (i / num_amplifier_channels);
+% % %             if (fraction_done >= percent_done)
+% % %                 fprintf(1, '%d%% done...\n', percent_done);
+% % %                 percent_done = percent_done + print_increment;
+% % %             end
+% % % 
+% % %         end
+% % %     end
 
 end
 
