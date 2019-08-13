@@ -1,5 +1,5 @@
 function [] = plot_recfield(psth, first_bin_latency, last_bin_latency, threshold, ...
-        event_onset, figure_handle, bin_size, pre_time)
+        figure_handle, bin_size, pre_time)
     %% Plots elements from rec field analysis
     figure(figure_handle);
     hold on

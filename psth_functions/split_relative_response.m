@@ -3,10 +3,6 @@ function [psth_struct] = split_relative_response(relative_response, col_labels, 
 
     %% Create window and edges for PSTH
     psth_struct = struct;
-    % event_window = -(abs(pre_time)):bin_size:(abs(post_time));
-    % tot_bins = length(event_window) - 1;
-    % pre_time_bins = (length(-abs(pre_time): bin_size: 0)) - 1;
-    % post_time_bins = (length(0:bin_size:post_time)) - 1;
 
     % Relative response: T X (N * B)
     tot_labels = length(col_labels);
@@ -24,11 +20,8 @@ function [psth_struct] = split_relative_response(relative_response, col_labels, 
         % are grouped by event and organized alphabetically (ie: 1, 3, 4, etc)
         event_relative_response = relative_response(event_start:event_end, :);
         current_psth = sum(event_relative_response, 1) / tot_event_trials;
-        % [pre_time_activity, post_time_activity] = split_psth(current_psth, pre_time, pre_time_bins, post_time_bins);
 
         %% Store relative response in event struct
-        % psth_struct.(event).norm_pre_time_activity = pre_time_activity;
-        % psth_struct.(event).norm_post_time_activity = post_time_activity;
         psth_struct.(event).relative_response = event_relative_response;
         psth_struct.(event).psth = current_psth;
         event_start = event_end + 1;
