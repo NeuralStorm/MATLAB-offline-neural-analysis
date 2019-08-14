@@ -27,7 +27,7 @@ function lowpass_filtered_path = do_lowpass_filter(animal_name, parsed_path, not
                      end
                  board_band_map = notch_filtered_map;
              else
-                    load(file, 'board_band_map', 'sample_rate');
+                    load(file, 'board_band_map', 'board_dig_in_data', 'sample_rate');
                     empty_vars = check_variables(file, board_band_map, sample_rate);
                     if empty_vars
                         continue
@@ -49,7 +49,7 @@ function lowpass_filtered_path = do_lowpass_filter(animal_name, parsed_path, not
                 save(matfile, 'lowpass_filtered_map', '-append');                        
             else
                 matfile = fullfile(lowpass_filtered_path, ['filtered_', filename, '.mat']);
-                save(matfile, 'lowpass_filtered_map', 'sample_rate'); 
+                save(matfile, 'lowpass_filtered_map', 'board_dig_in_data', 'sample_rate'); 
             end
 
         catch ME

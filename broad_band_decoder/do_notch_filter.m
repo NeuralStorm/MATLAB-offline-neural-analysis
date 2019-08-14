@@ -9,7 +9,7 @@ function notch_filtered_path = do_notch_filter(animal_name, ...
             %% Load file contents
             file = [parsed_path, '/', parsed_files(file_index).name];
             [~, filename, ~] = fileparts(file);
-            load(file, 'board_band_map', 'sample_rate');
+            load(file, 'board_band_map', 'board_dig_in_data', 'sample_rate');
             %% Check parsed variables to make sure they are not empty
             empty_vars = check_variables(file, board_band_map, sample_rate);
             if empty_vars
@@ -27,7 +27,7 @@ function notch_filtered_path = do_notch_filter(animal_name, ...
                 continue
             end
             %% Save file if all variables are not empty
-                 save(matfile, 'notch_filtered_map', 'sample_rate');
+                 save(matfile, 'notch_filtered_map', 'board_dig_in_data', 'sample_rate');
         catch ME
             handle_ME(ME, failed_path, filename);
         end
