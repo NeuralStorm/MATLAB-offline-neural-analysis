@@ -25,15 +25,16 @@ function [] = batch_nv(animal_name, original_path, data_path, dir_name, ...
             filename = erase(filename, [filename_substring_one, '.', filename_substring_two, '.']);
             filename = erase(filename, [filename_substring_one, '_', filename_substring_two, '_']);
             [~, experimental_group, ~, session_num, session_date, ~] = get_filename_info(filename);
-            load(file, 'labeled_data', 'psth_struct');
+            load(file, 'labeled_data', 'baseline_window');
             %% Check psth variables to make sure they are not empty
-            empty_vars = check_variables(file, psth_struct, labeled_data);
+            empty_vars = check_variables(file, baseline_window, labeled_data);
             if empty_vars
                 continue
             end
             %% NV analysis
-            neuron_activity = nv_calculation(labeled_data, psth_struct, config.pre_time, config.post_time, ...
-                config.bin_size, config.epsilon, config.norm_var_scaling, config.separate_events, analysis_column_names);
+            neuron_activity = nv_calculation(labeled_data, baseline_window, ...
+                config.pre_start, config.pre_end, config.bin_size, ...
+                config.epsilon, config.norm_var_scaling, config.separate_events, analysis_column_names);
 
             %% Store metadata about file
             current_general_info = [{animal_name}, {experimental_group}, session_date, session_num];
