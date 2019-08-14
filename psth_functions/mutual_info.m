@@ -1,6 +1,6 @@
-function [prob_struct, mi_results] = mutual_info(psth_struct, labeled_data)
+function [prob_struct, mi_results] = mutual_info(response_window, labeled_data)
 
-    all_events = psth_struct.all_events;
+    all_events = response_window.all_events;
     event_strings = all_events(:,1)';
     total_trials = 0;
     for event = 1:length(event_strings)
@@ -32,7 +32,7 @@ function [prob_struct, mi_results] = mutual_info(psth_struct, labeled_data)
             %% Iterate through channel keys
             for unit = 1:length(neuron_names)
                 current_unit = neuron_names{unit};
-                event_relative_response = psth_struct.(current_region).(current_event).(current_unit).relative_response;
+                event_relative_response = response_window.(current_region).(current_event).(current_unit).relative_response;
 
                 %% Count probability
                 bin_counts = sum(event_relative_response, 2);
