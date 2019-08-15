@@ -33,7 +33,7 @@ function [baseline_struct, response_struct] = create_analysis_windows(labeled_da
 
     all_events = psth_struct.all_events;
 
-    pre_start_index = (abs(pre_start) / bin_size);
+    pre_start_index = (abs(pre_start) / bin_size) - baseline_bins;
 
     post_start_index = (abs(post_start) / bin_size);
 
@@ -78,16 +78,17 @@ function [psth_window] = slice_window(response, tot_bins, start_time_i, tot_wind
         return
     end
     assert(tot_window_bins ~= 0);
+    label_start = 1;
     label_end = tot_bins;
     [~, tot_cols] = size(response);
     psth_window = [];
     while label_end <= tot_cols
-        label_start = label_end - tot_bins + 1;
         window_start = label_start + start_time_i;
         window_end = window_start + tot_window_bins - 1;
         assert(window_end <= tot_cols)
         psth_window = [psth_window, response(:, window_start:window_end)];
         % Update counter
         label_end = label_end + tot_bins;
+        label_start = label_end - tot_bins + 1;
     end
 end
