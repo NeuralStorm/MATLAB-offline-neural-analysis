@@ -1,9 +1,6 @@
 function [] = batch_nv(animal_name, original_path, data_path, dir_name, ...
         search_ext, filename_substring_one, filename_substring_two, config)
     %% Check pre time is valid for analysis
-    if abs(config.pre_time) <= 0.050
-        error('Pre time ~= 0 for normalized variance analysis. Create psth with pre time > 0.');
-    end
     nv_start = tic;
 
     %% NV set up
@@ -29,7 +26,9 @@ function [] = batch_nv(animal_name, original_path, data_path, dir_name, ...
             %% Check psth variables to make sure they are not empty
             empty_vars = check_variables(file, baseline_window, labeled_data);
             if empty_vars
-                continue
+                error('Baseline_window and/or labeled_data is empty');
+            elseif ~isstruct(baseline_window) && isnan(baseline_window)
+                error('pre_time, pre_start, and pre_end must all be non zero windows for this analysis.');
             end
             %% NV analysis
             neuron_activity = nv_calculation(labeled_data, baseline_window, ...

@@ -1,10 +1,6 @@
 function [rf_path] = batch_recfield(animal_name, original_path, data_path, dir_name, ...
         search_ext, filename_substring_one, filename_substring_two, config)
     %! TODO FIX CSV NAME HANDLING
-    %% Make sure rf analysis has enough pre time to determine threshold
-    if abs(config.pre_time) <= 0.050
-        error('Pre time ~= 0 for receptive field analysis. Create psth with pre time > 0.');
-    end
 
     rf_start = tic;
 
@@ -35,7 +31,11 @@ function [rf_path] = batch_recfield(animal_name, original_path, data_path, dir_n
             %% Check psth variables to make sure they are not empty
             empty_vars = check_variables(file, baseline_window, response_window, labeled_data);
             if empty_vars
-                continue
+                error('Baseline_window, response_window, and/or labeled_data is empty');
+            elseif ~isstruct(baseline_window) && isnan(baseline_window)
+                error('pre_time, pre_start, and pre_end must all be non zero windows for this analysis.');
+            elseif ~isstruct(response_window) && isnan(response_window)
+                error('post_time, post_start, and post_end must all be non zero windows for this analysis.');
             end
 
             [sig_neurons, non_sig_neurons] = receptive_field_analysis( ...

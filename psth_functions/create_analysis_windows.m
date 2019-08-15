@@ -37,7 +37,7 @@ function [baseline_struct, response_struct] = create_analysis_windows(labeled_da
 
     post_start_index = (abs(post_start) / bin_size);
 
-    unique_regions = fieldnames(labeled_data);
+    unique_regions = setdiff(fieldnames(psth_struct), 'all_events');
     baseline_struct = struct;
     baseline_struct.all_events = all_events;
     response_struct = struct;
@@ -51,20 +51,33 @@ function [baseline_struct, response_struct] = create_analysis_windows(labeled_da
 
         %% slice out baseline window
         baseline_response = slice_window(pre_response, pre_time_bins, pre_start_index, baseline_bins);
-        baseline_struct.(region) = split_relative_response(baseline_response, region_labels, ...
-            all_events, baseline_bins);
-        baseline_struct.(region).relative_response = baseline_response;
+        if isnan(baseline_response)
+            baseline_struct = NaN;
+        else
+            baseline_struct.(region) = split_relative_response(baseline_response, region_labels, ...
+                all_events, baseline_bins);
+            baseline_struct.(region).relative_response = baseline_response;
+        end
 
         %% Slice out response window
         response_window = slice_window(post_response, post_time_bins, post_start_index, response_bins);
-        response_struct.(region) = split_relative_response(response_window, region_labels, ...
-            all_events, response_bins);
-        response_struct.(region).relative_response = response_window;
+        if isnan(response_window)
+            response_struct = NaN;
+        else
+            response_struct.(region) = split_relative_response(response_window, region_labels, ...
+                all_events, response_bins);
+            response_struct.(region).relative_response = response_window;
+        end
     end
 
 end
 
 function [psth_window] = slice_window(response, tot_bins, start_time_i, tot_window_bins)
+    if isnan(response)
+        psth_window = NaN;
+        return
+    end
+    assert(tot_window_bins ~= 0);
     label_end = tot_bins;
     [~, tot_cols] = size(response);
     psth_window = [];

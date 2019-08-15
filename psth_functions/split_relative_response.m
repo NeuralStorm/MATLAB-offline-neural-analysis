@@ -1,6 +1,11 @@
 function [psth_struct] = split_relative_response(relative_response, col_labels, ...
         all_events, tot_bins)
 
+    if isnan(relative_response)
+        psth_struct = NaN;
+        return
+    end
+
     %% Create window and edges for PSTH
     psth_struct = struct;
 
@@ -25,7 +30,7 @@ function [psth_struct] = split_relative_response(relative_response, col_labels, 
         psth_struct.(event).relative_response = event_relative_response;
         psth_struct.(event).psth = current_psth;
         event_start = event_end + 1;
-        if event_index + 1 < tot_events
+        if event_index + 1 <= tot_events
             % Check to make sure event index is not pass total events
             event_end = event_end + length(all_events{event_index + 1, 2});
         end

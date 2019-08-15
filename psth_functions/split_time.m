@@ -1,9 +1,18 @@
 function [pre_response, post_response] = split_time(relative_response, pre_time_bins, post_time_bins)
+    if isempty(relative_response)
+        error('Relative response cannot be empty.');
+    end
     pre_response = [];
     post_response = [];
     [~, tot_cols] = size(relative_response);
     %% Breaks down the PSTH into pre psth
-    if pre_time_bins ~= 0
+    if pre_time_bins == 0
+        pre_response = NaN;
+        post_response = relative_response;
+    elseif post_time_bins == 0
+        pre_response = relative_response;
+        post_response = NaN;
+    else
         %% Creates pre time PSTH
         pre = pre_time_bins;
         while pre < tot_cols
@@ -17,8 +26,5 @@ function [pre_response, post_response] = split_time(relative_response, pre_time_
             post_response = [post_response, relative_response(:, (post - post_time_bins + 1): post)];
             post = post + pre_time_bins + post_time_bins;
         end
-    else
-        pre_response = NaN;
-        post_response = relative_response;
     end
 end
