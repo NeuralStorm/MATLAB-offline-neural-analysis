@@ -1,13 +1,37 @@
-function sep_l2h_map = sep_slicing(amp_sig_map, dig_sig, sample_rate, window)
-    ts = find_ts(dig_sig, sample_rate);
-    [tot_channel, ~] = size(amp_sig_map);
-    sep_l2h_map = [];
-    amp_sig_mat = cell2mat(amp_sig_map(:,2));
-    sep_l2h = make_sep(amp_sig_mat, ts(1,:), sample_rate, window);
-    %mapping
-    for channel_index = 1:tot_channel   
-        sep_l2h_map = [sep_l2h_map; {amp_sig_map{channel_index, 1}}, {sep_l2h(channel_index, :)}];
-    end
+function sep_slicing_path = sep_slicing(animal_name, filtered_path, first_window_time, last_window_time)
+    sep_slicing_start = tic;
+    fprintf('Applying sep slicing for %s \n', animal_name);
+        [filtered_files, sep_slicing_path, failed_path] = create_dir...
+            (filtered_path, 'sliced', '.mat');
+        for file_index = 1:length(filtered_files)
+            try
+                %% Load file contents
+                file = [filtered_path, '/', filtered_files(file_index).name];
+                [~, filename, ~] = fileparts(file);
+                load(file, 'lowpass_filtered_map', 'board_dig_in_data', 'sample_rate');
+                %% Check filtered variables to make sure they are not empty
+                empty_vars = check_variables(file, lowpass_filtered_map, board_dig_in_data, sample_rate);
+                if empty_vars
+                    continue
+                end
+                %% Apply sep slicing
+                sep_window = [-abs(first_window_time), last_window_time];
+                sep_l2h_map = make_sep_map(lowpass_filtered_map, board_dig_in_data, ...
+                    sample_rate, sep_window);
 
+                %% Saving outputs
+                matfile = fullfile(sep_slicing_path, ['sliced_', filename, '.mat']);
+                %% Check output to make sure there are no issues with the output
+                empty_vars = check_variables(matfile, sep_l2h_map);
+                if empty_vars
+                    continue
+                end
+                %% Save file if all variables are not empty
+                     save(matfile, 'sep_l2h_map', 'sep_window');
+            catch ME
+                handle_ME(ME, failed_path, filename);
+            end
+        end         
+        fprintf('Finished sep slicing for %s. It took %s s\n', ...
+            animal_name, num2str(toc(sep_slicing_start)));
 end
-

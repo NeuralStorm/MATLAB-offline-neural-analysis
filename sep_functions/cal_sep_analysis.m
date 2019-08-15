@@ -14,7 +14,7 @@ neg_sep_valid = [];
 sepdata= struct('animal_id', {}, 'channel_name', {}, 'sep_sliced_data', {}, 'peak_to_peak',{}, 'neg_peak',{},...
     'neg_peak_latency',{}, 'pos_peak', {}, 'pos_peak_latency',{} ,'response_dur',{},...
     'background', {},'background_sd',{},'snr',{},'pos_sep_valid',{},...
-    'neg_sep_valid',{},'type',{},'response',{}, 'layer', {});
+    'neg_sep_valid',{},'type',{},'response',{});
 
 disp(['Analyzing SEP...']);
 
@@ -74,17 +74,7 @@ for i = 1:size(sep,1)
         response = 0;
     end
     
-    if ((i==1)||(i==2))
-        layer='layer 1';
-    elseif (i>=3&&i<=6)
-        layer='layer 2/3';
-    elseif (i>=7&&i<=10)
-        layer='layer 4';
-    elseif (i>=11&&i<=14)
-        layer='layer 5';
-    else
-        layer='layer 6';
-    end
+
     sepdata(i).animal_id = animal_name;
     sepdata(i).channel_name = sep_map{i, 1};
     sepdata(i).sep_sliced_data = sep_map{i, 2};
@@ -101,7 +91,6 @@ for i = 1:size(sep,1)
     sepdata(i).neg_sep_valid = neg_sep_valid;
     sepdata(i).type = type;
     sepdata(i).response = response;
-    sepdata(i).layer = layer;
 %    sepdata(i).animal_num = file(1:6);
     end
 end
