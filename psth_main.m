@@ -163,9 +163,7 @@ function [] = psth_main()
             %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
             if config.psth_classify
                 batch_classify(animal_name, original_path, psth_path, 'classifier', '.mat', ...
-                    'PSTH', 'format', config.boot_iterations, config.bootstrap_classifier, ...
-                    config.bin_size, config.pre_time, config.pre_start, config.pre_end, ...
-                    config.post_time, config.post_start, config.post_end);
+                    'PSTH', 'format', config);
             end
 
             %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%

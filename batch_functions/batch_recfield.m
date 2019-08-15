@@ -6,6 +6,9 @@ function [rf_path] = batch_recfield(animal_name, original_path, data_path, dir_n
 
     %% Rec field general set up
     [files, rf_path, failed_path] = create_dir(data_path, dir_name, search_ext);
+    export_params(rf_path, 'receptive_field_analysis', rf_path, failed_path, ...
+        animal_name, config);
+
     general_column_names = {'animal', 'group', 'date', 'record_session', 'pre_time', 'post_time', ...
         'bin_size', 'sig_check', 'sig_bins', 'span', 'threshold_scale'};
     analysis_column_names = {'region', 'channel', 'event', 'significant', ...
@@ -14,7 +17,7 @@ function [rf_path] = batch_recfield(animal_name, original_path, data_path, dir_n
         'total_sig_events', 'principal_event', 'norm_magnitude', 'notes'};
     column_names = [general_column_names, analysis_column_names];
 
-    fprintf('Receptive field analysis for %s \n', animal_name);
+    sprintf('Receptive field analysis for %s \n', animal_name);
     all_neurons = [];
     general_info = table;
     for file_index = 1:length(files)
@@ -54,8 +57,6 @@ function [rf_path] = batch_recfield(animal_name, original_path, data_path, dir_n
             % Does not check if variables are empty since there may/may not be significant responses in a set
             matfile = fullfile(rf_path, ['rec_field_', filename, '.mat']);
             save(matfile, 'labeled_data', 'sig_neurons', 'non_sig_neurons');
-            export_params(rf_path, 'receptive_field_analysis', rf_path, failed_path, ...
-                animal_name, config);
         catch ME
             handle_ME(ME, failed_path, filename);
         end
