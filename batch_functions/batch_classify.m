@@ -1,5 +1,7 @@
-function [] = batch_classify(animal_name, original_path, data_path, dir_name, search_ext, filename_substring_one, filename_substring_two, ...
-                    boot_iterations, bootstrap_classifier, bin_size, pre_time, post_time)
+function [] = batch_classify(animal_name, original_path, data_path, dir_name, ...
+        search_ext, filename_substring_one, filename_substring_two, ...
+        boot_iterations, bootstrap_classifier, bin_size, pre_time, pre_start, ...
+        pre_end, post_time, post_start, post_end)
     classifier_start = tic;
 
     %% Classifier set up
@@ -26,16 +28,18 @@ function [] = batch_classify(animal_name, original_path, data_path, dir_name, se
             filename = erase(filename, [filename_substring_one, '.', filename_substring_two, '.']);
             filename = erase(filename, [filename_substring_one, '_', filename_substring_two, '_']);
             [~, experimental_group, ~, session_num, session_date, ~] = get_filename_info(filename);
-            load(file, 'labeled_data', 'psth_struct', 'event_ts');
+            load(file, 'labeled_data', 'psth_struct', 'event_ts', 'response_window');
             %% Check psth variables to make sure they are not empty
-            empty_vars = check_variables(file, psth_struct, labeled_data, event_ts);
+            empty_vars = check_variables(file, psth_struct, labeled_data, event_ts, response_window);
             if empty_vars
                 continue
             end
 
             %% Classify and bootstrap
-            [unit_struct, pop_struct, pop_table, unit_table] = psth_bootstrapper(labeled_data, psth_struct, ...
-                event_ts, boot_iterations, bootstrap_classifier, bin_size, pre_time, post_time, analysis_column_names);
+            [unit_struct, pop_struct, pop_table, unit_table] = psth_bootstrapper( ...
+                labeled_data, psth_struct, response_window, event_ts, boot_iterations, ...
+                bootstrap_classifier, bin_size, pre_time, pre_start, pre_end, post_time, ...
+                post_start, post_end, analysis_column_names);
 
             %% PSTH synergy redundancy
             [pop_table] = synergy_redundancy(pop_table, unit_table, bootstrap_classifier);

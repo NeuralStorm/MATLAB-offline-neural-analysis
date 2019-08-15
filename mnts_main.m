@@ -164,7 +164,8 @@ function [] = mnts_main()
             if config.psth_classify
                 batch_classify(animal_name, original_path, psth_path, 'classifier', '.mat', 'pca', 'psth', ...
                     config.boot_iterations, config.bootstrap_classifier, config.bin_size, ...
-                    config.pre_time, config.post_time);
+                    config.pre_time, config.pre_start, config.pre_end, config.post_time, ...
+                    config.post_start, config.post_end);
             end
 
             %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -257,7 +258,8 @@ function [] = mnts_main()
             if config.psth_classify
                 batch_classify(animal_name, original_path, psth_path, 'classifier', '.mat', 'ica', 'psth', ...
                     config.boot_iterations, config.bootstrap_classifier, config.bin_size, ...
-                    config.pre_time, config.post_time);
+                    config.pre_time, config.pre_start, config.pre_end, config.post_time, ...
+                    config.post_start, config.post_end);
             end
 
             %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
