@@ -1,5 +1,5 @@
 function [] = batch_nv(animal_name, original_path, data_path, dir_name, ...
-        search_ext, filename_substring_one, filename_substring_two, config)
+        search_ext, filename_substring_one, filename_substring_two, config, ignore_sessions)
     %% Check pre time is valid for analysis
     if abs(config.pre_time) <= 0.050
         error('Pre time ~= 0 for normalized variance analysis. Create psth with pre time > 0.');
@@ -7,7 +7,11 @@ function [] = batch_nv(animal_name, original_path, data_path, dir_name, ...
     nv_start = tic;
 
     %% NV set up
-    [psth_files, nv_path, failed_path] = create_dir(data_path, dir_name, search_ext);
+    if exist('ignore_sessions') == 0 || isempty(ignore_sessions)
+        [psth_files, nv_path, failed_path] = create_dir(data_path, dir_name, search_ext);
+    else
+        [psth_files, nv_path, failed_path] = create_dir(data_path, dir_name, search_ext, ignore_sessions);
+    end
     general_column_names = {'animal', 'group', 'date', 'record_session'};
     analysis_column_names = {'event', 'region', 'channel', 'avg_background_rate', ...
         'background_var', 'norm_var', 'fano', 'notes'};
