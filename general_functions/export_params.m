@@ -24,6 +24,6 @@ function [] = export_params(current_path, name_modifier, varargin)
         param_table = [param_table; current_row];
     end
 
-    table_path = fullfile(current_path, ['/', name_modifier, '_params.csv']);
+    table_path = fullfile(current_path, ['/', name_modifier, '_log.csv']);
     writetable(param_table, table_path);
 end

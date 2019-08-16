@@ -1,14 +1,14 @@
 function [rf_path] = batch_recfield(animal_name, original_path, data_path, dir_name, ...
         search_ext, filename_substring_one, filename_substring_two, config)
-    %% Make sure rf analysis has enough pre time to determine threshold
-    if abs(config.pre_time) <= 0.050
-        error('Pre time ~= 0 for receptive field analysis. Create psth with pre time > 0.');
-    end
+    %! TODO FIX CSV NAME HANDLING
 
     rf_start = tic;
 
     %% Rec field general set up
     [files, rf_path, failed_path] = create_dir(data_path, dir_name, search_ext);
+    export_params(rf_path, 'receptive_field_analysis', rf_path, failed_path, ...
+        animal_name, config);
+
     general_column_names = {'animal', 'group', 'date', 'record_session', 'pre_time', 'post_time', ...
         'bin_size', 'sig_check', 'sig_bins', 'span', 'threshold_scale'};
     analysis_column_names = {'region', 'channel', 'event', 'significant', ...
@@ -17,7 +17,7 @@ function [rf_path] = batch_recfield(animal_name, original_path, data_path, dir_n
         'total_sig_events', 'principal_event', 'norm_magnitude', 'notes'};
     column_names = [general_column_names, analysis_column_names];
 
-    fprintf('Receptive field analysis for %s \n', animal_name);
+    sprintf('Receptive field analysis for %s \n', animal_name);
     all_neurons = [];
     general_info = table;
     for file_index = 1:length(files)
@@ -30,15 +30,19 @@ function [rf_path] = batch_recfield(animal_name, original_path, data_path, dir_n
             [animal_id, experimental_group, ~, session_num, session_date, ~] = get_filename_info(filename);
 
             %% Load needed variables from psth and does the receptive field analysis
-            load(file, 'labeled_neurons', 'event_struct');
+            load(file, 'labeled_data', 'baseline_window', 'response_window');
             %% Check psth variables to make sure they are not empty
-            empty_vars = check_variables(file, event_struct, labeled_neurons);
+            empty_vars = check_variables(file, baseline_window, response_window, labeled_data);
             if empty_vars
-                continue
+                error('Baseline_window, response_window, and/or labeled_data is empty');
+            elseif ~isstruct(baseline_window) && isnan(baseline_window)
+                error('pre_time, pre_start, and pre_end must all be non zero windows for this analysis.');
+            elseif ~isstruct(response_window) && isnan(response_window)
+                error('post_time, post_start, and post_end must all be non zero windows for this analysis.');
             end
 
             [sig_neurons, non_sig_neurons] = receptive_field_analysis( ...
-                labeled_neurons, event_struct, config.bin_size, config.threshold_scale, ...
+                labeled_data, baseline_window, response_window, config.bin_size, config.post_start, config.threshold_scale, ...
                 config.sig_check, config.sig_bins, config.span, analysis_column_names);
 
             %% Capture data to save to csv from current day
@@ -52,9 +56,7 @@ function [rf_path] = batch_recfield(animal_name, original_path, data_path, dir_n
             %% Save receptive field matlab output
             % Does not check if variables are empty since there may/may not be significant responses in a set
             matfile = fullfile(rf_path, ['rec_field_', filename, '.mat']);
-            save(matfile, 'labeled_neurons', 'sig_neurons', 'non_sig_neurons');
-            export_params(rf_path, 'receptive_field_analysis', rf_path, failed_path, ...
-                animal_name, config);
+            save(matfile, 'labeled_data', 'sig_neurons', 'non_sig_neurons');
         catch ME
             handle_ME(ME, failed_path, filename);
         end

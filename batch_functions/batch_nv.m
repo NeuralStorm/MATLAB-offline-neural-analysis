@@ -1,9 +1,6 @@
 function [] = batch_nv(animal_name, original_path, data_path, dir_name, ...
         search_ext, filename_substring_one, filename_substring_two, config)
     %% Check pre time is valid for analysis
-    if abs(config.pre_time) <= 0.050
-        error('Pre time ~= 0 for normalized variance analysis. Create psth with pre time > 0.');
-    end
     nv_start = tic;
 
     %% NV set up
@@ -25,15 +22,18 @@ function [] = batch_nv(animal_name, original_path, data_path, dir_name, ...
             filename = erase(filename, [filename_substring_one, '.', filename_substring_two, '.']);
             filename = erase(filename, [filename_substring_one, '_', filename_substring_two, '_']);
             [~, experimental_group, ~, session_num, session_date, ~] = get_filename_info(filename);
-            load(file, 'labeled_neurons', 'event_struct');
+            load(file, 'labeled_data', 'baseline_window');
             %% Check psth variables to make sure they are not empty
-            empty_vars = check_variables(file, event_struct, labeled_neurons);
+            empty_vars = check_variables(file, baseline_window, labeled_data);
             if empty_vars
-                continue
+                error('Baseline_window and/or labeled_data is empty');
+            elseif ~isstruct(baseline_window) && isnan(baseline_window)
+                error('pre_time, pre_start, and pre_end must all be non zero windows for this analysis.');
             end
             %% NV analysis
-            neuron_activity = nv_calculation(labeled_neurons, event_struct, config.pre_time, config.post_time, ...
-                config.bin_size, config.epsilon, config.norm_var_scaling, config.separate_events, analysis_column_names);
+            neuron_activity = nv_calculation(labeled_data, baseline_window, ...
+                config.pre_start, config.pre_end, config.bin_size, ...
+                config.epsilon, config.norm_var_scaling, config.separate_events, analysis_column_names);
 
             %% Store metadata about file
             current_general_info = [{animal_name}, {experimental_group}, session_date, session_num];
@@ -42,8 +42,8 @@ function [] = batch_nv(animal_name, original_path, data_path, dir_name, ...
 
             %% Save analysis results
             matfile = fullfile(nv_path, ['NV_analysis_', filename, '.mat']);
-            check_variables(matfile, labeled_neurons, neuron_activity);
-            save(matfile, 'labeled_neurons', 'neuron_activity');
+            check_variables(matfile, labeled_data, neuron_activity);
+            save(matfile, 'labeled_data', 'neuron_activity');
         catch ME
             handle_ME(ME, failed_path, filename);
         end
