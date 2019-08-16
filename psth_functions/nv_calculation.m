@@ -1,7 +1,7 @@
 function nv_data = nv_calculation(labeled_data, baseline_window, pre_start, pre_end, ...
         bin_size, epsilon, norm_var_scaling, separate_events, analysis_column_names)
 
-    tot_bins = length(pre_start:bin_size:pre_end) - 1;
+    tot_bins = length(-abs(pre_start):bin_size:-abs(pre_end)) - 1;
     tot_time = abs(abs(pre_start) - abs(pre_end));
 
     nv_data = [];
