@@ -59,7 +59,7 @@ function [] = sep_main()
         end
     end
     toc(start_time);
-    end
+end
     
 
     

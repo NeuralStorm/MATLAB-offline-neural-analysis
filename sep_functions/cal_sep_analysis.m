@@ -11,10 +11,10 @@ temp1 = [];
 pos_sep_valid = [];
 neg_sep_valid = [];
 
-sepdata= struct('animal_id', {}, 'channel_name', {}, 'sep_sliced_data', {}, 'peak_to_peak',{}, 'neg_peak',{},...
+sepdata= struct('animal_id', {}, 'channel_name', {}, 'window', {}, 'sep_sliced_data', {}, 'peak_to_peak',{}, 'neg_peak',{},...
     'neg_peak_latency',{}, 'pos_peak', {}, 'pos_peak_latency',{} ,'response_dur',{},...
-    'background', {},'background_sd',{},'snr',{},'pos_sep_valid',{},...
-    'neg_sep_valid',{},'type',{},'response',{});
+    'background', {},'background_sd',{},'snr',{},'pos_sep_valid',{},'neg_sep_valid',{},'type',{},...
+    'response',{}, 'posthresh', {}, 'negthresh', {});
 
 disp(['Analyzing SEP...']);
 
@@ -77,7 +77,10 @@ for i = 1:size(sep,1)
 
     sepdata(i).animal_id = animal_name;
     sepdata(i).channel_name = sep_map{i, 1};
+    sepdata(i).window = window;
     sepdata(i).sep_sliced_data = sep_map{i, 2};
+    sepdata(i).posthresh = posthreshbackground;
+    sepdata(i).negthresh = negthreshbackground;   
     sepdata(i).peak_to_peak = peak_to_peak;
     sepdata(i).neg_peak = neg_peak;
     sepdata(i).neg_peak_latency = neg_peak_latency;
