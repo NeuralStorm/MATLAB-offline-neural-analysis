@@ -12,7 +12,6 @@ function [] = csv_comparison()
     assert(template_rows == result_rows && template_cols == result_cols, ...
         'csv files must have the same number of rows and columns');
 
-    index_diff_row = 1;
     index_diff_col = 1;
     diff_location = struct;
 
@@ -20,40 +19,33 @@ function [] = csv_comparison()
     for index_col = 1:template_cols
         col_check(index_col) = isequaln(template(:,index_col),results(:,index_col));
         if col_check(index_col) == 0
-            for index_row = 1:total_row
-                original_value = template{index_row,index_col};
-                new_value = results{index_row,index_col};
-                if (isnan(original_value) && isnan(new_value))
-                    diff = 0;
-                else
-                    diff = original_value-new_value;
-                    if  (abs(diff) > precision || isnan(diff))
-                        diff_index(index_diff_row) = index_row;
-                        index_diff_row = index_diff_row+1 ;
-                    end
+            index_diff_col = 0;
+            col_name = template.Properties.VariableNames{index_col};
+            diff_location.(col_name).difference = [];
+            for index_row = 1:result_rows
+                template_value = template{index_row, index_col};
+                template_type = class(template_value);
+                results_value = results{index_row, index_col};
+                results_type = class(results_value);
+
+                if ~strcmpi(template_type, results_type)
+                    %TODO store that point has differentvariable types
+                    diff_location.(col_name).difference = [diff_location.(col_name).difference; {template_type}, {results_type}];
+                elseif (isnumeric(template_value) && isnumeric(results_value)) && ~isequaln(template_value, results_value)
+                    diff_location.(col_name).difference = [diff_location.(col_name).difference; ...
+                        {index_row}, {template_value}, {results_value}];
+                % else
+                %     diff_location.(col_name).difference = [diff_location.(col_name).difference; setdiff(template_value, results_value)];
                 end
             end
-            
-            if index_diff_row > 1
-                if index_diff_col == 1
-                    fprintf('These two csv files are different.\n')
-                end
-                index_diff_col = index_diff_col+1; 
-            end
-            if index_diff_row == (total_row + 1)
-                diff_location(1).(['column', num2str(index_col)]) = 'all changed';
-            else
-                for diff_num = 1:length(diff_index)
-                    diff_location(diff_num).(['column',num2str(index_col)]) = ...
-                        ['row',num2str(diff_index(diff_num))];
-                end
-            end
-            index_diff_row = 1;
-            diff_index = [];
         end 
     end
 
     if index_diff_col == 1
         fprintf('These two csv files are the same. \n')
+    else
+        disp('not the same');
+        matfile = fullfile(template_path, 'csv_difference.mat');
+        save(matfile, 'diff_location');
     end
 end
