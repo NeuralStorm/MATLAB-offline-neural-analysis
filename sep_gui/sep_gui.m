@@ -179,6 +179,11 @@ if get(handles.neg_check, 'Value')
     cla(handles.axes1);
     plot_sep_gui(handles, handles.sep_data, handles.index); 
 end
+set(handles.pos_check, 'Enable', 'on');
+set(handles.neg_check, 'Enable', 'on');
+set(handles.pos_check, 'Value', 0);
+set(handles.neg_check, 'Value', 0);
+set(handles.change_button, 'Enable', 'off');
     
     
 
