@@ -19,7 +19,7 @@ function [unit_struct, pop_struct, pop_table, unit_table] = psth_bootstrapper( .
 
         %% Unit classification
         [classify_struct, unit_info] = classify_unit(current_region, ...
-            labeled_data.(current_region), psth_struct.(current_region), event_strings);
+            labeled_data.(current_region), response_window.(current_region), event_strings);
         %% Store unit classification
         unit_struct.(current_region) = classify_struct.(current_region);
         unit_results = [unit_results; unit_info];
