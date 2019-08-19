@@ -28,35 +28,39 @@ function [] = csv_comparison()
                 results_value = results{index_row, index_col};
                 results_type = class(results_value);
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%                
-                if isequal(template_type, 'cell')
-                    template_value = template_value{1};
-                end
-                if isequal(results_type, 'cell')
-                    results_value = results_value{1};
-                end
-                template_value = num2str(template_value);
-                results_value = num2str(results_value); 
+                % if isequal(template_type, 'cell')
+                %     template_value = template_value{1};
+                % end
+                % if isequal(results_type, 'cell')
+                %     results_value = results_value{1};
+                % end
+                % template_value = num2str(template_value);
+                % results_value = num2str(results_value); 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%                
                 
-%                 if ~strcmpi(template_type, results_type)
-%                     %TODO store that point has differentvariable types
-%                     diff_location.(col_name).difference = [diff_location.(col_name).difference;{index_row}, {template_type}, {results_type}];
-%                 elseif (isnumeric(template_value) && isnumeric(results_value)) && ~isequaln(template_value, results_value)
-%                     diff_location.(col_name).difference = [diff_location.(col_name).difference; ...
-%                         {index_row}, {template_value}, {results_value}];
-%                 end
+                if ~strcmpi(template_type, results_type)
+                    %TODO store that point has differentvariable types
+                    diff_location.(col_name).difference = ...
+                        [diff_location.(col_name).difference;{index_row}, {template_type}, {results_type}];
+                elseif (isnumeric(template_value) && isnumeric(results_value)) && ~isequaln(template_value, results_value)
+                    template_data = table2cell(template(index_row, :));
+                    results_data = table2cell(results(index_row, :));
+                    combined_data = ['template', template_data; 'results', results_data];
+                    diff_location.(col_name).difference = [diff_location.(col_name).difference; ...
+                        {index_row}, {template_value}, {results_value}, {combined_data}];
+                end
 
-                 if ~isequaln(template_value, results_value)
-                        template_value_num = str2double(template_value);
-                        results_value_num = str2double(results_value);
-                        if ~(abs(template_value_num - results_value_num) < precision)
-                             diff_location.(col_name).difference = [diff_location.(col_name).difference; ...
-                                 {index_row}, {template_value}, {results_value}];
-                        end
+                %  if ~isequaln(template_value, results_value)
+                %         template_value_num = str2double(template_value);
+                %         results_value_num = str2double(results_value);
+                %         if ~(abs(template_value_num - results_value_num) < precision)
+                %              diff_location.(col_name).difference = [diff_location.(col_name).difference; ...
+                %                  {index_row}, {template_value}, {results_value}];
+                %         end
                     
                 % else
                 %     diff_location.(col_name).difference = [diff_location.(col_name).difference; setdiff(template_value, results_value)];
-                end
+                % end
             end
         end 
     end
