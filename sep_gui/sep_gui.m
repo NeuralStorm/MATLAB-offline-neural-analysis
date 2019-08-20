@@ -22,7 +22,7 @@ function varargout = sep_gui(varargin)
 
 % Edit the above text to modify the response to help sep_gui
 
-% Last Modified by GUIDE v2.5 15-Aug-2019 16:17:23
+% Last Modified by GUIDE v2.5 19-Aug-2019 15:40:44
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
@@ -65,6 +65,9 @@ datacursormode on;
 set(dcm_obj,'UpdateFcn', @myupdatefcn )
 handles.sep_data = sep_analysis_results;
 set(0, 'userdata', []);
+check_check(handles);
+add_check(handles);
+    
 % Update handles structure
 guidata(hObject, handles);
 
@@ -74,11 +77,11 @@ guidata(hObject, handles);
 
 function txt = myupdatefcn(handles, event_obj)
     pos = event_obj.Position;
-    txt = {['X: ',num2str(pos(1)),', Y: ',num2str(pos(2))]};
+    txt = {['X: ',num2str(pos(1)),'s, Y: ',num2str(pos(2)), 'mV']};
     set(0, 'userdata', pos);
-%     pos_check = get(handles.pos_check, 'Value');
-%     neg_check = get(handles.neg_check, 'Value');
-%     if (pos_check || neg_check)
+%     pos1_check = get(handles.pos1_check, 'Value');
+%     neg1_check = get(handles.neg1_check, 'Value');
+%     if (pos1_check || neg1_check)
 %         set(handles.change_button, 'Enable', 'on');
 %     end
 
@@ -109,11 +112,17 @@ if handles.index > 1
     cla(handles.axes1);
     plot_sep_gui(handles, handles.sep_data, handles.index); 
     set(0, 'userdata', []);
-    set(handles.pos_check, 'Enable', 'on');
-    set(handles.neg_check, 'Enable', 'on');
-    set(handles.pos_check, 'Value', 0); 
-    set(handles.neg_check, 'Value', 0);  
+    set(handles.pos1_check, 'Enable', 'on');
+    set(handles.neg1_check, 'Enable', 'on');
+    set(handles.pos1_check, 'Value', 0); 
+    set(handles.neg1_check, 'Value', 0);
+    check_check(handles);
     set(handles.change_button, 'Enable', 'off');
+    
+    add_check(handles);
+    set(handles.addpos_check, 'Value', 0); 
+    set(handles.addneg_check, 'Value', 0);  
+    set(handles.add_button, 'Enable', 'off');
 end
 
 
@@ -129,11 +138,17 @@ if handles.index < length(handles.sep_data)
     cla(handles.axes1);
     plot_sep_gui(handles, handles.sep_data, handles.index);    
     set(0, 'userdata', []);
-    set(handles.pos_check, 'Enable', 'on');
-    set(handles.neg_check, 'Enable', 'on');
-    set(handles.pos_check, 'Value', 0); 
-    set(handles.neg_check, 'Value', 0);    
+    set(handles.pos1_check, 'Enable', 'on');
+    set(handles.neg1_check, 'Enable', 'on');
+    set(handles.pos1_check, 'Value', 0); 
+    set(handles.neg1_check, 'Value', 0);
+    check_check(handles);
     set(handles.change_button, 'Enable', 'off');
+    
+    add_check(handles);
+    set(handles.addpos_check, 'Value', 0); 
+    set(handles.addneg_check, 'Value', 0);  
+    set(handles.add_button, 'Enable', 'off');
 end
 
 
@@ -159,61 +174,105 @@ function change_button_Callback(hObject, eventdata, handles)
 % hObject    handle to change_button (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
-pos = get(0,'userdata');
-if get(handles.pos_check, 'Value')
-    if ~isempty(pos)
-        handles.sep_data(handles.index).pos_peak_latency = (pos(1)*1000);
-        handles.sep_data(handles.index).pos_peak = pos(2);
-        guidata(hObject, handles);
+position = get(0,'userdata');
+if get(handles.pos1_check, 'Value')
+    if ~isempty(position)
+        handles.sep_data(handles.index).pos_peak_latency1 = (position(1)*1000);
+        handles.sep_data(handles.index).pos_peak1 = position(2);
     end
-    cla(handles.axes1);
-    plot_sep_gui(handles, handles.sep_data, handles.index); 
 end
 
-if get(handles.neg_check, 'Value')
-    if ~isempty(pos)
-        handles.sep_data(handles.index).neg_peak_latency = (pos(1)*1000);
-        handles.sep_data(handles.index).neg_peak = pos(2);
-        guidata(hObject, handles);
+if get(handles.pos2_check, 'Value')
+    if ~isempty(position)
+        handles.sep_data(handles.index).pos_peak_latency2 = (position(1)*1000);
+        handles.sep_data(handles.index).pos_peak2 = position(2);
     end
-    cla(handles.axes1);
-    plot_sep_gui(handles, handles.sep_data, handles.index); 
 end
+
+if get(handles.pos3_check, 'Value')
+    if ~isempty(position)
+        handles.sep_data(handles.index).pos_peak_latency3 = (position(1)*1000);
+        handles.sep_data(handles.index).pos_peak3 = position(2);
+    end
+end
+
+if get(handles.neg1_check, 'Value')
+    if ~isempty(position)
+        handles.sep_data(handles.index).neg_peak_latency1 = (position(1)*1000);
+        handles.sep_data(handles.index).neg_peak1 = position(2);
+    end 
+end
+
+if get(handles.neg2_check, 'Value')
+    if ~isempty(position)
+        handles.sep_data(handles.index).neg_peak_latency2 = (position(1)*1000);
+        handles.sep_data(handles.index).neg_peak2 = position(2);
+    end
+end
+
+if get(handles.neg3_check, 'Value')
+    if ~isempty(position)
+        handles.sep_data(handles.index).neg_peak_latency3 = (position(1)*1000);
+        handles.sep_data(handles.index).neg_peak3 = position(2);
+    end
+end
+
+guidata(hObject, handles);
+cla(handles.axes1);
+plot_sep_gui(handles, handles.sep_data, handles.index);
+set(handles.pos1_check, 'Enable', 'on');
+set(handles.neg1_check, 'Enable', 'on');
+set(handles.pos1_check, 'Value', 0);
+set(handles.pos2_check, 'Value', 0);
+set(handles.pos3_check, 'Value', 0);
+set(handles.neg1_check, 'Value', 0);
+set(handles.neg2_check, 'Value', 0);
+set(handles.neg3_check, 'Value', 0);
+check_check(handles);
+set(handles.change_button, 'Enable', 'off');
     
     
 
 
 
-% --- Executes on button press in pos_check.
-function pos_check_Callback(hObject, eventdata, handles)
-% hObject    handle to pos_check (see GCBO)
+% --- Executes on button press in pos1_check.
+function pos1_check_Callback(hObject, eventdata, handles)
+% hObject    handle to pos1_check (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
 
-% Hint: get(hObject,'Value') returns toggle state of pos_check
-pos_check = get(handles.pos_check, 'Value');
+% Hint: get(hObject,'Value') returns toggle state of pos1_check
+pos_check = get(handles.pos1_check, 'Value');
 if pos_check == 1
-    set(handles.neg_check, 'Enable', 'off');
+    set(handles.pos2_check, 'Enable', 'off');
+    set(handles.pos3_check, 'Enable', 'off');
+    set(handles.neg1_check, 'Enable', 'off');
+    set(handles.neg2_check, 'Enable', 'off');
+    set(handles.neg3_check, 'Enable', 'off');
     set(handles.change_button, 'Enable', 'on');
 else
-    set(handles.neg_check, 'Enable', 'on');
+    check_check(handles);
     set(handles.change_button, 'Enable', 'off');
 end
 
 
-% --- Executes on button press in neg_check.
-function neg_check_Callback(hObject, eventdata, handles)
-% hObject    handle to neg_check (see GCBO)
+% --- Executes on button press in neg1_check.
+function neg1_check_Callback(hObject, eventdata, handles)
+% hObject    handle to neg1_check (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
 
-% Hint: get(hObject,'Value') returns toggle state of neg_check
-neg_check = get(handles.neg_check, 'Value');
+% Hint: get(hObject,'Value') returns toggle state of neg1_check
+neg_check = get(handles.neg1_check, 'Value');
 if neg_check == 1
-    set(handles.pos_check, 'Enable', 'off');
+    set(handles.pos2_check, 'Enable', 'off');
+    set(handles.pos3_check, 'Enable', 'off');
+    set(handles.pos1_check, 'Enable', 'off');
+    set(handles.neg2_check, 'Enable', 'off');
+    set(handles.neg3_check, 'Enable', 'off');
     set(handles.change_button, 'Enable', 'on');
 else
-    set(handles.pos_check, 'Enable', 'on');
+    check_check(handles);
     set(handles.change_button, 'Enable', 'off');
 end
 
@@ -229,3 +288,207 @@ sep_analysis_results = handles.sep_data;
 save(handles.file_path, 'sep_analysis_results'); 
 
 delete(hObject);
+
+
+% --- Executes on button press in addpos_check.
+function addpos_check_Callback(hObject, eventdata, handles)
+% hObject    handle to addpos_check (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+% Hint: get(hObject,'Value') returns toggle state of addpos_check
+addpos_check = get(handles.addpos_check, 'Value');
+if addpos_check == 1
+    set(handles.addneg_check, 'Enable', 'off');
+    set(handles.add_button, 'Enable', 'on');
+else
+    set(handles.addneg_check, 'Enable', 'on');
+    set(handles.add_button, 'Enable', 'off');
+end
+
+
+% --- Executes on button press in addneg_check.
+function addneg_check_Callback(hObject, eventdata, handles)
+% hObject    handle to addneg_check (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+% Hint: get(hObject,'Value') returns toggle state of addneg_check
+addneg_check = get(handles.addneg_check, 'Value');
+if addneg_check == 1
+    set(handles.addpos_check, 'Enable', 'off');
+    set(handles.add_button, 'Enable', 'on');
+else
+    set(handles.addpos_check, 'Enable', 'on');
+    set(handles.add_button, 'Enable', 'off');
+end
+
+
+% --- Executes on button press in add_button.
+function add_button_Callback(hObject, eventdata, handles)
+% hObject    handle to add_button (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+position = get(0,'userdata');
+if get(handles.addpos_check, 'Value')
+    if ~isempty(position)
+        if ~isnan(handles.sep_data(handles.index).pos_peak2)
+            handles.sep_data(handles.index).pos_peak_latency3 = (position(1)*1000);
+            handles.sep_data(handles.index).pos_peak3 = position(2);
+        else
+            handles.sep_data(handles.index).pos_peak_latency2 = (position(1)*1000);
+            handles.sep_data(handles.index).pos_peak2 = position(2);
+        end
+
+    end
+end
+
+if get(handles.addneg_check, 'Value')
+    if ~isempty(position)
+        if ~isnan(handles.sep_data(handles.index).neg_peak2)
+            handles.sep_data(handles.index).neg_peak_latency3 = (position(1)*1000);
+            handles.sep_data(handles.index).neg_peak3 = position(2);
+        else
+            handles.sep_data(handles.index).neg_peak_latency2 = (position(1)*1000);
+            handles.sep_data(handles.index).neg_peak2 = position(2);
+        end
+    end
+end
+
+guidata(hObject, handles);
+cla(handles.axes1);
+plot_sep_gui(handles, handles.sep_data, handles.index); 
+add_check(handles);
+
+set(handles.addpos_check, 'Value', 0);
+set(handles.addneg_check, 'Value', 0);
+set(handles.add_button, 'Enable', 'off');
+
+check_check(handles);
+set(handles.change_button, 'Enable', 'off');
+
+
+
+
+% --- Executes on button press in pushbutton6.
+function pushbutton6_Callback(hObject, eventdata, handles)
+% hObject    handle to pushbutton6 (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+
+% --- Executes on button press in pushbutton7.
+function pushbutton7_Callback(hObject, eventdata, handles)
+% hObject    handle to pushbutton7 (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+
+% --- Executes on button press in discard_button.
+function discard_button_Callback(hObject, eventdata, handles)
+% hObject    handle to discard_button (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+load(handles.file_path, 'sep_analysis_results');
+cla(handles.axes1);
+plot_sep_gui(handles, sep_analysis_results, handles.index);
+handles.sep_data = sep_analysis_results;
+check_check(handles);
+set(handles.change_button, 'Enable', 'off');
+add_check(handles);
+set(handles.add_button, 'Enable', 'off');
+% Update handles structure
+guidata(hObject, handles);
+
+
+% --- Executes on button press in pos2_check.
+function pos2_check_Callback(hObject, eventdata, handles)
+% hObject    handle to pos2_check (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+% Hint: get(hObject,'Value') returns toggle state of pos2_check
+pos_check = get(handles.pos2_check, 'Value');
+if pos_check == 1
+    set(handles.pos1_check, 'Enable', 'off');
+    set(handles.pos3_check, 'Enable', 'off');
+    set(handles.neg1_check, 'Enable', 'off');
+    set(handles.neg2_check, 'Enable', 'off');
+    set(handles.neg3_check, 'Enable', 'off');
+    set(handles.change_button, 'Enable', 'on');
+else
+    check_check(handles);
+    set(handles.change_button, 'Enable', 'off');
+end
+
+
+% --- Executes on button press in neg2_check.
+function neg2_check_Callback(hObject, eventdata, handles)
+% hObject    handle to neg2_check (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+% Hint: get(hObject,'Value') returns toggle state of neg2_check
+neg_check = get(handles.neg2_check, 'Value');
+if neg_check == 1
+    set(handles.pos2_check, 'Enable', 'off');
+    set(handles.pos3_check, 'Enable', 'off');
+    set(handles.neg1_check, 'Enable', 'off');
+    set(handles.pos1_check, 'Enable', 'off');
+    set(handles.neg3_check, 'Enable', 'off');
+    set(handles.change_button, 'Enable', 'on');
+else
+    check_check(handles);
+    set(handles.change_button, 'Enable', 'off');
+end
+
+
+% --- Executes on button press in pos3_check.
+function pos3_check_Callback(hObject, eventdata, handles)
+% hObject    handle to pos3_check (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+% Hint: get(hObject,'Value') returns toggle state of pos3_check
+pos_check = get(handles.pos3_check, 'Value');
+if pos_check == 1
+    set(handles.pos2_check, 'Enable', 'off');
+    set(handles.pos1_check, 'Enable', 'off');
+    set(handles.neg1_check, 'Enable', 'off');
+    set(handles.neg2_check, 'Enable', 'off');
+    set(handles.neg3_check, 'Enable', 'off');
+    set(handles.change_button, 'Enable', 'on');
+else
+    check_check(handles);
+    set(handles.change_button, 'Enable', 'off');
+end
+
+
+% --- Executes on button press in neg3_check.
+function neg3_check_Callback(hObject, eventdata, handles)
+% hObject    handle to neg3_check (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+% Hint: get(hObject,'Value') returns toggle state of neg3_check
+neg_check = get(handles.neg3_check, 'Value');
+if neg_check == 1
+    set(handles.pos2_check, 'Enable', 'off');
+    set(handles.pos3_check, 'Enable', 'off');
+    set(handles.neg1_check, 'Enable', 'off');
+    set(handles.neg2_check, 'Enable', 'off');
+    set(handles.pos1_check, 'Enable', 'off');
+    set(handles.change_button, 'Enable', 'on');
+else
+    check_check(handles);
+    set(handles.change_button, 'Enable', 'off');
+end
+
+
+% --- Executes on button press in save_button.
+function save_button_Callback(hObject, eventdata, handles)
+% hObject    handle to save_button (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+sep_analysis_results = handles.sep_data;
+save(handles.file_path, 'sep_analysis_results'); 

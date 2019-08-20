@@ -11,10 +11,11 @@ temp1 = [];
 pos_sep_valid = [];
 neg_sep_valid = [];
 
-sepdata= struct('animal_id', {}, 'channel_name', {}, 'window', {}, 'sep_sliced_data', {}, 'peak_to_peak',{}, 'neg_peak',{},...
-    'neg_peak_latency',{}, 'pos_peak', {}, 'pos_peak_latency',{} ,'response_dur',{},...
-    'background', {},'background_sd',{},'snr',{},'pos_sep_valid',{},'neg_sep_valid',{},'type',{},...
-    'response',{}, 'posthresh', {}, 'negthresh', {});
+sepdata= struct('animal_id', {}, 'channel_name', {}, 'window', {}, 'sep_sliced_data', {}, 'peak_to_peak',{}, 'neg_peak1',{},...
+     'neg_peak2',{}, 'neg_peak3',{},  'neg_peak_latency1',{},  'neg_peak_latency2',{},  'neg_peak_latency3',{},...
+     'pos_peak1', {}, 'pos_peak2', {}, 'pos_peak3', {}, 'pos_peak_latency1',{} , 'pos_peak_latency2',{} , ...
+     'pos_peak_latency3',{} ,'response_dur',{},'background', {},'background_sd',{},'snr',{},'pos_sep_valid',{},...
+     'neg_sep_valid',{},'type',{},'response',{}, 'posthresh', {}, 'negthresh', {});
 
 disp(['Analyzing SEP...']);
 
@@ -82,10 +83,10 @@ for i = 1:size(sep,1)
     sepdata(i).posthresh = posthreshbackground;
     sepdata(i).negthresh = negthreshbackground;   
     sepdata(i).peak_to_peak = peak_to_peak;
-    sepdata(i).neg_peak = neg_peak;
-    sepdata(i).neg_peak_latency = neg_peak_latency;
-    sepdata(i).pos_peak = pos_peak;
-    sepdata(i).pos_peak_latency = pos_peak_latency;
+    sepdata(i).neg_peak1 = neg_peak;
+    sepdata(i).neg_peak_latency1 = neg_peak_latency;
+    sepdata(i).pos_peak1 = pos_peak;
+    sepdata(i).pos_peak_latency1 = pos_peak_latency;
     sepdata(i).response_dur = response_dur;
     sepdata(i).background = background;
     sepdata(i).background_sd = background_sd;
@@ -94,7 +95,18 @@ for i = 1:size(sep,1)
     sepdata(i).neg_sep_valid = neg_sep_valid;
     sepdata(i).type = type;
     sepdata(i).response = response;
-%    sepdata(i).animal_num = file(1:6);
+    sepdata(i).neg_peak2 = NaN;
+    sepdata(i).neg_peak3 = NaN;
+    sepdata(i).pos_peak2 = NaN;    
+    sepdata(i).pos_peak3 = NaN;
+    sepdata(i).neg_peak_latency2 = NaN;
+    sepdata(i).neg_peak_latency3 = NaN;
+    sepdata(i).pos_peak_latency2 = NaN;
+    sepdata(i).pos_peak_latency3 = NaN;
+   
+    
+    
+    %    sepdata(i).animal_num = file(1:6);
     end
 end
 
