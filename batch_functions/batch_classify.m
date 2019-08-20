@@ -29,16 +29,16 @@ function [] = batch_classify(animal_name, original_path, data_path, dir_name, ..
             filename = erase(filename, [filename_substring_one, '.', filename_substring_two, '.']);
             filename = erase(filename, [filename_substring_one, '_', filename_substring_two, '_']);
             [~, experimental_group, ~, session_num, session_date, ~] = get_filename_info(filename);
-            load(file, 'labeled_data', 'psth_struct', 'event_ts', 'response_window');
+            load(file, 'labeled_data', 'event_ts', 'response_window');
             %% Check psth variables to make sure they are not empty
-            empty_vars = check_variables(file, psth_struct, labeled_data, event_ts, response_window);
+            empty_vars = check_variables(file, labeled_data, event_ts, response_window);
             if empty_vars
                 continue
             end
 
             %% Classify and bootstrap
             [unit_struct, pop_struct, pop_table, unit_table] = psth_bootstrapper( ...
-                labeled_data, psth_struct, response_window, event_ts, ...
+                labeled_data, response_window, event_ts, ...
                 config.boot_iterations, config.bootstrap_classifier, config.bin_size, ...
                 config.pre_time, config.pre_start, config.pre_end, config.post_time, ...
                 config.post_start, config.post_end, analysis_column_names);
@@ -55,7 +55,7 @@ function [] = batch_classify(animal_name, original_path, data_path, dir_name, ..
                 concat_tables(general_column_names, unit_config_info, current_general_info, unit_info, unit_table);
 
             matfile = fullfile(classify_path, ['test_psth_classifier_', filename, '.mat']);
-            check_variables(matfile, psth_struct, unit_struct, pop_struct, pop_table, unit_table);
+            check_variables(matfile, unit_struct, pop_struct, pop_table, unit_table);
             save(matfile, 'pop_struct', 'unit_struct', 'pop_table', 'unit_table');
         catch ME
             handle_ME(ME, failed_path, filename);
