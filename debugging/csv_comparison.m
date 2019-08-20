@@ -5,8 +5,9 @@ function [] = csv_comparison()
     results_file = fullfile(results_path, results_name);
     template = readtable(template_file);
     results = readtable(results_file);
+    % template = sortrows(template);
+    % results = sortrows(results);
 
-    precision = .00001;
     [template_rows, template_cols] = size(template);
     [result_rows, result_cols] = size(results);
     assert(template_rows == result_rows && template_cols == result_cols, ...
@@ -14,6 +15,10 @@ function [] = csv_comparison()
 
     index_diff_col = 1;
     diff_location = struct;
+    diff_location.template_path = template_path;
+    diff_location.template_filename = template_name;
+    diff_location.results_path = results_path;
+    diff_location.results_filename = results_name;
 
     % read two csv files by column
     for index_col = 1:template_cols
@@ -32,7 +37,7 @@ function [] = csv_comparison()
                 combined_data = ['template', template_data; 'results', results_data];
 
                 if ~strcmpi(template_type, results_type)
-                    %TODO store that point has differentvariable types
+                    %TODO store that point has different variable types
                     diff_location.(col_name).difference = ...
                         [diff_location.(col_name).difference;{index_row}, {template_type}, {results_type}];
                 elseif (isnumeric(template_value) && isnumeric(results_value)) && ~isequaln(template_value, results_value)
