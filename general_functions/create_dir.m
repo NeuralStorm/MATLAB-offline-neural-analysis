@@ -3,8 +3,7 @@ function [file_list, child_path, failed_path] = create_dir(parent_path, child_na
     file_type = [parent_path, '/*', file_extension];
     file_list = dir(file_type);
     %for ignoring training sessions that are not needed
-    if exist('ignore_sessions') == 0
-    else
+    if exist('ignore_sessions') ~= 0
         for i = 1:length(ignore_sessions)
             delete_j_index = 0;
             for j = 1:length(file_list)
