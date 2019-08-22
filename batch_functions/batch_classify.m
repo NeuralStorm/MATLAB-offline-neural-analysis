@@ -1,9 +1,13 @@
 function [] = batch_classify(animal_name, original_path, data_path, dir_name, search_ext, filename_substring_one, filename_substring_two, ...
-                    boot_iterations, bootstrap_classifier, bin_size, pre_time, post_time)
+                    boot_iterations, bootstrap_classifier, bin_size, pre_time, post_time, ignore_sessions)
     classifier_start = tic;
 
     %% Classifier set up
-    [files, classify_path, failed_path] = create_dir(data_path, dir_name, search_ext);
+     if exist('ignore_sessions') == 0 || isempty(ignore_sessions)
+        [files, classify_path, failed_path] = create_dir(data_path, dir_name, search_ext);
+    else
+        [files, classify_path, failed_path] = create_dir(data_path, dir_name, search_ext, ignore_sessions);
+     end
 
     general_column_names = {'animal', 'group', 'date', 'record_session', 'bin_size', 'pre_time', ...
         'post_time', 'bootstrap_classifier', 'boot_iterations'};

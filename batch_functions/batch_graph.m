@@ -1,8 +1,13 @@
 function [] = batch_graph(animal_name, data_path, dir_name, search_ext, filename_substring_one, filename_substring_two, ...
-                bin_size, pre_time, post_time, rf_analysis, rf_path, make_region_subplot, sub_columns, sub_rows)
+                bin_size, pre_time, post_time, rf_analysis, rf_path, make_region_subplot, sub_columns, sub_rows, ignore_sessions)
     graph_start = tic;
-    [files, graph_path, failed_path] = create_dir(data_path, dir_name, search_ext);
-
+    
+    if exist('ignore_sessions') == 0 || isempty(ignore_sessions)
+        [files, graph_path, failed_path] = create_dir(data_path, dir_name, search_ext);
+    else
+        [files, graph_path, failed_path] = create_dir(data_path, dir_name, search_ext, ignore_sessions);
+    end
+    
     fprintf('Graphing for %s \n', animal_name);
     %% Goes through all the files and calculates mutual info according to the parameters set in config
     for file_index = 1:length(files)

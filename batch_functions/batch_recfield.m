@@ -1,5 +1,5 @@
 function [rf_path] = batch_recfield(animal_name, original_path, data_path, dir_name, ...
-        search_ext, filename_substring_one, filename_substring_two, config)
+        search_ext, filename_substring_one, filename_substring_two, config, ignore_sessions)
     %% Make sure rf analysis has enough pre time to determine threshold
     if abs(config.pre_time) <= 0.050
         error('Pre time ~= 0 for receptive field analysis. Create psth with pre time > 0.');
@@ -8,7 +8,11 @@ function [rf_path] = batch_recfield(animal_name, original_path, data_path, dir_n
     rf_start = tic;
 
     %% Rec field general set up
-    [files, rf_path, failed_path] = create_dir(data_path, dir_name, search_ext);
+    if exist('ignore_sessions') == 0 || isempty(ignore_sessions)
+        [files, rf_path, failed_path] = create_dir(data_path, dir_name, search_ext);
+    else
+        [files, rf_path, failed_path] = create_dir(data_path, dir_name, search_ext, ignore_sessions);
+    end
     general_column_names = {'animal', 'group', 'date', 'record_session', 'pre_time', 'post_time', ...
         'bin_size', 'sig_check', 'sig_bins', 'span', 'threshold_scale'};
     analysis_column_names = {'region', 'channel', 'event', 'significant', ...
