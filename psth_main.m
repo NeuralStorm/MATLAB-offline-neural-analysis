@@ -10,6 +10,11 @@ function [] = psth_main()
             animal_list(strcmpi(animal_names{animal}, {animal_list.name})).folder, animal_name);
         config = import_config(animal_path);
         export_params(animal_path, 'main', config);
+        training_session_config_array = [];
+        % For ignoring certain training sessions
+        if isfield(config,'ignore_sessions')
+            training_session_config_array = config.ignore_sessions;
+        end
         % Skips animals we want to ignore
         if config.ignore_animal
             continue;
@@ -42,7 +47,7 @@ function [] = psth_main()
             if config.create_psth
                 psth_start = tic;
                 % warning('Since the pre time is set to 0, there will not be a psth generated with only the pre time activity.\n');
-                [parsed_files, psth_path, failed_path] = create_dir(parsed_path, 'psth', '.mat');
+                [parsed_files, psth_path, failed_path] = create_dir(parsed_path, 'psth', '.mat', training_session_config_array);
 
                 fprintf('Calculating PSTH for %s \n', animal_name);
                 %% Goes through all the files and creates PSTHs according to the parameters set in config
@@ -135,7 +140,7 @@ function [] = psth_main()
             %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
             if config.rf_analysis
                 rf_path = batch_recfield(animal_name, original_path, psth_path, 'receptive_field_analysis', ...
-                    '.mat', 'PSTH', 'format', config);
+                    '.mat', 'PSTH', 'format', config, training_session_config_array);
             else
                 rf_path = [psth_path, '/receptive_field_analysis'];
             end
@@ -147,7 +152,7 @@ function [] = psth_main()
                 batch_graph(animal_name, psth_path, 'psth_graphs', '.mat', 'PSTH', 'format', ...
                     config.bin_size, config.pre_time, config.post_time, config.pre_start, ...
                     config.pre_end, config.post_start, config.post_end, config.rf_analysis, rf_path, ...
-                    config.make_region_subplot, config.sub_columns, config.sub_rows);
+                    config.make_region_subplot, config.sub_columns, config.sub_rows, training_session_config_array);
             end
 
             %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -155,7 +160,7 @@ function [] = psth_main()
             %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
             if config.nv_analysis
                 batch_nv(animal_name, original_path, psth_path, 'normalized_variance_analysis', ...
-                    '.mat', 'psth', 'format', config)
+                    '.mat', 'psth', 'format', config, training_session_config_array)
             end
 
             %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -163,7 +168,7 @@ function [] = psth_main()
             %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
             if config.psth_classify
                 batch_classify(animal_name, original_path, psth_path, 'classifier', '.mat', ...
-                    'PSTH', 'format', config);
+                    'PSTH', 'format', config, training_session_config_array);
             end
 
             %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -171,7 +176,7 @@ function [] = psth_main()
             %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
             if config.info_analysis
                 batch_info(animal_name, psth_path, 'mutual_info', ...
-                    '.mat', 'psth', 'format');
+                    '.mat', 'psth', 'format', training_session_config_array);
             end
         end
     end

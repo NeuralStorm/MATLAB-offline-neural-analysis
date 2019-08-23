@@ -150,6 +150,10 @@ function [] = main()
         config = import_config(animal_path);
         total_bins = (length(-abs(config.pre_time):config.bin_size:abs(config.post_time)) - 1);
         export_params(animal_path, 'main', config);
+        training_session_config_array = [];
+        if isfield(config,'ignore_sessions')
+            training_session_config_array = config.ignore_sessions;
+        end
         % Skips animals we want to ignore
         if config.ignore_animal
             continue;
@@ -182,7 +186,7 @@ function [] = main()
             if config.create_psth
                 psth_start = tic;
                 % warning('Since the pre time is set to 0, there will not be a psth generated with only the pre time activity.\n');
-                [parsed_files, psth_path, failed_path] = create_dir(parsed_path, 'psth', '.mat');
+                [parsed_files, psth_path, failed_path] = create_dir(parsed_path, 'psth', '.mat',training_session_config_array);
 
                 fprintf('Calculating PSTH for %s \n', animal_name);
                 %% Goes through all the files and creates PSTHs according to the parameters set in config
@@ -273,7 +277,7 @@ function [] = main()
             %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
             if config.create_mnts
                 mnts_start = tic;
-                [parsed_files, mnts_path, failed_path] = create_dir(parsed_path, 'mnts', '.mat');
+                [parsed_files, mnts_path, failed_path] = create_dir(parsed_path, 'mnts', '.mat',training_session_config_array);
 
                 fprintf('Calculating mnts for %s \n', animal_name);
                 %% Goes through all the files and creates mnts according to the parameters set in config
@@ -320,7 +324,7 @@ function [] = main()
             %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
             if config.pc_analysis
                 pca_start = tic;
-                [mnts_files, pca_path, failed_path] = create_dir(mnts_path, 'pca', '.mat');
+                [mnts_files, pca_path, failed_path] = create_dir(mnts_path, 'pca', '.mat',training_session_config_array);
 
                 fprintf('PCA for %s \n', animal_name);
                 %% Goes through all the files and performs pca according to the parameters set in config
@@ -405,7 +409,7 @@ function [] = main()
             %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
             if config.ic_analysis
                 ica_start = tic;
-                [mnts_files, ica_path, failed_path] = create_dir(mnts_path, 'ica', '.mat');
+                [mnts_files, ica_path, failed_path] = create_dir(mnts_path, 'ica', '.mat',training_session_config_array);
                 fprintf('ICA for %s \n', animal_name);
                 %% Goes through all the files and performs pca according to the parameters set in config
                 for file_index = 1:length(mnts_files)
