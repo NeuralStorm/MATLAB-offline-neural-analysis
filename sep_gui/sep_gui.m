@@ -22,7 +22,7 @@ function varargout = sep_gui(varargin)
 
 % Edit the above text to modify the response to help sep_gui
 
-% Last Modified by GUIDE v2.5 22-Aug-2019 16:03:09
+% Last Modified by GUIDE v2.5 23-Aug-2019 12:48:38
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
@@ -58,13 +58,15 @@ handles.output = hObject;
 [file_name, original_path] = uigetfile('*.mat', 'MultiSelect', 'off');
 original_path = [original_path '\' file_name];
 load(original_path, 'sep_analysis_results');
+handles.sep_data = sep_analysis_results;
 handles.file_path = original_path;
 handles.index = 1;
+sort_peaks(hObject, handles);
+handles = guidata(hObject); 
 plot_sep_gui(handles, sep_analysis_results, handles.index);
 dcm_obj = datacursormode(handles.figure1);
 datacursormode on;
 set(dcm_obj,'UpdateFcn', @myupdatefcn )
-handles.sep_data = sep_analysis_results;
 set(0, 'userdata', []);
 check_check(handles);
 add_check(handles);
@@ -112,6 +114,8 @@ if handles.index > 1
     handles.sep_data(handles.index).analysis_notes = get(handles.notes_text, 'String');
     handles.index = handles.index - 1;
     guidata(hObject,handles);
+    sort_peaks(hObject, handles);
+    handles = guidata(hObject); 
     cla(handles.axes1);
     plot_sep_gui(handles, handles.sep_data, handles.index); 
     set(0, 'userdata', []);
@@ -139,6 +143,8 @@ if handles.index < length(handles.sep_data)
     handles.sep_data(handles.index).analysis_notes = get(handles.notes_text, 'String');
     handles.index = handles.index + 1;
     guidata(hObject,handles);
+    sort_peaks(hObject, handles);
+    handles = guidata(hObject); 
     cla(handles.axes1);
     plot_sep_gui(handles, handles.sep_data, handles.index);    
     set(0, 'userdata', []);
@@ -222,6 +228,8 @@ if get(handles.neg3_check, 'Value')
 end
 
 guidata(hObject, handles);
+sort_peaks(hObject, handles);
+handles = guidata(hObject); 
 cla(handles.axes1);
 plot_sep_gui(handles, handles.sep_data, handles.index);
 set(handles.pos1_check, 'Enable', 'on');
@@ -234,11 +242,10 @@ set(handles.neg2_check, 'Value', 0);
 set(handles.neg3_check, 'Value', 0);
 check_check(handles);
 set(handles.change_button, 'Enable', 'off');
+set(handles.delete_button, 'Enable', 'off');
+set(0, 'userdata', []);
+
     
-    
-
-
-
 % --- Executes on button press in pos1_check.
 function pos1_check_Callback(hObject, eventdata, handles)
 % hObject    handle to pos1_check (see GCBO)
@@ -254,9 +261,11 @@ if pos_check == 1
     set(handles.neg2_check, 'Enable', 'off');
     set(handles.neg3_check, 'Enable', 'off');
     set(handles.change_button, 'Enable', 'on');
+    set(handles.delete_button, 'Enable', 'on');
 else
     check_check(handles);
     set(handles.change_button, 'Enable', 'off');
+    set(handles.delete_button, 'Enable', 'off');
 end
 
 
@@ -275,9 +284,11 @@ if neg_check == 1
     set(handles.neg2_check, 'Enable', 'off');
     set(handles.neg3_check, 'Enable', 'off');
     set(handles.change_button, 'Enable', 'on');
+    set(handles.delete_button, 'Enable', 'on');
 else
     check_check(handles);
     set(handles.change_button, 'Enable', 'off');
+    set(handles.delete_button, 'Enable', 'off');
 end
 
 
@@ -358,10 +369,10 @@ if get(handles.addneg_check, 'Value')
         end
     end
 end
-% guidata(hObject, handles);
-%  sort_peaks(hObject, handles);
-%     aa = handles.sep_data(handles.index).neg_peak_latency1
 guidata(hObject, handles);
+
+sort_peaks(hObject, handles);
+handles = guidata(hObject); 
 
 cla(handles.axes1);
 plot_sep_gui(handles, handles.sep_data, handles.index); 
@@ -373,6 +384,8 @@ set(handles.add_button, 'Enable', 'off');
 
 check_check(handles);
 set(handles.change_button, 'Enable', 'off');
+set(0, 'userdata', []);
+
 
 
 
@@ -425,9 +438,11 @@ if pos_check == 1
     set(handles.neg2_check, 'Enable', 'off');
     set(handles.neg3_check, 'Enable', 'off');
     set(handles.change_button, 'Enable', 'on');
+    set(handles.delete_button, 'Enable', 'on');
 else
     check_check(handles);
     set(handles.change_button, 'Enable', 'off');
+    set(handles.delete_button, 'Enable', 'off');
 end
 
 
@@ -446,9 +461,11 @@ if neg_check == 1
     set(handles.pos1_check, 'Enable', 'off');
     set(handles.neg3_check, 'Enable', 'off');
     set(handles.change_button, 'Enable', 'on');
+    set(handles.delete_button, 'Enable', 'on');
 else
     check_check(handles);
     set(handles.change_button, 'Enable', 'off');
+    set(handles.delete_button, 'Enable', 'off');
 end
 
 
@@ -467,9 +484,11 @@ if pos_check == 1
     set(handles.neg2_check, 'Enable', 'off');
     set(handles.neg3_check, 'Enable', 'off');
     set(handles.change_button, 'Enable', 'on');
+    set(handles.delete_button, 'Enable', 'on');
 else
     check_check(handles);
     set(handles.change_button, 'Enable', 'off');
+    set(handles.delete_button, 'Enable', 'off');
 end
 
 
@@ -488,9 +507,11 @@ if neg_check == 1
     set(handles.neg2_check, 'Enable', 'off');
     set(handles.pos1_check, 'Enable', 'off');
     set(handles.change_button, 'Enable', 'on');
+    set(handles.delete_button, 'Enable', 'on');
 else
     check_check(handles);
     set(handles.change_button, 'Enable', 'off');
+    set(handles.delete_button, 'Enable', 'off');
 end
 
 
@@ -533,3 +554,66 @@ function notes_text_CreateFcn(hObject, eventdata, handles)
 if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
     set(hObject,'BackgroundColor','white');
 end
+
+
+% --- Executes on button press in delete_button.
+function delete_button_Callback(hObject, eventdata, handles)
+% hObject    handle to delete_button (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+if get(handles.pos1_check, 'Value')
+    handles.sep_data(handles.index).pos_peak_latency1 = NaN;
+    handles.sep_data(handles.index).pos_peak1 = NaN;
+end
+
+if get(handles.pos2_check, 'Value')
+    handles.sep_data(handles.index).pos_peak_latency2 = NaN;
+    handles.sep_data(handles.index).pos_peak2 = NaN;
+end
+
+if get(handles.pos3_check, 'Value')
+    handles.sep_data(handles.index).pos_peak_latency3 = NaN;
+    handles.sep_data(handles.index).pos_peak3 = NaN;
+end
+
+if get(handles.neg1_check, 'Value')
+    handles.sep_data(handles.index).neg_peak_latency1 = NaN;
+    handles.sep_data(handles.index).neg_peak1 = NaN;
+end
+
+if get(handles.neg2_check, 'Value')
+    handles.sep_data(handles.index).neg_peak_latency2 = NaN;
+    handles.sep_data(handles.index).neg_peak2 = NaN;
+end
+
+if get(handles.neg3_check, 'Value')
+    handles.sep_data(handles.index).neg_peak_latency3 = NaN;
+    handles.sep_data(handles.index).neg_peak3 = NaN;
+end
+
+guidata(hObject, handles);
+sort_peaks(hObject, handles);
+handles = guidata(hObject); 
+cla(handles.axes1);
+plot_sep_gui(handles, handles.sep_data, handles.index);
+set(handles.pos1_check, 'Enable', 'on');
+set(handles.neg1_check, 'Enable', 'on');
+set(handles.pos1_check, 'Value', 0);
+set(handles.pos2_check, 'Value', 0);
+set(handles.pos3_check, 'Value', 0);
+set(handles.neg1_check, 'Value', 0);
+set(handles.neg2_check, 'Value', 0);
+set(handles.neg3_check, 'Value', 0);
+add_check(handles);
+check_check(handles);
+set(handles.change_button, 'Enable', 'off');
+set(handles.delete_button, 'Enable', 'off');
+set(0, 'userdata', []);
+
+
+
+% --- Executes during object deletion, before destroying properties.
+function figure1_DeleteFcn(hObject, eventdata, handles)
+% hObject    handle to figure1 (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
