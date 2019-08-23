@@ -1,4 +1,6 @@
-function sep_analysis_path = sep_analysis(animal_name, sep_slicing_path)
+function sep_analysis_path = sep_analysis(animal_name, sep_slicing_path, ...
+            baseline_start_window, baseline_end_window, standard_deviation_coefficient, ...
+            early_start, early_end, late_start, late_end)
     sep_analysis_start = tic;
     fprintf('Applying sep analysis for %s \n', animal_name);
         [sliced_files, sep_analysis_path, failed_path] = create_dir...
@@ -16,7 +18,9 @@ function sep_analysis_path = sep_analysis(animal_name, sep_slicing_path)
                 end
                 %% Apply sep analysis
 
-                sep_analysis_results = cal_sep_analysis(animal_name, sep_l2h_map, sep_window);
+                sep_analysis_results = cal_sep_analysis(animal_name, sep_l2h_map, sep_window,...
+                    baseline_start_window, baseline_end_window, standard_deviation_coefficient, ...
+                    early_start, early_end, late_start, late_end);
 
                 %% Saving outputs
                 matfile = fullfile(sep_analysis_path, ['analysis_', filename, '.mat']);

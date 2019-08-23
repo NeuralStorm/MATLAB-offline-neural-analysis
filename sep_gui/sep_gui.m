@@ -22,7 +22,7 @@ function varargout = sep_gui(varargin)
 
 % Edit the above text to modify the response to help sep_gui
 
-% Last Modified by GUIDE v2.5 19-Aug-2019 15:40:44
+% Last Modified by GUIDE v2.5 22-Aug-2019 16:03:09
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
@@ -55,7 +55,8 @@ function sep_gui_OpeningFcn(hObject, eventdata, handles, varargin)
 % Choose default command line output for sep_gui
 handles.output = hObject;
 
-original_path = uigetfile('*.mat', 'MultiSelect', 'off');
+[file_name, original_path] = uigetfile('*.mat', 'MultiSelect', 'off');
+original_path = [original_path '\' file_name];
 load(original_path, 'sep_analysis_results');
 handles.file_path = original_path;
 handles.index = 1;
@@ -67,6 +68,7 @@ handles.sep_data = sep_analysis_results;
 set(0, 'userdata', []);
 check_check(handles);
 add_check(handles);
+
     
 % Update handles structure
 guidata(hObject, handles);
@@ -107,6 +109,7 @@ function prev_button_Callback(hObject, eventdata, handles)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
 if handles.index > 1
+    handles.sep_data(handles.index).analysis_notes = get(handles.notes_text, 'String');
     handles.index = handles.index - 1;
     guidata(hObject,handles);
     cla(handles.axes1);
@@ -133,6 +136,7 @@ function next_button_Callback(hObject, eventdata, handles)
 % handles    structure with handles and user data (see GUIDATA)
 
 if handles.index < length(handles.sep_data)
+    handles.sep_data(handles.index).analysis_notes = get(handles.notes_text, 'String');
     handles.index = handles.index + 1;
     guidata(hObject,handles);
     cla(handles.axes1);
@@ -354,8 +358,11 @@ if get(handles.addneg_check, 'Value')
         end
     end
 end
-
+% guidata(hObject, handles);
+%  sort_peaks(hObject, handles);
+%     aa = handles.sep_data(handles.index).neg_peak_latency1
 guidata(hObject, handles);
+
 cla(handles.axes1);
 plot_sep_gui(handles, handles.sep_data, handles.index); 
 add_check(handles);
@@ -366,6 +373,8 @@ set(handles.add_button, 'Enable', 'off');
 
 check_check(handles);
 set(handles.change_button, 'Enable', 'off');
+
+
 
 
 
@@ -492,3 +501,35 @@ function save_button_Callback(hObject, eventdata, handles)
 % handles    structure with handles and user data (see GUIDATA)
 sep_analysis_results = handles.sep_data;
 save(handles.file_path, 'sep_analysis_results'); 
+
+
+% --- Executes during object creation, after setting all properties.
+function axes2_CreateFcn(hObject, eventdata, handles)
+% hObject    handle to axes2 (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    empty - handles not created until after all CreateFcns called
+
+% Hint: place code in OpeningFcn to populate axes2
+
+
+
+function notes_text_Callback(hObject, eventdata, handles)
+% hObject    handle to notes_text (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+% Hints: get(hObject,'String') returns contents of notes_text as text
+%        str2double(get(hObject,'String')) returns contents of notes_text as a double
+
+
+% --- Executes during object creation, after setting all properties.
+function notes_text_CreateFcn(hObject, eventdata, handles)
+% hObject    handle to notes_text (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    empty - handles not created until after all CreateFcns called
+
+% Hint: edit controls usually have a white background on Windows.
+%       See ISPC and COMPUTER.
+if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
+    set(hObject,'BackgroundColor','white');
+end

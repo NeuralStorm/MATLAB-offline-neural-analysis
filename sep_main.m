@@ -42,7 +42,7 @@ function [] = sep_main()
              %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%               
             if config.is_sep_slicing
                 sep_slicing_path = sep_slicing(animal_name, filtered_path, ...
-                    config.first_window_time, config.last_window_time);
+                    config.start_window, config.end_window);
             else
                 sep_slicing_path = [filtered_path, '/sliced'];
             end
@@ -51,7 +51,10 @@ function [] = sep_main()
             %%         Sep_analysis         %%
              %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%               
             if config.is_sep_analysis
-                sep_analysis_path = sep_analysis(animal_name, sep_slicing_path);
+                sep_analysis_path = sep_analysis(animal_name, sep_slicing_path, ...
+                    config.baseline_start_window, config.baseline_end_window, ...
+                    config.standard_deviation_coefficient, config.early_start,...
+                    config.early_end, config.late_start, config.late_end);
             else
                 sep_analysis_path = [sep_slicing_path, '/sep_analysis'];
             end            

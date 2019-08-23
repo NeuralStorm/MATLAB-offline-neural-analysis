@@ -1,6 +1,6 @@
 function plot_sep_gui(handles, sep_analysis_results, i)
 sep_data = sep_analysis_results(i).sep_sliced_data;
-window = sep_analysis_results(i).window;
+window = sep_analysis_results(i).sep_window;
 animal_id = sep_analysis_results(i).animal_id;
 channel_name = sep_analysis_results(i).channel_name;
 neg_peak(1) = sep_analysis_results(i).neg_peak1;
@@ -28,30 +28,30 @@ ylim([1.1 * min_point+eps 1.1 * max_point + eps]);
 %mark the peak point, peak number and add the coordinates information at
 %the left side
 %postive peaks
-for i = 1:length(pos_peak)
-    if ~isnan(pos_peak(i))
-        plot(handles.axes1, pos_peak_latency(i)/1000, pos_peak(i), 'x', 'Color', 'b', 'MarkerSize', 20, 'LineWidth', 1);
-        plot(handles.axes1, pos_peak_latency(i)/1000, pos_peak(i), 'o', 'MarkerFaceColor', 'b', 'MarkerSize', 4);
-        text(handles.axes1, pos_peak_latency(i)/1000 - 0.004, pos_peak(i) - 3, num2str(i), ...
+for pos_index = 1:length(pos_peak)
+    if ~isnan(pos_peak(pos_index))
+        plot(handles.axes1, pos_peak_latency(pos_index)/1000, pos_peak(pos_index), 'x', 'Color', 'b', 'MarkerSize', 20, 'LineWidth', 1);
+        plot(handles.axes1, pos_peak_latency(pos_index)/1000, pos_peak(pos_index), 'o', 'MarkerFaceColor', 'b', 'MarkerSize', 4);
+        text(handles.axes1, pos_peak_latency(pos_index)/1000 - 0.004, pos_peak(pos_index) - y_range * 0.03, num2str(pos_index), ...
             'FontWeight','bold','FontSize',12 , 'Color', 'b');        
-        text(handles.axes1, window(1) + 0.02, max_point - y_range * 0.04 * i, ...
-            ['pos peak ' num2str(i) ': latency: ' num2str(pos_peak_latency(i)/1000) 's,']);
-        text(handles.axes1, window(1) + 0.25, max_point - y_range * 0.04 * i, ...
-            [' value: ' num2str(pos_peak(i)) 'mV']);
+        text(handles.axes1, window(1) + 0.02, max_point - y_range * 0.04 * pos_index, ...
+            ['pos peak ' num2str(pos_index) ': latency: ' num2str(pos_peak_latency(pos_index)/1000) 's,']);
+        text(handles.axes1, window(1) + 0.25, max_point - y_range * 0.04 * pos_index, ...
+            [' value: ' num2str(pos_peak(pos_index)) 'mV']);
         
     end
 end
 %negtive peaks
-for i = 1:length(neg_peak)
-    if ~isnan(neg_peak(i))
-        plot(handles.axes1, neg_peak_latency(i)/1000, neg_peak(i), 'x', 'Color', 'r', 'MarkerSize', 20, 'LineWidth', 1);
-        plot(handles.axes1, neg_peak_latency(i)/1000, neg_peak(i), 'o', 'MarkerFaceColor', 'r', 'MarkerSize', 4);
-        text(handles.axes1, neg_peak_latency(i)/1000 - 0.004, neg_peak(i) - 3, num2str(i), ...
+for neg_index = 1:length(neg_peak)
+    if ~isnan(neg_peak(neg_index))
+        plot(handles.axes1, neg_peak_latency(neg_index)/1000, neg_peak(neg_index), 'x', 'Color', 'r', 'MarkerSize', 20, 'LineWidth', 1);
+        plot(handles.axes1, neg_peak_latency(neg_index)/1000, neg_peak(neg_index), 'o', 'MarkerFaceColor', 'r', 'MarkerSize', 4);
+        text(handles.axes1, neg_peak_latency(neg_index)/1000 - 0.004, neg_peak(neg_index) - y_range * 0.03, num2str(neg_index), ...
             'FontWeight','bold','FontSize',12 , 'Color', 'r');    
-        text(handles.axes1, window(1) + 0.02, min_point + 12 - y_range * 0.04 * i, ...
-            ['neg peak ' num2str(i) ': latency: ' num2str(neg_peak_latency(i)/1000) 's,']);
-        text(handles.axes1, window(1) + 0.25, min_point + 12 - y_range * 0.04 * i, ...
-            [' value: ' num2str(neg_peak(i)) 'mV']);
+        text(handles.axes1, window(1) + 0.02, min_point + 12 - y_range * 0.04 * neg_index, ...
+            ['neg peak ' num2str(neg_index) ': latency: ' num2str(neg_peak_latency(neg_index)/1000) 's,']);
+        text(handles.axes1, window(1) + 0.25, min_point + 12 - y_range * 0.04 * neg_index, ...
+            [' value: ' num2str(neg_peak(neg_index)) 'mV']);
     end
 end
         
@@ -66,6 +66,10 @@ title(handles.axes1, title_text);
 xlabel(handles.axes1, 'Time (s)');
 ylabel(handles.axes1, 'Voltage (mV)');
 hold off
+
+set(handles.notes_text, 'String', sep_analysis_results(i).analysis_notes);
+
+
 end
 
 

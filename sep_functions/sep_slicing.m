@@ -1,4 +1,4 @@
-function sep_slicing_path = sep_slicing(animal_name, filtered_path, first_window_time, last_window_time)
+function sep_slicing_path = sep_slicing(animal_name, filtered_path, start_window, end_window)
     sep_slicing_start = tic;
     fprintf('Applying sep slicing for %s \n', animal_name);
         [filtered_files, sep_slicing_path, failed_path] = create_dir...
@@ -15,7 +15,7 @@ function sep_slicing_path = sep_slicing(animal_name, filtered_path, first_window
                     continue
                 end
                 %% Apply sep slicing
-                sep_window = [-abs(first_window_time), last_window_time];
+                sep_window = [-abs(start_window), end_window];
                 sep_l2h_map = make_sep_map(lowpass_filtered_map, board_dig_in_data, ...
                     sample_rate, sep_window);
 

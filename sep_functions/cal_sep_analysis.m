@@ -1,21 +1,33 @@
-function sepdata = cal_sep_analysis(animal_name, sep_map, window)
+function sepdata = cal_sep_analysis(animal_name, sep_map, sep_window,...
+            baseline_start_window, baseline_end_window, standard_deviation_coefficient, ...
+            early_start, early_end, late_start, late_end)
+        
 sep = cell2mat(sep_map(:,2));
 %create time vector for x-axis
-time_vec = linspace((window(1).*1000),(window(2)*1000),length(sep));
-response_window = find(time_vec >= 5);%%find 5ms after stim
-background_window = find(time_vec <= -10);%%10ms before 0 background
+time_vec = linspace((sep_window(1).*1000),(sep_window(2)*1000),length(sep));
+early_window = find((time_vec >= (early_start * 1000)) & (time_vec <= (early_end * 1000)));
+late_window = find((time_vec >= (late_start * 1000)) & (time_vec <= (late_end * 1000)));
 
-chan_data = [];
-sepdata = [];
-temp1 = [];
-pos_sep_valid = [];
-neg_sep_valid = [];
+background_window = find((time_vec >= (- abs(baseline_start_window)) * 1000) ...
+    & (time_vec <= (- abs(baseline_end_window) * 1000)));
 
-sepdata= struct('animal_id', {}, 'channel_name', {}, 'window', {}, 'sep_sliced_data', {}, 'peak_to_peak',{}, 'neg_peak1',{},...
-     'neg_peak2',{}, 'neg_peak3',{},  'neg_peak_latency1',{},  'neg_peak_latency2',{},  'neg_peak_latency3',{},...
-     'pos_peak1', {}, 'pos_peak2', {}, 'pos_peak3', {}, 'pos_peak_latency1',{} , 'pos_peak_latency2',{} , ...
-     'pos_peak_latency3',{} ,'response_dur',{},'background', {},'background_sd',{},'snr',{},'pos_sep_valid',{},...
-     'neg_sep_valid',{},'type',{},'response',{}, 'posthresh', {}, 'negthresh', {});
+% chan_data = [];
+% sepdata = [];
+% temp1 = [];
+% early_pos_sep_valid = [];
+% early_neg_sep_valid = [];
+
+% sepdata= struct('animal_id', {}, 'channel_name', {}, 'sep_window', {}, 'sep_sliced_data', {}, 'peak_to_peak',{}, 'neg_peak1',{},...
+%      'neg_peak2',{}, 'neg_peak3',{},  'neg_peak_latency1',{},  'neg_peak_latency2',{},  'neg_peak_latency3',{},...
+%      'pos_peak1', {}, 'pos_peak2', {}, 'pos_peak3', {}, 'pos_peak_latency1',{} , 'pos_peak_latency2',{} , ...
+%      'pos_peak_latency3',{} ,'response_dur',{},'background', {},'background_sd',{},'snr',{},'pos_sep_valid',{},...
+%      'neg_sep_valid',{},'type',{},'response',{}, 'posthresh', {}, 'negthresh', {});
+sepdata= struct('animal_id', {}, 'channel_name', {}, 'sep_window', {}, 'sep_sliced_data', {}, ...
+    'peak_to_peak',{}, 'neg_peak1',{}, 'neg_peak_latency1',{}, 'pos_peak1', {}, 'pos_peak_latency1',{}, 'sig_early', {}, ...
+    'neg_peak2',{}, 'neg_peak_latency2',{}, 'pos_peak2', {},  'pos_peak_latency2',{}, 'sig_late', {}, ...
+    'neg_peak3',{}, 'neg_peak_latency3',{}, 'pos_peak3', {}, 'pos_peak_latency3',{} , 'sig_response',{} ,...
+    'response_dur',{}, 'background', {}, 'background_sd',{}, 'snr',{}, 'pos_sep_valid',{}, ...
+    'neg_sep_valid',{}, 'type',{}, 'response',{}, 'posthresh', {}, 'negthresh', {}, 'analysis_notes', {});
 
 disp(['Analyzing SEP...']);
 
@@ -24,85 +36,90 @@ for i = 1:size(sep,1)
     
     background = mean(chan_data(background_window(1:end)));
     background_sd = std(chan_data(background_window(1:end)));
-    background_rms = rms(chan_data(background_window(1:end)));
     
-    response = chan_data(response_window(1:end));
-    response_rms = rms(response);
-    snr = 20*log(response_rms./background_rms);%%chgned to db
+%     background_rms = rms(chan_data(background_window(1:end)));
     
-    pos_peak = max(response);
-    neg_peak = min(response);%%%what if response is entirely positive?
-    peak_to_peak = pos_peak - neg_peak;
+    early_response = chan_data(early_window(1:end));
+    late_response = chan_data(late_window(1:end));
+    %     response_rms = rms(early_response);
+%      peak_to_peak = early_pos_peak - early_neg_peak;
+%     snr = 20*log(response_rms ./ background_rms);%%chgned to db
+    
+%     early_pos_peak = max(early_response);
+%     early_neg_peak = min(early_response);%%%what if response is entirely positive?
+% 
+%     early_pos_peak_index = find(chan_data >= early_pos_peak);
+%     temp1=find(early_pos_peak_index >= early_window(1));
+%     early_pos_peak_latency = time_vec(early_pos_peak_index(temp1(1)));
+    
+%     early_neg_peak_index = find(chan_data <= early_neg_peak);
+%     temp1 = find(early_neg_peak_index >= early_window(1));
+%     early_neg_peak_latency = time_vec(early_neg_peak_index(temp1(1)));
+%     early_response_dur = abs(early_neg_peak_latency-early_pos_peak_latency);
 
-    pos_peak_index = find(chan_data >= pos_peak);
-    temp1=find(pos_peak_index>=response_window(1));
-    pos_peak_latency = time_vec(pos_peak_index(temp1(1)));
+    posthreshbackground = background + (standard_deviation_coefficient * background_sd);
+    negthreshbackground = background - (standard_deviation_coefficient * background_sd);
+    
+    
+    % early window
+        [early_pos_peak, early_neg_peak, early_pos_peak_latency, early_neg_peak_latency, ...
+    sig_early] = select_peak(early_response, posthreshbackground, negthreshbackground, time_vec, early_window);
 
+    % late window
+        [late_pos_peak, late_neg_peak, late_pos_peak_latency, late_neg_peak_latency, ...
+    sig_late] = select_peak(late_response, posthreshbackground, negthreshbackground, time_vec, late_window);
 
-    neg_peak_index = find(chan_data <= neg_peak);
-    temp1=find(neg_peak_index>=response_window(1));
-    neg_peak_latency = time_vec(neg_peak_index(temp1(1)));
-    response_dur = abs(neg_peak_latency-pos_peak_latency);
-
-    posthreshbackground = background + (3*background_sd);
-    negthreshbackground = background - (3*background_sd);
-
-    if (pos_peak > posthreshbackground)
-        pos_sep_valid=1;
+    if sig_early || sig_late
+        sig_response = 1;
     else
-        pos_sep_valid=0;
+        sig_response = 0;
     end
 
-    if (neg_peak < negthreshbackground)
-        neg_sep_valid=1;
-    else
-        neg_sep_valid=0;
-    end
-
-    if (pos_sep_valid==1&&(abs(pos_peak_latency)<abs(neg_peak_latency)))
-        type='hyperpolarize';
-    elseif  (neg_sep_valid==1&&(abs(neg_peak_latency)<abs(pos_peak_latency)))
-        type='depolarize';
-    else
-        type='NaN';
-    end
+%     if (early_pos_sep_valid==1 && (abs(early_pos_peak_latency) < abs(early_neg_peak_latency)))
+%         type='hyperpolarize';
+%     elseif  (early_neg_sep_valid==1 && (abs(early_neg_peak_latency) < abs(early_pos_peak_latency)))
+%         type='depolarize';
+%     else
+%         type='NaN';
+%     end
     
-
-    snrthresh = 20*log(2);%%signal rms atleast twice background rms
-    if (snr > snrthresh)
-        response = 1;
-    else
-        response = 0;
-    end
-    
+%     snrthresh = 20 * log(2);%%signal rms atleast twice background rms
+%     if (snr > snrthresh)
+%         early_response = 1;
+%     else
+%         early_response = 0;
+%     end
 
     sepdata(i).animal_id = animal_name;
     sepdata(i).channel_name = sep_map{i, 1};
-    sepdata(i).window = window;
+    sepdata(i).sep_window = sep_window;
     sepdata(i).sep_sliced_data = sep_map{i, 2};
     sepdata(i).posthresh = posthreshbackground;
     sepdata(i).negthresh = negthreshbackground;   
-    sepdata(i).peak_to_peak = peak_to_peak;
-    sepdata(i).neg_peak1 = neg_peak;
-    sepdata(i).neg_peak_latency1 = neg_peak_latency;
-    sepdata(i).pos_peak1 = pos_peak;
-    sepdata(i).pos_peak_latency1 = pos_peak_latency;
-    sepdata(i).response_dur = response_dur;
+%     sepdata(i).peak_to_peak = peak_to_peak;
+    sepdata(i).neg_peak1 = early_neg_peak;
+    sepdata(i).neg_peak_latency1 = early_neg_peak_latency;
+    sepdata(i).pos_peak1 = early_pos_peak;
+    sepdata(i).pos_peak_latency1 = early_pos_peak_latency;
+    sepdata(i).sig_early = sig_early;
+    sepdata(i).neg_peak2 = late_neg_peak;
+    sepdata(i).neg_peak_latency2 = late_neg_peak_latency;
+    sepdata(i).pos_peak2 = late_pos_peak;
+    sepdata(i).pos_peak_latency2 = late_pos_peak_latency;
+    sepdata(i).sig_late = sig_late;
+    sepdata(i).sig_response = sig_response;
+%     sepdata(i).response_dur = early_response_dur;
     sepdata(i).background = background;
     sepdata(i).background_sd = background_sd;
-    sepdata(i).snr = snr;
-    sepdata(i).pos_sep_valid = pos_sep_valid;
-    sepdata(i).neg_sep_valid = neg_sep_valid;
-    sepdata(i).type = type;
-    sepdata(i).response = response;
-    sepdata(i).neg_peak2 = NaN;
+%     sepdata(i).snr = snr;
+%     sepdata(i).neg_sep_valid = early_neg_sep_valid;
+%     sepdata(i).type = type;
+%     sepdata(i).response = early_response;
     sepdata(i).neg_peak3 = NaN;
-    sepdata(i).pos_peak2 = NaN;    
     sepdata(i).pos_peak3 = NaN;
-    sepdata(i).neg_peak_latency2 = NaN;
     sepdata(i).neg_peak_latency3 = NaN;
-    sepdata(i).pos_peak_latency2 = NaN;
     sepdata(i).pos_peak_latency3 = NaN;
+    sepdata(i).analysis_notes = [];
    
     
     
