@@ -5,8 +5,7 @@ function [] = csv_comparison()
     results_file = fullfile(results_path, results_name);
     template = readtable(template_file);
     results = readtable(results_file);
-    % template = sortrows(template);
-    % results = sortrows(results);
+    prec = 5;
 
     [template_rows, template_cols] = size(template);
     [result_rows, result_cols] = size(results);
@@ -40,7 +39,8 @@ function [] = csv_comparison()
                     %TODO store that point has different variable types
                     diff_location.(col_name).difference = ...
                         [diff_location.(col_name).difference;{index_row}, {template_type}, {results_type}];
-                elseif (isnumeric(template_value) && isnumeric(results_value)) && ~isequaln(template_value, results_value)
+                elseif (isnumeric(template_value) && isnumeric(results_value)) && ...
+                        ~isequaln(round(template_value, prec), round(results_value, prec))
                     diff_location.(col_name).difference = [diff_location.(col_name).difference; ...
                         {index_row}, {template_value}, {results_value}, {combined_data}];
                 elseif (isstring(template_value) && isstring(results_value)) && ~strcmpi(template_value, results_value)
