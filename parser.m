@@ -35,7 +35,7 @@ function [parsed_path] = parser(dir_path, animal_name, total_trials, total_event
             [~, channel_names] = plx_chan_names(file);
 
             subchan = {'i','a','b','c','d'};
-            neuron_map = [];
+            channel_map = [];
             for unit_i = 1:tot_units - 1 % Start at 0 for unsorted 
                 for channel_i = 1:tot_channels - 1
                     if (tscounts(unit_i + 1, channel_i + 1) > 0)
@@ -48,11 +48,11 @@ function [parsed_path] = parser(dir_path, animal_name, total_trials, total_event
                         current_channel = deblank(current_channel);
                         current_subchan = subchan{unit_i + 1};
                         complete_channel_name = [current_channel, current_subchan];
-                        neuron_map = [neuron_map; {complete_channel_name}, {channel_timestamps}];
+                        channel_map = [channel_map; {complete_channel_name}, {channel_timestamps}];
                     end
                 end
             end
-            total_neurons = length(neuron_map(:,1));
+            total_neurons = length(channel_map(:,1));
 
             [total_event_chan, event_channels] = plx_event_chanmap(file);
             event_ts = [];
@@ -99,14 +99,14 @@ function [parsed_path] = parser(dir_path, animal_name, total_trials, total_event
             end
 
             event_ts = sortrows(event_ts, 2);
-            neuron_map = sortrows(neuron_map, 1);
+            channel_map = sortrows(channel_map, 1);
 
             %% Saves parsed files
             % filename = ['PARSED.', file_name, '.mat'];
             filename = [file_name, '.mat'];
             matfile = fullfile(parsed_path, filename);
             save(matfile, 'tscounts', 'evcounts', 'event_ts',  ...
-                    'total_neurons', 'neuron_map');
+                    'total_neurons', 'channel_map');
         catch ME
             handle_ME(ME, failed_path, file_name);
         end

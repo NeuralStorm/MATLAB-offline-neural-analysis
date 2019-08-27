@@ -1,5 +1,5 @@
 function [] = plot_recfield(psth, first_bin_latency, last_bin_latency, threshold, ...
-        event_onset, figure_handle, bin_size, pre_time)
+        figure_handle, bin_size, pre_time)
     %% Plots elements from rec field analysis
     figure(figure_handle);
     hold on
@@ -15,10 +15,8 @@ function [] = plot_recfield(psth, first_bin_latency, last_bin_latency, threshold
         plot(xlim,[threshold threshold], 'r', 'LineWidth', 0.75);
         line([first_bin_latency first_bin_latency], ylim, 'Color', 'red', 'LineWidth', 0.75);
         line([last_bin_latency last_bin_latency], ylim, 'Color', 'red', 'LineWidth', 0.75);
-        line([event_onset event_onset], ylim, 'Color', 'black', 'LineWidth', 0.75);
     else
         plot(xlim,[threshold threshold], 'r', 'LineWidth', 0.75);
-        line([event_onset event_onset], ylim, 'Color', 'black', 'LineWidth', 0.75);
     end
     hold off
 end

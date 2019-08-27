@@ -72,14 +72,14 @@ function [] = intertrial_anlysis(original_path, animal_name, psth_path, bin_size
         current_animal = [current_animal, current_animal_id];
         disp([current_animal, ' ', current_day])
 
-        load(current_file, 'event_struct', 'event_ts', 'event_strings', 'labeled_neurons');
+        load(current_file, 'psth_struct', 'event_ts', 'event_strings', 'labeled_data');
 
         trial_ids = 1:1:length(event_ts);
         labeled_events = [trial_ids', event_ts];
 
         intertrial_struct = struct;
-        all_events = event_struct.all_events;
-        unique_regions = fieldnames(labeled_neurons);
+        all_events = psth_struct.all_events;
+        unique_regions = fieldnames(labeled_data);
         for region = 1:length(unique_regions)
             region_name = unique_regions{region};
             %% Determine direct and indirect regions
@@ -95,8 +95,8 @@ function [] = intertrial_anlysis(original_path, animal_name, psth_path, bin_size
             end
 
 
-            total_region_neurons = length(labeled_neurons.(region_name)(:,1));          
-            region_neurons = [labeled_neurons.(region_name)(:,1), labeled_neurons.(region_name)(:,end)];
+            total_region_neurons = length(labeled_data.(region_name)(:,1));          
+            region_neurons = [labeled_data.(region_name)(:,1), labeled_data.(region_name)(:,end)];
             region_psth = NeuroToolbox.PSTHToolbox.PSTH(region_neurons, all_events, 'bin_size', ... 
                 bin_size, 'PSTH_window', [-abs(pre_time), post_time]);
             region_template = NeuroToolbox.PSTHToolbox.SU_Classifier(region_psth);
@@ -128,7 +128,7 @@ function [] = intertrial_anlysis(original_path, animal_name, psth_path, bin_size
             intertrial_struct.(region_name).correct_trials = correct_trials;
             intertrial_struct.(region_name).correct_labels = correct_labels;
             figure('Visible', 'off');
-            all_events = event_struct.all_events;
+            all_events = psth_struct.all_events;
             event_length = length(all_events{1,2}) + length(all_events{2,2}) + length(all_events{3,2}) + length(all_events{4,2});
             % disp(event_length)
             x_values = (1:1:event_length)';

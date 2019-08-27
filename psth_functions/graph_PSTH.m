@@ -1,15 +1,17 @@
-function [] = graph_PSTH(save_path, event_struct, labeled_neurons, sig_response, non_sig_response, bin_size, ...
-                pre_time, post_time, rf_analysis, make_region_subplot, sub_cols, sub_rows)
+function [] = graph_PSTH(save_path, psth_struct, labeled_data, sig_response, ...
+        non_sig_response, bin_size, pre_time, post_time, pre_start, pre_end, ...
+        post_start, post_end, rf_analysis, make_region_subplot, sub_cols, sub_rows)
 
-    event_strings = event_struct.all_events(:,1)';
+    check_time(pre_time, pre_start, pre_end, post_time, post_start, post_end, bin_size)
+
+    event_strings = psth_struct.all_events(:,1)';
     event_window = -(abs(pre_time) - bin_size):bin_size:(abs(post_time));
     total_bins = length(event_window);
-    event_onset = 0;
 
-    region_names = fieldnames(labeled_neurons);
+    region_names = fieldnames(labeled_data);
     parfor region = 1:length(region_names)
         current_region = region_names{region};
-        region_neurons = labeled_neurons.(current_region)(:,1);
+        region_neurons = labeled_data.(current_region)(:,1);
         total_region_neurons = length(region_neurons);
         % Creates the region directory if it does not already exist
         region_path = [save_path, '/', current_region];
@@ -19,7 +21,7 @@ function [] = graph_PSTH(save_path, event_struct, labeled_neurons, sig_response,
 
         for event = 1:length(event_strings(1,:))
             current_event = event_strings{event};
-            event_psth = event_struct.(current_region).(current_event).psth;
+            event_psth = psth_struct.(current_region).(current_event).psth;
 
             event_max = 1.1 * max(event_psth) + eps;
             if min(event_psth) >= 0
@@ -43,7 +45,8 @@ function [] = graph_PSTH(save_path, event_struct, labeled_neurons, sig_response,
             for neuron = 1:total_region_neurons
                 psth = event_psth(((1:total_bins) + ((neuron-1) * total_bins)));
                 psth_name = region_neurons{neuron};
-                unit_figure = plot_PSTH(psth,psth_name,current_event,event_window)               
+                unit_figure = plot_PSTH(psth, psth_name, current_event, event_window, ...
+                    pre_start, pre_end, post_start, post_end);
                 if rf_analysis
                     threshold = NaN;
                     first_bin_latency = NaN;
@@ -72,7 +75,7 @@ function [] = graph_PSTH(save_path, event_struct, labeled_neurons, sig_response,
                     end
                     %% Plots elements from rec field analysis
                     plot_recfield(psth, first_bin_latency, last_bin_latency, threshold, ...
-                        event_onset, unit_figure, bin_size, pre_time);
+                        unit_figure, bin_size, pre_time);
                     if make_region_subplot
                         figure(region_figure);
                         scrollsubplot(sub_rows, sub_cols, neuron);
@@ -80,9 +83,13 @@ function [] = graph_PSTH(save_path, event_struct, labeled_neurons, sig_response,
                         region_handle = bar(event_window, psth,'BarWidth', 1);
                         set(region_handle, 'EdgeAlpha', 0);
                         ylim([event_min event_max]);
-
-                        plot_recfield(psth, first_bin_latency, last_bin_latency, threshold, event_onset,...
+                        
+                        plot_recfield(psth, first_bin_latency, last_bin_latency, threshold, ...
                             region_figure, bin_size, pre_time);
+                        line([pre_start pre_start], ylim, 'Color', 'black', 'LineWidth', 0.75, 'LineStyle', '--');
+                        line([pre_end pre_end], ylim, 'Color', 'black', 'LineWidth', 0.75, 'LineStyle', '--');
+                        line([post_start post_start], ylim, 'Color', 'black', 'LineWidth', 0.75, 'LineStyle', '--');
+                        line([post_end post_end], ylim, 'Color', 'black', 'LineWidth', 0.75, 'LineStyle', '--');
                         title(psth_name);
                         hold off
                     end
@@ -94,8 +101,10 @@ function [] = graph_PSTH(save_path, event_struct, labeled_neurons, sig_response,
                     region_handle = bar(event_window, psth,'BarWidth', 1);
                     set(region_handle, 'EdgeAlpha', 0);
                     ylim([event_min event_max]);
-
-                    line([event_onset event_onset], ylim, 'Color', 'black', 'LineWidth', 0.75);
+                    line([pre_start pre_start], ylim, 'Color', 'black', 'LineWidth', 0.75, 'LineStyle', '--');
+                    line([pre_end pre_end], ylim, 'Color', 'black', 'LineWidth', 0.75, 'LineStyle', '--');
+                    line([post_start post_start], ylim, 'Color', 'black', 'LineWidth', 0.75, 'LineStyle', '--');
+                    line([post_end post_end], ylim, 'Color', 'black', 'LineWidth', 0.75, 'LineStyle', '--');
                     title(psth_name);
                     hold off
                 end
