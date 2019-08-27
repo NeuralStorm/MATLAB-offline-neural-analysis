@@ -14,8 +14,8 @@ function [psth_figure] = plot_PSTH(psth, psth_name, event, event_window, pre_sta
     end
     set(unit_handle, 'EdgeAlpha', 0);
     hold on
-    line([-abs(pre_start) -abs(pre_start)], ylim, 'Color', 'black', 'LineWidth', 0.75, 'LineStyle', '--');
-    line([-abs(pre_end) -abs(pre_end)], ylim, 'Color', 'black', 'LineWidth', 0.75, 'LineStyle', '--');
+    line([pre_start pre_start], ylim, 'Color', 'black', 'LineWidth', 0.75, 'LineStyle', '--');
+    line([pre_end pre_end], ylim, 'Color', 'black', 'LineWidth', 0.75, 'LineStyle', '--');
     line([post_start post_start], ylim, 'Color', 'black', 'LineWidth', 0.75, 'LineStyle', '--');
     line([post_end post_end], ylim, 'Color', 'black', 'LineWidth', 0.75, 'LineStyle', '--');
     hold off

@@ -1,35 +1,13 @@
 function [baseline_struct, response_struct] = create_analysis_windows(labeled_data, psth_struct, ...
     pre_time, pre_start, pre_end, post_time, post_start, post_end, bin_size)
 
-    if -abs(pre_time) > -abs(pre_start)
-        warning('Pre time cannot occur before baseline analysis window. Chaning pre start to pre time');
-        pre_start = pre_time;
-    end
+    check_time(pre_time, pre_start, pre_end, post_time, post_start, post_end, bin_size)
 
-    if -abs(pre_start) > -abs(pre_end)
-        warning('Pre start cannot occur before pre end for the analysis window. Swapping values.');
-        temp = pre_start;
-        pre_start = pre_end;
-        pre_end = temp;
-    end
+    pre_time_bins = (length(-abs(pre_time):bin_size:0)) - 1;
+    post_time_bins = (length(0:bin_size:abs(post_time))) - 1;
 
-    if abs(post_time) < abs(post_end)
-        warning('Post time cannot occur before response analysis window. Chaning post end to post time');
-        post_end = post_time;
-    end
-
-    if abs(post_start) > abs(post_end)
-        warning('Post start cannot occur before post end for the analysis window. Swapping values.');
-        temp = post_start;
-        post_start = post_end;
-        post_end = temp;
-    end
-
-    pre_time_bins = (length(-abs(pre_time): bin_size: 0)) - 1;
-    post_time_bins = (length(0:bin_size:post_time)) - 1;
-
-    baseline_bins = (length(-abs(pre_start):bin_size:-abs(pre_end))) - 1;
-    response_bins = (length(abs(post_start):bin_size:abs(post_end))) - 1;
+    baseline_bins = (length(pre_start:bin_size:pre_end)) - 1;
+    response_bins = (length(post_start:bin_size:post_end)) - 1;
 
     all_events = psth_struct.all_events;
 

@@ -2,6 +2,8 @@ function [] = graph_PSTH(save_path, psth_struct, labeled_data, sig_response, ...
         non_sig_response, bin_size, pre_time, post_time, pre_start, pre_end, ...
         post_start, post_end, rf_analysis, make_region_subplot, sub_cols, sub_rows)
 
+    check_time(pre_time, pre_start, pre_end, post_time, post_start, post_end, bin_size)
+
     event_strings = psth_struct.all_events(:,1)';
     event_window = -(abs(pre_time) - bin_size):bin_size:(abs(post_time));
     total_bins = length(event_window);
@@ -84,8 +86,8 @@ function [] = graph_PSTH(save_path, psth_struct, labeled_data, sig_response, ...
                         
                         plot_recfield(psth, first_bin_latency, last_bin_latency, threshold, ...
                             region_figure, bin_size, pre_time);
-                        line([-abs(pre_start) -abs(pre_start)], ylim, 'Color', 'black', 'LineWidth', 0.75, 'LineStyle', '--');
-                        line([-abs(pre_end) -abs(pre_end)], ylim, 'Color', 'black', 'LineWidth', 0.75, 'LineStyle', '--');
+                        line([pre_start pre_start], ylim, 'Color', 'black', 'LineWidth', 0.75, 'LineStyle', '--');
+                        line([pre_end pre_end], ylim, 'Color', 'black', 'LineWidth', 0.75, 'LineStyle', '--');
                         line([post_start post_start], ylim, 'Color', 'black', 'LineWidth', 0.75, 'LineStyle', '--');
                         line([post_end post_end], ylim, 'Color', 'black', 'LineWidth', 0.75, 'LineStyle', '--');
                         title(psth_name);
@@ -99,8 +101,8 @@ function [] = graph_PSTH(save_path, psth_struct, labeled_data, sig_response, ...
                     region_handle = bar(event_window, psth,'BarWidth', 1);
                     set(region_handle, 'EdgeAlpha', 0);
                     ylim([event_min event_max]);
-                    line([-abs(pre_start) -abs(pre_start)], ylim, 'Color', 'black', 'LineWidth', 0.75, 'LineStyle', '--');
-                    line([-abs(pre_end) -abs(pre_end)], ylim, 'Color', 'black', 'LineWidth', 0.75, 'LineStyle', '--');
+                    line([pre_start pre_start], ylim, 'Color', 'black', 'LineWidth', 0.75, 'LineStyle', '--');
+                    line([pre_end pre_end], ylim, 'Color', 'black', 'LineWidth', 0.75, 'LineStyle', '--');
                     line([post_start post_start], ylim, 'Color', 'black', 'LineWidth', 0.75, 'LineStyle', '--');
                     line([post_end post_end], ylim, 'Color', 'black', 'LineWidth', 0.75, 'LineStyle', '--');
                     title(psth_name);
