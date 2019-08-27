@@ -24,15 +24,15 @@ max_point = max(sep_data);
 min_point = min(sep_data);
 y_range = 1.1 * (max_point - min_point);
 
-y_limits = [1.1 * min_point+eps 1.1 * max_point + eps];
-line(handles.axes1, [early_window(1) early_window(1)], y_limits, 'Color', 'black', 'LineWidth', 0.75, 'LineStyle', ':');
+y_limits = [min_point - 0.1 * abs(min_point) + eps max_point + 0.1 * abs(max_point) + eps];
+line(handles.axes1, [early_window(1) early_window(1)], y_limits, 'Color', 'black', 'LineWidth', 0.75, 'LineStyle', '--');
 hold (handles.axes1, 'on')
-line(handles.axes1, [early_window(2) early_window(2)], y_limits, 'Color', 'black', 'LineWidth', 0.75, 'LineStyle', ':');
-line(handles.axes1, [late_window(1) late_window(1)], y_limits, 'Color', 'black', 'LineWidth', 0.75, 'LineStyle', ':');
-line(handles.axes1, [late_window(2) late_window(2)], y_limits, 'Color', 'black', 'LineWidth', 0.75, 'LineStyle', ':');
+line(handles.axes1, [early_window(2) early_window(2)], y_limits, 'Color', 'black', 'LineWidth', 0.75, 'LineStyle', '--');
+line(handles.axes1, [late_window(1) late_window(1)], y_limits, 'Color', 'black', 'LineWidth', 0.75, 'LineStyle', '-.');
+line(handles.axes1, [late_window(2) late_window(2)], y_limits, 'Color', 'black', 'LineWidth', 0.75, 'LineStyle', '-.');
 
 plot(handles.axes1, sep_window(1):(1/(length(sep_data) - 1)):sep_window(2), sep_data);
-ylim(handles.axes1, [1.1 * min_point+eps 1.1 * max_point + eps]);
+ylim(handles.axes1, y_limits);
 
 %add threshold, stimulus time and window range
 plot(handles.axes1, xlim,[posthresh posthresh], 'r', 'LineWidth', 0.75, 'LineStyle', ':');

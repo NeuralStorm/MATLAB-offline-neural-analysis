@@ -22,7 +22,7 @@ function varargout = sep_gui(varargin)
 
 % Edit the above text to modify the response to help sep_gui
 
-% Last Modified by GUIDE v2.5 26-Aug-2019 20:24:10
+% Last Modified by GUIDE v2.5 27-Aug-2019 11:54:00
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
@@ -122,8 +122,6 @@ if handles.index > 1
     cla(handles.axes1);
     plot_sep_gui(handles, handles.sep_data, handles.index); 
     set(0, 'userdata', []);
-    set(handles.pos1_check, 'Enable', 'on');
-    set(handles.neg1_check, 'Enable', 'on');
     set(handles.pos1_check, 'Value', 0);
     set(handles.pos2_check, 'Value', 0);
     set(handles.pos3_check, 'Value', 0);
@@ -155,8 +153,6 @@ if handles.index < length(handles.sep_data)
     cla(handles.axes1);
     plot_sep_gui(handles, handles.sep_data, handles.index);
     set(0, 'userdata', []);
-    set(handles.pos1_check, 'Enable', 'on');
-    set(handles.neg1_check, 'Enable', 'on');
     set(handles.pos1_check, 'Value', 0);
     set(handles.pos2_check, 'Value', 0);
     set(handles.pos3_check, 'Value', 0);
@@ -165,7 +161,6 @@ if handles.index < length(handles.sep_data)
     set(handles.neg3_check, 'Value', 0);
     check_check(handles);
     set(handles.change_button, 'Enable', 'off');
-    
     add_check(handles);
     set(handles.addpos_check, 'Value', 0); 
     set(handles.addneg_check, 'Value', 0);  
@@ -694,3 +689,48 @@ function save_button_CreateFcn(hObject, eventdata, handles)
 % hObject    handle to save_button (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    empty - handles not created until after all CreateFcns called
+
+
+% --- Executes on button press in load_button.
+function load_button_Callback(hObject, eventdata, handles)
+% hObject    handle to load_button (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+%save files
+sep_analysis_results = handles.sep_data;
+save(handles.file_path, 'sep_analysis_results'); 
+%load new files
+[file_name, original_path] = uigetfile('*.mat', 'MultiSelect', 'off');
+original_path = [original_path '\' file_name];
+setappdata(0,'select_path',original_path);
+handles.file_path = original_path;
+load(handles.file_path, 'sep_analysis_results');
+handles.sep_data = sep_analysis_results;
+cla(handles.axes1);
+handles.index = 1;
+sort_peaks(hObject, handles);
+handles = guidata(hObject); 
+plot_sep_gui(handles, sep_analysis_results, handles.index);
+%checkbox status
+set(handles.pos1_check, 'Value', 0);
+set(handles.pos2_check, 'Value', 0);
+set(handles.pos3_check, 'Value', 0);
+set(handles.neg1_check, 'Value', 0);
+set(handles.neg2_check, 'Value', 0);
+set(handles.neg3_check, 'Value', 0);
+check_check(handles);
+set(handles.change_button, 'Enable', 'off');
+add_check(handles);
+set(handles.addpos_check, 'Value', 0); 
+set(handles.addneg_check, 'Value', 0);  
+set(handles.add_button, 'Enable', 'off');
+%refresh subplot graph
+handles.changed_channel_index = 1 : length(sep_analysis_results);
+setappdata(0, 'changed_channel_index', handles.changed_channel_index);
+obj_sub = findobj('Name', 'all_channels_sep');
+handles_sub = guidata(obj_sub);
+% clf(handles_sub.figure_sub);
+all_channels_sep('subplot_refresh_Callback', handles_sub.subplot_refresh, [], handles_sub);
+handles.changed_channel_index = [];
+% Update handles structure
+guidata(hObject, handles);

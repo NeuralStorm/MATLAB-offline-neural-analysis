@@ -39,7 +39,7 @@ function [] = sep_main()
             end
             
              %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-            %%         Sep_slicing         %%
+            %%         Sep_slicing         %%    The only data passed in the slicing part is bandpass filtered data.
              %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%               
             if config.is_sep_slicing
                 sep_slicing_path = sep_slicing(animal_name, filtered_path, ...

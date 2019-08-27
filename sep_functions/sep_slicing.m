@@ -8,15 +8,15 @@ function sep_slicing_path = sep_slicing(animal_name, filtered_path, start_window
                 %% Load file contents
                 file = [filtered_path, '/', filtered_files(file_index).name];
                 [~, filename, ~] = fileparts(file);
-                load(file, 'lowpass_filtered_map', 'board_dig_in_data', 'sample_rate');
+                load(file, 'bandpass_filtered_map', 'board_dig_in_data', 'sample_rate');
                 %% Check filtered variables to make sure they are not empty
-                empty_vars = check_variables(file, lowpass_filtered_map, board_dig_in_data, sample_rate);
+                empty_vars = check_variables(file, bandpass_filtered_map, board_dig_in_data, sample_rate);
                 if empty_vars
                     continue
                 end
                 %% Apply sep slicing
                 sep_window = [-abs(start_window), end_window];
-                sep_l2h_map = make_sep_map(lowpass_filtered_map, board_dig_in_data, ...
+                sep_l2h_map = make_sep_map(bandpass_filtered_map, board_dig_in_data, ...
                     sample_rate, sep_window);
 
                 %% Saving outputs

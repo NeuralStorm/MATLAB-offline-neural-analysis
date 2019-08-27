@@ -56,6 +56,7 @@ function all_channels_sep_OpeningFcn(hObject, eventdata, handles, varargin)
 handles.output = hObject;
 original_path = getappdata(0, 'select_path');
 load(original_path, 'sep_analysis_results');
+clf(handles.figure_sub);
 for channel_index = 1 : length(sep_analysis_results)
     subplot_sep_gui(sep_analysis_results, channel_index, eventdata, handles);
 end
@@ -107,9 +108,12 @@ function subplot_refresh_Callback(hObject, eventdata, handles)
 % handles    structure with handles and user data (see GUIDATA)
 
 original_path = getappdata(0, 'select_path');
-original_changed_index = getappdata(0, 'changed_channel_index');
-changed_index = unique(original_changed_index);
+% original_changed_index = getappdata(0, 'changed_channel_index');
+% changed_index = unique(original_changed_index);
+% if ~isempty(changed_index)
 load(original_path, 'sep_analysis_results');
-for channel_index = changed_index
+clf(handles.figure_sub);
+for channel_index = 1 : length(sep_analysis_results)
     subplot_sep_gui(sep_analysis_results, channel_index, eventdata, handles);
 end
+% end

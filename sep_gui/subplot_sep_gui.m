@@ -30,7 +30,7 @@ negthresh = sep_analysis_results(channel_index).negthresh;
     plot(sep_window(1):(1/(length(sep_data) - 1)) : sep_window(2), sep_data);     
 %     plot(sep_window(1):(1/(length(sep_data) - 1)) : sep_window(2), sep_data);
     hold ('on')
-    ylim([1.1 * min_point+eps 1.1 * max_point + eps]);
+    ylim([min_point - 0.1 * abs(min_point) + eps max_point + 0.1 * abs(max_point) + eps]);
     %mark the peak point, peak number and add the coordinates information at
     %the left side
     %postive peaks
@@ -57,7 +57,7 @@ negthresh = sep_analysis_results(channel_index).negthresh;
     set(gca,'tag',num2str(channel_index));
      set(gca,'ButtonDownFcn', @channel_select);
 
-    title_text=['                                Channel: ', channel_name];
+    title_text=['Channel: ', channel_name];
       title(title_text, 'FontSize', 9);
     hold off
 
