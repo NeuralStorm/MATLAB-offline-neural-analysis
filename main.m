@@ -147,7 +147,7 @@ function [] = main()
         animal_name = animal_names{animal};
         animal_path = fullfile(...
             animal_list(strcmpi(animal_names{animal}, {animal_list.name})).folder, animal_name);
-        config = import_config(animal_path);
+        config = import_config(animal_path, 'mnts');
         total_bins = (length(-abs(config.pre_time):config.bin_size:abs(config.post_time)) - 1);
         export_params(animal_path, 'main', config);
         training_session_config_array = [];

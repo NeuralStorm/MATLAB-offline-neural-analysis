@@ -8,7 +8,7 @@ function [] = mnts_main()
         animal_name = animal_names{animal};
         animal_path = fullfile(...
             animal_list(strcmpi(animal_names{animal}, {animal_list.name})).folder, animal_name);
-        config = import_config(animal_path);
+        config = import_config(animal_path, 'mnts');
         export_params(animal_path, 'main', config);
         training_session_config_array = [];
         % For ignoring certain training sessions
