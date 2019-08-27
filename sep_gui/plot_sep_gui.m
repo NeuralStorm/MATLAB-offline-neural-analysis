@@ -24,18 +24,21 @@ max_point = max(sep_data);
 min_point = min(sep_data);
 y_range = 1.1 * (max_point - min_point);
 
-plot(handles.axes1, sep_window(1):(1/(length(sep_data) - 1)):sep_window(2), sep_data);
+y_limits = [1.1 * min_point+eps 1.1 * max_point + eps];
+line(handles.axes1, [early_window(1) early_window(1)], y_limits, 'Color', 'black', 'LineWidth', 0.75, 'LineStyle', ':');
 hold (handles.axes1, 'on')
-ylim([1.1 * min_point+eps 1.1 * max_point + eps]);
+line(handles.axes1, [early_window(2) early_window(2)], y_limits, 'Color', 'black', 'LineWidth', 0.75, 'LineStyle', ':');
+line(handles.axes1, [late_window(1) late_window(1)], y_limits, 'Color', 'black', 'LineWidth', 0.75, 'LineStyle', ':');
+line(handles.axes1, [late_window(2) late_window(2)], y_limits, 'Color', 'black', 'LineWidth', 0.75, 'LineStyle', ':');
+
+plot(handles.axes1, sep_window(1):(1/(length(sep_data) - 1)):sep_window(2), sep_data);
+ylim(handles.axes1, [1.1 * min_point+eps 1.1 * max_point + eps]);
 
 %add threshold, stimulus time and window range
 plot(handles.axes1, xlim,[posthresh posthresh], 'r', 'LineWidth', 0.75, 'LineStyle', ':');
 plot(handles.axes1, xlim,[negthresh negthresh], 'r', 'LineWidth', 0.75, 'LineStyle', ':');
-line(handles.axes1, [0 0], ylim, 'Color', 'black', 'LineWidth', 0.75);
-line(handles.axes1, [early_window(1) early_window(1)], ylim, 'Color', 'black', 'LineWidth', 0.75, 'LineStyle', ':');
-line(handles.axes1, [early_window(2) early_window(2)], ylim, 'Color', 'black', 'LineWidth', 0.75, 'LineStyle', ':');
-line(handles.axes1, [late_window(1) late_window(1)], ylim, 'Color', 'black', 'LineWidth', 0.75, 'LineStyle', ':');
-line(handles.axes1, [late_window(2) late_window(2)], ylim, 'Color', 'black', 'LineWidth', 0.75, 'LineStyle', ':');
+line(handles.axes1, [0 0], y_limits, 'Color', 'black', 'LineWidth', 0.75);
+
 
 
 %mark the peak point, peak number and add the coordinates information at
@@ -61,9 +64,9 @@ for neg_index = 1:length(neg_peak)
         plot(handles.axes1, neg_peak_latency(neg_index)/1000, neg_peak(neg_index), 'o', 'MarkerFaceColor', 'r', 'MarkerSize', 4);
         text(handles.axes1, neg_peak_latency(neg_index)/1000 - 0.004, neg_peak(neg_index) - y_range * 0.03, num2str(neg_index), ...
             'FontWeight','bold','FontSize',12 , 'Color', 'r');    
-        text(handles.axes1, sep_window(1) + 0.02, min_point + 12 - y_range * 0.04 * neg_index, ...
+        text(handles.axes1, sep_window(1) + 0.02, min_point + y_range * 0.1 - y_range * 0.04 * neg_index, ...
             ['neg peak ' num2str(neg_index) ': latency: ' num2str(neg_peak_latency(neg_index)/1000) 's,']);
-        text(handles.axes1, sep_window(1) + 0.25, min_point + 12 - y_range * 0.04 * neg_index, ...
+        text(handles.axes1, sep_window(1) + 0.25, min_point + y_range * 0.1 - y_range * 0.04 * neg_index, ...
             [' value: ' num2str(neg_peak(neg_index)) 'mV']);
     end
 end

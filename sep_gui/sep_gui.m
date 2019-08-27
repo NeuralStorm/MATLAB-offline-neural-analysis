@@ -22,7 +22,7 @@ function varargout = sep_gui(varargin)
 
 % Edit the above text to modify the response to help sep_gui
 
-% Last Modified by GUIDE v2.5 23-Aug-2019 12:48:38
+% Last Modified by GUIDE v2.5 26-Aug-2019 20:24:10
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
@@ -57,10 +57,12 @@ handles.output = hObject;
 
 [file_name, original_path] = uigetfile('*.mat', 'MultiSelect', 'off');
 original_path = [original_path '\' file_name];
+setappdata(0,'select_path',original_path);
 load(original_path, 'sep_analysis_results');
 handles.sep_data = sep_analysis_results;
 handles.file_path = original_path;
 handles.index = 1;
+handles.changed_channel_index = [];
 sort_peaks(hObject, handles);
 handles = guidata(hObject); 
 plot_sep_gui(handles, sep_analysis_results, handles.index);
@@ -71,7 +73,8 @@ set(0, 'userdata', []);
 check_check(handles);
 add_check(handles);
 
-    
+all_channels_sep;   
+
 % Update handles structure
 guidata(hObject, handles);
 
@@ -121,8 +124,12 @@ if handles.index > 1
     set(0, 'userdata', []);
     set(handles.pos1_check, 'Enable', 'on');
     set(handles.neg1_check, 'Enable', 'on');
-    set(handles.pos1_check, 'Value', 0); 
+    set(handles.pos1_check, 'Value', 0);
+    set(handles.pos2_check, 'Value', 0);
+    set(handles.pos3_check, 'Value', 0);
     set(handles.neg1_check, 'Value', 0);
+    set(handles.neg2_check, 'Value', 0);
+    set(handles.neg3_check, 'Value', 0);
     check_check(handles);
     set(handles.change_button, 'Enable', 'off');
     
@@ -146,12 +153,16 @@ if handles.index < length(handles.sep_data)
     sort_peaks(hObject, handles);
     handles = guidata(hObject); 
     cla(handles.axes1);
-    plot_sep_gui(handles, handles.sep_data, handles.index);    
+    plot_sep_gui(handles, handles.sep_data, handles.index);
     set(0, 'userdata', []);
     set(handles.pos1_check, 'Enable', 'on');
     set(handles.neg1_check, 'Enable', 'on');
-    set(handles.pos1_check, 'Value', 0); 
+    set(handles.pos1_check, 'Value', 0);
+    set(handles.pos2_check, 'Value', 0);
+    set(handles.pos3_check, 'Value', 0);
     set(handles.neg1_check, 'Value', 0);
+    set(handles.neg2_check, 'Value', 0);
+    set(handles.neg3_check, 'Value', 0);
     check_check(handles);
     set(handles.change_button, 'Enable', 'off');
     
@@ -227,6 +238,8 @@ if get(handles.neg3_check, 'Value')
     end
 end
 
+handles.changed_channel_index = [handles.changed_channel_index handles.index];
+
 guidata(hObject, handles);
 sort_peaks(hObject, handles);
 handles = guidata(hObject); 
@@ -245,7 +258,10 @@ set(handles.change_button, 'Enable', 'off');
 set(handles.delete_button, 'Enable', 'off');
 set(0, 'userdata', []);
 
-    
+
+
+
+ 
 % --- Executes on button press in pos1_check.
 function pos1_check_Callback(hObject, eventdata, handles)
 % hObject    handle to pos1_check (see GCBO)
@@ -369,6 +385,9 @@ if get(handles.addneg_check, 'Value')
         end
     end
 end
+
+handles.changed_channel_index = [handles.changed_channel_index handles.index];
+
 guidata(hObject, handles);
 
 sort_peaks(hObject, handles);
@@ -522,6 +541,14 @@ function save_button_Callback(hObject, eventdata, handles)
 % handles    structure with handles and user data (see GUIDATA)
 sep_analysis_results = handles.sep_data;
 save(handles.file_path, 'sep_analysis_results'); 
+%refresh subplot graph
+setappdata(0, 'changed_channel_index', handles.changed_channel_index);
+obj_sub = findobj('Name', 'all_channels_sep');
+handles_sub = guidata(obj_sub);
+all_channels_sep('subplot_refresh_Callback', handles_sub.subplot_refresh,[],handles_sub);
+handles.changed_channel_index = [];
+% Update handles structure
+guidata(hObject, handles);
 
 
 % --- Executes during object creation, after setting all properties.
@@ -591,6 +618,8 @@ if get(handles.neg3_check, 'Value')
     handles.sep_data(handles.index).neg_peak3 = NaN;
 end
 
+handles.changed_channel_index = [handles.changed_channel_index handles.index];
+
 guidata(hObject, handles);
 sort_peaks(hObject, handles);
 handles = guidata(hObject); 
@@ -617,3 +646,51 @@ function figure1_DeleteFcn(hObject, eventdata, handles)
 % hObject    handle to figure1 (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
+
+
+
+
+% --- Executes on button press in channel_switch.
+function channel_switch_Callback(hObject, eventdata, handles)
+% hObject    handle to channel_switch (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+handles.sep_data(handles.index).analysis_notes = get(handles.notes_text, 'String');
+
+handles.index = getappdata(0,'select_index');
+
+guidata(hObject,handles);
+sort_peaks(hObject, handles);
+handles = guidata(hObject); 
+cla(handles.axes1);
+plot_sep_gui(handles, handles.sep_data, handles.index);
+set(0, 'userdata', []);
+set(handles.pos1_check, 'Enable', 'on');
+set(handles.neg1_check, 'Enable', 'on');
+set(handles.pos1_check, 'Value', 0);
+set(handles.pos2_check, 'Value', 0);
+set(handles.pos3_check, 'Value', 0);
+set(handles.neg1_check, 'Value', 0);
+set(handles.neg2_check, 'Value', 0);
+set(handles.neg3_check, 'Value', 0);
+check_check(handles);
+set(handles.change_button, 'Enable', 'off');
+
+add_check(handles);
+set(handles.addpos_check, 'Value', 0); 
+set(handles.addneg_check, 'Value', 0);  
+set(handles.add_button, 'Enable', 'off');
+
+
+% --- Executes during object creation, after setting all properties.
+function prev_button_CreateFcn(hObject, eventdata, handles)
+% hObject    handle to prev_button (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    empty - handles not created until after all CreateFcns called
+
+
+% --- Executes during object creation, after setting all properties.
+function save_button_CreateFcn(hObject, eventdata, handles)
+% hObject    handle to save_button (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    empty - handles not created until after all CreateFcns called
