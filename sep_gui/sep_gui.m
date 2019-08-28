@@ -46,12 +46,6 @@ end
 
 % --- Executes just before sep_gui is made visible.
 function sep_gui_OpeningFcn(hObject, eventdata, handles, varargin)
-% This function has no output args, see OutputFcn.
-% hObject    handle to figure
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    structure with handles and user data (see GUIDATA)
-% varargin   command line arguments to sep_gui (see VARARGIN)
-
 % Choose default command line output for sep_gui
 handles.output = hObject;
 %load the file and save struct to handles.sep_data
@@ -86,49 +80,37 @@ all_channels_sep;
 guidata(hObject, handles);
 
 
-% UIWAIT makes sep_gui wait for user response (see UIRESUME)
-% uiwait(handles.figure1);
-
 function txt = myupdatefcn(handles, event_obj)
+    %Get the coordinates from the graph
     pos = event_obj.Position;
     txt = {['X: ',num2str(pos(1)),'s, Y: ',num2str(pos(2)), 'mV']};
     set(0, 'userdata', pos);
-%     pos1_check = get(handles.pos1_check, 'Value');
-%     neg1_check = get(handles.neg1_check, 'Value');
-%     if (pos1_check || neg1_check)
-%         set(handles.change_button, 'Enable', 'on');
-%     end
+
 
 
 
 
 % --- Outputs from this function are returned to the command line.
 function varargout = sep_gui_OutputFcn(hObject, eventdata, handles) 
-% varargout  cell array for returning output args (see VARARGOUT);
-% hObject    handle to figure
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    structure with handles and user data (see GUIDATA)
-
-% Get default command line output from handles structure
-
 varargout{1} = handles.output;
 
 
 
-% --- Executes on button press in prev_button.
+% --- Switch to the previous channel
 function prev_button_Callback(hObject, eventdata, handles)
-% hObject    handle to prev_button (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    structure with handles and user data (see GUIDATA)
 if handles.index > 1
+    %save the notes in textbox
     handles.sep_data(handles.index).analysis_notes = get(handles.notes_text, 'String');
+    %switch the channel
     handles.index = handles.index - 1;
     guidata(hObject,handles);
-    sort_peaks(hObject, handles);
-    handles = guidata(hObject); 
+    sort_peaks(hObject, handles); %sort peaks to the ascending order
+    handles = guidata(hObject);
+    %plot new graph 
     cla(handles.axes1);
     plot_sep_gui(handles, handles.sep_data, handles.index); 
     set(0, 'userdata', []);
+    %refresh the status of all checkboxes and buttons
     set(handles.pos1_check, 'Value', 0);
     set(handles.pos2_check, 'Value', 0);
     set(handles.pos3_check, 'Value', 0);
@@ -137,7 +119,6 @@ if handles.index > 1
     set(handles.neg3_check, 'Value', 0);
     check_check(handles);
     set(handles.change_button, 'Enable', 'off');
-    
     add_check(handles);
     set(handles.addpos_check, 'Value', 0); 
     set(handles.addneg_check, 'Value', 0);  
@@ -145,17 +126,14 @@ if handles.index > 1
 end
 
 
-% --- Executes on button press in next_button.
+% --- Switch to next channel
 function next_button_Callback(hObject, eventdata, handles)
-% hObject    handle to next_button (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    structure with handles and user data (see GUIDATA)
-
+%The process is the same as above
 if handles.index < length(handles.sep_data)
     handles.sep_data(handles.index).analysis_notes = get(handles.notes_text, 'String');
     handles.index = handles.index + 1;
     guidata(hObject,handles);
-    sort_peaks(hObject, handles);
+    sort_peaks(hObject, handles);%sort peaks to the ascending order
     handles = guidata(hObject); 
     cla(handles.axes1);
     plot_sep_gui(handles, handles.sep_data, handles.index);
@@ -192,12 +170,15 @@ function axes1_CreateFcn(hObject, eventdata, handles)
 % Hint: place code in OpeningFcn to populate axes1
 
 
-% --- Executes on button press in change_button.
+% --- Click to change peaks
 function change_button_Callback(hObject, eventdata, handles)
 % hObject    handle to change_button (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
+
+%get the coordinates of selected point in the curve
 position = get(0,'userdata');
+%check which peak the user wants to change
 if get(handles.pos1_check, 'Value')
     if ~isempty(position)
         handles.sep_data(handles.index).pos_peak_latency1 = (position(1)*1000);
@@ -239,14 +220,16 @@ if get(handles.neg3_check, 'Value')
         handles.sep_data(handles.index).neg_peak3 = position(2);
     end
 end
-
+%record the changed channel index (no use in the current) 
 handles.changed_channel_index = [handles.changed_channel_index handles.index];
 
 guidata(hObject, handles);
-sort_peaks(hObject, handles);
+sort_peaks(hObject, handles); %sort peaks to the ascending order
 handles = guidata(hObject); 
+%plot the new curve
 cla(handles.axes1);
 plot_sep_gui(handles, handles.sep_data, handles.index);
+%refresh the status of checkboxes and buttons
 set(handles.pos1_check, 'Enable', 'on');
 set(handles.neg1_check, 'Enable', 'on');
 set(handles.pos1_check, 'Value', 0);
@@ -316,7 +299,7 @@ function figure1_CloseRequestFcn(hObject, eventdata, handles)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
 
-% Hint: delete(hObject) closes the figure
+% Save the file when close this window
 sep_analysis_results = handles.sep_data;
 save(handles.file_path, 'sep_analysis_results'); 
 
@@ -359,12 +342,13 @@ end
 
 % --- Executes on button press in add_button.
 function add_button_Callback(hObject, eventdata, handles)
-% hObject    handle to add_button (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    structure with handles and user data (see GUIDATA)
+%get the coordinates of selected point in the curve
 position = get(0,'userdata');
+
 if get(handles.addpos_check, 'Value')
     if ~isempty(position)
+        %if peak2 is vacant, fill peak2 first, and then go to peak3 next
+        %time(a little hard code here...)
         if ~isnan(handles.sep_data(handles.index).pos_peak2)
             handles.sep_data(handles.index).pos_peak_latency3 = (position(1)*1000);
             handles.sep_data(handles.index).pos_peak3 = position(2);
@@ -429,9 +413,7 @@ function pushbutton7_Callback(hObject, eventdata, handles)
 
 % --- Executes on button press in discard_button.
 function discard_button_Callback(hObject, eventdata, handles)
-% hObject    handle to discard_button (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    structure with handles and user data (see GUIDATA)
+% load the last saved file  
 load(handles.file_path, 'sep_analysis_results');
 cla(handles.axes1);
 plot_sep_gui(handles, sep_analysis_results, handles.index);
@@ -538,15 +520,16 @@ end
 
 % --- Executes on button press in save_button.
 function save_button_Callback(hObject, eventdata, handles)
-% hObject    handle to save_button (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    structure with handles and user data (see GUIDATA)
+%save notes
+handles.sep_data(handles.index).analysis_notes = get(handles.notes_text, 'String');
+%save the data back to the loaded mat.flie 
 sep_analysis_results = handles.sep_data;
 save(handles.file_path, 'sep_analysis_results'); 
 %refresh subplot graph
-setappdata(0, 'changed_channel_index', handles.changed_channel_index);
-obj_sub = findobj('Name', 'all_channels_sep');
-handles_sub = guidata(obj_sub);
+setappdata(0, 'changed_channel_index', handles.changed_channel_index); %no use currently
+obj_sub = findobj('Name', 'all_channels_sep'); %get the Object from 'all_channels_sep' gui
+handles_sub = guidata(obj_sub); %get the handles from 'all_channels_sep' gui
+%call the function 'subplot_refresh_Callback' in 'all_channels_sep' gui
 all_channels_sep('subplot_refresh_Callback', handles_sub.subplot_refresh,[],handles_sub);
 handles.changed_channel_index = [];
 % Update handles structure
@@ -624,7 +607,7 @@ handles.changed_channel_index = [handles.changed_channel_index handles.index];
 
 guidata(hObject, handles);
 sort_peaks(hObject, handles);
-handles = guidata(hObject); 
+handles = guidata(hObject);
 cla(handles.axes1);
 plot_sep_gui(handles, handles.sep_data, handles.index);
 set(handles.pos1_check, 'Enable', 'on');
@@ -654,17 +637,18 @@ function figure1_DeleteFcn(hObject, eventdata, handles)
 
 % --- Executes on button press in channel_switch.
 function channel_switch_Callback(hObject, eventdata, handles)
-% hObject    handle to channel_switch (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    structure with handles and user data (see GUIDATA)
-handles.sep_data(handles.index).analysis_notes = get(handles.notes_text, 'String');
+%Switch the graph to the channel selected in preview window
 
+%save the notes in textbox
+handles.sep_data(handles.index).analysis_notes = get(handles.notes_text, 'String');
+%get the selected channel index
 handles.index = getappdata(0,'select_index');
 
 guidata(hObject,handles);
 sort_peaks(hObject, handles);
-handles = guidata(hObject); 
+handles = guidata(hObject);
 cla(handles.axes1);
+%plot the selected channel
 plot_sep_gui(handles, handles.sep_data, handles.index);
 set(0, 'userdata', []);
 set(handles.pos1_check, 'Enable', 'on');
@@ -680,7 +664,7 @@ set(handles.change_button, 'Enable', 'off');
 
 add_check(handles);
 set(handles.addpos_check, 'Value', 0); 
-set(handles.addneg_check, 'Value', 0);  
+set(handles.addneg_check, 'Value', 0);
 set(handles.add_button, 'Enable', 'off');
 
 
@@ -700,12 +684,11 @@ function save_button_CreateFcn(hObject, eventdata, handles)
 
 % --- Executes on button press in load_button.
 function load_button_Callback(hObject, eventdata, handles)
-% hObject    handle to load_button (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    structure with handles and user data (see GUIDATA)
+%save notes
+handles.sep_data(handles.index).analysis_notes = get(handles.notes_text, 'String');
 %save files
 sep_analysis_results = handles.sep_data;
-save(handles.file_path, 'sep_analysis_results'); 
+save(handles.file_path, 'sep_analysis_results');
 %load new files
 [file_name, original_path] = uigetfile('*.mat', 'MultiSelect', 'off');
 original_path = [original_path '\' file_name];
@@ -717,7 +700,7 @@ find_universal_peaks(handles);
 cla(handles.axes1);
 handles.index = 1;
 sort_peaks(hObject, handles);
-handles = guidata(hObject); 
+handles = guidata(hObject);
 plot_sep_gui(handles, sep_analysis_results, handles.index);
 %checkbox status
 set(handles.pos1_check, 'Value', 0);
@@ -730,14 +713,13 @@ check_check(handles);
 set(handles.change_button, 'Enable', 'off');
 add_check(handles);
 set(handles.addpos_check, 'Value', 0); 
-set(handles.addneg_check, 'Value', 0);  
+set(handles.addneg_check, 'Value', 0);
 set(handles.add_button, 'Enable', 'off');
 %refresh subplot graph
 handles.changed_channel_index = 1 : length(sep_analysis_results);
 setappdata(0, 'changed_channel_index', handles.changed_channel_index);
 obj_sub = findobj('Name', 'all_channels_sep');
 handles_sub = guidata(obj_sub);
-% clf(handles_sub.figure_sub);
 all_channels_sep('subplot_refresh_Callback', handles_sub.subplot_refresh, [], handles_sub);
 handles.changed_channel_index = [];
 % Update handles structure

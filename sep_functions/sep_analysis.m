@@ -5,6 +5,8 @@ function sep_analysis_path = sep_analysis(animal_name, parsed_path, sep_slicing_
     fprintf('Applying sep analysis for %s \n', animal_name);
         [sliced_files, sep_analysis_path, failed_path] = create_dir...
             (sep_slicing_path, 'sep_analysis', '.mat');
+        %Attention: Be sure there are files in parsed_path so that the
+        %original file name can be extracted
             original_file_type = [parsed_path, '/*', '.mat'];
             original_file_list = dir(original_file_type);
         for file_index = 1:length(sliced_files)
