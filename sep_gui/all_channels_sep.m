@@ -60,6 +60,14 @@ clf(handles.figure_sub);
 for channel_index = 1 : length(sep_analysis_results)
     subplot_sep_gui(sep_analysis_results, channel_index, eventdata, handles);
 end
+
+context_menu = uicontextmenu;
+% Assign the uicontextmenu to the plot line
+handles.figure_sub.UIContextMenu = context_menu;
+% Create child menu items for the uicontextmenu
+menu_1 = uimenu(context_menu,'Label','Universal scale','Callback',@scale_change);
+menu_2 = uimenu(context_menu,'Label','Specified scale','Callback',@scale_change);
+
 guidata(hObject, handles);
 
 % UIWAIT makes all_channels_sep wait for user response (see UIRESUME)
@@ -116,4 +124,24 @@ clf(handles.figure_sub);
 for channel_index = 1 : length(sep_analysis_results)
     subplot_sep_gui(sep_analysis_results, channel_index, eventdata, handles);
 end
-% end
+context_menu = uicontextmenu;
+% Assign the uicontextmenu to the plot line
+handles.figure_sub.UIContextMenu = context_menu;
+% Create child menu items for the uicontextmenu
+menu_1 = uimenu(context_menu,'Label','Universal scale','Callback',@scale_change);
+menu_2 = uimenu(context_menu,'Label','Specified scale','Callback',@scale_change);
+
+function scale_change(source, Object, eventdata)
+switch source.Label
+    case 'Universal scale'
+        setappdata(0,'scale_selection',1);
+        obj_sub = findobj('Name', 'all_channels_sep');
+        handles_sub = guidata(obj_sub);
+        all_channels_sep('subplot_refresh_Callback', handles_sub.subplot_refresh,[],handles_sub);        
+    case 'Specified scale'
+        setappdata(0,'scale_selection',2);
+        obj_sub = findobj('Name', 'all_channels_sep');
+        handles_sub = guidata(obj_sub);
+        all_channels_sep('subplot_refresh_Callback', handles_sub.subplot_refresh,[],handles_sub);   
+
+end

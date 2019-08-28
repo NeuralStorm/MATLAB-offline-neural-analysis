@@ -54,27 +54,34 @@ function sep_gui_OpeningFcn(hObject, eventdata, handles, varargin)
 
 % Choose default command line output for sep_gui
 handles.output = hObject;
-
+%load the file and save struct to handles.sep_data
 [file_name, original_path] = uigetfile('*.mat', 'MultiSelect', 'off');
 original_path = [original_path '\' file_name];
 setappdata(0,'select_path',original_path);
 load(original_path, 'sep_analysis_results');
-handles.sep_data = sep_analysis_results;
 handles.file_path = original_path;
+handles.sep_data = sep_analysis_results;
+%scale set
+setappdata(0,'scale_selection',1);
+find_universal_peaks(handles);
+%initial set
 handles.index = 1;
 handles.changed_channel_index = [];
+%sort peaks to the ascending order
 sort_peaks(hObject, handles);
-handles = guidata(hObject); 
+handles = guidata(hObject);
+%plot the graph on sep_gui
 plot_sep_gui(handles, sep_analysis_results, handles.index);
+%turn on the datacursormode(which gives you the coordinates when you click on the curve)
 dcm_obj = datacursormode(handles.figure1);
 datacursormode on;
 set(dcm_obj,'UpdateFcn', @myupdatefcn )
 set(0, 'userdata', []);
+%check the status for checkboxes in "Change peaks" panel and "Add peaks" panel
 check_check(handles);
 add_check(handles);
-
+%plot the preview window
 all_channels_sep;   
-
 % Update handles structure
 guidata(hObject, handles);
 
@@ -706,6 +713,7 @@ setappdata(0,'select_path',original_path);
 handles.file_path = original_path;
 load(handles.file_path, 'sep_analysis_results');
 handles.sep_data = sep_analysis_results;
+find_universal_peaks(handles);
 cla(handles.axes1);
 handles.index = 1;
 sort_peaks(hObject, handles);

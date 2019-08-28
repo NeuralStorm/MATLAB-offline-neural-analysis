@@ -3,8 +3,8 @@ figure(handles.figure_sub);
 scrollsubplot(2, 3, channel_index);
 sep_data = sep_analysis_results(channel_index).sep_sliced_data;
 sep_window = sep_analysis_results(channel_index).sep_window;
-% early_window = sep_analysis_results(channel_index).early_window;
-% late_window = sep_analysis_results(channel_index).late_window;
+early_window = sep_analysis_results(channel_index).early_window;
+late_window = sep_analysis_results(channel_index).late_window;
 channel_name = sep_analysis_results(channel_index).channel_name;
 neg_peak(1) = sep_analysis_results(channel_index).neg_peak1;
 neg_peak_latency(1) = sep_analysis_results(channel_index).neg_peak_latency1;
@@ -30,7 +30,15 @@ negthresh = sep_analysis_results(channel_index).negthresh;
     plot(sep_window(1):(1/(length(sep_data) - 1)) : sep_window(2), sep_data);     
 %     plot(sep_window(1):(1/(length(sep_data) - 1)) : sep_window(2), sep_data);
     hold ('on')
+    scale_type = getappdata(0, 'scale_selection');
+    global_max_peak = getappdata(0, 'universal_max_peak');
+    global_min_peak = getappdata(0, 'universal_min_peak');
+    switch scale_type
+    case 1
+    ylim([global_min_peak - 0.1 * abs(global_min_peak) + eps global_max_peak + 0.1 * abs(global_max_peak) + eps]);
+    case 2
     ylim([min_point - 0.1 * abs(min_point) + eps max_point + 0.1 * abs(max_point) + eps]);
+    end    
     %mark the peak point, peak number and add the coordinates information at
     %the left side
     %postive peaks
@@ -53,6 +61,10 @@ negthresh = sep_analysis_results(channel_index).negthresh;
     plot(xlim,[posthresh posthresh], 'r', 'LineWidth', 0.75, 'LineStyle', ':');
     plot(xlim,[negthresh negthresh], 'r', 'LineWidth', 0.75, 'LineStyle', ':');
     line([0 0], ylim, 'Color', 'black', 'LineWidth', 0.75);
+    line([early_window(1) early_window(1)], ylim, 'Color', 'black', 'LineWidth', 0.75, 'LineStyle', '--');
+    line([early_window(2) early_window(2)], ylim, 'Color', 'black', 'LineWidth', 0.75, 'LineStyle', '--');
+    line([late_window(1) late_window(1)], ylim, 'Color', 'black', 'LineWidth', 0.75, 'LineStyle', '-.');
+    line([late_window(2) late_window(2)], ylim, 'Color', 'black', 'LineWidth', 0.75, 'LineStyle', '-.');
     %add comments
     set(gca,'tag',num2str(channel_index));
      set(gca,'ButtonDownFcn', @channel_select);
