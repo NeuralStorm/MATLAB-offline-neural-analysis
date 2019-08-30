@@ -6,8 +6,7 @@ function [] = sep_main()
     animal_names = {animal_list([animal_list.isdir] == 1 & ~contains({animal_list.name}, '.')).name};
     for animal = 1:length(animal_names)
         animal_name = animal_names{animal};
-        animal_path = fullfile(...
-            animal_list(strcmpi(animal_names{animal}, {animal_list.name})).folder, animal_name);
+        animal_path = [original_path, '/', animal_name];
         config = import_config(animal_path);
 
         %export_params(animal_path, 'main', config);
