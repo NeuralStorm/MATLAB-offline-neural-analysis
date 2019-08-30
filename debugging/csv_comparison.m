@@ -5,12 +5,16 @@ function [] = csv_comparison()
     results_file = fullfile(results_path, results_name);
     template = readtable(template_file);
     results = readtable(results_file);
+    template = sortrows(template);
+    results = sortrows(results);
     prec = 5;
 
     [template_rows, template_cols] = size(template);
     [result_rows, result_cols] = size(results);
     assert(template_rows == result_rows && template_cols == result_cols, ...
-        'csv files must have the same number of rows and columns');
+        ['csv files must have the same number of rows and columns.\n' ...
+        'Template rows: %d\nResults rows: %d\nTemplate cols: %d\nResults cols: %d\n'], ...
+        template_rows, result_rows, template_cols, result_cols);
 
     index_diff_col = 1;
     diff_location = struct;
@@ -25,7 +29,7 @@ function [] = csv_comparison()
         if col_check(index_col) == 0
             index_diff_col = 0;
             col_name = template.Properties.VariableNames{index_col};
-            diff_location.(col_name).difference = [];
+            diff_location.(col_name) = [];
             for index_row = 1:result_rows
                 template_value = template{index_row, index_col};
                 template_type = class(template_value);
@@ -37,14 +41,14 @@ function [] = csv_comparison()
 
                 if ~strcmpi(template_type, results_type)
                     %TODO store that point has different variable types
-                    diff_location.(col_name).difference = ...
-                        [diff_location.(col_name).difference;{index_row}, {template_type}, {results_type}];
+                    diff_location.(col_name) = ...
+                        [diff_location.(col_name);{index_row}, {template_type}, {results_type}];
                 elseif (isnumeric(template_value) && isnumeric(results_value)) && ...
                         ~isequaln(round(template_value, prec), round(results_value, prec))
-                    diff_location.(col_name).difference = [diff_location.(col_name).difference; ...
+                    diff_location.(col_name) = [diff_location.(col_name); ...
                         {index_row}, {template_value}, {results_value}, {combined_data}];
                 elseif (isstring(template_value) && isstring(results_value)) && ~strcmpi(template_value, results_value)
-                    diff_location.(col_name).difference = [diff_location.(col_name).difference; ...
+                    diff_location.(col_name) = [diff_location.(col_name); ...
                         {index_row}, {template_value}, {results_value}, {combined_data}];
                 end
 
@@ -58,7 +62,12 @@ function [] = csv_comparison()
     if index_diff_col == 1
         fprintf('These two csv files are the same. \n')
     else
-        disp('not the same');
+        struct_names = fieldnames(diff_location);
+        empty = cellfun(@(x) isempty(diff_location.(x)), struct_names);
+        diff_location = rmfield(diff_location, struct_names(empty));
+        struct_names = fieldnames(diff_location);
+        struct_names = setdiff(struct_names, {'template_path', 'template_filename', 'results_path', 'results_filename'});
+        celldisp(struct_names, 'Different fields: ');
         matfile = fullfile(template_path, 'csv_difference.mat');
         save(matfile, 'diff_location');
     end
