@@ -497,13 +497,13 @@ end
 % % % end
 
 fprintf(1, 'Done!  Elapsed time: %0.1f seconds\n', toc);
-if (data_present)
-    fprintf(1, 'Extracted data are now available in the MATLAB workspace.\n');
-else
-    fprintf(1, 'Extracted waveform information is now available in the MATLAB workspace.\n');
-end
-fprintf(1, 'Type ''whos'' to see variables.\n');
-fprintf(1, '\n');
+% % % if (data_present)
+% % %     fprintf(1, 'Extracted data are now available in the MATLAB workspace.\n');
+% % % else
+% % %     fprintf(1, 'Extracted waveform information is now available in the MATLAB workspace.\n');
+% % % end
+% % % fprintf(1, 'Type ''whos'' to see variables.\n');
+% % % fprintf(1, '\n');
 
 return
 

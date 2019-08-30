@@ -48,7 +48,7 @@ function highpass_filtered_path = do_highpass_filter(animal_name, parsed_path, n
             if (is_notch_filter ||  is_lowpass_filter)
                 save(matfile, 'highpass_filtered_map', '-append');                        
             else
-                save(matfile, 'highpass_filtered_map', 'board_dig_in_data', 'sample_rate'); 
+                save(matfile, '-v7.3', 'highpass_filtered_map', 'board_dig_in_data', 'sample_rate'); 
             end
 
         catch ME

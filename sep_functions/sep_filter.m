@@ -12,7 +12,7 @@ function  filtered_path = sep_filter(is_notch_filter, is_lowpass_filter, ...
         end  
         
         % If is_notch_filter is ture, pass the filtered data into lowpass
-        % or highpass filter. If is_notch_filter is false, pass the raw
+        % ,highpass or bandpass filter. If is_notch_filter is false, pass the raw
         % data into lowpass or highpass filter. 
             %% Lowpass filter 
         if is_lowpass_filter                           

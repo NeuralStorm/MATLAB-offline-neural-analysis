@@ -27,7 +27,7 @@ function notch_filtered_path = do_notch_filter(animal_name, ...
                 continue
             end
             %% Save file if all variables are not empty
-                 save(matfile, 'notch_filtered_map', 'board_dig_in_data', 'sample_rate');
+                 save(matfile, '-v7.3', 'notch_filtered_map', 'board_dig_in_data', 'sample_rate');
         catch ME
             handle_ME(ME, failed_path, filename);
         end

@@ -4,7 +4,7 @@ function parsed_path = sep_parser(animal_name, animal_path)
     % Creates a list of all the files in the given directory ending with
     %TODO grab unique file extensions and use switch on valid file
     %extensions
-    file_type = [animal_path, '/*rh*'];
+    file_type = [animal_path, '/*.rh*'];
     file_list = dir(file_type);
     file_names = {file_list([file_list.isdir] == 0).name};
     fprintf('Parsing for %s\n', animal_name);

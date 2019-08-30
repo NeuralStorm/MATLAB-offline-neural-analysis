@@ -49,7 +49,7 @@ function lowpass_filtered_path = do_lowpass_filter(animal_name, parsed_path, not
                 save(matfile, 'lowpass_filtered_map', '-append');                        
             else
                 matfile = fullfile(lowpass_filtered_path, ['filtered_', filename, '.mat']);
-                save(matfile, 'lowpass_filtered_map', 'board_dig_in_data', 'sample_rate'); 
+                save(matfile, '-v7.3', 'lowpass_filtered_map', 'board_dig_in_data', 'sample_rate'); 
             end
 
         catch ME

@@ -27,7 +27,7 @@ function sep_slicing_path = sep_slicing(animal_name, filtered_path, start_window
                     continue
                 end
                 %% Save file if all variables are not empty
-                     save(matfile, 'sep_l2h_map', 'sep_window');
+                     save(matfile, '-v7.3', 'sep_l2h_map', 'sep_window');
             catch ME
                 handle_ME(ME, failed_path, filename);
             end

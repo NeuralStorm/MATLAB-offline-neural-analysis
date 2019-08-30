@@ -49,7 +49,7 @@ function bandpass_filtered_path = do_bandpass_filter(animal_name, parsed_path, n
             if (is_notch_filter ||  is_lowpass_filter || is_highpass_filter)
                 save(matfile, 'bandpass_filtered_map', '-append');                        
             else
-                save(matfile, 'bandpass_filtered_map', 'board_dig_in_data', 'sample_rate'); 
+                save(matfile, '-v7.3', 'bandpass_filtered_map', 'board_dig_in_data', 'sample_rate'); 
             end
 
         catch ME

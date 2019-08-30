@@ -438,23 +438,23 @@ if (data_present)
 
     % If the software notch filter was selected during the recording, apply the
     % same notch filter to amplifier data here.
-    if (notch_filter_frequency > 0)
-        fprintf(1, 'Applying notch filter...\n');
-
-        print_increment = 10;
-        percent_done = print_increment;
-        for i=1:num_amplifier_channels
-            amplifier_data(i,:) = ...
-                notch_filter(amplifier_data(i,:), sample_rate, notch_filter_frequency, 10);
-
-            fraction_done = 100 * (i / num_amplifier_channels);
-            if (fraction_done >= percent_done)
-                fprintf(1, '%d%% done...\n', percent_done);
-                percent_done = percent_done + print_increment;
-            end
-
-        end
-    end
+% % %     if (notch_filter_frequency > 0)
+% % %         fprintf(1, 'Applying notch filter...\n');
+% % % 
+% % %         print_increment = 10;
+% % %         percent_done = print_increment;
+% % %         for i=1:num_amplifier_channels
+% % %             amplifier_data(i,:) = ...
+% % %                 notch_filter(amplifier_data(i,:), sample_rate, notch_filter_frequency, 10);
+% % % 
+% % %             fraction_done = 100 * (i / num_amplifier_channels);
+% % %             if (fraction_done >= percent_done)
+% % %                 fprintf(1, '%d%% done...\n', percent_done);
+% % %                 percent_done = percent_done + print_increment;
+% % %             end
+% % % 
+% % %         end
+% % %     end
 
 end
 
@@ -522,13 +522,13 @@ end
 % % % end
 
 fprintf(1, 'Done!  Elapsed time: %0.1f seconds\n', toc);
-if (data_present)
-    fprintf(1, 'Extracted data are now available in the MATLAB workspace.\n');
-else
-    fprintf(1, 'Extracted waveform information is now available in the MATLAB workspace.\n');
-end
-fprintf(1, 'Type ''whos'' to see variables.\n');
-fprintf(1, '\n');
+% % % if (data_present)
+% % %     fprintf(1, 'Extracted data are now available in the MATLAB workspace.\n');
+% % % else
+% % %     fprintf(1, 'Extracted waveform information is now available in the MATLAB workspace.\n');
+% % % end
+% % % fprintf(1, 'Type ''whos'' to see variables.\n');
+% % % fprintf(1, '\n');
 
 return
 

@@ -36,7 +36,7 @@ function sep_analysis_path = sep_analysis(animal_name, parsed_path, sep_slicing_
                     continue
                 end
                 %% Save file if all variables are not empty
-                     save(matfile, 'sep_analysis_results');
+                     save(matfile, '-v7.3', 'sep_analysis_results');
             catch ME
                 handle_ME(ME, failed_path, filename);
             end

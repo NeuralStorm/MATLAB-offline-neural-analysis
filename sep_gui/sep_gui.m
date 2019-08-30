@@ -55,9 +55,6 @@ setappdata(0,'select_path',original_path);
 load(original_path, 'sep_analysis_results');
 handles.file_path = original_path;
 handles.sep_data = sep_analysis_results;
-%scale set
-setappdata(0,'scale_selection',1);
-find_universal_peaks(handles);
 %initial set
 handles.index = 1;
 handles.changed_channel_index = [];
@@ -74,6 +71,9 @@ set(0, 'userdata', []);
 %check the status for checkboxes in "Change peaks" panel and "Add peaks" panel
 check_check(handles);
 add_check(handles);
+%preview window scale set
+setappdata(0,'scale_selection',1);
+find_universal_peaks(handles);
 %plot the preview window
 all_channels_sep;   
 % Update handles structure

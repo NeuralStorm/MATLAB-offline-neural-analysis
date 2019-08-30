@@ -5,11 +5,6 @@ function notch_filtered_map = notch_filter_for_boardband(board_band_map, notch_f
     if use_notch_bandstop
         stopband = [notch_filter_frequency - notch_filter_bandwidth/2 ...
             notch_filter_frequency + notch_filter_bandwidth/2];
-%         for channel_index = 1:tot_channel    
-%             notch_filtered_data = bandstop(board_band_map{channel_index, 2}, stopband, sample_rate);
-%             notch_filtered_map = [notch_filtered_map; {board_band_map{channel_index, 1}}, ...
-%                 {notch_filtered_data}];
-%         end
         parfor channel_index = 1:tot_channel    
             notch_filtered_data_map{channel_index} = bandstop(board_band_map{channel_index, 2}, stopband, sample_rate);
         end
