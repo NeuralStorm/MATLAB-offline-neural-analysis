@@ -105,8 +105,7 @@ function [parsed_path] = parser(dir_path, animal_name, total_trials, total_event
             % filename = ['PARSED.', file_name, '.mat'];
             filename = [file_name, '.mat'];
             matfile = fullfile(parsed_path, filename);
-            save(matfile, 'tscounts', 'evcounts', 'event_ts',  ...
-                    'total_neurons', 'channel_map');
+            save(matfile, 'tscounts', 'evcounts', 'event_ts', 'channel_map');
         catch ME
             handle_ME(ME, failed_path, file_name);
         end

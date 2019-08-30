@@ -38,7 +38,7 @@ function [] = psth_main()
             if config.label_channels
                 %% Label channels
                 %! Might remove the file handling in the future
-                label_neurons(animal_path, animal_name, parsed_path);
+                batch_label(animal_path, animal_name, parsed_path);
             end
 
             %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
