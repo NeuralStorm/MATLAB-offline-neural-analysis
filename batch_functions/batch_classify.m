@@ -1,11 +1,12 @@
 function [] = batch_classify(animal_name, original_path, data_path, dir_name, ...
         search_ext, filename_substring_one, filename_substring_two, ...
-        config, ignore_sessions)
+        config)
     classifier_start = tic;
-    if isempty(ignore_sessions)
+
+    if isempty(config.ignore_sessions)
         [files, classify_path, failed_path] = create_dir(data_path, dir_name, search_ext);
     else
-        [files, classify_path, failed_path] = create_dir(data_path, dir_name, search_ext, ignore_sessions);
+        [files, classify_path, failed_path] = create_dir(data_path, dir_name, search_ext, config.ignore_sessions);
     end
 
     %% Pull variable names into workspace scope for log

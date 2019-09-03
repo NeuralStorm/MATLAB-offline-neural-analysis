@@ -10,8 +10,6 @@ function [] = mnts_main()
             animal_list(strcmpi(animal_names{animal}, {animal_list.name})).folder, animal_name);
         config = import_config(animal_path, 'mnts');
         export_params(animal_path, 'main', config);
-        % For ignoring certain training sessions
-        training_session_config_array = config.ignore_sessions;
         % Skips animals we want to ignore
         if config.ignore_animal
             continue;
@@ -41,7 +39,7 @@ function [] = mnts_main()
             %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
             if config.create_mnts
                 mnts_start = tic;
-                [parsed_files, mnts_path, failed_path] = create_dir(parsed_path, 'mnts', '.mat', training_session_config_array);
+                [parsed_files, mnts_path, failed_path] = create_dir(parsed_path, 'mnts', '.mat', config.ignore_sessions);
 
                 fprintf('Calculating mnts for %s \n', animal_name);
                 %% Goes through all the files and creates mnts according to the parameters set in config
@@ -88,7 +86,7 @@ function [] = mnts_main()
             %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
             if config.pc_analysis
                 pca_start = tic;
-                [mnts_files, pca_path, failed_path] = create_dir(mnts_path, 'pca', '.mat', training_session_config_array);
+                [mnts_files, pca_path, failed_path] = create_dir(mnts_path, 'pca', '.mat', config.ignore_sessions);
 
                 fprintf('PCA for %s \n', animal_name);
                 %% Goes through all the files and performs pca according to the parameters set in config
@@ -127,7 +125,7 @@ function [] = mnts_main()
 
             if config.convert_mnts_psth
                 psth_path = batch_mnts_to_psth(animal_name, pca_path, 'psth', ...
-                    '.mat', 'pc', 'analysis', 'pca_psth', config, training_session_config_array);
+                    '.mat', 'pc', 'analysis', 'pca_psth', config);
             end
 
             %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -135,7 +133,7 @@ function [] = mnts_main()
             %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
             if config.nv_analysis
                 batch_nv(animal_name, original_path, psth_path, 'normalized_variance_analysis', ...
-                    '.mat', 'pca', 'psth', config, training_session_config_array);
+                    '.mat', 'pca', 'psth', config);
             end
 
             %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -143,7 +141,7 @@ function [] = mnts_main()
             %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
             if config.rf_analysis
                 pc_rf_path = batch_recfield(animal_name, original_path, psth_path, 'receptive_field_analysis', ...
-                    '.mat', 'pca', 'psth', config, training_session_config_array);
+                    '.mat', 'pca', 'psth', config);
             else
                 pc_rf_path = [psth_path, '/receptive_field_analysis'];
             end
@@ -155,7 +153,7 @@ function [] = mnts_main()
                 batch_graph(animal_name, psth_path, 'pc_graphs', '.mat', 'pca', 'psth', ...
                     config.bin_size, config.pre_time, config.post_time, config.pre_start, ...
                     config.pre_end, config.post_start, config.post_end, config.rf_analysis, pc_rf_path, ...
-                    config.make_region_subplot, config.sub_columns, config.sub_rows, training_session_config_array);
+                    config.make_region_subplot, config.sub_columns, config.sub_rows, config.ignore_sessions);
             end
 
             %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -163,7 +161,7 @@ function [] = mnts_main()
             %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
             if config.psth_classify
                 batch_classify(animal_name, original_path, psth_path, 'classifier', '.mat', ...
-                    'pca', 'psth', config, training_session_config_array);
+                    'pca', 'psth', config);
             end
 
             %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -171,7 +169,7 @@ function [] = mnts_main()
             %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
             if config.info_analysis
                 batch_info(animal_name, psth_path, 'mutual_info', ...
-                    '.mat', 'pca', 'psth', training_session_config_array);
+                    '.mat', 'pca', 'psth', config.ignore_sessions);
             end
 
             %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -179,7 +177,7 @@ function [] = mnts_main()
             %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
             if config.ic_analysis
                 ica_start = tic;
-                [mnts_files, ica_path, failed_path] = create_dir(mnts_path, 'ica', '.mat', training_session_config_array);
+                [mnts_files, ica_path, failed_path] = create_dir(mnts_path, 'ica', '.mat', config.ignore_sessions);
                 fprintf('ICA for %s \n', animal_name);
                 %% Goes through all the files and performs pca according to the parameters set in config
                 for file_index = 1:length(mnts_files)
@@ -227,7 +225,7 @@ function [] = mnts_main()
             %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
             if config.nv_analysis
                 batch_nv(animal_name, original_path, psth_path, 'normalized_variance_analysis', ...
-                    '.mat', 'ica', 'psth', config, training_session_config_array)
+                    '.mat', 'ica', 'psth', config)
             end
 
             %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -235,7 +233,7 @@ function [] = mnts_main()
             %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
             if config.rf_analysis
                 ic_rf_path = batch_recfield(animal_name, original_path, psth_path, 'receptive_field_analysis', ...
-                    '.mat', 'ica', 'psth', config, training_session_config_array);
+                    '.mat', 'ica', 'psth', config);
             else
                 ic_rf_path = [psth_path, '/receptive_field_analysis'];
             end
@@ -247,7 +245,7 @@ function [] = mnts_main()
                 batch_graph(animal_name, psth_path, 'pc_graphs', '.mat', 'ica', 'psth', ...
                     config.bin_size, config.pre_time, config.post_time, config.pre_start, ...
                     config.pre_end, config.post_start, config.post_end, config.rf_analysis, ic_rf_path, ...
-                    config.make_region_subplot, config.sub_columns, config.sub_rows, training_session_config_array);
+                    config.make_region_subplot, config.sub_columns, config.sub_rows, config.ignore_sessions);
             end
 
             %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -255,7 +253,7 @@ function [] = mnts_main()
             %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
             if config.psth_classify
                 batch_classify(animal_name, original_path, psth_path, 'classifier', '.mat', ...
-                    'ica', 'psth', config, training_session_config_array);
+                    'ica', 'psth', config);
             end
 
             %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -263,7 +261,7 @@ function [] = mnts_main()
             %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
             if config.info_analysis
                 batch_info(animal_name, psth_path, 'mutual_info', ...
-                    '.mat', 'ica', 'psth', training_session_config_array);
+                    '.mat', 'ica', 'psth', config.ignore_sessions);
             end
 
         end

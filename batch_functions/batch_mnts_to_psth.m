@@ -1,10 +1,10 @@
 function [psth_path] = batch_mnts_to_psth(animal_name, data_path, dir_name, ...
-        search_ext, filename_substring_one, filename_substring_two, filename_substring_three, config, ignore_sessions)
+        search_ext, filename_substring_one, filename_substring_two, filename_substring_three, config)
 
-    if isempty(ignore_sessions)
+    if isempty(config.ignore_sessions)
         [files, psth_path, failed_path] = create_dir(data_path, dir_name, search_ext);
     else
-        [files, psth_path, failed_path] = create_dir(data_path, dir_name, search_ext, ignore_sessions);
+        [files, psth_path, failed_path] = create_dir(data_path, dir_name, search_ext, config.ignore_sessions);
     end
 
     for file_index = 1:length(files)

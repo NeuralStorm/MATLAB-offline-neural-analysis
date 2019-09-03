@@ -1,13 +1,13 @@
 function [] = batch_nv(animal_name, original_path, data_path, dir_name, ...
-        search_ext, filename_substring_one, filename_substring_two, config, ignore_sessions)
+        search_ext, filename_substring_one, filename_substring_two, config)
     %% Check pre time is valid for analysis
     nv_start = tic;
     
     %% NV set up
-    if isempty(ignore_sessions)
+    if isempty(config.ignore_sessions)
         [psth_files, nv_path, failed_path] = create_dir(data_path, dir_name, search_ext);
     else
-        [psth_files, nv_path, failed_path] = create_dir(data_path, dir_name, search_ext, ignore_sessions);
+        [psth_files, nv_path, failed_path] = create_dir(data_path, dir_name, search_ext, config.ignore_sessions);
     end
     meta_headers = {'animal', 'group', 'date', 'record_session', 'pre_time', 'pre_start', 'pre_end'};
     analysis_headers = {'event', 'region', 'channel', 'avg_background_rate', ...

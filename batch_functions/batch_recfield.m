@@ -1,13 +1,13 @@
 function [rf_path] = batch_recfield(animal_name, original_path, data_path, dir_name, ...
-        search_ext, filename_substring_one, filename_substring_two, config, ignore_sessions)
+        search_ext, filename_substring_one, filename_substring_two, config)
     %! TODO FIX CSV NAME HANDLING
 
     rf_start = tic;
-  
-    if isempty(ignore_sessions)
+    
+    if isempty(config.ignore_sessions)
         [files, rf_path, failed_path] = create_dir(data_path, dir_name, search_ext);
     else
-        [files, rf_path, failed_path] = create_dir(data_path, dir_name, search_ext, ignore_sessions);
+        [files, rf_path, failed_path] = create_dir(data_path, dir_name, search_ext, config.ignore_sessions);
     end
 
     %% Pull variable names into workspace scope for log
