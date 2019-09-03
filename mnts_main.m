@@ -130,7 +130,7 @@ function [] = mnts_main()
 
             if config.convert_mnts_psth
                 psth_path = batch_mnts_to_psth(animal_name, pca_path, 'psth', ...
-                    '.mat', 'pc', 'analysis', 'pca_psth', config);
+                    '.mat', 'pc', 'analysis', 'pca_psth', config, training_session_config_array);
             end
 
             %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
