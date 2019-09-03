@@ -12,7 +12,8 @@ function [psth_struct, event_ts, event_strings] = format_PSTH(...
     unique_regions = fieldnames(labeled_data);
     for region = 1:length(unique_regions)
         region_name = unique_regions{region};
-        region_neurons = [labeled_data.(region_name)(:,1), labeled_data.(region_name)(:,4)];
+        % region_neurons = [labeled_data.(region_name)(:,1), labeled_data.(region_name)(:,4)];
+        region_neurons = [labeled_data.(region_name).sig_channels, labeled_data.(region_name).channel_data];
         region_response = create_relative_response(region_neurons, psth_struct.all_events, ...
             bin_size, pre_time, post_time);
         psth_struct.(region_name) = region_response;

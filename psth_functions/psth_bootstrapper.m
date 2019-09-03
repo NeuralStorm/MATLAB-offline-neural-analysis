@@ -14,7 +14,7 @@ function [unit_struct, pop_struct, pop_table, unit_table] = psth_bootstrapper( .
     total_neurons = 0;
     for region = 1:length(region_names)
         current_region = region_names{region};
-        region_neurons = labeled_data.(current_region)(:,1);
+        region_neurons = labeled_data.(current_region).sig_channels;
         total_neurons = total_neurons + length(region_neurons(:, 1));
 
         %% Unit classification
@@ -45,7 +45,8 @@ function [unit_struct, pop_struct, pop_table, unit_table] = psth_bootstrapper( .
             region_unit_info = [];
             for region = 1:length(region_names)
                 current_region = region_names{region};
-                region_neurons = [labeled_data.(current_region)(:,1), labeled_data.(current_region)(:,4)];
+                % region_neurons = [labeled_data.(current_region)(:,1), labeled_data.(current_region)(:,4)];
+                region_neurons = [labeled_data.(current_region).sig_channels, labeled_data.(current_region).channel_data];
                 %% Recreate relative response matrix from shuffled labels for region
                 shuffled_region = create_relative_response(region_neurons, shuffled_labels, bin_size, ...
                     pre_time, post_time);
@@ -131,13 +132,12 @@ function [all_events] = shuffle_event_labels(event_ts, event_strings)
     end
 end
 
-function [classify_struct, table_results] = classify_unit(region_name, labeled_data, psth_struct, event_strings)
+function [classify_struct, table_results] = classify_unit(region_name, region_table, psth_struct, event_strings)
     classify_struct = struct;
     table_results = [];
-    region_neurons = labeled_data(:,1);
     %% Unit Classification
-    for unit = 1:length(region_neurons)
-        current_unit = region_neurons{unit, 1};
+    for unit = 1:height(region_table)
+        current_unit = region_table.sig_channels{unit};
         unit_response = struct;
         for event = 1:length(event_strings)
             current_event = event_strings{event};
@@ -152,7 +152,7 @@ function [classify_struct, table_results] = classify_unit(region_name, labeled_d
         classify_struct.(region_name).(current_unit).correct_trials = correct_trials;
         classify_struct.(region_name).(current_unit).performance = performance;
 
-        notes = labeled_data(strcmpi(labeled_data(:,1), current_unit), end);
+        notes = region_table.recording_notes(strcmpi(region_table.sig_channels, current_unit));
         table_results = [table_results; {region_name}, {current_unit}, {performance}, {mutual_info}, ...
             {0}, {mutual_info}, {NaN}, {NaN}, {notes}];
     end

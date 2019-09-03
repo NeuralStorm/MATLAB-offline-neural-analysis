@@ -60,6 +60,8 @@ function [pca_results, labeled_pcs] = calc_pca(labeled_data, mnts_struct, ...
             pc_names{component_i} = ['pc_', num2str(component_i)];
         end
         %% Reset labeled data
-        labeled_pcs.(region)(:, 1) = pc_names;
+        labeled_pcs.(region).sig_channels = pc_names;
+        labeled_pcs.(region).channels = pc_names;
+        labeled_pcs.(region).channel_data = num2cell(pca_score, 1)';
     end
 end

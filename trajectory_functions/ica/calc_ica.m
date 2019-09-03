@@ -63,11 +63,10 @@ function [labeled_ics, ica_results] = calc_ica(labeled_data, mnts_struct, ...
         for component_i = 1:tot_components
             ic_names{component_i} = ['ic_', num2str(component_i)];
         end
-        repeat = [length(ic_names), 1];
-        region_num = labeled_data.(region){1, 3};
-        region_date = labeled_data.(region){1, 4};
-        labeled_ics.(region) = [ic_names, repmat({region}, repeat), repmat({region_num}, repeat) ...
-            repmat({region_date}, repeat), repmat({'IC'}, repeat)];
+        region_table = labeled_data.(region)(1:tot_components, :);
+        region_table.sig_channels = ic_names; region_table.channel = ic_names;
+        region_table.channel_data = num2cell(weighted_mnts, 1)';
+        labeled_ics.(region) = region_table;
 
         %% Store ICA results
         ica_results.(region).ica_weights = ica_weights;
