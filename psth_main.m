@@ -23,7 +23,7 @@ function [] = psth_main()
                 %! Might remove the file handling in the future
                 parsed_path = parser(animal_path, animal_name, config.total_trials, ...
                     config.total_events, config.trial_lower_bound, ...
-                    config.is_non_strobed_and_strobed, config.event_map);
+                    config.is_non_strobed_and_strobed, config.event_map, config.ignore_sessions);
             else
                 parsed_path = [animal_path, '/parsed'];
             end

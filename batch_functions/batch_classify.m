@@ -3,11 +3,7 @@ function [] = batch_classify(animal_name, original_path, data_path, dir_name, ..
         config)
     classifier_start = tic;
 
-    if isempty(config.ignore_sessions)
-        [files, classify_path, failed_path] = create_dir(data_path, dir_name, search_ext);
-    else
-        [files, classify_path, failed_path] = create_dir(data_path, dir_name, search_ext, config.ignore_sessions);
-    end
+    [files, classify_path, failed_path] = create_dir(data_path, dir_name, search_ext, config.ignore_sessions);
 
     %% Pull variable names into workspace scope for log
     bin_size = config.bin_size; pre_time = config.pre_time; pre_start = config.pre_start;
