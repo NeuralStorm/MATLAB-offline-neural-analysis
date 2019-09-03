@@ -10,7 +10,8 @@ function [psth_struct, baseline_struct, response_struct] = reformat_mnts(labeled
     %% Convert weighted mnts into relative response
     for region_index = 1:length(unique_regions)
         region = unique_regions{region_index};
-        region_labels = labeled_data.(region)(:, 1);
+        % region_labels = labeled_data.(region)
+        region_labels = labeled_data.(region).sig_channels;
         region_mnts = component_struct.(region).weighted_mnts;
         [tot_rows, tot_components] = size(region_mnts);
         tot_trials = tot_rows / tot_bins;
