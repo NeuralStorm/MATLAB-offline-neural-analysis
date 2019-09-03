@@ -7,13 +7,12 @@ function [sig_neurons, non_sig_neurons] = receptive_field_analysis(labeled_data,
     region_names = fieldnames(labeled_data);
     for region = 1:length(region_names)
         current_region = region_names{region};
-        region_neurons = labeled_data.(current_region)(:,1);
+        region_table = labeled_data.(current_region);
         for event = 1:length(event_strings(1,:))
             current_event = event_strings{event};
-            for neuron = 1:length(region_neurons)
-                neuron_name = region_neurons{neuron};
-                notes = labeled_data.(current_region)(strcmpi(labeled_data.(current_region)(:,1), ...
-                    neuron_name), end);
+            for neuron = 1:height(region_table)
+                neuron_name = region_table.sig_channels{neuron};
+                notes = region_table.recording_notes(strcmpi(region_table.sig_channels, neuron_name));
                 baseline_psth = baseline_window.(current_region).(current_event).(neuron_name).psth;
                 response_psth = response_window.(current_region).(current_event).(neuron_name).psth;
                 %% Deal with pre window first

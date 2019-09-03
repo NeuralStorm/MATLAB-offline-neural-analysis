@@ -9,6 +9,7 @@ function [] = psth_main()
         animal_path = fullfile(...
             animal_list(strcmpi(animal_names{animal}, {animal_list.name})).folder, animal_name);
         config = import_config(animal_path, 'psth');
+        config.trial_range
         export_params(animal_path, 'main', config);
         training_session_config_array = [];
         % For ignoring certain training sessions
@@ -36,9 +37,7 @@ function [] = psth_main()
             %%       Label Channels       %%
             %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
             if config.label_channels
-                %% Label channels
-                %! Might remove the file handling in the future
-                label_neurons(animal_path, animal_name, parsed_path);
+                batch_label(animal_path, animal_name, parsed_path);
             end
 
             %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%

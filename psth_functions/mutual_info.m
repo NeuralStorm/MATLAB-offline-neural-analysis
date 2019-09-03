@@ -12,7 +12,7 @@ function [prob_struct, mi_results] = mutual_info(response_window, labeled_data)
     unique_regions = fieldnames(labeled_data);
     for region = 1:length(unique_regions)
         current_region = unique_regions{region};
-        neuron_names = unique(labeled_data.(current_region)(:, 1));
+        neuron_names = unique(labeled_data.(current_region).sig_channels);
 
 
         % Pre-allocate fields

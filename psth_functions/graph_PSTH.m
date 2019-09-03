@@ -11,7 +11,7 @@ function [] = graph_PSTH(save_path, psth_struct, labeled_data, sig_response, ...
     region_names = fieldnames(labeled_data);
     parfor region = 1:length(region_names)
         current_region = region_names{region};
-        region_neurons = labeled_data.(current_region)(:,1);
+        region_neurons = labeled_data.(current_region).sig_channels;
         total_region_neurons = length(region_neurons);
         % Creates the region directory if it does not already exist
         region_path = [save_path, '/', current_region];
