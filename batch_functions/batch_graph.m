@@ -5,11 +5,8 @@ function [] = batch_graph(animal_name, data_path, dir_name, search_ext, ...
 
     graph_start = tic;
     
-    if exist('ignore_sessions') == 0 || isempty(ignore_sessions)
-        [files, graph_path, failed_path] = create_dir(data_path, dir_name, search_ext);
-    else
-        [files, graph_path, failed_path] = create_dir(data_path, dir_name, search_ext, ignore_sessions);
-    end
+    [graph_path, failed_path] = create_dir(data_path, dir_name);
+    [files] = get_file_list(data_path, search_ext, ignore_sessions);
     
     fprintf('Graphing for %s \n', animal_name);
     %% Goes through all the files and calculates mutual info according to the parameters set in config

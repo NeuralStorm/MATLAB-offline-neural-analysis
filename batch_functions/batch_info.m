@@ -1,12 +1,9 @@
 function [] = batch_info(animal_name, data_path, dir_name, ...
     search_ext, filename_substring_one, filename_substring_two, ignore_sessions)
     info_start = tic;
-    
-    if exist('ignore_sessions') == 0 || isempty(ignore_sessions)
-        [files, info_path, failed_path] = create_dir(data_path, dir_name, search_ext);
-    else
-        [files, info_path, failed_path] = create_dir(data_path, dir_name, search_ext, ignore_sessions);
-    end
+
+    [info_path, failed_path] = create_dir(data_path, dir_name);
+    [files] = get_file_list(data_path, search_ext, ignore_sessions);
 
     fprintf('Mutual Info for %s \n', animal_name);
     %% Goes through all the files and calculates mutual info according to the parameters set in config

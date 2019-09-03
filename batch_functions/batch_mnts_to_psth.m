@@ -1,7 +1,9 @@
 function [psth_path] = batch_mnts_to_psth(animal_name, data_path, dir_name, ...
         search_ext, filename_substring_one, filename_substring_two, filename_substring_three, config)
 
-    [files, psth_path, failed_path] = create_dir(data_path, dir_name, search_ext);
+    [psth_path, failed_path] = create_dir(data_path, dir_name);
+    [files] = get_file_list(data_path, search_ext, config.ignore_sessions);
+
     for file_index = 1:length(files)
         try
             %% pull info from filename and set up file path for analysis
