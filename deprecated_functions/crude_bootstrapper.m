@@ -73,7 +73,7 @@ function [classify_path] = crude_bootstrapper(original_path, first_iteration, ps
                     classified_struct = struct;
 
                     % Preforms standard classification
-                    classified_struct = crude_classifier(classify_path, failed_path, filename, event_struct.all_events, labeled_neurons, bin_size, pre_time, post_time, unit_classification, i, classified_struct);
+                    classified_struct = crude_classifier(classify_path, failed_path, filename, psth_struct.all_events, labeled_data, bin_size, pre_time, post_time, unit_classification, i, classified_struct);
                 else
                     % Shuffle event labels from the event_ts matrix
                     shuffled_event_labels = event_ts(:,1);
@@ -86,13 +86,13 @@ function [classify_path] = crude_bootstrapper(original_path, first_iteration, ps
                         %% Slices out the desired trials from the event_ts matrix (Inclusive range)
                         all_events = [all_events; event_strings{event}, {shuffled_events(shuffled_events == unique_events(event), 2)}];
                     end
-                    classified_struct = crude_classifier(classify_path, failed_path, filename, all_events, labeled_neurons, bin_size, pre_time, post_time, unit_classification, i, classified_struct);
+                    classified_struct = crude_classifier(classify_path, failed_path, filename, all_events, labeled_data, bin_size, pre_time, post_time, unit_classification, i, classified_struct);
                 end
             end
 
             % Goes through all the struct fields in the classified struct
             % And corrects the info by subtracting the bootstrapped info off of the original info
-            unique_regions = fieldnames(labeled_neurons);
+            unique_regions = fieldnames(labeled_data);
             for region = 1:length(unique_regions)
                 current_region = unique_regions{region};
                 if (contains(right_direct, animal_name) && strcmpi('Right', current_region)) || (contains(left_direct, animal_name) && strcmpi('Left', current_region))
@@ -101,8 +101,8 @@ function [classify_path] = crude_bootstrapper(original_path, first_iteration, ps
                     region_type = 'Indirect';
                 end
                 if unit_classification
-                    for unit = 1:length(labeled_neurons.(current_region)(:,1))
-                        current_unit = labeled_neurons.(current_region){unit, 1};
+                    for unit = 1:length(labeled_data.(current_region)(:,1))
+                        current_unit = labeled_data.(current_region){unit, 1};
                         unit_info = classified_struct.(current_region).([current_unit, '_information']);
                         avg_boot_info = mean(classified_struct.(current_region).([current_unit, '_bootstrapped_info']));
                         corrected_info = unit_info - avg_boot_info;
@@ -127,7 +127,7 @@ function [classify_path] = crude_bootstrapper(original_path, first_iteration, ps
             end
 
             %% Saving classifier info
-            all_events = event_struct.all_events;
+            all_events = psth_struct.all_events;
             if unit_classification
                 unit_path = [classify_path, '/unit'];
                 if ~exist(unit_path, 'dir')
@@ -145,7 +145,7 @@ function [classify_path] = crude_bootstrapper(original_path, first_iteration, ps
                 info_filename = strrep(info_filename, 'format', 'classified');
                 matfile = fullfile(pop_path, ['NEW_', info_filename, '.mat']);
             end
-            save(matfile, 'classified_struct', 'all_events', 'labeled_neurons');
+            save(matfile, 'classified_struct', 'all_events', 'labeled_data');
         catch ME
             if ~exist(failed_path, 'dir')
                 mkdir(classify_path, 'failed');

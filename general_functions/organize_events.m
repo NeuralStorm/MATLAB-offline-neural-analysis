@@ -14,7 +14,7 @@ function [event_strings, all_events, event_ts] = organize_events(event_ts, ...
     % Truncates events to desired trial range from total_trials * total_events
     if ~isempty(trial_range)
         try
-            event_ts = event_ts(trial_range(1):trial_range(2), :);
+            event_ts = event_ts(str2num(trial_range), :);
         catch ME
             warning(ME.identifier, '%s', ME.message);
             warning('Animal does not have enough trials for the decided trial range. Truncating to the length of events it has.');

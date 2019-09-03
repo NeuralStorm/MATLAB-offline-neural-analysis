@@ -1,8 +1,10 @@
-function [unit_struct, pop_struct, pop_table, unit_table] = psth_bootstrapper(labeled_neurons, event_struct, ...
-        event_ts, boot_iterations, bootstrap_classifier, bin_size, pre_time, post_time, analysis_column_names)
+function [unit_struct, pop_struct, pop_table, unit_table] = psth_bootstrapper( ...
+        labeled_data, response_window, event_ts, boot_iterations, ...
+        bootstrap_classifier, bin_size, pre_time, pre_start, pre_end, post_time, ...
+        post_start, post_end, analysis_column_names)
 
-    region_names = fieldnames(labeled_neurons);
-    event_strings = event_struct.all_events(:,1)';
+    region_names = fieldnames(labeled_data);
+    event_strings = response_window.all_events(:,1)';
     unit_struct = struct;
     pop_struct = struct;
     unit_results = [];
@@ -12,17 +14,18 @@ function [unit_struct, pop_struct, pop_table, unit_table] = psth_bootstrapper(la
     total_neurons = 0;
     for region = 1:length(region_names)
         current_region = region_names{region};
-        region_neurons = labeled_neurons.(current_region)(:,1);
+        region_neurons = labeled_data.(current_region).sig_channels;
         total_neurons = total_neurons + length(region_neurons(:, 1));
 
         %% Unit classification
-        [classify_struct, unit_info] = classify_unit(current_region, labeled_neurons.(current_region), event_struct.(current_region), event_strings);
+        [classify_struct, unit_info] = classify_unit(current_region, ...
+            labeled_data.(current_region), response_window.(current_region), event_strings);
         %% Store unit classification
         unit_struct.(current_region) = classify_struct.(current_region);
         unit_results = [unit_results; unit_info];
 
         %% Population classification
-        [classify_struct, pop_info] = classify_pop(current_region, event_struct, event_strings);
+        [classify_struct, pop_info] = classify_pop(current_region, response_window, event_strings);
         %% Store unit classification
         pop_struct.(current_region) = classify_struct;
         pop_results = [pop_results; pop_info];
@@ -42,13 +45,22 @@ function [unit_struct, pop_struct, pop_table, unit_table] = psth_bootstrapper(la
             region_unit_info = [];
             for region = 1:length(region_names)
                 current_region = region_names{region};
-                region_neurons = [labeled_neurons.(current_region)(:,1), labeled_neurons.(current_region)(:,4)];
+                % region_neurons = [labeled_data.(current_region)(:,1), labeled_data.(current_region)(:,4)];
+                region_neurons = [labeled_data.(current_region).sig_channels, labeled_data.(current_region).channel_data];
                 %% Recreate relative response matrix from shuffled labels for region
-                shuffled_response = create_relative_response(region_neurons, shuffled_labels, bin_size, pre_time, post_time);
+                shuffled_region = create_relative_response(region_neurons, shuffled_labels, bin_size, ...
+                    pre_time, post_time);
+                shuffled_response = struct;
+                shuffled_response.all_events = shuffled_labels;
+                shuffled_response.(current_region) = shuffled_region;
+                %% Isolate response
+                [~, shuffled_struct] = create_analysis_windows(labeled_data, shuffled_response, ...
+                    pre_time, pre_start, pre_end, post_time, post_start, post_end, bin_size);
 
                 %% Unit classification
                 unit_shuffled_info = [];
-                [classify_struct, ~] = classify_unit(current_region, labeled_neurons.(current_region), shuffled_response, event_strings);
+                [classify_struct, ~] = classify_unit(current_region, labeled_data.(current_region), ...
+                    shuffled_struct.(current_region), event_strings);
                 for unit = 1:length(region_neurons(:,1))
                     current_unit = region_neurons{unit, 1};
                     shuffled_info = classify_struct.(current_region).(current_unit).mutual_info;
@@ -57,7 +69,7 @@ function [unit_struct, pop_struct, pop_table, unit_table] = psth_bootstrapper(la
                 region_unit_info = [region_unit_info, unit_shuffled_info];
 
                 %% Population classification
-                [~, shuffled_info, ~, ~, ~, ~] = psth_classifier(shuffled_response, event_strings);
+                [~, shuffled_info, ~, ~, ~, ~] = psth_classifier(shuffled_struct.(current_region), event_strings);
                 region_shuffled_info = [region_shuffled_info, {current_region}, {shuffled_info}];
             end
             unit_rand_info(i, :) = region_unit_info;
@@ -120,17 +132,16 @@ function [all_events] = shuffle_event_labels(event_ts, event_strings)
     end
 end
 
-function [classify_struct, table_results] = classify_unit(region_name, labeled_neurons, event_struct, event_strings)
+function [classify_struct, table_results] = classify_unit(region_name, region_table, psth_struct, event_strings)
     classify_struct = struct;
     table_results = [];
-    region_neurons = labeled_neurons(:,1);
     %% Unit Classification
-    for unit = 1:length(region_neurons)
-        current_unit = region_neurons{unit, 1};
+    for unit = 1:height(region_table)
+        current_unit = region_table.sig_channels{unit};
         unit_response = struct;
         for event = 1:length(event_strings)
             current_event = event_strings{event};
-            unit_response.(current_event) = event_struct.(current_event).(current_unit);
+            unit_response.(current_event) = psth_struct.(current_event).(current_unit);
         end
         [confusion_matrix, mutual_info, predicted_events, true_events, correct_trials, performance] = ...
             psth_classifier(unit_response, event_strings);
@@ -141,18 +152,18 @@ function [classify_struct, table_results] = classify_unit(region_name, labeled_n
         classify_struct.(region_name).(current_unit).correct_trials = correct_trials;
         classify_struct.(region_name).(current_unit).performance = performance;
 
-        notes = labeled_neurons(strcmpi(labeled_neurons(:,1), current_unit), end);
+        notes = region_table.recording_notes(strcmpi(region_table.sig_channels, current_unit));
         table_results = [table_results; {region_name}, {current_unit}, {performance}, {mutual_info}, ...
             {0}, {mutual_info}, {NaN}, {NaN}, {notes}];
     end
 end
 
-function [classify_struct, table_results] = classify_pop(region_name, event_struct, event_strings)
+function [classify_struct, table_results] = classify_pop(region_name, psth_struct, event_strings)
     classify_struct = struct;
     table_results = [];
 
     %% Population Classification
-    region_response = event_struct.(region_name);
+    region_response = psth_struct.(region_name);
     [confusion_matrix, mutual_info, predicted_events, true_events, correct_trials, performance] = ...
         psth_classifier(region_response, event_strings);
     classify_struct.confusion_matrix = confusion_matrix;

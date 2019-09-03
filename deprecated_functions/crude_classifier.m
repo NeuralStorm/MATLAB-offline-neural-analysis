@@ -1,17 +1,17 @@
-function [classified_struct] = crude_classifier(classify_path, failed_path, file_name, all_events, labeled_neurons, bin_size, pre_time, post_time, unit_classification, iteration, classified_struct)
+function [classified_struct] = crude_classifier(classify_path, failed_path, file_name, all_events, labeled_data, bin_size, pre_time, post_time, unit_classification, iteration, classified_struct)
     %% Crude classifier
     if pre_time ~= 0
         warning('The classifier will try and classify on the time period before the event took place. Consider changing pre time to 0');
     end
     try
-        region_names = fieldnames(labeled_neurons);
+        region_names = fieldnames(labeled_data);
         if unit_classification
             for region = 1:length(region_names)
                 current_region = region_names{region};
-                for unit = 1:length(labeled_neurons.(current_region))
-                    neuron_name = labeled_neurons.(current_region){unit};
-                    neuron = [neuron_name, labeled_neurons.(current_region)(unit, 4)];
-                    region_map = [labeled_neurons.(current_region)(:,1), labeled_neurons.(current_region)(:,4)];
+                for unit = 1:length(labeled_data.(current_region))
+                    neuron_name = labeled_data.(current_region){unit};
+                    neuron = [neuron_name, labeled_data.(current_region)(unit, 4)];
+                    region_map = [labeled_data.(current_region)(:,1), labeled_data.(current_region)(:,4)];
                     % Creates the PSTH object using dark, unknown magic from mythical toolbox
                     psth = NeuroToolbox.PSTHToolbox.PSTH(neuron, all_events, 'bin_size', ... 
                         bin_size, 'PSTH_window', [-abs(pre_time), post_time]);
@@ -46,7 +46,7 @@ function [classified_struct] = crude_classifier(classify_path, failed_path, file
         else
             for region = 1:length(region_names)
                 current_region = region_names{region};
-                region_neurons = [labeled_neurons.(region_names{region})(:,1), labeled_neurons.(region_names{region})(:,4)];
+                region_neurons = [labeled_data.(region_names{region})(:,1), labeled_data.(region_names{region})(:,4)];
                 region_psth = NeuroToolbox.PSTHToolbox.PSTH(region_neurons, all_events, 'bin_size', ... 
                     bin_size, 'PSTH_window', [-abs(pre_time), post_time]);
                 region_template = NeuroToolbox.PSTHToolbox.SU_Classifier(region_psth);

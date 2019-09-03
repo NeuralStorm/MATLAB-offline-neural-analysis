@@ -1,7 +1,12 @@
 function [] = batch_info(animal_name, data_path, dir_name, ...
-    search_ext, filename_substring_one, filename_substring_two)
+    search_ext, filename_substring_one, filename_substring_two, ignore_sessions)
     info_start = tic;
-    [files, info_path, failed_path] = create_dir(data_path, dir_name, search_ext);
+    
+    if exist('ignore_sessions') == 0 || isempty(ignore_sessions)
+        [files, info_path, failed_path] = create_dir(data_path, dir_name, search_ext);
+    else
+        [files, info_path, failed_path] = create_dir(data_path, dir_name, search_ext, ignore_sessions);
+    end
 
     fprintf('Mutual Info for %s \n', animal_name);
     %% Goes through all the files and calculates mutual info according to the parameters set in config
@@ -12,20 +17,21 @@ function [] = batch_info(animal_name, data_path, dir_name, ...
             [~, filename, ~] = fileparts(file);
             filename = erase(filename, [filename_substring_one, '.', filename_substring_two, '.']);
             filename = erase(filename, [filename_substring_one, '_', filename_substring_two, '_']);
-            load(file, 'event_struct', 'labeled_neurons');
+            load(file, 'response_window', 'labeled_data');
             %% Check psth variables to make sure they are not empty
-            empty_vars = check_variables(file, event_struct, labeled_neurons);
+            empty_vars = check_variables(file, response_window, labeled_data);
             if empty_vars
+                warning('Animal: %s Does not have all the variables required for this analysis. Skipping...', animal_name);
                 continue
             end
 
             %% Mutual information
-            [prob_struct, mi_results] = mutual_info(event_struct, labeled_neurons);
+            [prob_struct, mi_results] = mutual_info(response_window, labeled_data);
 
             %% Saving the file
             matfile = fullfile(info_path, ['mutual_info_', filename, '.mat']);
             check_variables(matfile, prob_struct, mi_results);
-            save(matfile, 'labeled_neurons', 'prob_struct', 'mi_results');
+            save(matfile, 'labeled_data', 'prob_struct', 'mi_results');
         catch ME
             handle_ME(ME, failed_path, filename);
         end
