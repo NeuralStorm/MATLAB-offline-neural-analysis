@@ -4,7 +4,8 @@ function [rf_path] = batch_recfield(animal_name, original_path, data_path, dir_n
 
     rf_start = tic;
     
-    [files, rf_path, failed_path] = create_dir(data_path, dir_name, search_ext, config.ignore_sessions);
+    [rf_path, failed_path] = create_dir(data_path, dir_name);
+    [files] = get_file_list(data_path, search_ext, config.ignore_sessions);
 
     %% Pull variable names into workspace scope for log
     pre_time = config.pre_time; pre_start = config.pre_start; pre_end = config.pre_end;

@@ -5,7 +5,8 @@ function [] = batch_nv(animal_name, original_path, data_path, dir_name, ...
     
     %% NV set up
 
-    [psth_files, nv_path, failed_path] = create_dir(data_path, dir_name, search_ext, config.ignore_sessions);
+    [nv_path, failed_path] = create_dir(data_path, dir_name);
+    [psth_files] = get_file_list(data_path, search_ext, config.ignore_sessions);
     
     meta_headers = {'animal', 'group', 'date', 'record_session', 'pre_time', 'pre_start', 'pre_end'};
     analysis_headers = {'event', 'region', 'channel', 'avg_background_rate', ...

@@ -6,7 +6,8 @@ function [parsed_path] = parser(dir_path, animal_name, total_trials, total_event
 
     % Creates a list of all the files in the given directory ending with
     % *.plx
-    [plx_files, parsed_path, failed_path] = create_dir(dir_path, 'parsed', '.plx', ignore_sessions);
+    [parsed_path, failed_path] = create_dir(dir_path, 'parsed');
+    [plx_files] = get_file_list(dir_path, '.plx', ignore_sessions);
 
     export_params(parsed_path, 'parsed', failed_path, animal_name, total_trials, total_events, trial_lower_bound, ...
         is_non_strobed_and_strobed, event_map);

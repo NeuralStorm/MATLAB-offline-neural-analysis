@@ -39,7 +39,8 @@ function [] = mnts_main()
             %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
             if config.create_mnts
                 mnts_start = tic;
-                [parsed_files, mnts_path, failed_path] = create_dir(parsed_path, 'mnts', '.mat', config.ignore_sessions);
+                [mnts_path, failed_path] = create_dir(parsed_path, 'mnts');
+                [parsed_files] = get_file_list(parsed_path, '.mat', config.ignore_sessions);
 
                 fprintf('Calculating mnts for %s \n', animal_name);
                 %% Goes through all the files and creates mnts according to the parameters set in config
@@ -86,7 +87,8 @@ function [] = mnts_main()
             %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
             if config.pc_analysis
                 pca_start = tic;
-                [mnts_files, pca_path, failed_path] = create_dir(mnts_path, 'pca', '.mat', config.ignore_sessions);
+                [pca_path, failed_path] = create_dir(mnts_path, 'pca');
+                [mnts_files] = get_file_list(mnts_path, '.mat', config.ignore_sessions);
 
                 fprintf('PCA for %s \n', animal_name);
                 %% Goes through all the files and performs pca according to the parameters set in config
@@ -177,7 +179,8 @@ function [] = mnts_main()
             %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
             if config.ic_analysis
                 ica_start = tic;
-                [mnts_files, ica_path, failed_path] = create_dir(mnts_path, 'ica', '.mat', config.ignore_sessions);
+                [ica_path, failed_path] = create_dir(mnts_path, 'ica');
+                [mnts_files] = get_file_list(mnts_path, '.mat', config.ignore_sessions);
                 fprintf('ICA for %s \n', animal_name);
                 %% Goes through all the files and performs pca according to the parameters set in config
                 for file_index = 1:length(mnts_files)

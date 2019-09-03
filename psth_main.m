@@ -9,7 +9,6 @@ function [] = psth_main()
         animal_path = fullfile(...
             animal_list(strcmpi(animal_names{animal}, {animal_list.name})).folder, animal_name);
         config = import_config(animal_path, 'psth');
-        config.trial_range
         export_params(animal_path, 'main', config);
         % Skips animals we want to ignore
         if config.ignore_animal
@@ -41,7 +40,8 @@ function [] = psth_main()
             if config.create_psth
                 psth_start = tic;
                 % warning('Since the pre time is set to 0, there will not be a psth generated with only the pre time activity.\n');
-                [parsed_files, psth_path, failed_path] = create_dir(parsed_path, 'psth', '.mat', config.ignore_sessions);
+                [psth_path, failed_path] = create_dir(parsed_path, 'psth');
+                [parsed_files] = get_file_list(parsed_path, '.mat', config.ignore_sessions);
 
                 fprintf('Calculating PSTH for %s \n', animal_name);
                 %% Goes through all the files and creates PSTHs according to the parameters set in config
