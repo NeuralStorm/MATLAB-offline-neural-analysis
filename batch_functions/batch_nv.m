@@ -1,21 +1,8 @@
-%varargin is for ignore_sessions
 function [] = batch_nv(animal_name, original_path, data_path, dir_name, ...
-        search_ext, filename_substring_one, filename_substring_two, config, varargin)
+        search_ext, filename_substring_one, filename_substring_two, config, ignore_sessions)
     %% Check pre time is valid for analysis
     nv_start = tic;
     
-    ignore_sessions = [];
-    if length(varargin) > 1
-        msg = 'Too many arguments';
-        error(msg)
-    elseif length(varargin) == 1
-        ignore_sessions = varargin{1};
-        if ~ismatrix(ignore_sessions)
-            msg = 'Input ignore_sessions is not a matrix';
-            error(msg)
-        end
-    end
-
     %% NV set up
     if isempty(ignore_sessions)
         [psth_files, nv_path, failed_path] = create_dir(data_path, dir_name, search_ext);

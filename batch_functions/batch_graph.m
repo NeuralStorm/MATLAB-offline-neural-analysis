@@ -1,22 +1,9 @@
-%varargin is for variable ignore_sessions
 function [] = batch_graph(animal_name, data_path, dir_name, search_ext, ...
         filename_substring_one, filename_substring_two, bin_size, pre_time, ...
         post_time, pre_start, pre_end, post_start, post_end, rf_analysis, rf_path, ...
-        make_region_subplot, sub_columns, sub_rows, varargin)
+        make_region_subplot, sub_columns, sub_rows, ignore_sessions)
 
     graph_start = tic;
-    
-    ignore_sessions = [];
-    if length(varargin) > 1
-        msg = 'Too many arguments';
-        error(msg)
-    elseif length(varargin) == 1
-        ignore_sessions = varargin{1};
-        if ~ismatrix(ignore_sessions)
-            msg = 'Input ignore_sessions is not a matrix';
-            error(msg)
-        end
-    end
     
     if isempty(ignore_sessions)
         [files, graph_path, failed_path] = create_dir(data_path, dir_name, search_ext);

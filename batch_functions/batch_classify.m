@@ -1,19 +1,7 @@
-%varargin for ignore_sessions variable
 function [] = batch_classify(animal_name, original_path, data_path, dir_name, ...
         search_ext, filename_substring_one, filename_substring_two, ...
-        config, varargin)
+        config, ignore_sessions)
     classifier_start = tic;
-    ignore_sessions = [];
-    if length(varargin) > 1
-        msg = 'Too many arguments';
-        error(msg)
-    elseif length(varargin) == 1
-        ignore_sessions = varargin{1};
-        if ~ismatrix(ignore_sessions)
-            msg = 'Input ignore_sessions is not a matrix';
-            error(msg)
-        end
-    end
     if isempty(ignore_sessions)
         [files, classify_path, failed_path] = create_dir(data_path, dir_name, search_ext);
     else

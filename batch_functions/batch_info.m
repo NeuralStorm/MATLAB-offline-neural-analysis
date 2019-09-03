@@ -1,20 +1,7 @@
-%varargin is for variable ignore_sessions
 function [] = batch_info(animal_name, data_path, dir_name, ...
-    search_ext, filename_substring_one, filename_substring_two, varargin)
+    search_ext, filename_substring_one, filename_substring_two, ignore_sessions)
     info_start = tic;
-    
-    ignore_sessions = [];
-    if length(varargin) > 1
-        msg = 'Too many arguments';
-        error(msg)
-    elseif length(varargin) == 1
-        ignore_sessions = varargin{1};
-        if ~ismatrix(ignore_sessions)
-            msg = 'Input ignore_sessions is not a matrix';
-            error(msg)
-        end
-    end
-    
+
     if isempty(ignore_sessions)
         [files, info_path, failed_path] = create_dir(data_path, dir_name, search_ext);
     else

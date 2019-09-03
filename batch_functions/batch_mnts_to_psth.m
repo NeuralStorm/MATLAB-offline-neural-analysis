@@ -1,19 +1,6 @@
-%varargin is for variable ignore_sessions
 function [psth_path] = batch_mnts_to_psth(animal_name, data_path, dir_name, ...
-        search_ext, filename_substring_one, filename_substring_two, filename_substring_three, config, varargin)
-    
-    ignore_sessions = [];
-    if length(varargin) > 1
-        msg = 'Too many arguments';
-        error(msg)
-    elseif length(varargin) == 1
-        ignore_sessions = varargin{1};
-        if ~ismatrix(ignore_sessions)
-            msg = 'Input ignore_sessions is not a matrix';
-            error(msg)
-        end
-    end
-    
+        search_ext, filename_substring_one, filename_substring_two, filename_substring_three, config, ignore_sessions)
+
     if isempty(ignore_sessions)
         [files, psth_path, failed_path] = create_dir(data_path, dir_name, search_ext);
     else

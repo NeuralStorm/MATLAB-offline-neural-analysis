@@ -10,11 +10,8 @@ function [] = mnts_main()
             animal_list(strcmpi(animal_names{animal}, {animal_list.name})).folder, animal_name);
         config = import_config(animal_path, 'mnts');
         export_params(animal_path, 'main', config);
-        training_session_config_array = [];
         % For ignoring certain training sessions
-        if isfield(config,'ignore_sessions')
-            training_session_config_array = config.ignore_sessions;
-        end
+        training_session_config_array = config.ignore_sessions;
         % Skips animals we want to ignore
         if config.ignore_animal
             continue;
