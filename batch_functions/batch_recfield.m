@@ -1,25 +1,21 @@
 function [rf_path] = batch_recfield(animal_name, original_path, data_path, dir_name, ...
-        search_ext, filename_substring_one, filename_substring_two, config, ignore_sessions)
+        search_ext, filename_substring_one, filename_substring_two, config)
     %! TODO FIX CSV NAME HANDLING
 
     rf_start = tic;
-
-    if exist('ignore_sessions') == 0 || isempty(ignore_sessions)
-        [files, rf_path, failed_path] = create_dir(data_path, dir_name, search_ext);
-    else
-        [files, rf_path, failed_path] = create_dir(data_path, dir_name, search_ext, ignore_sessions);
-    end
+    
+    [rf_path, failed_path] = create_dir(data_path, dir_name);
+    [files] = get_file_list(data_path, search_ext, config.ignore_sessions);
 
     %% Pull variable names into workspace scope for log
     pre_time = config.pre_time; pre_start = config.pre_start; pre_end = config.pre_end;
     post_time = config.post_time; post_start = config.post_start; post_end = config.post_end;
-    bin_size = config.bin_size; threshold_scale = config.threshold_scale;
+    bin_size = config.bin_size; threshold_scale = config.threshold_scale; ignore_sessions = config.ignore_sessions;
     sig_check = config.sig_check; sig_bins = config.sig_bins; span = config.span;
 
     export_params(rf_path, 'receptive_field_analysis', rf_path, failed_path, ...
         animal_name, pre_time, pre_start, pre_end, post_start, post_end, bin_size, ...
-        threshold_scale, sig_check, sig_bins, span);
-
+        threshold_scale, sig_check, sig_bins, span, ignore_sessions);
 
     meta_headers = {'animal', 'group', 'date', 'record_session', 'pre_time', ...
         'pre_start', 'pre_end', 'post_time', 'post_start', 'post_end', 'bin_size', ...

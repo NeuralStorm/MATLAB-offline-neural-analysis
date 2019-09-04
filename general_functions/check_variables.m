@@ -26,7 +26,7 @@ function [empty_variable] = check_variables(file, varargin)
             delete(file);
             %% Save variables to an empty folder to keep track
             [file_path, filename, file_ext] = fileparts(file);
-            [~, empty_path, ~] = create_dir(file_path, 'missing_variables', file_ext);
+            [empty_path, ~] = create_dir(file_path, 'missing_variables');
             save(fullfile(empty_path, ['missing_vars_', filename]), 'empty_list', 'variable_list');
         end
     end
