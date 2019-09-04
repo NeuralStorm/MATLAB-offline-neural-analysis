@@ -9,8 +9,8 @@ function [] = batch_nv(animal_name, original_path, data_path, dir_name, ...
     [psth_files] = get_file_list(data_path, search_ext, config.ignore_sessions);
     
     meta_headers = {'animal', 'group', 'date', 'record_session', 'pre_time', 'pre_start', 'pre_end'};
-    analysis_headers = {'event', 'region', 'channel', 'avg_background_rate', ...
-        'background_var', 'norm_var', 'fano', 'notes'};
+    analysis_headers = {'event', 'region', 'sig_channels', 'user_channels', 'avg_background_rate', ...
+        'background_var', 'norm_var', 'fano', 'recording_notes'};
     csv_headers = [meta_headers, analysis_headers];
 
     %% Pull variable names into workspace scope for log

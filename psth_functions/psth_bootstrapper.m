@@ -102,14 +102,14 @@ function [unit_struct, pop_struct, pop_table, unit_table] = psth_bootstrapper( .
                 current_unit = current_unit_column{1};
                 avg_rand_info = mean([unit_rand_info{:, unit + 1}]);
                 corrected_info = unit_table.mutual_info(strcmpi(unit_table.region, current_region) ...
-                    & strcmpi(unit_table.channel, current_unit)) - avg_rand_info;
+                    & strcmpi(unit_table.sig_channels, current_unit)) - avg_rand_info;
 
                 %% Store unit corrected info and averaged random info
                 unit_struct.(current_region).(current_unit).avg_rand_info = avg_rand_info;
                 unit_table.boot_info(strcmpi(unit_table.region, current_region) ...
-                    & strcmpi(unit_table.channel, current_unit)) = avg_rand_info;
+                    & strcmpi(unit_table.sig_channels, current_unit)) = avg_rand_info;
                 unit_table.corrected_info(strcmpi(unit_table.region, current_region) ...
-                    & strcmpi(unit_table.channel, current_unit)) = corrected_info;
+                    & strcmpi(unit_table.sig_channels, current_unit)) = corrected_info;
             end
         end
     end
@@ -152,8 +152,9 @@ function [classify_struct, table_results] = classify_unit(region_name, region_ta
         classify_struct.(region_name).(current_unit).correct_trials = correct_trials;
         classify_struct.(region_name).(current_unit).performance = performance;
 
+        user_channels = region_table.user_channels(strcmpi(region_table.sig_channels, current_unit));
         notes = region_table.recording_notes(strcmpi(region_table.sig_channels, current_unit));
-        table_results = [table_results; {region_name}, {current_unit}, {performance}, {mutual_info}, ...
+        table_results = [table_results; {region_name}, {current_unit}, {user_channels}, {performance}, {mutual_info}, ...
             {0}, {mutual_info}, {NaN}, {NaN}, {notes}];
     end
 end
@@ -172,6 +173,6 @@ function [classify_struct, table_results] = classify_pop(region_name, psth_struc
     classify_struct.true_events = true_events;
     classify_struct.correct_trials = correct_trials;
     classify_struct.performance = performance;
-    table_results = [table_results; {region_name}, {'population'}, {performance}, {mutual_info}, {0}, {mutual_info} ...
+    table_results = [table_results; {region_name}, {'population'}, {'population'}, {performance}, {mutual_info}, {0}, {mutual_info} ...
         {NaN}, {NaN}, {strings}];
 end
