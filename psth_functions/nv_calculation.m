@@ -18,10 +18,8 @@ function nv_data = nv_calculation(labeled_data, baseline_window, pre_start, pre_
                 current_event = event_strings{event};
                 for neuron = 1:height(region_table)
                     current_neuron = region_table.sig_channels{neuron};
+                    user_channels = region_table.user_channels(strcmpi(region_table.sig_channels, current_neuron));
                     notes = region_table.recording_notes(strcmpi(region_table.sig_channels, current_neuron));
-                    % current_neuron = region_neurons{neuron};
-                    % notes = labeled_data.(current_region)(strcmpi(labeled_data.(current_region)(:,1), ...
-                    %     current_neuron), end);
                     baseline_response = baseline_window.(current_region).(current_event).(current_neuron).relative_response;
                     %% Calculate NV for each event for each trial for each neuron
                     bfr = sum(baseline_response, 2) / (tot_time);
@@ -29,7 +27,7 @@ function nv_data = nv_calculation(labeled_data, baseline_window, pre_start, pre_
                     bfr_var = var(bfr);
                     norm_var = norm_var_scaling * (epsilon + bfr_var)/(norm_var_scaling * epsilon + avg_bfr);
                     fano = avg_bfr / bfr_var;
-                    nv_data = [nv_data; {current_event}, {current_region}, {current_neuron}, ...
+                    nv_data = [nv_data; {current_event}, {current_region}, {current_neuron}, {user_channels}, ...
                         {avg_bfr}, {bfr_var}, {norm_var}, {fano}, {notes}];
                 end
             end
@@ -38,9 +36,8 @@ function nv_data = nv_calculation(labeled_data, baseline_window, pre_start, pre_
             unit_index = tot_bins;
             for neuron = 1:height(region_table)
                 current_neuron = region_table.sig_channels{neuron};
+                user_channels = region_table.user_channels(strcmpi(region_table.sig_channels, current_neuron));
                 notes = region_table.recording_notes(strcmpi(region_table.sig_channels, current_neuron));
-                % notes = labeled_data.(current_region)(strcmpi(labeled_data.(current_region)(:,1), ...
-                %     current_neuron), end);
                 %% Grabs all trials for given neuron
                 baseline_response = baseline_window.(current_region).relative_response(:, (unit_index - tot_bins + 1):unit_index);
                 %% Calculate NV for each trial for each neuron
@@ -49,7 +46,7 @@ function nv_data = nv_calculation(labeled_data, baseline_window, pre_start, pre_
                 bfr_var = var(bfr);
                 norm_var = norm_var_scaling * (epsilon + bfr_var)/(norm_var_scaling * epsilon + avg_bfr);
                 fano = avg_bfr / bfr_var;
-                nv_data = [nv_data; {'all_events'}, {current_region}, {current_neuron}, ...
+                nv_data = [nv_data; {'all_events'}, {current_region}, {current_neuron}, {user_channels}, ...
                     {avg_bfr}, {bfr_var}, {norm_var}, {fano}, {notes}];
                 unit_index = unit_index + tot_bins;
             end
