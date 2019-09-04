@@ -61,7 +61,7 @@ function [pca_results, labeled_pcs] = calc_pca(labeled_data, mnts_struct, ...
         end
         %% Reset labeled data
         labeled_pcs.(region).sig_channels = pc_names;
-        labeled_pcs.(region).channels = pc_names;
+        labeled_pcs.(region).user_channels = pc_names;
         labeled_pcs.(region).channel_data = num2cell(pca_score, 1)';
     end
 end
