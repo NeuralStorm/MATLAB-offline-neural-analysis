@@ -74,7 +74,7 @@ function [rf_path] = batch_recfield(animal_name, original_path, data_path, dir_n
     end
 
     %% CSV export set up
-    csv_path = fullfile(original_path, 'receptive_field_results.csv');
+    csv_path = fullfile(original_path, [filename_substring_one, '_receptive_field_results.csv']);
     export_csv(csv_path, csv_headers, general_info, all_neurons);
 
     fprintf('Finished receptive field analysis for %s. It took %s \n', ...

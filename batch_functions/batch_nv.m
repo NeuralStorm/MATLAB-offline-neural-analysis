@@ -60,7 +60,7 @@ function [] = batch_nv(animal_name, original_path, data_path, dir_name, ...
         end
     end
     %% CSV export set up
-    csv_path = fullfile(original_path, 'norm_var.csv');
+    csv_path = fullfile(original_path, [filename_substring_one, '_norm_var.csv']);
     export_csv(csv_path, csv_headers, meta_info, all_neurons);
 
     fprintf('Finished normalized variance analysis for %s. It took %s \n', ...
