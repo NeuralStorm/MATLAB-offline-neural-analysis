@@ -15,9 +15,9 @@ function [measurements] = process_raw_grf(raw_measurements, event_ts, pre_time, 
         filtered_table(:, column_i) = num2cell(zscore(filtered_data));
         column_response = [];
         for trial_index = 1:length(event_ts)
-            trial_ts = event_ts(trial_index);
-            pre_start = round(trial_ts * sampling_rate) - round(pre_time * sampling_rate);
-            post_end = round(trial_ts * sampling_rate) + round(post_time * sampling_rate);
+            trial_ts = event_ts(trial_index, 2);
+            pre_start = round(trial_ts * sampling_rate) - round(abs(pre_time) * sampling_rate);
+            post_end = round(trial_ts * sampling_rate) + round(abs(post_time) * sampling_rate);
             response = filtered_data(pre_start:(post_end - 1));
             column_response = [column_response; response];
         end

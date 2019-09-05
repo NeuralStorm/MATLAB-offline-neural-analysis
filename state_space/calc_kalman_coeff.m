@@ -1,11 +1,11 @@
-function [] = calc_kalman_coeff(grf_responses, event_ts, event_struct, labeled_neurons, training_size, pre_time, post_time, bin_size)
+function [] = calc_kalman_coeff(grf_responses, event_ts, psth_struct, labeled_data, training_size, pre_time, post_time, bin_size)
     %% Closed form calculations of A, H, W, Q
 
     event_window = -(abs(pre_time)):bin_size:(abs(post_time));
     tot_bins = length(event_window) - 1;
     %! Automate regions --> only using direct region for timebeing
     region = 'Right';
-    [tot_region_units, ~] = size(labeled_neurons.(region));
+    [tot_region_units, ~] = size(labeled_data.(region));
     %TODO verify if we want to randomly take trials for training
     %TODO Wu et al. takes trials in order but there is no implicit order for trials?
     [tot_trials, ~] = size(event_ts);
@@ -26,7 +26,7 @@ function [] = calc_kalman_coeff(grf_responses, event_ts, event_struct, labeled_n
     for trial_i = 1:training_set
         trial_num = training_set(trial_i);
         %% Format firing rates for current trial (N X B)
-        trial_rates = event_struct.(region).relative_response(trial_num, :); % 1 X (N*B)
+        trial_rates = psth_struct.(region).relative_response(trial_num, :); % 1 X (N*B)
         %% Find trial measurements
         measurement_table = grf_responses(grf_responses.trial_number == trial_num,:);
         trial_measures = table2array(measurement_table(:, 4:end))';
@@ -61,7 +61,7 @@ function [] = calc_kalman_coeff(grf_responses, event_ts, event_struct, labeled_n
     trial_num = validation_set(1);
     measurement_table = grf_responses(grf_responses.trial_number == trial_num,:);
     trial_measures = table2array(measurement_table(:, 4:end))';
-    trial_rates = event_struct.(region).relative_response(trial_num, :); % 1 X (N*B)
+    trial_rates = psth_struct.(region).relative_response(trial_num, :); % 1 X (N*B)
     pop_rates = reshape(trial_rates, [tot_region_units, tot_bins]); % N X B
     x = zeros(3, tot_bins);
     w = diag(W);
