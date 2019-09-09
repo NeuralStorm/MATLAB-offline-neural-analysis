@@ -1,7 +1,6 @@
 function [] = batch_classify(animal_name, original_path, data_path, dir_name, ...
         search_ext, filename_substring_one, filename_substring_two, ...
         config)
-
     classifier_start = tic;
 
     [classify_path, failed_path] = create_dir(data_path, dir_name);

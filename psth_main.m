@@ -9,12 +9,9 @@ function [] = psth_main()
         animal_path = fullfile(...
             animal_list(strcmpi(animal_names{animal}, {animal_list.name})).folder, animal_name);
         config = import_config(animal_path, 'psth');
+        check_time(config.pre_time, config.pre_start, config.pre_end, config.post_time, ...
+            config.post_start, config.post_end, config.bin_size);
         export_params(animal_path, 'main', config);
-        training_session_config_array = [];
-        % For ignoring certain training sessions
-        if isfield(config,'ignore_sessions')
-            training_session_config_array = config.ignore_sessions;
-        end
         % Skips animals we want to ignore
         if config.ignore_animal
             continue;
@@ -43,59 +40,18 @@ function [] = psth_main()
             %%        Format PSTH         %%
             %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
             if config.create_psth
-                psth_start = tic;
-                % warning('Since the pre time is set to 0, there will not be a psth generated with only the pre time activity.\n');
-                [psth_path, failed_path] = create_dir(parsed_path, 'psth');
-                [parsed_files] = get_file_list(parsed_path, '.mat', config.ignore_sessions);
-
-                fprintf('Calculating PSTH for %s \n', animal_name);
-                %% Goes through all the files and creates PSTHs according to the parameters set in config
-                for file_index = 1:length(parsed_files)
-                    try
-                        %% Load file contents
-                        file = [parsed_path, '/', parsed_files(file_index).name];
-                        [~, filename, ~] = fileparts(file);
-                        load(file, 'event_ts', 'labeled_data');
-                        %% Check parsed variables to make sure they are not empty
-                        empty_vars = check_variables(file, event_ts, labeled_data);
-                        if empty_vars
-                            continue
-                        end
-
-                        %% Format PSTH
-                        [psth_struct, event_ts, event_strings] = ...
-                            format_PSTH(event_ts, labeled_data, config.bin_size, config.pre_time, ...
-                            config.post_time, config.wanted_events, config.trial_range, config.trial_lower_bound);
-
-                        %% Add analysis window
-                        [baseline_window, response_window] = create_analysis_windows(labeled_data, psth_struct, ...
-                            config.pre_time, config.pre_start, config.pre_end, config.post_time, ...
-                            config.post_start, config.post_end, config.bin_size);
-
-                        %% Saving outputs
-                        matfile = fullfile(psth_path, ['PSTH_format_', filename, '.mat']);
-                        %% Check PSTH output to make sure there are no issues with the output
-                        empty_vars = check_variables(matfile, psth_struct, event_ts, event_strings);
-                        if empty_vars
-                            continue
-                        end
-
-                        %% Save file if all variables are not empty
-                        save(matfile, 'psth_struct', 'event_ts', 'event_strings', 'labeled_data', 'baseline_window', 'response_window');
-                        export_params(psth_path, 'format_psth', parsed_path, failed_path, animal_name, config);
-                    catch ME
-                        handle_ME(ME, failed_path, filename);
-                    end
-                end
-                fprintf('Finished calculating PSTH for %s. It took %s \n', ...
-                    animal_name, num2str(toc(psth_start)));
+                psth_path = batch_format_psth(parsed_path, animal_name, config);
             else
                 psth_path = [parsed_path, '/psth'];
             end
 
             if config.update_psth_windows
-                file_type = [psth_path, '/*', '.mat'];
-                file_list = dir(file_type);
+                failed_path = [psth_path, '/failed_', 'window_slice'];
+                if exist(failed_path, 'dir') == 7
+                    delete([failed_path, '/*']);
+                    rmdir(failed_path);
+                end
+                file_list = get_file_list(psth_path, '.mat', config.ignore_sessions);
                 for file_index = 1:length(file_list)
                     try
                         %% pull info from filename and set up file path for analysis
@@ -103,14 +59,17 @@ function [] = psth_main()
                         [~, filename, ~] = fileparts(file);
 
                         %% Load needed variables from psth and does the receptive field analysis
-                        load(file, 'labeled_data', 'baseline_window', 'response_window', 'event_ts', ...
-                            'event_strings', 'psth_struct');
+                        load(file, 'labeled_data', 'psth_struct');
                         %% Check psth variables to make sure they are not empty
-                        empty_vars = check_variables(file, baseline_window, response_window, labeled_data, ...
-                            event_ts, event_strings, psth_struct);
+                        empty_vars = check_variables(file, labeled_data, psth_struct);
                         if empty_vars
                             continue
                         end
+
+                        %% Add analysis window
+                        [baseline_window, response_window] = create_analysis_windows(labeled_data, psth_struct, ...
+                            config.pre_time, config.pre_start, config.pre_end, config.post_time, ...
+                            config.post_start, config.post_end, config.bin_size);
 
                         %% Add analysis window
                         [baseline_window, response_window] = create_analysis_windows(labeled_data, psth_struct, ...
@@ -120,14 +79,12 @@ function [] = psth_main()
                         %% Saving outputs
                         matfile = fullfile(psth_path, [filename, '.mat']);
                         %% Check PSTH output to make sure there are no issues with the output
-                        empty_vars = check_variables(matfile, psth_struct, event_ts, event_strings);
+                        empty_vars = check_variables(matfile, psth_struct, labeled_data, baseline_window, response_window);
                         if empty_vars
                             continue
                         end
-
                         %% Save file if all variables are not empty
-                        save(matfile, 'psth_struct', 'event_ts', 'event_strings', 'labeled_data', 'baseline_window', 'response_window');
-                        export_params(psth_path, 'format_psth', parsed_path, failed_path, animal_name, config);
+                        save(matfile, 'baseline_window', 'response_window', '-append');
                     catch ME
                         handle_ME(ME, failed_path, filename);
                     end
@@ -159,7 +116,7 @@ function [] = psth_main()
             %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
             if config.nv_analysis
                 batch_nv(animal_name, original_path, psth_path, 'normalized_variance_analysis', ...
-                    '.mat', 'psth', 'format', config, training_session_config_array)
+                    '.mat', 'psth', 'format', config)
             end
 
             %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%

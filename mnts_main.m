@@ -10,11 +10,8 @@ function [] = mnts_main()
             animal_list(strcmpi(animal_names{animal}, {animal_list.name})).folder, animal_name);
         config = import_config(animal_path, 'mnts');
         export_params(animal_path, 'main', config);
-        training_session_config_array = [];
-        % For ignoring certain training sessions
-        if isfield(config,'ignore_sessions')
-            training_session_config_array = config.ignore_sessions;
-        end
+        check_time(config.pre_time, config.pre_start, config.pre_end, config.post_time, ...
+            config.post_start, config.post_end, config.bin_size);
         % Skips animals we want to ignore
         if config.ignore_animal
             continue;
@@ -62,20 +59,20 @@ function [] = mnts_main()
                         end
 
                         %% Format mnts
-                        [mnts_struct, event_ts, event_strings, labeled_data] = format_mnts(event_ts, ...
+                        [mnts_struct, event_ts, labeled_data] = format_mnts(event_ts, ...
                             labeled_data, config.bin_size, config.pre_time, config.post_time, config.wanted_events, ...
                             config.trial_range, config.trial_lower_bound);
 
                         %% Saving outputs
                         matfile = fullfile(mnts_path, ['mnts_format_', filename, '.mat']);
                         %% Check PSTH output to make sure there are no issues with the output
-                        empty_vars = check_variables(matfile, mnts_struct, event_ts, event_strings, labeled_data);
+                        empty_vars = check_variables(matfile, mnts_struct, event_ts, labeled_data);
                         if empty_vars
                             continue
                         end
 
                         %% Save file if all variables are not empty
-                        save(matfile, 'mnts_struct', 'event_ts', 'event_strings', 'labeled_data');
+                        save(matfile, 'mnts_struct', 'event_ts', 'labeled_data');
                         export_params(mnts_path, 'mnts_psth', parsed_path, failed_path, animal_name, config);
                     catch ME
                         handle_ME(ME, failed_path, filename);
@@ -250,7 +247,7 @@ function [] = mnts_main()
             %%         Graph PSTH         %%
             %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
             if config.make_psth_graphs
-                batch_graph(animal_name, psth_path, 'pc_graphs', '.mat', 'ica', 'psth', ...
+                batch_graph(animal_name, psth_path, 'ic_graphs', '.mat', 'ica', 'psth', ...
                     config.bin_size, config.pre_time, config.post_time, config.pre_start, ...
                     config.pre_end, config.post_start, config.post_end, config.rf_analysis, ic_rf_path, ...
                     config.make_region_subplot, config.sub_columns, config.sub_rows, config.ignore_sessions);
