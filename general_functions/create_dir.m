@@ -1,8 +1,6 @@
-function [file_list, child_path, failed_path] = create_dir(parent_path, child_name, file_extension)
-    % mkdir parentFolder folderName
-    file_type = [parent_path, '/*', file_extension];
-    file_list = dir(file_type);
-
+%varargin is for ignore_sessions variable
+function [child_path, failed_path] = create_dir(parent_path, child_name)
+    
     %% Checks and creates a rf directory if it does not exists
     child_path = [parent_path, '/', child_name];
     if ~exist(child_path, 'dir')

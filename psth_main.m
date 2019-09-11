@@ -8,8 +8,9 @@ function [] = psth_main()
         animal_name = animal_names{animal};
         animal_path = fullfile(...
             animal_list(strcmpi(animal_names{animal}, {animal_list.name})).folder, animal_name);
-        config = import_config(animal_path);
-        total_bins = (length(-abs(config.pre_time):config.bin_size:abs(config.post_time)) - 1);
+        config = import_config(animal_path, 'psth');
+        check_time(config.pre_time, config.pre_start, config.pre_end, config.post_time, ...
+            config.post_start, config.post_end, config.bin_size);
         export_params(animal_path, 'main', config);
         % Skips animals we want to ignore
         if config.ignore_animal
@@ -23,7 +24,7 @@ function [] = psth_main()
                 %! Might remove the file handling in the future
                 parsed_path = parser(animal_path, animal_name, config.total_trials, ...
                     config.total_events, config.trial_lower_bound, ...
-                    config.is_non_strobed_and_strobed, config.event_map);
+                    config.is_non_strobed_and_strobed, config.event_map, config.ignore_sessions);
             else
                 parsed_path = [animal_path, '/parsed'];
             end
@@ -32,57 +33,59 @@ function [] = psth_main()
             %%       Label Channels       %%
             %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
             if config.label_channels
-                %% Label channels
-                %! Might remove the file handling in the future
-                label_neurons(animal_path, animal_name, parsed_path);
+                batch_label(animal_path, animal_name, parsed_path);
             end
 
             %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
             %%        Format PSTH         %%
             %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
             if config.create_psth
-                psth_start = tic;
-                % warning('Since the pre time is set to 0, there will not be a psth generated with only the pre time activity.\n');
-                [parsed_files, psth_path, failed_path] = create_dir(parsed_path, 'psth', '.mat');
+                psth_path = batch_format_psth(parsed_path, animal_name, config);
+            else
+                psth_path = [parsed_path, '/psth'];
+            end
 
-                fprintf('Calculating PSTH for %s \n', animal_name);
-                %% Goes through all the files and creates PSTHs according to the parameters set in config
-                for file_index = 1:length(parsed_files)
+            if config.update_psth_windows
+                failed_path = [psth_path, '/failed_', 'window_slice'];
+                if exist(failed_path, 'dir') == 7
+                    delete([failed_path, '/*']);
+                    rmdir(failed_path);
+                end
+                file_list = get_file_list(psth_path, '.mat', config.ignore_sessions);
+                for file_index = 1:length(file_list)
                     try
-                        %% Load file contents
-                        file = [parsed_path, '/', parsed_files(file_index).name];
+                        %% pull info from filename and set up file path for analysis
+                        file = fullfile(psth_path, file_list(file_index).name);
                         [~, filename, ~] = fileparts(file);
-                        load(file, 'event_ts', 'labeled_neurons');
-                        %% Check parsed variables to make sure they are not empty
-                        empty_vars = check_variables(file, event_ts, labeled_neurons);
+
+                        %% Load needed variables from psth and does the receptive field analysis
+                        load(file, 'labeled_data', 'psth_struct');
+                        %% Check psth variables to make sure they are not empty
+                        empty_vars = check_variables(file, labeled_data, psth_struct);
                         if empty_vars
                             continue
                         end
 
-                        %% Format PSTH
-                        [event_struct, event_ts, event_strings] = ...
-                            format_PSTH(event_ts, labeled_neurons, config.bin_size, config.pre_time, ...
-                            config.post_time, config.wanted_events, config.trial_range, config.trial_lower_bound);
+                        %% Add analysis window
+                        [baseline_window, response_window] = create_analysis_windows(labeled_data, psth_struct, ...
+                            config.pre_time, config.pre_start, config.pre_end, config.post_time, ...
+                            config.post_start, config.post_end, config.bin_size);
 
                         %% Saving outputs
-                        matfile = fullfile(psth_path, ['PSTH_format_', filename, '.mat']);
+                        matfile = fullfile(psth_path, [filename, '.mat']);
                         %% Check PSTH output to make sure there are no issues with the output
-                        empty_vars = check_variables(matfile, event_struct, event_ts, event_strings);
+                        empty_vars = check_variables(matfile, psth_struct, labeled_data);
                         if empty_vars
                             continue
                         end
 
                         %% Save file if all variables are not empty
-                        save(matfile, 'event_struct', 'event_ts', 'event_strings', 'labeled_neurons');
+                        save(matfile, 'baseline_window', 'response_window', '-append');
                         export_params(psth_path, 'format_psth', parsed_path, failed_path, animal_name, config);
                     catch ME
                         handle_ME(ME, failed_path, filename);
                     end
                 end
-                fprintf('Finished calculating PSTH for %s. It took %s \n', ...
-                    animal_name, num2str(toc(psth_start)));
-            else
-                psth_path = [parsed_path, '/psth'];
             end
 
             %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -100,8 +103,9 @@ function [] = psth_main()
             %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
             if config.make_psth_graphs
                 batch_graph(animal_name, psth_path, 'psth_graphs', '.mat', 'PSTH', 'format', ...
-                    config.bin_size, config.pre_time, config.post_time, config.rf_analysis, rf_path, ...
-                    config.make_region_subplot, config.sub_columns, config.sub_rows);
+                    config.bin_size, config.pre_time, config.post_time, config.pre_start, ...
+                    config.pre_end, config.post_start, config.post_end, config.rf_analysis, rf_path, ...
+                    config.make_region_subplot, config.sub_columns, config.sub_rows, config.ignore_sessions);
             end
 
             %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -116,9 +120,8 @@ function [] = psth_main()
             %%     PSTH Classification    %%
             %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
             if config.psth_classify
-                batch_classify(animal_name, original_path, psth_path, 'classifier', '.mat', 'PSTH', 'format', ...
-                    config.boot_iterations, config.bootstrap_classifier, config.bin_size, ...
-                    config.pre_time, config.post_time);
+                batch_classify(animal_name, original_path, psth_path, 'classifier', '.mat', ...
+                    'PSTH', 'format', config);
             end
 
             %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -126,7 +129,7 @@ function [] = psth_main()
             %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
             if config.info_analysis
                 batch_info(animal_name, psth_path, 'mutual_info', ...
-                    '.mat', 'psth', 'format');
+                    '.mat', 'psth', 'format', config.ignore_sessions);
             end
         end
     end

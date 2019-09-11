@@ -1,5 +1,5 @@
-function [mnts_struct, event_ts, event_strings, labeled_neurons] = format_mnts(event_ts, ...
-    labeled_neurons, bin_size, pre_time, post_time, wanted_events, ...
+function [mnts_struct, event_ts, labeled_data] = format_mnts(event_ts, ...
+    labeled_data, bin_size, pre_time, post_time, wanted_events, ...
     trial_range, trial_lower_bound)
 
     mnts_struct = struct;
@@ -7,7 +7,7 @@ function [mnts_struct, event_ts, event_strings, labeled_neurons] = format_mnts(e
     tot_bins = length(event_window) - 1;
 
     %% Organize and group timestamps
-    [event_strings, all_events, event_ts] = organize_events(event_ts, ...
+    [~, all_events, event_ts] = organize_events(event_ts, ...
         trial_lower_bound, trial_range, wanted_events);
     mnts_struct.all_events = all_events;
 
@@ -15,10 +15,10 @@ function [mnts_struct, event_ts, event_strings, labeled_neurons] = format_mnts(e
     event_ts = sortrows(event_ts);
     tot_trials = length(event_ts(:, 1));
 
-    unique_regions = fieldnames(labeled_neurons);
+    unique_regions = fieldnames(labeled_data);
     for region_index = 1:length(unique_regions)
         region = unique_regions{region_index};
-        region_neurons = [labeled_neurons.(region)(:,1), labeled_neurons.(region)(:,4)];
+        region_neurons = [labeled_data.(region).sig_channels, labeled_data.(region).channel_data];
         [tot_region_neurons, ~] = size(region_neurons);
         mnts = nan((tot_bins * tot_trials), tot_region_neurons);
         for neuron_index = 1:tot_region_neurons
@@ -46,7 +46,7 @@ function [mnts_struct, event_ts, event_strings, labeled_neurons] = format_mnts(e
                 remove_units = [remove_units; col];
             end
         end
-        labeled_neurons.(region)(remove_units, :) = [];
+        labeled_data.(region)(remove_units, :) = [];
         mnts(:, remove_units) = [];
 
         z_mnts = zscore(mnts);

@@ -1,6 +1,6 @@
 function sepdata = cal_sep_analysis(animal_name, sep_map, sep_window,...
             baseline_start_window, baseline_end_window, standard_deviation_coefficient, ...
-            early_start, early_end, late_start, late_end, original_file_name)
+            early_start, early_end, late_start, late_end)
         
 sep = cell2mat(sep_map(:,2));
 %create time vector for x-axis
@@ -17,8 +17,7 @@ sepdata= struct('animal_id', {}, 'channel_name', {}, 'sep_window', {}, 'early_wi
     'neg_peak2',{}, 'neg_peak_latency2',{}, 'pos_peak2', {},  'pos_peak_latency2',{}, 'sig_late', {}, ...
     'neg_peak3',{}, 'neg_peak_latency3',{}, 'pos_peak3', {}, 'pos_peak_latency3',{} , 'sig_response',{} ,...
     'response_dur',{}, 'background', {}, 'background_sd',{}, 'snr',{}, 'pos_sep_valid',{}, ...
-    'neg_sep_valid',{}, 'type',{}, 'response',{}, 'posthresh', {}, 'negthresh', {}, 'analysis_notes', {},...
-    'file_name', {});
+    'neg_sep_valid',{}, 'type',{}, 'response',{}, 'posthresh', {}, 'negthresh', {}, 'analysis_notes', {});
 
 disp(['Analyzing SEP...']);
 
@@ -113,12 +112,5 @@ for i = 1:size(sep,1)
     sepdata(i).neg_peak_latency3 = NaN;
     sepdata(i).pos_peak_latency3 = NaN;
     sepdata(i).analysis_notes = [];
-    sepdata(i).file_name = original_file_name;
-   
-    
-    
-    %    sepdata(i).animal_num = file(1:6);
     end
 end
-
-    

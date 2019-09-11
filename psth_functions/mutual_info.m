@@ -1,6 +1,6 @@
-function [prob_struct, mi_results] = mutual_info(event_struct, labeled_neurons)
+function [prob_struct, mi_results] = mutual_info(response_window, labeled_data)
 
-    all_events = event_struct.all_events;
+    all_events = response_window.all_events;
     event_strings = all_events(:,1)';
     total_trials = 0;
     for event = 1:length(event_strings)
@@ -9,10 +9,10 @@ function [prob_struct, mi_results] = mutual_info(event_struct, labeled_neurons)
 
     mi_results = struct;
     prob_struct = struct;
-    unique_regions = fieldnames(labeled_neurons);
+    unique_regions = fieldnames(labeled_data);
     for region = 1:length(unique_regions)
         current_region = unique_regions{region};
-        neuron_names = unique(labeled_neurons.(current_region)(:, 1));
+        neuron_names = unique(labeled_data.(current_region).sig_channels);
 
 
         % Pre-allocate fields
@@ -32,7 +32,7 @@ function [prob_struct, mi_results] = mutual_info(event_struct, labeled_neurons)
             %% Iterate through channel keys
             for unit = 1:length(neuron_names)
                 current_unit = neuron_names{unit};
-                event_relative_response = event_struct.(current_region).(current_event).(current_unit).relative_response;
+                event_relative_response = response_window.(current_region).(current_event).(current_unit).relative_response;
 
                 %% Count probability
                 bin_counts = sum(event_relative_response, 2);
