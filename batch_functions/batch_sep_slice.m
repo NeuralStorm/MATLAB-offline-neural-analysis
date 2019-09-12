@@ -52,11 +52,11 @@ function [sep_path] = batch_sep_slice(animal_name, parsed_path, config)
 
         %% slice
         sep_window = [-abs(config.start_window), config.end_window];
-        sep_l2h_map = make_sep_map(data_map, board_dig_in_data, ...
-            sample_rate, sep_window);
+        [sep_l2h_map, sep_struct, analysis_sep_struct] = make_sep_map(data_map, board_dig_in_data, ...
+            sample_rate, sep_window, config.trial_range);
 
         matfile = fullfile(sep_path, ['sliced_', filename, '.mat']);
-        save(matfile, '-v7.3', 'sep_l2h_map', 'sep_window');
+        save(matfile, '-v7.3', 'sep_l2h_map', 'sep_window', 'sep_struct', 'analysis_sep_struct');
 
     end
 

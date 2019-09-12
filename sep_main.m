@@ -7,6 +7,11 @@ function [] = sep_main()
         animal_name = animal_names{animal};
         animal_path = [original_path, '/', animal_name];
         config = import_config(animal_path, 'sep');
+        if isempty(config.trial_range)
+            config.trial_range = [];
+        else
+            config.trial_range = str2num(config.trial_range);
+        end
 
         export_params(animal_path, 'main', config);
         % Skips animals we want to ignore
@@ -28,7 +33,11 @@ function [] = sep_main()
             if config.is_sep_slicing
                 slice_path = batch_sep_slice(animal_name, parsed_path, config);
             else
-                slice_path = [filtered_path, '/sliced'];
+                slice_path = [parsed_path, '/sep'];
+            end
+
+            if config.update_sep_trials
+                update_sep(slice_path, config.ignore_sessions, config.trial_range);
             end
 
              %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%

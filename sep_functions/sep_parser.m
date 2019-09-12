@@ -14,6 +14,9 @@ function parsed_path = sep_parser(animal_name, animal_path, ignore_sessions)
             [board_band_map, board_adda_map, board_dig_in_data, t_amplifier, ...
                 sample_rate] = board_band_parser(file);
 
+            % newStr = strrep(str,old,new)
+            board_band_map(:, 1) = cellfun(@(x) strrep(x, '-', '_'), board_band_map(:, 1), 'UniformOutput',false);
+
             matfile = fullfile(parsed_path, [file_name, '.mat']);
             save(matfile, '-v7.3', 'board_band_map', 'board_adda_map', 'board_dig_in_data',  ...
                     't_amplifier', 'sample_rate');
