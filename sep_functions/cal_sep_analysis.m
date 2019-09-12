@@ -1,15 +1,15 @@
 function sepdata = cal_sep_analysis(animal_name, sep_map, sep_window,...
-            baseline_start_window, baseline_end_window, standard_deviation_coefficient, ...
-            early_start, early_end, late_start, late_end)
+            baseline_window_start, baseline_window_end, standard_deviation_coefficient, ...
+            early_response_start, early_response_end, late_response_start, late_response_end)
         
 sep = cell2mat(sep_map(:,2));
 %create time vector for x-axis
 time_vec = linspace((sep_window(1).*1000),(sep_window(2)*1000),length(sep));
-early_window_range = find((time_vec >= (early_start * 1000)) & (time_vec <= (early_end * 1000)));
-late_window_range = find((time_vec >= (late_start * 1000)) & (time_vec <= (late_end * 1000)));
+early_window_range = find((time_vec >= (early_response_start * 1000)) & (time_vec <= (early_response_end * 1000)));
+late_window_range = find((time_vec >= (late_response_start * 1000)) & (time_vec <= (late_response_end * 1000)));
 
-background_window = find((time_vec >= (- abs(baseline_start_window)) * 1000) ...
-    & (time_vec <= (- abs(baseline_end_window) * 1000)));
+background_window = find((time_vec >= (- abs(baseline_window_start)) * 1000) ...
+    & (time_vec <= (- abs(baseline_window_end) * 1000)));
 
 sepdata= struct('animal_id', {}, 'channel_name', {}, 'sep_window', {}, 'early_window', {},...
     'late_window', {}, 'sep_sliced_data', {}, 'peak_to_peak',{},...
@@ -83,8 +83,8 @@ for i = 1:size(sep,1)
     sepdata(i).animal_id = animal_name;
     sepdata(i).channel_name = sep_map{i, 1};
     sepdata(i).sep_window = sep_window;
-    sepdata(i).early_window = [early_start early_end];
-    sepdata(i).late_window = [late_start late_end];
+    sepdata(i).early_window = [early_response_start early_response_end];
+    sepdata(i).late_window = [late_response_start late_response_end];
     sepdata(i).sep_sliced_data = sep_map{i, 2};
     sepdata(i).posthresh = posthreshbackground;
     sepdata(i).negthresh = negthreshbackground;   

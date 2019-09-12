@@ -1,6 +1,7 @@
-function [final_sep, sep_struct, analysis_sep_struct] = make_sep(amp_sig, stim_ts, sample_rate, time_window, trial_range)
-
-final_sep = [];
+function [sep_map, sep_struct] = make_sep(amp_sig, dig_sig, sample_rate, time_window, trial_range)
+stim_ts = find_ts(dig_sig, sample_rate);
+stim_ts = stim_ts(1, :);
+sep_map = [];
 [num_channels, ~] = size(amp_sig);
 sep_struct = struct;
 
@@ -25,13 +26,11 @@ disp('Making SEP...');
         end
         sep_struct.(amp_sig{i, 1}) = temp_sep;
         if isempty(trial_range)
-            analysis_sep_struct.(amp_sig{i, 1}) = temp_sep;
             mean_sep = mean(temp_sep);
         else
-            analysis_sep_struct.(amp_sig{i, 1}) = temp_sep(trial_range, :);
             mean_sep = mean(temp_sep(trial_range, :));
         end
 
-        final_sep = [final_sep; mean_sep];
+        sep_map = [sep_map; amp_sig(i, 1), {mean_sep}];
     end
 end

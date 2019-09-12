@@ -21,8 +21,8 @@ function [] = sep_main()
             %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
             %%           Parser           %%
             %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-             if config.is_parse_files
-                 parsed_path = sep_parser(animal_name, animal_path, config.ignore_sessions);
+             if config.parse_files
+                 parsed_path = sep_parser(animal_name, animal_path, config);
             else
                 parsed_path = [animal_path, '/parsed'];
             end
@@ -30,7 +30,7 @@ function [] = sep_main()
             %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
             %%            Sep_slicing           %%
             %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-            if config.is_sep_slicing
+            if config.sep_slicing
                 slice_path = batch_sep_slice(animal_name, parsed_path, config);
             else
                 slice_path = [parsed_path, '/sep'];
@@ -44,10 +44,7 @@ function [] = sep_main()
             %%         Sep_analysis         %%
              %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
             if config.is_sep_analysis
-                sep_analysis(animal_name, slice_path, config.baseline_start_window, ...
-                    config.baseline_end_window, config.standard_deviation_coefficient, ...
-                    config.early_start, config.early_end, config.late_start, ...
-                    config.late_end, config.ignore_sessions);
+                sep_analysis(animal_name, slice_path, config);
             end
             
         end

@@ -1,8 +1,9 @@
-function parsed_path = sep_parser(animal_name, animal_path, ignore_sessions)
+function parsed_path = sep_parser(animal_name, animal_path, config)
     %% Parse files
     parse_start = tic;
     [parsed_path, failed_path] = create_dir(animal_path, 'parsed');
-    [file_list] = get_file_list(animal_path, '.rh*', ignore_sessions);
+    [file_list] = get_file_list(animal_path, '.rh*', config.ignore_sessions);
+    export_params(parsed_path, 'parser', failed_path, config);
     fprintf('Parsing for %s\n', animal_name);
     % Data mapping for rhd files
     % Runs through all of the files in the selected directory
