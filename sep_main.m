@@ -43,8 +43,8 @@ function [] = sep_main()
              %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
             %%         Sep_analysis         %%
              %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-            if config.is_sep_analysis
-                sep_analysis(animal_name, slice_path, config);
+            if config.sep_analysis
+                do_sep_analysis(animal_name, slice_path, config);
             end
             
         end

@@ -1,4 +1,4 @@
-function sep_analysis_path = sep_analysis(animal_name, slice_path, config)
+function sep_analysis_path = do_sep_analysis(animal_name, slice_path, config)
     sep_analysis_start = tic;
     fprintf('SEP analysis for %s \n', animal_name);
     analysis_vars = {'baseline_window_start', 'baseline_window_end', 'standard_deviation_coefficient', ...
