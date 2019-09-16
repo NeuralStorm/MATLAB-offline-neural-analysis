@@ -12,18 +12,26 @@ function sep_analysis_path = do_sep_analysis(animal_name, slice_path, config)
             %% Load file contents
             file = [slice_path, '/', file_list(file_index).name];
             [~, filename, ~] = fileparts(file);
-            load(file, 'sep_l2h_map', 'sep_window', 'sep_log');
+            load(file, 'sliced_signal', 'sep_window', 'sep_log');
             %extract the file name
             %% Check sliced variables to make sure they are not empty
-            empty_vars = check_variables(file, sep_l2h_map);
+            empty_vars = check_variables(file, sliced_signal);
             if empty_vars
                 continue
-            end
+            end            
+            
+            %% Average sliced data into SEP
+            sep_data = average_sliced_data(sliced_signal, config.trial_range);
+            
             %% Apply sep analysis
 
-            sep_analysis_results = cal_sep_analysis(animal_name, sep_l2h_map, sep_window,...
+            sep_analysis_results = cal_sep_analysis(animal_name, sep_data, sep_window,...
                 config.baseline_window_start, config.baseline_window_end, config.standard_deviation_coefficient, ...
                 config.early_response_start, config.early_response_end, config.late_response_start, config.late_response_end);
+            
+            %% Apply sep region analysis
+            % (These analyses are updated if changes are made in the GUI)
+            sep_analysis_results = region_sep_analysis(sep_analysis_results);
 
             %% Saving outputs
             matfile = fullfile(sep_analysis_path, ['analysis_', filename, '.mat']);

@@ -5,6 +5,9 @@ function parsed_path = sep_parser(animal_name, animal_path, config)
     [file_list] = get_file_list(animal_path, '.rh*', config.ignore_sessions);
     export_params(parsed_path, 'parser', failed_path, config);
     fprintf('Parsing for %s\n', animal_name);
+    
+    labels = sep_make_labels(animal_path, animal_name); 
+    
     % Data mapping for rhd files
     % Runs through all of the files in the selected directory
     if ~isempty(file_list)
@@ -15,9 +18,20 @@ function parsed_path = sep_parser(animal_name, animal_path, config)
             [board_band_map, board_adda_map, board_dig_in_data, t_amplifier, ...
                 sample_rate] = board_band_parser(file);
 
+            %Gets filename parameters and adds to labels
+            file_name_params = split(file_name, '_'); 
+            [exp_group{1:height(labels),1}] = deal(cell2mat(file_name_params(2)));
+            [exp_cond{1:height(labels),1}] = deal(cell2mat(file_name_params(3)));
+            [rec_session{1:height(labels),1}] = deal(cell2mat(file_name_params(4)));
+            [date{1:height(labels),1}] = deal(cell2mat(file_name_params(5)));
+            
+            labels = addvars(labels, exp_group, exp_cond, rec_session); 
+            
+            
+            
             % newStr = strrep(str,old,new)
             board_band_map(:, 1) = cellfun(@(x) strrep(x, '-', '_'), board_band_map(:, 1), 'UniformOutput',false);
-
+            board_band_map = sep_assign_labels(board_band_map, labels);
             matfile = fullfile(parsed_path, [file_name, '.mat']);
             save(matfile, '-v7.3', 'board_band_map', 'board_adda_map', 'board_dig_in_data',  ...
                     't_amplifier', 'sample_rate');

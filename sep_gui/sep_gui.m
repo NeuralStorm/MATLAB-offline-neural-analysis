@@ -524,6 +524,8 @@ function save_button_Callback(hObject, eventdata, handles)
 handles.sep_data(handles.index).analysis_notes = get(handles.notes_text, 'String');
 %save the data back to the loaded mat.flie 
 sep_analysis_results = handles.sep_data;
+%recalculates region / label based analysis
+sep_analysis_results = region_sep_analysis(sep_analysis_results);
 save(handles.file_path, 'sep_analysis_results'); 
 %refresh subplot graph
 setappdata(0, 'changed_channel_index', handles.changed_channel_index); %no use currently

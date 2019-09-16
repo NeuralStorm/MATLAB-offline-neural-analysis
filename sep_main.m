@@ -1,3 +1,6 @@
+%%ISSUES: 
+% - Need to make sure that changes work with all filters
+
 function [] = sep_main()
     original_path = uigetdir(pwd);
     start_time = tic;
