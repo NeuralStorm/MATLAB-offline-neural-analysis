@@ -13,7 +13,7 @@ function [labeled_data] = sep_assign_labels(channel_map, label_table)
         labeled_data(labels_indices_index).label = cell2mat(table2cell(label_table(labels_indices_index, 'label')));
         labeled_data(labels_indices_index).label_id = cell2mat(table2cell(label_table(labels_indices_index, 'label_id')));  
         labeled_data(labels_indices_index).exp_group = cell2mat(table2cell(label_table(labels_indices_index, 'exp_group')));  
-         labeled_data(labels_indices_index).exp_cond = cell2mat(table2cell(label_table(labels_indices_index, 'exp_cond')));
+        labeled_data(labels_indices_index).exp_cond = cell2mat(table2cell(label_table(labels_indices_index, 'exp_cond')));
         labeled_data(labels_indices_index).rec_session = cell2mat(table2cell(label_table(labels_indices_index, 'rec_session')));  
     end
 

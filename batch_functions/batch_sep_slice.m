@@ -13,17 +13,21 @@ function [sep_path] = batch_sep_slice(animal_name, parsed_path, config)
 
     
     error_list = [];
-    for file_index = 1:length(file_list)
+    parfor file_index = 1:length(file_list)
       %% Load file contents
         file = [parsed_path, '/', file_list(file_index).name];
         [~, filename, ~] = fileparts(file);
         disp(['Loading ', filename, '...']); 
         try
-            load(file, 'board_band_map', 'board_dig_in_data', 'sample_rate');        
-        empty_vars = check_variables(file, board_band_map, board_dig_in_data, sample_rate);
-        if empty_vars
-            continue
-        end
+            parsed_file = load(file);
+            board_band_map = parsed_file.board_band_map;
+            board_dig_in_data = parsed_file.board_dig_in_data;
+            sample_rate = parsed_file.sample_rate;
+            %             load(file, 'board_band_map', 'board_dig_in_data', 'sample_rate');        
+%         empty_vars = check_variables(file, board_band_map, board_dig_in_data, sample_rate);
+%         if empty_vars
+%             continue
+%         end
 
         %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
         %%           Filter           %%
@@ -35,25 +39,25 @@ function [sep_path] = batch_sep_slice(animal_name, parsed_path, config)
                 config.notch_freq, config.notch_bandwidth, config.notch_bandstop, ...
                 config.sep_filt_type, config.sep_filt_freq, config.sep_filt_order);
 
-            if config.save_filtered
-                [filter_path, failed_path] = create_dir(parsed_path, 'filtered');
-                matfile = fullfile(filter_path, ['filtered_data_', filename, '.mat']);
-                save(matfile, '-v7.3', 'data_map', 'filter_log');
-                export_params(filter_path, 'filtering', failed_path, config);
-            end
-            fprintf('Finished filtering for %s. It took %s.\nFilename: %s\n', ...
-                animal_name, num2str(toc(filtering_tic)), filename);
+%             if config.save_filtered
+%                 [filter_path, failed_path] = create_dir(parsed_path, 'filtered');
+%                 matfile = fullfile(filter_path, ['filtered_data_', filename, '.mat']);
+%                 save(matfile, '-v7.3', 'data_map', 'filter_log');
+%                 export_params(filter_path, 'filtering', failed_path, config);
+%             end
+%             fprintf('Finished filtering for %s. It took %s.\nFilename: %s\n', ...
+%                 animal_name, num2str(toc(filtering_tic)), filename);
 
-        elseif config.load_filtered
-            filter_path = [parsed_path, '/filtered'];
-            if exist(filter_path, 'dir') ~= 7
-                error('Filtered data does not exist on the exected path:\n%s\n', filter_path);
-            else
-                filtered_file = [filter_path, '/filtered_data_', file_list(file_index).name];
-                load(filtered_file, 'data_map');
-            end
-        elseif config.use_raw
-            data_map = board_band_map;
+%         elseif config.load_filtered
+%             filter_path = [parsed_path, '/filtered'];
+%             if exist(filter_path, 'dir') ~= 7
+%                 error('Filtered data does not exist on the exected path:\n%s\n', filter_path);
+%             else
+%                 filtered_file = [filter_path, '/filtered_data_', file_list(file_index).name];
+%                 load(filtered_file, 'data_map');
+%             end
+%         elseif config.use_raw
+%             data_map = board_band_map;
         else
             error('Must load data before creating SEPs');
         end
@@ -68,7 +72,7 @@ function [sep_path] = batch_sep_slice(animal_name, parsed_path, config)
 
         matfile = fullfile(sep_path, ['sliced_', filename, '.mat']);
 %         save(matfile, '-v7.3', 'sep_l2h_map', 'sep_window', 'sep_struct', 'sep_log');
-        save(matfile, '-v7.3', 'sliced_signal', 'sep_window', 'sep_log');
+        save_file(matfile, '-v7.3', sliced_signal, sep_window, sep_log);
         fprintf('Finished formatting SEP for %s. It took %s.\nFilename: %s\n', ...
             animal_name, num2str(toc(sep_tic)), filename);
         catch
