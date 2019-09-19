@@ -10,17 +10,25 @@ function [measurements] = process_raw_grf(raw_measurements, event_ts, pre_time, 
     filtered_table = raw_measurements;
     tot_cols = width(raw_measurements);
     all_response = [];
+    index_step = bin_size * sampling_rate;
     for column_i = 1:tot_cols
         filtered_data = butterworth(n_order, cutoff_freq, filter_type, table2array(raw_measurements(:, column_i)));
         filtered_table(:, column_i) = num2cell(zscore(filtered_data));
         column_response = [];
         for trial_index = 1:length(event_ts)
-            %! TODO Accomodate different bin sizes --> only works with 1ms
-            %!(average samples or grab random sample in bin?)
             trial_ts = event_ts(trial_index, 2);
             pre_start = round(trial_ts * sampling_rate) - round(abs(pre_time) * sampling_rate);
             post_end = round(trial_ts * sampling_rate) + round(abs(post_time) * sampling_rate);
-            response = filtered_data(pre_start:(post_end - 1));
+            if bin_size == .001
+                response = filtered_data(pre_start:(post_end - 1));
+            else
+                response = [];
+                for sample_i = pre_start:index_step:(post_end - 1) % post_end - 1 since otherwise it overshoots
+                    avg_values = mean(filtered_data(sample_i:(sample_i + index_step)));
+                    response = [response; avg_values];
+                end
+            end
+            % response = filtered_data(pre_start:(post_end - 1));
             column_response = [column_response; response];
         end
         all_response = [all_response, column_response];
