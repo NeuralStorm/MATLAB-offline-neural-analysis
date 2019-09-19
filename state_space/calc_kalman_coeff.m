@@ -71,13 +71,22 @@ function [] = calc_kalman_coeff(grf_responses, event_ts, psth_struct, labeled_da
     trial_rates = psth_struct.(region).relative_response(trial_num, :); % 1 X (N*B)
     pop_rates = reshape(trial_rates, [tot_region_units, tot_bins]); % N X B
     x = zeros(3, tot_bins); % rows = measurement, cols = bins
-    w = diag(W);
-    for bin = 2:tot_bins
-        x(:, bin) = (A * trial_measures(:, bin - 1)) + w;
+    x(:, 1) = trial_measures(:, 1);
+    P = W;
+    for bin_i = 2:tot_bins
+        curr_x = trial_measures(:, bin_i);
+        % z = (H * curr_x) + q;
+        z = pop_rates(:, bin_i); % firing rates for given trial
+        %% Time update (a priori)
+        x_prior = A * trial_measures(:, bin_i - 1);
+        P_priori = A * P * A' + W;
+        %% Calculate kalman gain
+        K = P_priori * H' * (H * P_priori * H' + Q)^-1;
+        %% Measurement Update (a posterior)
+        x_post = x_prior + K * (z - H * x_prior);
+        x(:, bin_i) = x_post;
+        P = (eye(3) - K * H) * P_priori;
     end
-
-    q = diag(Q);
-    z = (H * x) + q;
 
     %% Prelimary check on parameters
     forelimb = figure;

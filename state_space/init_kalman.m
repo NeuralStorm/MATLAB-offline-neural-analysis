@@ -76,6 +76,4 @@ function [A, W, H, Q] = calc_kalman(tot_measurements, tot_region_units, measurem
     W = (1/((tot_bins - 1) * tot_training_trials)) * (uu - (A * vu));
     H = sl * ll^-1;
     Q = (1/(tot_bins * tot_training_trials)) * (ss_state - (H * ls_state));
-    trial_measures = table2array(measurement_table(:, 4:end))'
-    s = reshape(trial_rates, [tot_region_units, tot_bins])
 end
