@@ -73,27 +73,9 @@ function [] = state_space_main()
             end
         end
 
-        % % %! Add variables to config
-        % is_kalman = true;
-        % if is_kalman
-        %     [file_list, closed_path, ~] = create_dir(kalman_path, 'closed_form', '.mat');
-        %     for file_index = 1:length(file_list)
-        %         file = [kalman_path, '/', file_list(file_index).name];
-        %         [~, filename, ~] = fileparts(file);
-        %         psth_filename = erase(filename, '.grf');
-        %         psth_file = fullfile(psth_path, ['psth_format_', psth_filename, '.mat']);
-        %         load(psth_file, 'event_ts', 'labeled_data', 'psth_struct');
-
-
-        %         %% Saving the file
-        %         matfile = fullfile(kalman_path, [filename, '.mat']);
-        %         empty_vars = check_variables(matfile, event_ts, grf_responses);
-        %         if empty_vars
-        %             continue
-        %         end
-        %         save(matfile, 'grf_responses', 'event_ts', 'labeled_data', 'psth_struct');
-        %     end
-        % end
+        if config.kalman_analysis
+            batch_kalman(kalman_path, psth_path, config)
+        end
 
 
 

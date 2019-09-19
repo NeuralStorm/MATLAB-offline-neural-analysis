@@ -23,8 +23,7 @@ function [] = calc_kalman_coeff(grf_responses, event_ts, psth_struct, labeled_da
     ll = zeros(3);
     ss_state = zeros(tot_region_units);
     ls_state = zeros(3, tot_region_units);
-    for trial_i = 1:training_set
-        trial_num = training_set(trial_i);
+    for trial_num = training_set
         %% Format firing rates for current trial (N X B)
         trial_rates = psth_struct.(region).relative_response(trial_num, :); % 1 X (N*B)
         %% Find trial measurements
@@ -53,6 +52,14 @@ function [] = calc_kalman_coeff(grf_responses, event_ts, psth_struct, labeled_da
         ss_state = ss_state + curr_ss;
         ls_state = ls_state + curr_ls;
     end
+    % uv = curr_uv;
+    % vv = curr_vv;
+    % uu = curr_uu;
+    % vu = curr_vu;
+    % sl = curr_sl;
+    % ll = curr_ll;
+    % ss_state = curr_ss;
+    % ls_state = curr_ls;
     A = uv * vv^-1;
     W = (1/((tot_bins - 1) * tot_training_trials)) * (uu - (A * vu));
     H = sl * ll^-1;
@@ -63,7 +70,7 @@ function [] = calc_kalman_coeff(grf_responses, event_ts, psth_struct, labeled_da
     trial_measures = table2array(measurement_table(:, 4:end))';
     trial_rates = psth_struct.(region).relative_response(trial_num, :); % 1 X (N*B)
     pop_rates = reshape(trial_rates, [tot_region_units, tot_bins]); % N X B
-    x = zeros(3, tot_bins);
+    x = zeros(3, tot_bins); % rows = measurement, cols = bins
     w = diag(W);
     for bin = 2:tot_bins
         x(:, bin) = (A * trial_measures(:, bin - 1)) + w;
@@ -78,14 +85,20 @@ function [] = calc_kalman_coeff(grf_responses, event_ts, psth_struct, labeled_da
     hold on
     plot(x(1,:));
     legend
+    title('forelimb');
     left = figure;
     plot(measurement_table.left_hindlimb);
     hold on
     plot(x(2, :));
     legend
+    title('left');
     right = figure;
     plot(measurement_table.right_hindlimb);
     hold on
     plot(x(3,:));
     legend
+    title('right');
+
+    % projected_z = reshape(z, [1, (tot_region_units * tot_bins)]);
+    % immse(projected_z, psth_struct.(region).relative_response(trial_num, :))
 end

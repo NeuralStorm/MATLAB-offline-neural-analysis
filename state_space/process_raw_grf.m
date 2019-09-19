@@ -15,6 +15,8 @@ function [measurements] = process_raw_grf(raw_measurements, event_ts, pre_time, 
         filtered_table(:, column_i) = num2cell(zscore(filtered_data));
         column_response = [];
         for trial_index = 1:length(event_ts)
+            %! TODO Accomodate different bin sizes --> only works with 1ms
+            %!(average samples or grab random sample in bin?)
             trial_ts = event_ts(trial_index, 2);
             pre_start = round(trial_ts * sampling_rate) - round(abs(pre_time) * sampling_rate);
             post_end = round(trial_ts * sampling_rate) + round(abs(post_time) * sampling_rate);
