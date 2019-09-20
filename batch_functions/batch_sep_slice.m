@@ -83,5 +83,5 @@ function [sep_path] = batch_sep_slice(animal_name, parsed_path, config)
     fprintf('Finished  SEP formation for %s. It took %s.\n', ...
         animal_name, num2str(toc(batch_sep_tic)));
     
-    save([sep_path, '/errors.mat'], 'error_list');
+%     save([sep_path, '/errors.mat'], 'error_list');
 end
