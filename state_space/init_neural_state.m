@@ -1,4 +1,4 @@
-function [region_obs] = init_neural_state(psth_struct, event_ts, trial_range)
+function [region_obs] = init_neural_obs(psth_struct, event_ts, trial_range)
 
     %% Determine total number of trials across all events
     all_events = psth_struct.all_events;
