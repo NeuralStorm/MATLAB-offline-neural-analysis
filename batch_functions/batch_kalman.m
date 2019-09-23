@@ -4,11 +4,11 @@ function [] = batch_kalman(kalman_path, psth_path, config)
     % TODO grab another prac003 day and try with coefficents found in best day
 
     for file_index = 1:length(file_list)
-        %% Load PSTH file to create state
+        %% Load PSTH file to create observations used to get kalman coeffs
         psth_file = [psth_path, '/', file_list(file_index).name];
         [~, psth_filename, ~] = fileparts(psth_file);
         load(psth_file, 'labeled_data', 'psth_struct', 'event_ts');
-        region_obs = init_neural_state(psth_struct, event_ts, config.trial_range);
+        region_obs = init_neural_obs(psth_struct, event_ts, config.trial_range);
 
         %% Load measurements file
         %! Fix path stuff
