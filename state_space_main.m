@@ -40,6 +40,7 @@ function [] = state_space_main()
         %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
         %%        Format PSTH         %%
         %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+        %TODO add option for pca/ica or psth
         if config.create_psth
             psth_path = batch_format_psth(parsed_path, animal_name, config);
         else
@@ -47,7 +48,7 @@ function [] = state_space_main()
         end
 
         if config.process_grf
-            config.cutoff_freq = 200 / (2 * config.sampling_rate);
+            config.cutoff_freq = config.cutoff_freq / (2 * config.sampling_rate);
             [kalman_path, ~] = create_dir(parsed_path, 'kalman');
             measurement_path = [animal_path, '/kalman_measurements'];
             file_list = dir([measurement_path, '/*.csv']);

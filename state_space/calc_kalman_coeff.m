@@ -1,4 +1,4 @@
-function [] = calc_kalman_coeff(grf_responses, event_ts, psth_struct, labeled_data, training_size, pre_time, post_time, bin_size)
+function [] = calc_kalman_coeff(grf_responses, observations, event_ts, labeled_data, training_size, pre_time, post_time, bin_size)
     %% Closed form calculations of A, H, W, Q
 
     event_window = -(abs(pre_time)):bin_size:(abs(post_time));
@@ -25,7 +25,7 @@ function [] = calc_kalman_coeff(grf_responses, event_ts, psth_struct, labeled_da
     ls_state = zeros(3, tot_region_units);
     for trial_num = training_set
         %% Format firing rates for current trial (N X B)
-        trial_rates = psth_struct.(region).relative_response(trial_num, :); % 1 X (N*B)
+        trial_rates = table2array(observations.(region)(observations.(region).trial_number == trial_num, 4));
         %% Find trial measurements
         measurement_table = grf_responses(grf_responses.trial_number == trial_num,:);
         trial_measures = table2array(measurement_table(:, 4:end))';
@@ -52,23 +52,20 @@ function [] = calc_kalman_coeff(grf_responses, event_ts, psth_struct, labeled_da
         ss_state = ss_state + curr_ss;
         ls_state = ls_state + curr_ls;
     end
-    % uv = curr_uv;
-    % vv = curr_vv;
-    % uu = curr_uu;
-    % vu = curr_vu;
-    % sl = curr_sl;
-    % ll = curr_ll;
-    % ss_state = curr_ss;
-    % ls_state = curr_ls;
     A = uv * vv^-1;
     W = (1/((tot_bins - 1) * tot_training_trials)) * (uu - (A * vu));
     H = sl * ll^-1;
     Q = (1/(tot_bins * tot_training_trials)) * (ss_state - (H * ls_state));
+    [test_A, test_W, test_H, test_Q] = calc_closed_coeff(grf_responses, observations.(region), training_set, tot_bins);
+    assert(isequal(A, test_A))
+    assert(isequal(W, test_W))
+    assert(isequal(H, test_H))
+    assert(isequal(Q, test_Q))
     %% Test parameters
     trial_num = validation_set(1);
     measurement_table = grf_responses(grf_responses.trial_number == trial_num,:);
     trial_measures = table2array(measurement_table(:, 4:end))';
-    trial_rates = psth_struct.(region).relative_response(trial_num, :); % 1 X (N*B)
+    trial_rates = table2array(observations.(region)(observations.(region).trial_number == trial_num, 4));
     pop_rates = reshape(trial_rates, [tot_region_units, tot_bins]); % N X B
     x = zeros(3, tot_bins); % rows = measurement, cols = bins
     x(:, 1) = trial_measures(:, 1);
