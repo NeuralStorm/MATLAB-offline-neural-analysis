@@ -86,21 +86,21 @@ function [] = calc_kalman_coeff(grf_responses, observations, event_ts, labeled_d
     predict_state(grf_responses, observations.(region), validation_set, tot_bins, A, W, H, Q);
 
     %% Prelimary check on parameters
-    forelimb = figure;
+    figure;
     plot(measurement_table.forelimb);
     hold on
     plot(x(1,:));
     legend
     title('forelimb');
     forelimb_mse = immse(x(1,:), measurement_table.forelimb');
-    left = figure;
+    figure;
     plot(measurement_table.left_hindlimb);
     hold on
     plot(x(2, :));
     legend
     title('left');
     left_mse = immse(x(2,:), measurement_table.left_hindlimb');
-    right = figure;
+    figure;
     plot(measurement_table.right_hindlimb);
     hold on
     plot(x(3,:));
@@ -109,7 +109,4 @@ function [] = calc_kalman_coeff(grf_responses, observations, event_ts, labeled_d
     right_mse = immse(x(3,:), measurement_table.right_hindlimb');
     fprintf('Trial: %d\nForelimb: %d\nLeft: %d\nRight: %d\n', ...
         validation_set(end), forelimb_mse, left_mse, right_mse);
-
-    % projected_z = reshape(z, [1, (tot_region_units * tot_bins)]);
-    % immse(projected_z, psth_struct.(region).relative_response(trial_num, :))
 end
