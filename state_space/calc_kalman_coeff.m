@@ -62,28 +62,28 @@ function [] = calc_kalman_coeff(grf_responses, observations, event_ts, labeled_d
     assert(isequal(H, test_H))
     assert(isequal(Q, test_Q))
     %% Test parameters
-    trial_num = validation_set(1);
+    trial_num = validation_set(end);
     measurement_table = grf_responses(grf_responses.trial_number == trial_num,:);
     trial_measures = table2array(measurement_table(:, 4:end))';
     trial_rates = table2array(observations.(region)(observations.(region).trial_number == trial_num, 4));
     pop_rates = reshape(trial_rates, [tot_region_units, tot_bins]); % N X B
     x = zeros(3, tot_bins); % rows = measurement, cols = bins
     x(:, 1) = trial_measures(:, 1);
-    P = W;
+    prev_P = W; % init prev P to be initial W matrix
     for bin_i = 2:tot_bins
-        curr_x = trial_measures(:, bin_i);
         % z = (H * curr_x) + q;
         z = pop_rates(:, bin_i); % firing rates for given trial
         %% Time update (a priori)
         x_prior = A * trial_measures(:, bin_i - 1);
-        P_priori = A * P * A' + W;
+        P_priori = A * prev_P * A' + W;
         %% Calculate kalman gain
         K = P_priori * H' * (H * P_priori * H' + Q)^-1;
         %% Measurement Update (a posterior)
         x_post = x_prior + K * (z - H * x_prior);
+        prev_P = (eye(3) - K * H) * P_priori;
         x(:, bin_i) = x_post;
-        P = (eye(3) - K * H) * P_priori;
     end
+    predict_state(grf_responses, observations.(region), validation_set, tot_bins, A, W, H, Q);
 
     %% Prelimary check on parameters
     forelimb = figure;
@@ -92,18 +92,23 @@ function [] = calc_kalman_coeff(grf_responses, observations, event_ts, labeled_d
     plot(x(1,:));
     legend
     title('forelimb');
+    forelimb_mse = immse(x(1,:), measurement_table.forelimb');
     left = figure;
     plot(measurement_table.left_hindlimb);
     hold on
     plot(x(2, :));
     legend
     title('left');
+    left_mse = immse(x(2,:), measurement_table.left_hindlimb');
     right = figure;
     plot(measurement_table.right_hindlimb);
     hold on
     plot(x(3,:));
     legend
     title('right');
+    right_mse = immse(x(3,:), measurement_table.right_hindlimb');
+    fprintf('Trial: %d\nForelimb: %d\nLeft: %d\nRight: %d\n', ...
+        validation_set(end), forelimb_mse, left_mse, right_mse);
 
     % projected_z = reshape(z, [1, (tot_region_units * tot_bins)]);
     % immse(projected_z, psth_struct.(region).relative_response(trial_num, :))

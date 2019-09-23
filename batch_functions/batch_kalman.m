@@ -20,13 +20,13 @@ function [] = batch_kalman(kalman_path, psth_path, config)
 
 
         %% Closed form kalman filter
-        init_kalman(event_ts, measurements, region_obs, config.pre_time, config.post_time, config.bin_size, config.training_size);
+        kalman_coeffs = init_kalman(event_ts, measurements, region_obs, config.pre_time, config.post_time, config.bin_size, config.training_size);
         calc_kalman_coeff(measurements, region_obs, event_ts, labeled_data, config.training_size, config.pre_time, config.post_time, config.bin_size)
 
 
         %% Saving the file
         matfile = fullfile(closed_path, [psth_filename, '.mat']);
-        save(matfile, 'region_obs', 'labeled_data', 'psth_struct');
+        save(matfile, 'region_obs', 'labeled_data', 'kalman_coeffs');
         % empty_vars = check_variables(matfile, event_ts, grf_responses);
         % if empty_vars
         %     continue

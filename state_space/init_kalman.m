@@ -1,4 +1,4 @@
-function [A, W, H, Q] = init_kalman(event_ts, state, obs, pre_time, post_time, bin_size, training_size)
+function [kalman_coeffs] = init_kalman(event_ts, state, obs, pre_time, post_time, bin_size, training_size)
     meta_info = {'trial_number', 'event_label', 'event_ts'};
     event_window = -(abs(pre_time)):bin_size:(abs(post_time));
     tot_bins = length(event_window) - 1;
@@ -19,6 +19,8 @@ function [A, W, H, Q] = init_kalman(event_ts, state, obs, pre_time, post_time, b
         assert(all(ismember(meta_info, region_names)));
         [A, W, H, Q] = calc_closed_coeff(state, obs.(region), training_set, tot_bins);
         %TODO calc mean square error
+        kalman_coeffs.(region).A = A; kalman_coeffs.(region).W = W;
+        kalman_coeffs.(region).H = H; kalman_coeffs.(region).Q = Q;
     end
 
 end
