@@ -1,8 +1,9 @@
 function [] = batch_kalman(kalman_path, psth_path, config)
-    [closed_path, failed_path] = create_dir(kalman_path, 'closed_form');
+    [closed_path, ~] = create_dir(kalman_path, 'closed_form');
     [file_list] = get_file_list(psth_path, '.mat', config.ignore_sessions);
+    [kalman_list] = get_file_list(kalman_path, '.mat', config.ignore_sessions);
     % TODO grab another prac003 day and try with coefficents found in best day
-
+    % TODO add error handling
     for file_index = 1:length(file_list)
         %% Load PSTH file to create observations used to get kalman coeffs
         psth_file = [psth_path, '/', file_list(file_index).name];
@@ -11,11 +12,11 @@ function [] = batch_kalman(kalman_path, psth_path, config)
         region_obs = init_neural_obs(psth_struct, event_ts, config.trial_range);
 
         %% Load measurements file
-        %! Fix path stuff
-        measurements_filename = erase(psth_filename, ['PSTH', '.', 'format', '.']);
-        measurements_filename = erase(measurements_filename, ['PSTH', '_', 'format', '_']);
-        measurements_filename = [measurements_filename, '.grf.mat'];
-        measurement_file = fullfile(kalman_path, measurements_filename);
+        measurements_filename = erase(psth_filename, ['PSTH.format.', 'psth.format.', 'PSTH_format_', 'psth_format_']);
+        [~, ~, ~, session_num, session_date, ~] = get_filename_info(measurements_filename);
+        measurement_file = {kalman_list(contains({kalman_list.name}, num2str(session_num)) & ...
+            contains({kalman_list.name}, num2str(session_date))).name};
+        measurement_file = fullfile(kalman_path, measurement_file{1});
         load(measurement_file, 'measurements');
 
 
@@ -27,10 +28,5 @@ function [] = batch_kalman(kalman_path, psth_path, config)
         %% Saving the file
         matfile = fullfile(closed_path, [psth_filename, '.mat']);
         save(matfile, 'region_obs', 'labeled_data', 'kalman_coeffs');
-        % empty_vars = check_variables(matfile, event_ts, grf_responses);
-        % if empty_vars
-        %     continue
-        % end
-        % save(matfile, 'grf_responses', 'event_ts', 'labeled_data', 'psth_struct');
     end
 end

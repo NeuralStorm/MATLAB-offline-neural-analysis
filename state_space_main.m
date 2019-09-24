@@ -35,51 +35,69 @@ function [] = state_space_main()
             if config.label_channels
                 batch_label(animal_path, animal_name, parsed_path);
             end
-        end
 
-        %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-        %%        Format PSTH         %%
-        %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-        %TODO add option for pca/ica or psth
-        if config.create_psth
-            psth_path = batch_format_psth(parsed_path, animal_name, config);
-        else
-            psth_path = [parsed_path, '/psth'];
-        end
-
-        if config.process_grf
-            config.cutoff_freq = config.cutoff_freq / (2 * config.sampling_rate);
-            [kalman_path, ~] = create_dir(parsed_path, 'kalman');
-            measurement_path = [animal_path, '/kalman_measurements'];
-            file_list = dir([measurement_path, '/*.csv']);
-            for file_index = 1:length(file_list)
-                file = [measurement_path, '/', file_list(file_index).name];
-                [~, filename, ~] = fileparts(file);
-                psth_filename = erase(filename, '.grf');
-                psth_file = fullfile(psth_path, ['psth_format_', psth_filename, '.mat']);
-                load(psth_file, 'event_ts', 'labeled_data', 'psth_struct');
-                data = readtable(file);
-                grf_table = data(:, 1:3);
-                grf_table.Properties.VariableNames = {'forelimb','left_hindlimb', 'right_hindlimb'};
-                measurements = process_raw_grf(grf_table, event_ts, config.pre_time, config.post_time, config.bin_size, ...
-                    config.sampling_rate, config.n_order, config.cutoff_freq, config.filter_type);
-
-                %% Saving the file
-                matfile = fullfile(kalman_path, [filename, '.mat']);
-                empty_vars = check_variables(matfile, event_ts, measurements);
-                if empty_vars
-                    continue
+            %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+            %%        Format PSTH         %%
+            %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+            %TODO add option for pca/ica or psth
+            if config.use_psth
+                if config.create_psth
+                    psth_path = batch_format_psth(parsed_path, animal_name, config);
+                else
+                    psth_path = [parsed_path, '/psth'];
                 end
-                save(matfile, 'measurements', 'event_ts', 'labeled_data', 'psth_struct');
+            else
+                if config.create_mnts
+                    [mnts_path] = batch_format_mnts(parsed_path, animal_name, config);
+                else
+                    mnts_path = [parsed_path, '/mnts'];
+                end
+
+                if config.use_pca
+                    component_path = batch_pca(mnts_path, animal_name, config);
+                    analysis_type = 'pc';
+                else
+                    component_path = batch_ica(mnts_path, animal_name, config);
+                    analysis_type = 'ic';
+                end
+
+                if config.convert_mnts_psth
+                    psth_path = batch_mnts_to_psth(animal_name, component_path, 'psth', ...
+                        '.mat', analysis_type, 'analysis', 'psth', config);
+                end
+            end
+
+            if config.process_grf
+                config.cutoff_freq = config.cutoff_freq / (2 * config.sampling_rate);
+                [kalman_path, ~] = create_dir(parsed_path, 'kalman');
+                measurement_path = [animal_path, '/kalman_measurements'];
+                file_list = dir([measurement_path, '/*.csv']);
+                for file_index = 1:length(file_list)
+                    file = [measurement_path, '/', file_list(file_index).name];
+                    [~, filename, ~] = fileparts(file);
+                    psth_filename = erase(filename, '.grf');
+                    psth_file = fullfile(psth_path, ['psth_format_', psth_filename, '.mat']);
+                    load(psth_file, 'event_ts', 'labeled_data', 'psth_struct');
+                    data = readtable(file);
+                    grf_table = data(:, 1:3);
+                    grf_table.Properties.VariableNames = {'forelimb','left_hindlimb', 'right_hindlimb'};
+                    measurements = process_raw_grf(grf_table, event_ts, config.pre_time, config.post_time, config.bin_size, ...
+                        config.sampling_rate, config.n_order, config.cutoff_freq, config.filter_type);
+
+                    %% Saving the file
+                    matfile = fullfile(kalman_path, [filename, '.mat']);
+                    empty_vars = check_variables(matfile, event_ts, measurements);
+                    if empty_vars
+                        continue
+                    end
+                    save(matfile, 'measurements', 'event_ts', 'labeled_data', 'psth_struct');
+                end
+            end
+    
+            if config.kalman_analysis
+                batch_kalman(kalman_path, psth_path, config)
             end
         end
-
-        if config.kalman_analysis
-            batch_kalman(kalman_path, psth_path, config)
-        end
-
-
-
     end
     toc(start_time);
 end
