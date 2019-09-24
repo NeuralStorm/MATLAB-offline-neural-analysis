@@ -24,7 +24,7 @@ function [psth_path] = batch_mnts_to_psth(animal_name, data_path, dir_name, ...
                 component_results, config.bin_size, config.pre_time, config.post_time, config.pre_start, ...
                 config.pre_end, config.post_start, config.post_end);
 
-            matfile = fullfile(psth_path, [filename_substring_three, '_' filename, '.mat']);
+            matfile = fullfile(psth_path, [filename_substring_three, '_format_' filename, '.mat']);
             save(matfile, 'labeled_data', 'psth_struct', 'baseline_window', 'response_window', 'event_ts');
         catch ME
             handle_ME(ME, failed_path, filename);
