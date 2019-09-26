@@ -71,11 +71,6 @@ function [] = psth_main()
                             config.pre_time, config.pre_start, config.pre_end, config.post_time, ...
                             config.post_start, config.post_end, config.bin_size);
 
-                        %% Add analysis window
-                        [baseline_window, response_window] = create_analysis_windows(labeled_data, psth_struct, ...
-                            config.pre_time, config.pre_start, config.pre_end, config.post_time, ...
-                            config.post_start, config.post_end, config.bin_size);
-
                         %% Saving outputs
                         matfile = fullfile(psth_path, [filename, '.mat']);
                         %% Check PSTH output to make sure there are no issues with the output

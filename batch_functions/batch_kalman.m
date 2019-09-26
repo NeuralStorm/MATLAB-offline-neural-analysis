@@ -21,6 +21,7 @@ function [] = batch_kalman(kalman_path, psth_path, config)
 
 
         %% Closed form kalman filter
+        fprintf('----Recording Session: %d----\n', session_num);
         kalman_coeffs = init_kalman(event_ts, measurements, region_obs, config.pre_time, config.post_time, config.bin_size, config.training_size);
         calc_kalman_coeff(measurements, region_obs, event_ts, labeled_data, config.training_size, config.pre_time, config.post_time, config.bin_size)
 

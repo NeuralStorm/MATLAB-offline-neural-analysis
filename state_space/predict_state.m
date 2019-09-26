@@ -2,6 +2,7 @@ function [] = predict_state(state, obs, validation_set, tot_bins, A, W, H, Q)
 
     state_names = state.Properties.VariableNames;
     meta_info = {'trial_number', 'event_label', 'event_ts'};
+    state_headers = setdiff(state_names, meta_info);
     assert(all(ismember(meta_info, state_names)));
 
     %% Get sizes for preallocation and reshaping
@@ -10,8 +11,8 @@ function [] = predict_state(state, obs, validation_set, tot_bins, A, W, H, Q)
     tot_states = length(setdiff(state_names, meta_info));
 
     %% Go through validation set
-    tot_mse = 0;
-    avg_mse = zeros([length(validation_set), 1]);
+    tot_mse = zeros([tot_states, 1]);
+    avg_mse = zeros([tot_states, length(validation_set)]);
     for trial_i = 1:length(validation_set)
         trial_num = validation_set(trial_i);
         %% Format firing rates for current trial (N X B)
@@ -32,13 +33,18 @@ function [] = predict_state(state, obs, validation_set, tot_bins, A, W, H, Q)
             K = P_priori * H' * (H * P_priori * H' + Q)^-1;
             %% Measurement Update (a posterior)
             x_post = x_prior + K * (z - H * x_prior);
-            prev_P = (eye(3) - K * H) * P_priori;
+            prev_P = (eye(tot_states) - K * H) * P_priori;
             x(:, bin_i) = x_post;
         end
-        curr_mse = immse(x, trial_state);
-        tot_mse = tot_mse + curr_mse;
-        avg_mse(trial_i, 1) = curr_mse;
+        for row_i = 1:tot_states
+            curr_mse = immse(x(row_i, :), trial_state(row_i, :));
+            tot_mse(row_i) = tot_mse(row_i) + curr_mse;
+            avg_mse(row_i, trial_i) = curr_mse;
+        end
     end
-    avg_mse = mean(avg_mse);
-    fprintf('Total mse: %d\nAvg Mse: %d\n', tot_mse, avg_mse);
+    avg_mse = mean(avg_mse, 2);
+    for row_i = 1:tot_states
+        fprintf('State: %s Total MSE: %d Avg MSE: %d\n', state_headers{row_i}, ...
+            tot_mse(row_i), avg_mse(row_i));
+    end
 end

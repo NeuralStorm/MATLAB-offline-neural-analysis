@@ -1,5 +1,6 @@
 function [] = calc_kalman_coeff(grf_responses, observations, event_ts, labeled_data, training_size, pre_time, post_time, bin_size)
     %% Closed form calculations of A, H, W, Q
+    fprintf('----CALC KALMAN COEFF----\n');
 
     event_window = -(abs(pre_time)):bin_size:(abs(post_time));
     tot_bins = length(event_window) - 1;
@@ -90,21 +91,21 @@ function [] = calc_kalman_coeff(grf_responses, observations, event_ts, labeled_d
     plot(measurement_table.forelimb);
     hold on
     plot(x(1,:));
-    legend
+    legend('Observed', 'Predicted');
     title('forelimb');
     forelimb_mse = immse(x(1,:), measurement_table.forelimb');
     figure;
     plot(measurement_table.left_hindlimb);
     hold on
     plot(x(2, :));
-    legend
+    legend('Observed', 'Predicted');
     title('left');
     left_mse = immse(x(2,:), measurement_table.left_hindlimb');
     figure;
     plot(measurement_table.right_hindlimb);
     hold on
     plot(x(3,:));
-    legend
+    legend('Observed', 'Predicted');
     title('right');
     right_mse = immse(x(3,:), measurement_table.right_hindlimb');
     fprintf('Trial: %d\nForelimb: %d\nLeft: %d\nRight: %d\n', ...
