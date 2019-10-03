@@ -11,8 +11,8 @@ function [baseline_struct, response_struct] = create_analysis_windows(labeled_da
 
     all_events = psth_struct.all_events;
 
-    pre_start_index = (abs(pre_start) / bin_size) - pre_time_bins;
-
+    pre_start_index = ((abs(pre_time) - abs(pre_start)) / bin_size);
+    
     post_start_index = (abs(post_start) / bin_size);
 
     unique_regions = setdiff(fieldnames(psth_struct), 'all_events');
