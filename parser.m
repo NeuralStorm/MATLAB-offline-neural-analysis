@@ -39,7 +39,7 @@ function [parsed_path] = parser(dir_path, animal_name, total_trials, total_event
             channel_map = [];
             for unit_i = 1:tot_units - 1 % Start at 0 for unsorted 
                 for channel_i = 1:tot_channels - 1
-                    if (tscounts(unit_i + 1, channel_i + 1) > 0)
+                    if (tscounts(unit_i + 1, channel_i + 1) > 0) && unit_i < length(subchan)
                         %% get the timestamps for this channel and unit 
                         [~, channel_timestamps] = plx_ts(file, channel_i, unit_i);
                         % channel_names is a char array
