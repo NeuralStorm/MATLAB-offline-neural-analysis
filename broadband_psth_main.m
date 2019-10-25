@@ -1,5 +1,7 @@
 %WHERE I LEFT OFF
-% Getting errors when I try to filter the parsed files
+% -low_high_file is not able to handle the file structure of the data -
+% using bandpass filtering now
+% - Left off on labeling data
 % ISSUES
 % Should change sep_parser to a more generalized name
 
@@ -33,25 +35,25 @@ function [] = broadband_psth_main()
                 parsed_path = [animal_path, '/parsed'];
             end
 
-            %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-            %%            Find Spikes           %%
             %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%             if config.find_spikes
-%                 slice_path = batch_sep_slice(animal_name, parsed_path, config);
-%             else
-%                 slice_path = [parsed_path, '/sep'];
-%             end
-% 
-%             if config.update_sep_trials
-%                 update_sep(slice_path, config.ignore_sessions, config.trial_range);
-%             end
-              
+            %%  Find Spikes & Event Time Stamps  %%
+            %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%             
               if config.find_spikes
-                  spikes_path = batch_find_spikes(animal_name, parsed_path, config); 
+                  spikes_path = batch_find_spikes(animal_name, parsed_path, config);                  
               else
                   spikes_path = [parsed_path, '/spikes'];
               end
-             %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+              
+            %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+            %%       Label Channels       %%
+            %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+            if config.label_channels
+                batch_label(animal_path, animal_name, spikes_path);
+            end  
+              
+              
+              
+              %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
             %%         Sep_analysis         %%
              %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %             if config.sep_analysis

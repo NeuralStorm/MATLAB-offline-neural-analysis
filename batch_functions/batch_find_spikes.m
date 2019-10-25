@@ -1,7 +1,7 @@
 function [spikes_path] = batch_find_spikes(animal_name, parsed_path, config)
 
     batch_spikes_tic = tic;
-    [spikes_path, failed_path] = create_dir(parsed_path, 'sep');
+    [spikes_path, failed_path] = create_dir(parsed_path, 'spikes');
     [file_list] = get_file_list(parsed_path, '.mat', config.ignore_sessions);
     export_params(spikes_path, 'spikes', failed_path, config);
 %     filter_vars = {'notch_filt', 'notch_freq', 'notch_bandwidth', 'notch_bandstop', ...
@@ -58,9 +58,38 @@ function [spikes_path] = batch_find_spikes(animal_name, parsed_path, config)
         %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
         %%          Find Spikes       %%
         %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-        spikes = find_spikes(board_band_map, config.broadband_thresh_sd, t_amplifier);
-        matfile = fullfile(psth_path, ['spikes_', filename, '.mat']);
-        save_file(matfile, '-v7.3', spikes, sample_rate, board_dig_in_data, t_amplifier);
+        spikes = find_spikes(board_band_map, config.broadband_thresh_sd, parsed_file.t_amplifier);       
+        matfile = fullfile(spikes_path, [filename, '.mat']);
+        board_dig_in_data = parsed_file.board_dig_in_data;
+        t_amplifier = parsed_file.t_amplifier;
+        
+        
+        %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+        %%         Find Event TS      %%
+        %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+        ts = find_ts(board_dig_in_data, sample_rate);
+        
+        %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+        %% Format Data for PSTH code  %%
+        %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+        
+        %%%%% Empty but necessary variables%%%%%%%
+        evcounts = 0; 
+        tscounts = 0; 
+        
+        %%%%% Assumes that there is only one event%%%%%%%%%
+        event_ts(1:length(ts), 1) = 1;
+        event_ts(1:length(ts), 2) = transpose(ts(1,:));
+        event_ts(:,2) = event_ts(:,2) / sample_rate;
+        
+        channel_map = transpose({parsed_file.board_band_map.sig_channels});
+        channel_map(:,2) = transpose({spikes.spike_table});        
+        channel_map(:,2) = cellfun(@transpose, channel_map(:,2), 'UniformOutput', false);
+        
+        %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+        %%          Save Data         %%
+        %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+        save(matfile, '-v7.3', 'channel_map', 'evcounts', 'event_ts', 'tscounts');
         catch        
         end
     end
