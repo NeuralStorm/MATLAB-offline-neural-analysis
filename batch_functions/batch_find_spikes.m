@@ -85,6 +85,7 @@ function [spikes_path] = batch_find_spikes(animal_name, parsed_path, config)
         channel_map = transpose({parsed_file.board_band_map.sig_channels});
         channel_map(:,2) = transpose({spikes.spike_table});        
         channel_map(:,2) = cellfun(@transpose, channel_map(:,2), 'UniformOutput', false);
+        channel_map(:,1) = cellfun(@cell2mat, channel_map(:,1), 'UniformOutput', false);
         
         %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
         %%          Save Data         %%
