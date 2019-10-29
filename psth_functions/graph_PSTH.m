@@ -1,6 +1,7 @@
 function [] = graph_PSTH(save_path, psth_struct, labeled_data, sig_response, ...
         non_sig_response, bin_size, pre_time, post_time, pre_start, pre_end, ...
-        post_start, post_end, rf_analysis, make_region_subplot, sub_cols, sub_rows)
+        post_start, post_end, rf_analysis, make_region_subplot, make_unit_plot,...
+        sub_cols, sub_rows, orig_filename)
 
     check_time(pre_time, pre_start, pre_end, post_time, post_start, post_end, bin_size)
 
@@ -9,7 +10,7 @@ function [] = graph_PSTH(save_path, psth_struct, labeled_data, sig_response, ...
     total_bins = length(event_window);
 
     region_names = fieldnames(labeled_data);
-    parfor region = 1:length(region_names)
+    for region = 1:length(region_names) %this should be parfor
         current_region = region_names{region};
         region_neurons = labeled_data.(current_region).sig_channels;
         total_region_neurons = length(region_neurons);
@@ -45,8 +46,10 @@ function [] = graph_PSTH(save_path, psth_struct, labeled_data, sig_response, ...
             for neuron = 1:total_region_neurons
                 psth = event_psth(((1:total_bins) + ((neuron-1) * total_bins)));
                 psth_name = region_neurons{neuron};
-                unit_figure = plot_PSTH(psth, psth_name, current_event, event_window, ...
-                    pre_start, pre_end, post_start, post_end);
+                if make_unit_plot
+                    unit_figure = plot_PSTH(psth, psth_name, current_event, event_window, ...
+                        pre_start, pre_end, post_start, post_end);
+                end
                 if rf_analysis
                     threshold = NaN;
                     first_bin_latency = NaN;
@@ -74,8 +77,10 @@ function [] = graph_PSTH(save_path, psth_struct, labeled_data, sig_response, ...
                                 strcmpi(non_sig_response.region, current_region));
                     end
                     %% Plots elements from rec field analysis
-                    plot_recfield(psth, first_bin_latency, last_bin_latency, threshold, ...
-                        unit_figure, bin_size, pre_time);
+                    if make_unit_plot
+                        plot_recfield(psth, first_bin_latency, last_bin_latency, threshold, ...
+                            unit_figure, bin_size, pre_time);
+                    end
                     if make_region_subplot
                         figure(region_figure);
                         scrollsubplot(sub_rows, sub_cols, neuron);
@@ -108,15 +113,17 @@ function [] = graph_PSTH(save_path, psth_struct, labeled_data, sig_response, ...
                     title(psth_name);
                     hold off
                 end
-                figure(unit_figure);
-                filename = [psth_name, '_', current_event, '.png'];
-                saveas(gcf, fullfile(event_path, filename));
-                filename = [psth_name, '_', current_event, '.fig'];
-                savefig(gcf, fullfile(event_path, filename));
+                if make_unit_plot
+                    figure(unit_figure);
+                    filename = [psth_name, '_', current_event, '.png'];
+                    saveas(gcf, fullfile(event_path, filename));
+                    filename = [psth_name, '_', current_event, '.fig'];
+                    savefig(gcf, fullfile(event_path, filename));
+                end
             end
             if make_region_subplot
                 figure(region_figure);
-                filename = ['region_units_', current_event, '.fig'];
+                filename = [orig_filename, '.fig'];
                 savefig(gcf, fullfile(event_path, filename));
             end
             close all

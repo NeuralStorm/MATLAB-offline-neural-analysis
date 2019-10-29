@@ -15,7 +15,8 @@ function [label_table] = sep_make_labels(animal_path, animal_name)
     end
 
     label_headers = label_table.Properties.VariableNames;
-    expected_headers = {{'sig_channels'}, {'user_channels'}, {'label'}, {'label_id'}};
+    expected_headers = {{'sig_channels'}, {'user_channels'}, {'label'}, {'label_id'}, ...
+        {'recording_session'}, {'date'}, {'recording_notes'}};
     if length(label_headers) ~= length(expected_headers)
         celldisp(expected_headers, 'Expected headers: ');
         error('Must have the above headers in labels');

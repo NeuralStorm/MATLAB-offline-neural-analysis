@@ -4,9 +4,10 @@
 % - Recording session are pulled from the filename and it
 % seems like label_neuons cannot handle a recording session of 0 - I
 % changed recroding session 0-1 to 1 in the file names but not within the
-% mat files
+% mat files - Current solution is to change file names 
+% - Make individual psth plots an option and change the way file names are
+% written for region subplots
 % - Should change sep_parser to a more generalized name
-% - PSTH plots are being overwritted with every file
 %%%%%%%%%%%%%%% PROGRESS %%%%%%%%%%%%%%%%%%%%%%%
 % 
 
@@ -49,18 +50,19 @@ function [] = broadband_psth_main()
                   spikes_path = [parsed_path, '/spikes'];
               end
               
+            %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+            %% The following code is copied from psth_main.m%%
+            %   all parsed_path(s) changed to spikes_path    %
+            %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+              
+              
             %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
             %%       Label Channels       %%
             %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
             if config.label_channels
                 batch_label(animal_path, animal_name, spikes_path);
             end  
-              
-
-            %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-            %% The following code is copied from psth_main.m%%
-            %   all parsed_path(s) changed to spikes_path    %
-            %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+                          
             
             %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
             %%        Format PSTH         %%
@@ -131,7 +133,8 @@ function [] = broadband_psth_main()
                 batch_graph(animal_name, psth_path, 'psth_graphs', '.mat', 'PSTH', 'format', ...
                     config.bin_size, config.pre_time, config.post_time, config.pre_start, ...
                     config.pre_end, config.post_start, config.post_end, config.rf_analysis, rf_path, ...
-                    config.make_region_subplot, config.sub_columns, config.sub_rows, config.ignore_sessions);
+                    config.make_region_subplot, config.make_unit_plot, config.sub_columns, ...
+                    config.sub_rows, config.ignore_sessions);
             end
         end
             
