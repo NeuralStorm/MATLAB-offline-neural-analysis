@@ -56,19 +56,20 @@ function [spikes_path] = batch_find_spikes(animal_name, parsed_path, config)
         end
         
         %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-        %%          Find Spikes       %%
-        %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-        spikes = find_spikes(board_band_map, config.broadband_thresh_sd, parsed_file.t_amplifier);       
-        matfile = fullfile(spikes_path, [filename, '.mat']);
-        board_dig_in_data = parsed_file.board_dig_in_data;
-        t_amplifier = parsed_file.t_amplifier;
-        
-        
-        %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
         %%         Find Event TS      %%
         %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-        ts = find_ts(board_dig_in_data, sample_rate);
+        ts = find_ts(parsed_file.board_dig_in_data, sample_rate);
+                
+        %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+        %%          Find Spikes       %%
+        %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+        spikes = find_spikes(data_map, config.broadband_thresh_sd, ...
+            parsed_file.t_amplifier, ts, sample_rate, config.pre_start, ...
+            config.pre_end, config.remove_stim_artifact, config.artifact_rm_multiplier);       
+        matfile = fullfile(spikes_path, [filename, '.mat']);
         
+        t_amplifier = parsed_file.t_amplifier;
+                               
         %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
         %% Format Data for PSTH code  %%
         %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%

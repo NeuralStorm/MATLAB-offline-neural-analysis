@@ -1,15 +1,11 @@
 %%%%%%%%%%%%%%% ISSUES %%%%%%%%%%%%%%%%%%%%%%%%%
 % -low_high_file is not able to handle the file structure of the data -
 % using bandpass filtering now
-% - Recording session are pulled from the filename and it
-% seems like label_neuons cannot handle a recording session of 0 - I
-% changed recroding session 0-1 to 1 in the file names but not within the
-% mat files - Current solution is to change file names 
-% - Make individual psth plots an option and change the way file names are
-% written for region subplots
+% - event_span variable in find_spikes.m is hardcoded to 1ms. Should take
+% the difference between ts(2) - ts(1)
+% - stim artifact removal in find_spikes doesn't seem to work perfectly
 % - Should change sep_parser to a more generalized name
-%%%%%%%%%%%%%%% PROGRESS %%%%%%%%%%%%%%%%%%%%%%%
-% 
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 function [] = broadband_psth_main()
     original_path = uigetdir(pwd);
