@@ -2,6 +2,10 @@ function [sliced_signals] = slice_signal(data_map, board_dig_in_data, sample_rat
 
     stim_ts = find_ts(board_dig_in_data, sample_rate);
     stim_ts = stim_ts(1, :);
+    
+    %REMOVE THIS LINE
+    stim_ts = stim_ts(1, 1:2:end);     
+    
     window_start = abs(sep_window(1)) * sample_rate; 
     window_end = abs(sep_window(2)) * sample_rate; 
 

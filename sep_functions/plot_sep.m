@@ -1,0 +1,3 @@
+[path] = uigetdir('MultiSelect', 'on');
+
+  
