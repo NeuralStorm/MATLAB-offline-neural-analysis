@@ -1,4 +1,5 @@
-function [kalman_coeffs] = init_kalman(event_ts, state, obs, pre_time, post_time, bin_size, training_size)
+function [kalman_coeffs, validation_prediction] = init_kalman(event_ts, state, obs, ...
+        pre_time, post_time, bin_size, training_size, plot_states, plot_trials)
     meta_info = {'trial_number', 'event_label', 'event_ts'};
     event_window = -(abs(pre_time)):bin_size:(abs(post_time));
     tot_bins = length(event_window) - 1;
@@ -20,7 +21,8 @@ function [kalman_coeffs] = init_kalman(event_ts, state, obs, pre_time, post_time
         [A, W, H, Q] = calc_closed_coeff(state, obs.(region), training_set, tot_bins);
         %TODO calc mean square error
         fprintf('Region: %s\n', region);
-        predict_state(state, obs.(region), validation_set, tot_bins, A, W, H, Q);
+        validation_prediction = predict_state(state, obs.(region), validation_set, tot_bins, ...
+            A, W, H, Q, plot_states, plot_trials);
         %% Store kalman coeffs
         kalman_coeffs.(region).A = A; kalman_coeffs.(region).W = W;
         kalman_coeffs.(region).H = H; kalman_coeffs.(region).Q = Q;

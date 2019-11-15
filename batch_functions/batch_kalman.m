@@ -12,7 +12,8 @@ function [] = batch_kalman(kalman_path, psth_path, config)
         region_obs = init_neural_obs(psth_struct, event_ts, config.trial_range);
 
         %% Load measurements file
-        measurements_filename = erase(psth_filename, ['PSTH.format.', 'psth.format.', 'PSTH_format_', 'psth_format_']);
+        %! TODO FIX
+        measurements_filename = erase(psth_filename, 'PSTH_format_');
         [~, ~, ~, session_num, session_date, ~] = get_filename_info(measurements_filename);
         measurement_file = {kalman_list(contains({kalman_list.name}, num2str(session_num)) & ...
             contains({kalman_list.name}, num2str(session_date))).name};
@@ -22,12 +23,13 @@ function [] = batch_kalman(kalman_path, psth_path, config)
 
         %% Closed form kalman filter
         fprintf('----Recording Session: %d----\n', session_num);
-        kalman_coeffs = init_kalman(event_ts, measurements, region_obs, config.pre_time, config.post_time, config.bin_size, config.training_size);
+        [kalman_coeffs, validation_prediction] = init_kalman(event_ts, measurements, region_obs, config.pre_time, ...
+            config.post_time, config.bin_size, config.training_size, config.plot_states, config.plot_trials);
         calc_kalman_coeff(measurements, region_obs, event_ts, labeled_data, config.training_size, config.pre_time, config.post_time, config.bin_size)
 
 
         %% Saving the file
         matfile = fullfile(closed_path, [psth_filename, '.mat']);
-        save(matfile, 'region_obs', 'labeled_data', 'kalman_coeffs');
+        save(matfile, 'region_obs', 'labeled_data', 'kalman_coeffs', 'validation_prediction');
     end
 end

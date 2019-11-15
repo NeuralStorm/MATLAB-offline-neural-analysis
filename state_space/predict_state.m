@@ -1,4 +1,5 @@
-function [] = predict_state(state, obs, validation_set, tot_bins, A, W, H, Q)
+function [validation_prediction] = predict_state(state, obs, validation_set, ...
+    tot_bins, A, W, H, Q, plot_states, plot_trials)
 
     state_names = state.Properties.VariableNames;
     meta_info = {'trial_number', 'event_label', 'event_ts'};
@@ -9,10 +10,13 @@ function [] = predict_state(state, obs, validation_set, tot_bins, A, W, H, Q)
     [~, tot_obs] = size(obs.observations);
     tot_units = tot_obs / tot_bins;
     tot_states = length(setdiff(state_names, meta_info));
+    % all_trials = unique(state.trial_number);
+    % training_set = setdiff(all_trials, validation_set);
 
     %% Go through validation set
     tot_mse = zeros([tot_states, 1]);
     avg_mse = zeros([tot_states, length(validation_set)]);
+    validation_prediction = state(ismember(state.trial_number, validation_set), :);
     for trial_i = 1:length(validation_set)
         trial_num = validation_set(trial_i);
         %% Format firing rates for current trial (N X B)
@@ -36,11 +40,15 @@ function [] = predict_state(state, obs, validation_set, tot_bins, A, W, H, Q)
             prev_P = (eye(tot_states) - K * H) * P_priori;
             x(:, bin_i) = x_post;
         end
+        validation_prediction(validation_prediction.trial_number == trial_num,4:end) = array2table(x');
         for row_i = 1:tot_states
             curr_mse = immse(x(row_i, :), trial_state(row_i, :));
             tot_mse(row_i) = tot_mse(row_i) + curr_mse;
             avg_mse(row_i, trial_i) = curr_mse;
         end
+    end
+    if plot_states
+        plot_event_states(state, plot_trials)
     end
     avg_mse = mean(avg_mse, 2);
     for row_i = 1:tot_states
