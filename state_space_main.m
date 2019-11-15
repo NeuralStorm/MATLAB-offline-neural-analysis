@@ -129,9 +129,9 @@ function [] = state_space_main()
                 batch_kalman(kalman_path, psth_path, config)
             end
 
-            % if config.gpf_analysis
-            %     batch_gpfa(psth_path, config)
-            % end
+            if config.gpf_analysis
+                batch_gpfa(psth_path, config)
+            end
         end
     end
     toc(start_time);
