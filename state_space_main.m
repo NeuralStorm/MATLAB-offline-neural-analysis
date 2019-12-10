@@ -40,18 +40,16 @@ function [] = state_space_main()
             %%     Process Sensor Data    %%
             %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
             if config.process_grf
-                %TODO change csv list to be made from parsed file list and match up based on day
                 config.cutoff_freq = config.cutoff_freq / (2 * config.sampling_rate);
                 [kalman_path, ~] = create_dir(parsed_path, 'kalman');
                 measurement_path = [animal_path, '/kalman_measurements'];
                 measure_file_list = dir([measurement_path, '/*.csv']);
-                psth_file_list = get_file_list(psth_path, '.mat', config.ignore_sessions);
-                for file_index = 1:length(psth_file_list)
-                    psth_file = [psth_path, '/', psth_file_list(file_index).name];
-                    [~, psth_filename, ~] = fileparts(psth_file);
-                    load(psth_file, 'event_ts', 'labeled_data', 'psth_struct');
-                    original_filename = erase(psth_filename, 'PSTH_format_');
-                    [~, ~, ~, session_num, ~, ~] = get_filename_info(original_filename);
+                file_list = get_file_list(parsed_path, '.mat', config.ignore_sessions);
+                for file_index = 1:length(file_list)
+                    parsed_file = [parsed_path, '/', file_list(file_index).name];
+                    [~, filename, ~] = fileparts(parsed_file);
+                    load(parsed_file, 'event_ts', 'labeled_data');
+                    [~, ~, ~, session_num, ~, ~] = get_filename_info(filename);
 
                     raw_list = {measure_file_list(contains({measure_file_list.name}, num2str(session_num)) & ...
                         contains({measure_file_list.name}, 'grf')).name};
@@ -75,18 +73,17 @@ function [] = state_space_main()
                     % biased_grf_table = readtable(fullfile(measurement_path, raw_list{1}));
                     % grf_table = grf_bias_correction(bias_table, biased_grf_table);
                     %% Processing measurements --> turn into state in kalman
-                    processs_tic = tic;
+
                     measurements = process_raw_grf(grf_table, event_ts, config.pre_time, config.post_time, config.bin_size, ...
                         config.sampling_rate, config.n_order, config.cutoff_freq, config.filter_type);
-                    toc(processs_tic)
 
                     %% Saving the file
-                    matfile = fullfile(kalman_path, [original_filename, '.mat']);
+                    matfile = fullfile(kalman_path, [filename, '.mat']);
                     empty_vars = check_variables(matfile, event_ts, measurements);
                     if empty_vars
                         continue
                     end
-                    save(matfile, 'measurements', 'event_ts', 'labeled_data', 'psth_struct', 'grf_table');
+                    save(matfile, 'measurements', 'event_ts', 'labeled_data', 'grf_table');
                 end
             else
                 kalman_path = [parsed_path, '/kalman'];
@@ -95,7 +92,6 @@ function [] = state_space_main()
             %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
             %%        Format PSTH         %%
             %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-            %TODO add option for pca/ica or psth
             if config.use_psth
                 if config.create_psth
                     psth_path = batch_format_psth(parsed_path, animal_name, config);
@@ -122,10 +118,24 @@ function [] = state_space_main()
                         '.mat', analysis_type, 'analysis', 'psth', config);
                 end
             elseif config.use_trajectories
-                %TODO format trajectory into relative response format and create path to pass into kalman
-                % if config.gpf_analysis
-                %     batch_gpfa(psth_path, config)
+                psth_path = [parsed_path, '/psth'];
+                %% Enforce psths exist
+                if ~isfolder(psth_path)
+                    warning('Need PSTHs for GPFA. Creating PSTHs...');
+                    psth_path = batch_format_psth(parsed_path, animal_name, config);
+                end
+
+                %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+                %%       Filter Trials        %%
+                %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+                % if config.filter_trials
+                %     remove_trials(psth_path, kalman_path, config)
                 % end
+
+                %TODO format trajectory into relative response format and create path to pass into kalman
+                if config.gpf_analysis
+                    batch_gpfa(psth_path, config)
+                end
             end
 
             %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
