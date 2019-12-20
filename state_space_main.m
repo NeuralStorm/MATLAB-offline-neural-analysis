@@ -143,6 +143,14 @@ function [] = state_space_main()
             end
 
             %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+            %%       Filter Trials        %%
+            %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+            if config.filter_trials && ~config.use_trajectories
+                fprintf('Filtering trials for %s', animal_name)
+                batch_state_filter_trials(psth_path, kalman_path, config);
+            end
+
+            %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
             %%         Graph PSTH         %%
             %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
             if config.make_psth_graphs

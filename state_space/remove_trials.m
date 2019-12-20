@@ -9,7 +9,7 @@ function [psth_struct, state_struct] = remove_trials(state_table, psth_struct, l
     unique_regions = setdiff(struct_names, meta_info);
 
     %TODO verify that this doesnt have to be symmetrical
-    %TODO generalize
+    %TODO generalize & do not hard code threshold scalar
     bad_rh_trials = unique(state_table.trial_number(state_table.rh_F < (mean(state_table.rh_F) - 3 * std(state_table.rh_F))));
     bad_lh_trials = unique(state_table.trial_number(state_table.lh_F < (mean(state_table.lh_F) - 3 * std(state_table.lh_F))));
     bad_fl_trials = unique(state_table.trial_number(state_table.fl_F < (mean(state_table.fl_F) - 3 * std(state_table.fl_F))));
