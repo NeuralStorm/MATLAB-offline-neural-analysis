@@ -51,10 +51,10 @@ function [] = state_space_main()
                     load(parsed_file, 'event_ts', 'labeled_data');
                     [~, ~, ~, session_num, ~, ~] = get_filename_info(filename);
 
-                    raw_list = {measure_file_list(contains({measure_file_list.name}, num2str(session_num)) & ...
-                        contains({measure_file_list.name}, 'grf')).name};
+                    grf_file = measure_file_list(contains({measure_file_list.name}, num2str(session_num)) & ...
+                        contains({measure_file_list.name}, 'grf')).name;
                     %% Nates data
-                    raw_data = readtable(fullfile(measurement_path, raw_list{1}));
+                    raw_data = readtable(fullfile(measurement_path, grf_file));
                     grf_table = raw_data(:, 1:3);
                     grf_table.Properties.VariableNames = {'fl_F','lh_F', 'rh_F'};
 
@@ -70,7 +70,7 @@ function [] = state_space_main()
                     % bias_list = {measure_file_list(contains({measure_file_list.name}, num2str(session_num)) & ...
                     %     contains({measure_file_list.name}, 'bias')).name};
                     % bias_table = readtable(fullfile(measurement_path, bias_list{1}));
-                    % biased_grf_table = readtable(fullfile(measurement_path, raw_list{1}));
+                    % biased_grf_table = readtable(fullfile(measurement_path, grf_file));
                     % grf_table = grf_bias_correction(bias_table, biased_grf_table);
                     %% Processing measurements --> turn into state in kalman
 
@@ -128,13 +128,17 @@ function [] = state_space_main()
                 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
                 %%       Filter Trials        %%
                 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-                % if config.filter_trials
-                %     remove_trials(psth_path, kalman_path, config)
-                % end
+                if config.filter_trials
+                    %PSTH Path changes here to use the trial observations desired and not alter the original PSTHs
+                    fprintf('Filtering trials for %s', animal_name)
+                    psth_path = batch_state_filter_trials(parsed_path, kalman_path, config);
+                else
+                    psth_path = [parsed_path, '/gpfa'];
+                end
 
-                %TODO format trajectory into relative response format and create path to pass into kalman
+                % change psth path to use trajectory psths
                 if config.gpf_analysis
-                    batch_gpfa(psth_path, config)
+                    psth_path = batch_gpfa(psth_path, config);
                 end
             end
 
