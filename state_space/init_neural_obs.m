@@ -1,4 +1,6 @@
-function [region_obs] = init_neural_obs(psth_struct, event_ts, trial_range)
+function [region_obs] = init_neural_obs(psth_struct, event_ts, state_struct, trial_range)
+    %TODO implement state_struct to give the table format list for events
+    %TODO first implement gpfa -> psth format and plot relationship
 
     %% Determine total number of trials across all events
     all_events = psth_struct.all_events;
