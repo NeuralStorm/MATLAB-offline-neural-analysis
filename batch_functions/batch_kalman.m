@@ -1,25 +1,23 @@
 function [] = batch_kalman(kalman_path, psth_path, config)
-    [closed_path, ~] = create_dir(kalman_path, 'closed_form');
-    [file_list] = get_file_list(psth_path, '.mat', config.ignore_sessions);
-    [kalman_list] = get_file_list(kalman_path, '.mat', config.ignore_sessions);
-    % TODO grab another prac003 day and try with coefficents found in best day
+    psth_list = get_file_list(psth_path, '.mat', config.ignore_sessions);
+    kalman_list = get_file_list(kalman_path, '.mat', config.ignore_sessions);
     % TODO add error handling
-    for file_index = 1:length(file_list)
-        %% Load PSTH file to create observations used to get kalman coeffs
-        psth_file = [psth_path, '/', file_list(file_index).name];
-        [~, psth_filename, ~] = fileparts(psth_file);
-        load(psth_file, 'labeled_data', 'psth_struct', 'event_ts');
-        region_obs = init_neural_obs(psth_struct, event_ts, config.trial_range);
-
+    for file_i = 1:length(kalman_list)
         %% Load measurements file
-        %! TODO FIX
-        measurements_filename = erase(psth_filename, 'PSTH_format_');
-        [~, ~, ~, session_num, session_date, ~] = get_filename_info(measurements_filename);
-        measurement_file = {kalman_list(contains({kalman_list.name}, num2str(session_num)) & ...
-            contains({kalman_list.name}, num2str(session_date))).name};
-        measurement_file = fullfile(kalman_path, measurement_file{1});
-        load(measurement_file, 'measurements');
-        plot_state_obs(kalman_path, num2str(session_num), measurements, psth_struct)
+        filename = kalman_list(file_i).name;
+        measurement_file = fullfile(kalman_path, filename);
+        [~, ~, ~, session_num, session_date, ~] = get_filename_info(erase(filename, '.mat'));
+        load(measurement_file, 'measurements', 'state_struct');
+
+        %% Load PSTH file to create observations used to get kalman coeffs
+        psth_file_struct = psth_list(contains({psth_list.name}, num2str(session_num)) & ...
+            contains({psth_list.name}, num2str(session_date)));
+        psth_file = fullfile(psth_file_struct.folder, psth_file_struct.name);
+        load(psth_file, 'labeled_data', 'psth_struct', 'event_ts');
+        region_obs = init_neural_obs(psth_struct, event_ts, state_struct, config.trial_range);
+
+
+        % plot_state_obs(kalman_path, num2str(session_num), measurements, psth_struct)
 
 
         %% Closed form kalman filter
