@@ -1,5 +1,5 @@
 function [] = batch_nv(animal_name, original_path, data_path, dir_name, ...
-        search_ext, filename_substring_one, filename_substring_two, config)
+        search_ext, filename_substring_one, filename_substring_two, config, ignore_sessions)
     %% Check pre time is valid for analysis
     nv_start = tic;
     
