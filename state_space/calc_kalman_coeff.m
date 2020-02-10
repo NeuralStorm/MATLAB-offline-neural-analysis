@@ -43,6 +43,8 @@ function [] = calc_kalman_coeff(grf_responses, observations, event_ts, labeled_d
         vu = vu + curr_vu;
         %% State measures
         s = reshape(trial_rates, [tot_region_units, tot_bins]); % N X B
+        random_i = randperm(numel(s));
+        s = reshape(s(random_i), size(s));
         l = trial_measures;
         curr_sl = s * l';
         curr_ll = l * l';
@@ -58,16 +60,21 @@ function [] = calc_kalman_coeff(grf_responses, observations, event_ts, labeled_d
     H = sl * ll^-1;
     Q = (1/(tot_bins * tot_training_trials)) * (ss_state - (H * ls_state));
     [test_A, test_W, test_H, test_Q] = calc_closed_coeff(grf_responses, observations.(region), training_set, tot_bins);
-    assert(isequal(A, test_A))
-    assert(isequal(W, test_W))
-    assert(isequal(H, test_H))
-    assert(isequal(Q, test_Q))
+    % assert(isequal(A, test_A))
+    % assert(isequal(W, test_W))
+    % assert(isequal(H, test_H))
+    % assert(isequal(Q, test_Q))
     %% Test parameters
     trial_num = validation_set(end);
     measurement_table = grf_responses(grf_responses.trial_number == trial_num,:);
     trial_measures = table2array(measurement_table(:, 4:end))';
+    random_i = randperm(numel(trial_measures));
+    trial_measures = reshape(trial_measures(random_i), size(trial_measures));
     trial_rates = table2array(observations.(region)(observations.(region).trial_number == trial_num, 4));
     pop_rates = reshape(trial_rates, [tot_region_units, tot_bins]); % N X B
+    random_i = randperm(numel(pop_rates));
+    rand_pop_rates = reshape(pop_rates(random_i), size(pop_rates));
+    isequal(rand_pop_rates, pop_rates)
     x = zeros(3, tot_bins); % rows = measurement, cols = bins
     x(:, 1) = trial_measures(:, 1);
     prev_P = W; % init prev P to be initial W matrix
@@ -84,28 +91,57 @@ function [] = calc_kalman_coeff(grf_responses, observations, event_ts, labeled_d
         prev_P = (eye(3) - K * H) * P_priori;
         x(:, bin_i) = x_post;
     end
-    predict_state(grf_responses, observations.(region), validation_set, tot_bins, A, W, H, Q);
+
+    rand_x = zeros(3, tot_bins); % rows = measurement, cols = bins
+    rand_x(:, 1) = trial_measures(:, 1);
+    prev_P = W; % init prev P to be initial W matrix
+    for bin_i = 2:tot_bins
+        % z = (H * curr_x) + q;
+        z = rand_pop_rates(:, bin_i); % firing rates for given trial
+        %% Time update (a priori)
+        x_prior = A * trial_measures(:, bin_i - 1);
+        P_priori = A * prev_P * A' + W;
+        %% Calculate kalman gain
+        K = P_priori * H' * (H * P_priori * H' + Q)^-1;
+        %% Measurement Update (a posterior)
+        x_post = x_prior + K * (z - H * x_prior);
+        prev_P = (eye(3) - K * H) * P_priori;
+        rand_x(:, bin_i) = x_post;
+    end
+    % predict_state(grf_responses, observations.(region), validation_set, tot_bins, A, W, H, Q);
 
     %% Prelimary check on parameters
     figure;
     plot(measurement_table.forelimb);
     hold on
+    % random_i = randperm(numel(measurement_table.forelimb));
+    % rand_obs = reshape(measurement_table.forelimb(random_i), size(measurement_table.forelimb));
+    % plot(rand_obs);
     plot(x(1,:));
-    legend('Observed', 'Predicted');
+    plot(rand_x(1,:));
+    legend('Observed', 'Predicted', 'Random');
     title('forelimb');
     forelimb_mse = immse(x(1,:), measurement_table.forelimb');
     figure;
     plot(measurement_table.left_hindlimb);
     hold on
+    % random_i = randperm(numel(measurement_table.left_hindlimb));
+    % rand_obs = reshape(measurement_table.left_hindlimb(random_i), size(measurement_table.left_hindlimb));
+    % plot(rand_obs);
     plot(x(2, :));
-    legend('Observed', 'Predicted');
+    plot(rand_x(2, :));
+    legend('Observed', 'Predicted', 'Random');
     title('left');
     left_mse = immse(x(2,:), measurement_table.left_hindlimb');
     figure;
     plot(measurement_table.right_hindlimb);
     hold on
+    % random_i = randperm(numel(measurement_table.right_hindlimb));
+    % rand_obs = reshape(measurement_table.right_hindlimb(random_i), size(measurement_table.right_hindlimb));
+    % plot(rand_obs);
     plot(x(3,:));
-    legend('Observed', 'Predicted');
+    plot(rand_x(3,:));
+    legend('Observed', 'Predicted', 'Random');
     title('right');
     right_mse = immse(x(3,:), measurement_table.right_hindlimb');
     fprintf('Trial: %d\nForelimb: %d\nLeft: %d\nRight: %d\n', ...
