@@ -11,6 +11,9 @@ function [] = export_csv(csv_path, column_names, general_table, analysis_table)
     results_table = table('Size', [0, length(column_names)], 'VariableTypes', var_types, 'VariableNames', column_names);
     if exist(csv_path, 'file')
         results_table = readtable(csv_path);
+        if strcmpi(class(results_table.recording_notes), 'double')
+            results_table.recording_notes = num2cell(results_table.recording_notes);
+        end
     end
 
     new_results_table = [general_table analysis_table];
