@@ -115,6 +115,11 @@ function [] = mnts_main()
                     '.mat', 'ic', 'analysis', 'ica_psth', config);
             end
 
+            if config.convert_mnts_psth
+                psth_path = batch_mnts_to_psth(animal_name, ica_path, 'psth', ...
+                    '.mat', 'ic', 'analysis', 'ica_psth', config);
+            end
+
             %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
             %%     Normalized Variance    %%
             %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
