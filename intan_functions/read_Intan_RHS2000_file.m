@@ -283,6 +283,9 @@ end
 
 num_data_blocks = bytes_remaining / bytes_per_block;
 
+%added this
+num_data_blocks = round(num_data_blocks);
+
 num_amplifier_samples = num_samples_per_data_block * num_data_blocks;
 num_board_adc_samples = num_samples_per_data_block * num_data_blocks;
 num_board_dac_samples = num_samples_per_data_block * num_data_blocks;

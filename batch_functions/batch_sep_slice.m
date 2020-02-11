@@ -1,6 +1,5 @@
 function [sep_path] = batch_sep_slice(animal_name, parsed_path, config)
-    
-    batch_sep_tic = tic;
+
     [sep_path, failed_path] = create_dir(parsed_path, 'sep');
     [file_list] = get_file_list(parsed_path, '.mat', config.ignore_sessions);
     export_params(sep_path, 'sep', failed_path, config);
@@ -13,12 +12,14 @@ function [sep_path] = batch_sep_slice(animal_name, parsed_path, config)
 
     
     error_list = [];
-    parfor file_index = 1:length(file_list)
+    for file_index = 1:length(file_list)
       %% Load file contents
-        file = [parsed_path, '/', file_list(file_index).name];
-        [~, filename, ~] = fileparts(file);
-        disp(['Loading ', filename, '...']); 
+        batch_sep_tic = tic;
         try
+            file = [parsed_path, '/', file_list(file_index).name];
+            [~, filename, ~] = fileparts(file);
+            disp(['Loading.......... ', filename]); 
+
             parsed_file = load(file);
             board_band_map = parsed_file.board_band_map;
             board_dig_in_data = parsed_file.board_dig_in_data;
@@ -33,7 +34,7 @@ function [sep_path] = batch_sep_slice(animal_name, parsed_path, config)
         %%           Filter           %%
         %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
         if config.filter_raw
-            disp(['Filtering ', filename, '...']);
+            disp(['Filtering........ ', filename]);
             filtering_tic = tic;            
             data_map = do_filter(board_band_map, sample_rate, config.notch_filt, ...
                 config.notch_freq, config.notch_bandwidth, config.notch_bandstop, ...
@@ -63,7 +64,7 @@ function [sep_path] = batch_sep_slice(animal_name, parsed_path, config)
         end
 
         %% slice
-        disp(['Slicing ', filename, '...']);
+        disp(['Slicing.......... ', filename]);
         sep_tic = tic;
         sep_window = [-abs(config.window_start), config.window_end];
 %         [sep_l2h_map, sep_struct] = make_sep(data_map, board_dig_in_data, ...
@@ -73,15 +74,14 @@ function [sep_path] = batch_sep_slice(animal_name, parsed_path, config)
         matfile = fullfile(sep_path, ['sliced_', filename, '.mat']);
 %         save(matfile, '-v7.3', 'sep_l2h_map', 'sep_window', 'sep_struct', 'sep_log');
         save_file(matfile, '-v7.3', sliced_signal, sep_window, sep_log);
-        fprintf('Finished formatting SEP for %s. It took %s.\nFilename: %s\n', ...
-            animal_name, num2str(toc(sep_tic)), filename);
+
         catch
             error_list = [error_list; filename];
             continue;
         end
+    fprintf('Finished......... %s. %s seconds.\n\n', ...
+        filename, num2str(toc(batch_sep_tic)));
     end
-    fprintf('Finished  SEP formation for %s. It took %s.\n', ...
-        animal_name, num2str(toc(batch_sep_tic)));
     
 %     save([sep_path, '/errors.mat'], 'error_list');
 end
