@@ -89,7 +89,9 @@ function sepdata = cal_sep_analysis(animal_name, sep_map, sep_window,...
         sepdata(i).exp_group = sep_map(i).exp_group;
         sepdata(i).exp_cond = sep_map(i).exp_cond;
         sepdata(i).rec_session = sep_map(i).rec_session;
+        
         sepdata(i).notch = sep_map(i).notch;
+        
         sepdata(i).filter = sep_map(i).filter;
         sepdata(i).sep_window = sep_window;
         sepdata(i).early_window = [early_response_start early_response_end];
