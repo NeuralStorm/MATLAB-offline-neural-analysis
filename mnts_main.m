@@ -84,7 +84,7 @@ function [] = mnts_main()
                 batch_graph(animal_name, psth_path, 'pc_graphs', '.mat', 'pca', 'psth', ...
                     config.bin_size, config.pre_time, config.post_time, config.pre_start, ...
                     config.pre_end, config.post_start, config.post_end, config.rf_analysis, pc_rf_path, ...
-                    config.make_region_subplot, config.sub_columns, config.sub_rows, config.ignore_sessions);
+                    config.make_region_subplot, config.make_unit_plot, config.sub_columns, config.sub_rows, config.ignore_sessions);
             end
 
             %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -108,6 +108,11 @@ function [] = mnts_main()
             %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
             if config.ic_analysis
                 ica_path = batch_ica(mnts_path, animal_name, config);
+            end
+
+            if config.convert_mnts_psth
+                psth_path = batch_mnts_to_psth(animal_name, ica_path, 'psth', ...
+                    '.mat', 'ic', 'analysis', 'ica_psth', config);
             end
 
             if config.convert_mnts_psth
@@ -145,7 +150,7 @@ function [] = mnts_main()
                 batch_graph(animal_name, psth_path, 'ic_graphs', '.mat', 'ica', 'psth', ...
                     config.bin_size, config.pre_time, config.post_time, config.pre_start, ...
                     config.pre_end, config.post_start, config.post_end, config.rf_analysis, ic_rf_path, ...
-                    config.make_region_subplot, config.sub_columns, config.sub_rows, config.ignore_sessions);
+                    config.make_region_subplot, config.make_unit_plot, config.sub_columns, config.sub_rows, config.ignore_sessions);
             end
 
             %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
