@@ -74,14 +74,12 @@ function [] = psth_main()
                         %% Saving outputs
                         matfile = fullfile(psth_path, [filename, '.mat']);
                         %% Check PSTH output to make sure there are no issues with the output
-                        empty_vars = check_variables(matfile, psth_struct, labeled_data);
+                        empty_vars = check_variables(matfile, psth_struct, labeled_data, baseline_window, response_window);
                         if empty_vars
                             continue
                         end
-
                         %% Save file if all variables are not empty
                         save(matfile, 'baseline_window', 'response_window', '-append');
-                        export_params(psth_path, 'format_psth', parsed_path, failed_path, animal_name, config);
                     catch ME
                         handle_ME(ME, failed_path, filename);
                     end
@@ -105,7 +103,7 @@ function [] = psth_main()
                 batch_graph(animal_name, psth_path, 'psth_graphs', '.mat', 'PSTH', 'format', ...
                     config.bin_size, config.pre_time, config.post_time, config.pre_start, ...
                     config.pre_end, config.post_start, config.post_end, config.rf_analysis, rf_path, ...
-                    config.make_region_subplot, config.sub_columns, config.sub_rows, config.ignore_sessions);
+                    config.make_region_subplot, config.make_unit_plot, config.sub_columns, config.sub_rows, config.ignore_sessions);
             end
 
             %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%

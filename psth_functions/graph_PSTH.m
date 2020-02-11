@@ -10,7 +10,7 @@ function [] = graph_PSTH(save_path, psth_struct, labeled_data, sig_response, ...
     total_bins = length(event_window);
 
     region_names = fieldnames(labeled_data);
-    for region = 1:length(region_names) %this should be parfor
+    parfor region = 1:length(region_names)
         current_region = region_names{region};
         region_neurons = labeled_data.(current_region).sig_channels;
         total_region_neurons = length(region_neurons);

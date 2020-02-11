@@ -35,4 +35,6 @@ function [confusion_matrix, mutual_info, predicted_events, true_events, correct_
     mutual_info = I_confmatr(confusion_matrix);
     correct_trials = cellfun(@strcmp, true_events, predicted_events);
     performance = mean(correct_trials);
+    correct_trials = table(true_events, predicted_events, correct_trials, ...
+        'VariableNames', {'true', 'predicted', 'correct'});
 end
