@@ -6,7 +6,7 @@ function [file_list] = get_file_list(parent_path, file_extension, ignore_session
     for i = 1:length(ignore_sessions)
         delete_j_index = 0;
         for j = 1:length(file_list)
-            file_split = split(file_list(j).name,".");
+            file_split = split(file_list(j).name, {'.', '_'});
             if str2num(file_split{4,1}) == ignore_sessions(i)
                 delete_j_index = j;
                 break;
