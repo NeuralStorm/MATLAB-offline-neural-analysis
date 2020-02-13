@@ -35,7 +35,7 @@ function [event_strings, all_events, event_ts] = organize_events(event_ts, ...
     all_events = {};
     for event = 1: length(event_strings)
         %% Slices out the desired trials from the events matrix (Inclusive range)
-        all_events = [all_events; event_strings{event}, {event_ts(event_ts == wanted_events(event), 2)}];
+        all_events = [all_events; event_strings{event}, {event_ts(event_ts(:, 1) == wanted_events(event), 2)}];
         if isempty(all_events{event, 2})
             %% Remove empty events
             all_events(event, :) = [];
