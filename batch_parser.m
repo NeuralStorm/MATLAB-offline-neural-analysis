@@ -30,8 +30,15 @@ function [] = batch_parser(animal_path, dir_name, config)
                     else
                         error('Continous parser for plexon needs to be implemented');
                     end
-                case '.mat'
-                    parsing_func = 'jamies_parser'
+                case '.rhs'
+                    parsing_func = 'rh_parser';
+                    config.rh = 'rhs';
+                case '.rhd'
+                    parsing_func = 'rh_parser';
+                    config.rh = 'rhd';
+                otherwise
+                    error('Parser not implemented for %s. Please create your own parser.', ...
+                        curr_ext);
             end
             parsing = str2func(parsing_func);
             %% Find files with unique extension
@@ -40,7 +47,6 @@ function [] = batch_parser(animal_path, dir_name, config)
                 curr_filename = filenames{file_i};
                 raw_file = fullfile(animal_path, curr_filename);
                 parsing(parsed_path, failed_path, raw_file, config);
-                % plx_spike_parser(parsed_path, failed_path, raw_file, config)
             end
         end
     end
