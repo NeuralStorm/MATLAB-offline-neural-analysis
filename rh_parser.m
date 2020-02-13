@@ -31,11 +31,12 @@ function [] = rh_parser(parsed_path, failed_path, raw_file, config)
             ];
         end
         %% Saves parsed files
-        [~, curr_filename, ~] = fileparts(raw_file);
-        matfile = fullfile(parsed_path, [curr_filename, '.mat']);
+        [~, filename, ~] = fileparts(raw_file);
+        filename_meta = get_filename_info(filename);
+        matfile = fullfile(parsed_path, [filename, '.mat']);
         save(matfile, '-v7.3','board_band_map', 'board_adda_map', ...
-            'board_dig_in_data', 't_amplifier', 'sample_rate');
+            'board_dig_in_data', 't_amplifier', 'sample_rate', 'filename_meta');
     catch ME
-        handle_ME(ME, failed_path, curr_filename);
+        handle_ME(ME, failed_path, filename);
     end
 end
