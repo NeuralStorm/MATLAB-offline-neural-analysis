@@ -1,4 +1,4 @@
-function [] = rh_parser(parsed_path, failed_path, raw_file, config)
+function [] = rh_parser(parsed_path, failed_path, raw_file, config, label_table)
     try
         %% reads and maps data
         if strcmpi(config.rh, 'rhs')
@@ -10,32 +10,38 @@ function [] = rh_parser(parsed_path, failed_path, raw_file, config)
         else
             error('Expected rhs or rhd files, but given %s', config.rh);
         end
-        board_band_map = [];
-        board_adda_map = [];
-        % amplifier data mapping
         [~, tot_amp_channels] = size(amplifier_channels);
+        wideband_map = cell(tot_amp_channels, 2);
+        [~, tot_adda_channels] = size(board_adda_channels);
+        analog_input_map = cell(tot_adda_channels, 2);
+        % amplifier data mapping
         for channel = 1:tot_amp_channels
-            board_band_map = [ ...
-                board_band_map; ...
+            wideband_map(channel, :) = [ ...
                 {amplifier_channels(channel).native_channel_name}, ...
                 {amplifier_data(channel, :)} ...
             ];
         end
+        wideband_map(:, 1) = cellfun(@(x) strrep(x, '-', '_'), wideband_map(:, 1), 'UniformOutput',false);
         % ad/da data mapping
-        [~, tot_adda_channels] = size(board_adda_channels);
         for channel = 1:tot_adda_channels
-            board_adda_map = [ ...
-                board_adda_map; ...
+            analog_input_map = [ ...
                 {board_adda_channels(channel).native_channel_name}, ...
                 {board_adda_data(channel, :)} ...
             ];
         end
-        %% Saves parsed files
+
+        %% label channel map
         [~, filename, ~] = fileparts(raw_file);
         filename_meta = get_filename_info(filename);
+        labeled_data = label_neurons(wideband_map, label_table, ...
+            filename_meta.session_num);
+
+
+        %% Saves parsed files
         matfile = fullfile(parsed_path, [filename, '.mat']);
-        save(matfile, '-v7.3','board_band_map', 'board_adda_map', ...
-            'board_dig_in_data', 't_amplifier', 'sample_rate', 'filename_meta');
+        save(matfile, '-v7.3', 'analog_input_map', ...
+            'board_dig_in_data', 't_amplifier', 'sample_rate', ...
+            'filename_meta', 'labeled_data');
     catch ME
         handle_ME(ME, failed_path, filename);
     end

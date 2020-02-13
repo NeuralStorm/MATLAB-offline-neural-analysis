@@ -1,4 +1,4 @@
-function [] = plx_spike_parser(parsed_path, failed_path, raw_file, config)
+function [] = plx_spike_parser(parsed_path, failed_path, raw_file, config, label_table)
     total_trials = config.total_trials; total_events = config.total_events;
     trial_lower_bound = config.trial_lower_bound; event_map = config.event_map;
     is_non_strobed_and_strobed = config.is_non_strobed_and_strobed;
@@ -88,11 +88,15 @@ function [] = plx_spike_parser(parsed_path, failed_path, raw_file, config)
         event_ts = sortrows(event_ts, 2);
         channel_map = sortrows(channel_map, 1);
 
-        %% Saves parsed files
+        %% label channel map
         [~, filename, ~] = fileparts(raw_file);
         filename_meta = get_filename_info(filename);
+        labeled_data = label_neurons(channel_map, label_table, ...
+            filename_meta.session_num);
+
+        %% Saves parsed files
         matfile = fullfile(parsed_path, [filename, '.mat']);
-        save(matfile, 'event_ts', 'channel_map', 'filename_meta');
+        save(matfile, 'event_ts', 'channel_map', 'filename_meta', 'labeled_data');
     catch ME
         handle_ME(ME, failed_path, filename);
     end

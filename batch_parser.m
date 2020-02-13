@@ -1,9 +1,13 @@
 function [] = batch_parser(animal_path, dir_name, config)
     fprintf('Parsing %s \n', dir_name);
+
+    %% load label table
+    label_table = load_labels(animal_path, 'labels.csv', config.ignore_sessions);
+
     [parsed_path, failed_path] = create_dir(animal_path, 'parsed');
 
     %% Create list of files to parse excluding directories, configs, labels, and logs
-    [file_list] = get_file_list(animal_path, '.*', config.ignore_sessions);
+    file_list = get_file_list(animal_path, '.*', config.ignore_sessions);
     file_list = file_list([file_list.isdir] == 0 ...
         & ~contains({file_list.name}, {'config.csv', 'labels.csv', 'log.csv'}));
 
@@ -46,7 +50,7 @@ function [] = batch_parser(animal_path, dir_name, config)
                 %% Call appropriate parser
                 curr_filename = filenames{file_i};
                 raw_file = fullfile(animal_path, curr_filename);
-                parsing(parsed_path, failed_path, raw_file, config);
+                parsing(parsed_path, failed_path, raw_file, config, label_table);
             end
         end
     end
