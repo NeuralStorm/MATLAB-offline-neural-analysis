@@ -13,7 +13,7 @@ function [psth_path] = batch_mnts_to_psth(animal_name, data_path, dir_name, ...
             filename = erase(filename, [filename_substring_one, '_', filename_substring_two, '_']);
 
             %% Load needed variables from psth and does the receptive field analysis
-            load(file, 'labeled_data', 'component_results', 'event_ts');
+            load(file, 'labeled_data', 'component_results', 'event_ts', 'filename_meta');
             %% Check psth variables to make sure they are not empty
             empty_vars = check_variables(file, labeled_data, component_results, event_ts);
             if empty_vars
@@ -25,7 +25,7 @@ function [psth_path] = batch_mnts_to_psth(animal_name, data_path, dir_name, ...
                 config.pre_end, config.post_start, config.post_end);
 
             matfile = fullfile(psth_path, [filename_substring_three, '_format_' filename, '.mat']);
-            save(matfile, 'labeled_data', 'psth_struct', 'baseline_window', 'response_window', 'event_ts');
+            save(matfile, 'labeled_data', 'psth_struct', 'baseline_window', 'response_window', 'event_ts', 'filename_meta');
         catch ME
             handle_ME(ME, failed_path, filename);
         end

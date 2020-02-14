@@ -1,5 +1,6 @@
 function [meta_struct] = get_filename_info(filename)
     meta_struct = struct;
+    meta_struct.filename = filename;
     if contains(filename, '.')
         % Handles file with old format
         split_name = strsplit(filename, '.');

@@ -16,31 +16,17 @@ function [] = psth_main()
         if config.ignore_animal
             continue;
         else
-            %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-            %%           Parser           %%
-            %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-            if config.parse_files
-                %% Parse files
-                %! Might remove the file handling in the future
-                parsed_path = parser(animal_path, animal_name, config.total_trials, ...
-                    config.total_events, config.trial_lower_bound, ...
-                    config.is_non_strobed_and_strobed, config.event_map, config.ignore_sessions);
-            else
-                parsed_path = [animal_path, '/parsed'];
-            end
-
-            %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-            %%       Label Channels       %%
-            %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-            if config.label_channels
-                batch_label(animal_path, animal_name, parsed_path);
+            %% Checks to see if parsed directory exists
+            parsed_path = [animal_path, '/', 'parsed'];
+            if ~exist(parsed_path, 'dir')
+                error('Parsed directory does not exist. Please run the Parser main to parse files');
             end
 
             %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
             %%        Format PSTH         %%
             %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
             if config.create_psth
-                psth_path = batch_format_psth(parsed_path, animal_name, config);
+                psth_path = batch_format_psth(animal_path, parsed_path, animal_name, config);
             else
                 psth_path = [parsed_path, '/psth'];
             end
@@ -90,8 +76,8 @@ function [] = psth_main()
             %%  Receptive Field Analysis  %%
             %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
             if config.rf_analysis
-                rf_path = batch_recfield(animal_name, original_path, psth_path, 'receptive_field_analysis', ...
-                    '.mat', 'PSTH', 'format', config);
+                rf_path = batch_recfield(animal_name, original_path, psth_path, ...
+                    'receptive_field_analysis', '.mat', 'PSTH', config);
             else
                 rf_path = [psth_path, '/receptive_field_analysis'];
             end
@@ -100,26 +86,23 @@ function [] = psth_main()
             %%         Graph PSTH         %%
             %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
             if config.make_psth_graphs
-                batch_graph(animal_name, psth_path, 'psth_graphs', '.mat', 'PSTH', 'format', ...
-                    config.bin_size, config.pre_time, config.post_time, config.pre_start, ...
-                    config.pre_end, config.post_start, config.post_end, config.rf_analysis, rf_path, ...
-                    config.make_region_subplot, config.make_unit_plot, config.sub_columns, config.sub_rows, config.ignore_sessions);
+                batch_graph(animal_name, psth_path, 'psth_graphs', '.mat', config, rf_path);
             end
 
             %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
             %%     Normalized Variance    %%
             %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
             if config.nv_analysis
-                batch_nv(animal_name, original_path, psth_path, 'normalized_variance_analysis', ...
-                    '.mat', 'psth', 'format', config)
+                batch_nv(animal_name, original_path, psth_path, ...
+                    'normalized_variance_analysis', '.mat', 'psth', config)
             end
 
             %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
             %%     PSTH Classification    %%
             %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
             if config.psth_classify
-                batch_classify(animal_name, original_path, psth_path, 'classifier', '.mat', ...
-                    'PSTH', 'format', config);
+                batch_classify(animal_name, original_path, psth_path, ...
+                    'classifier', '.mat', 'PSTH', config);
             end
 
             %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -127,7 +110,7 @@ function [] = psth_main()
             %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
             if config.info_analysis
                 batch_info(animal_name, psth_path, 'mutual_info', ...
-                    '.mat', 'psth', 'format', config.ignore_sessions);
+                    '.mat', config.ignore_sessions);
             end
         end
     end

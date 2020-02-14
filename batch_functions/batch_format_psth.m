@@ -1,4 +1,4 @@
-function [psth_path] = batch_format_psth(parent_path, dir_name, config)
+function [psth_path] = batch_format_psth(animal_path, parent_path, dir_name, config)
     psth_start = tic;
     [psth_path, failed_path] = create_dir(parent_path, 'psth');
     [file_list] = get_file_list(parent_path, '.mat', config.ignore_sessions);
@@ -13,6 +13,9 @@ function [psth_path] = batch_format_psth(parent_path, dir_name, config)
         pre_end, post_time, post_start, post_end, bin_size, ignore_sessions, trial_range, ...
         wanted_events, trial_lower_bound);
 
+    %% load label table
+    channel_table = load_labels(animal_path, 'selected_neurons.csv', config.ignore_sessions);
+
     fprintf('Calculating PSTH for %s \n', dir_name);
     %% Goes through all the files and creates PSTHs according to the parameters set in config
     for file_index = 1:length(file_list)
@@ -20,7 +23,10 @@ function [psth_path] = batch_format_psth(parent_path, dir_name, config)
             %% Load file contents
             file = [parent_path, '/', file_list(file_index).name];
             [~, filename, ~] = fileparts(file);
-            load(file, 'event_ts', 'labeled_data');
+            load(file, 'event_ts', 'labeled_data', 'filename_meta');
+            %% Select channels
+            labeled_data = select_channels(labeled_data, ...
+                channel_table, filename_meta.session_num);
             %% Check parsed variables to make sure they are not empty
             empty_vars = check_variables(file, event_ts, labeled_data);
             if empty_vars
@@ -45,8 +51,8 @@ function [psth_path] = batch_format_psth(parent_path, dir_name, config)
             end
 
             %% Save file if all variables are not empty
-            save(matfile, 'psth_struct', 'event_ts', 'labeled_data', 'baseline_window', ...
-                'response_window');
+            save(matfile, 'psth_struct', 'event_ts', 'labeled_data', ...
+                'baseline_window', 'response_window', 'filename_meta');
         catch ME
             handle_ME(ME, failed_path, filename);
         end

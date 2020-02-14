@@ -1,7 +1,11 @@
-function [mnts_path] = batch_format_mnts(parsed_path, animal_name, config)
+function [mnts_path] = batch_format_mnts(animal_path, parsed_path, animal_name, config)
     mnts_start = tic;
     [mnts_path, failed_path] = create_dir(parsed_path, 'mnts');
-    [parsed_files] = get_file_list(parsed_path, '.mat', config.ignore_sessions);
+    parsed_files = get_file_list(parsed_path, '.mat', config.ignore_sessions);
+
+    %% load label table
+    channel_table = load_labels(animal_path, 'selected_neurons.csv', config.ignore_sessions);
+
 
     fprintf('Calculating mnts for %s \n', animal_name);
     %% Goes through all the files and creates mnts according to the parameters set in config
@@ -10,7 +14,10 @@ function [mnts_path] = batch_format_mnts(parsed_path, animal_name, config)
             %% Load file contents
             file = [parsed_path, '/', parsed_files(file_index).name];
             [~, filename, ~] = fileparts(file);
-            load(file, 'event_ts', 'labeled_data');
+            load(file, 'event_ts', 'labeled_data', 'filename_meta');
+            %% Select channels
+            labeled_data = select_channels(labeled_data, ...
+                channel_table, filename_meta.session_num);
             %% Check parsed variables to make sure they are not empty
             empty_vars = check_variables(file, event_ts, labeled_data);
             if empty_vars
@@ -31,7 +38,7 @@ function [mnts_path] = batch_format_mnts(parsed_path, animal_name, config)
             end
 
             %% Save file if all variables are not empty
-            save(matfile, 'mnts_struct', 'event_ts', 'labeled_data');
+            save(matfile, 'mnts_struct', 'event_ts', 'labeled_data', 'filename_meta');
             export_params(mnts_path, 'mnts_psth', parsed_path, failed_path, animal_name, config);
         catch ME
             handle_ME(ME, failed_path, filename);

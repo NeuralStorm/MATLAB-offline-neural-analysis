@@ -16,31 +16,17 @@ function [] = mnts_main()
         if config.ignore_animal
             continue;
         else
-            %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-            %%           Parser           %%
-            %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-            if config.parse_files
-                %% Parse files
-                %! Might remove the file handling in the future
-                parsed_path = parser(animal_path, animal_name, config.total_trials, ...
-                    config.total_events, config.trial_lower_bound, ...
-                    config.is_non_strobed_and_strobed, config.event_map, config.ignore_sessions);
-            else
-                parsed_path = [animal_path, '/parsed'];
-            end
-
-            %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-            %%       Label Channels       %%
-            %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-            if config.label_channels
-                batch_label(animal_path, animal_name, parsed_path);
+            %% Checks to see if parsed directory exists
+            parsed_path = [animal_path, '/', 'parsed'];
+            if ~exist(parsed_path, 'dir')
+                error('Parsed directory does not exist. Please run the Parser main to parse files');
             end
 
             %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
             %%            MNTS            %%
             %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
             if config.create_mnts
-                mnts_path = batch_format_mnts(parsed_path, animal_name, config);
+                mnts_path = batch_format_mnts(animal_path, parsed_path, animal_name, config);
             else
                 mnts_path = [parsed_path, '/mnts'];
             end
@@ -64,7 +50,7 @@ function [] = mnts_main()
             %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
             if config.nv_analysis
                 batch_nv(animal_name, original_path, psth_path, 'normalized_variance_analysis', ...
-                    '.mat', 'pca', 'psth', config);
+                    '.mat', 'pca', config);
             end
 
             %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -72,7 +58,7 @@ function [] = mnts_main()
             %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
             if config.rf_analysis
                 pc_rf_path = batch_recfield(animal_name, original_path, psth_path, 'receptive_field_analysis', ...
-                    '.mat', 'pca', 'psth', config);
+                    '.mat', 'pca', config);
             else
                 pc_rf_path = [psth_path, '/receptive_field_analysis'];
             end
@@ -81,10 +67,7 @@ function [] = mnts_main()
             %%         Graph PSTH         %%
             %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
             if config.make_psth_graphs
-                batch_graph(animal_name, psth_path, 'pc_graphs', '.mat', 'pca', 'psth', ...
-                    config.bin_size, config.pre_time, config.post_time, config.pre_start, ...
-                    config.pre_end, config.post_start, config.post_end, config.rf_analysis, pc_rf_path, ...
-                    config.make_region_subplot, config.make_unit_plot, config.sub_columns, config.sub_rows, config.ignore_sessions);
+                batch_graph(animal_name, psth_path, 'pc_graphs', '.mat', config, pc_rf_path);
             end
 
             %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -92,7 +75,7 @@ function [] = mnts_main()
             %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
             if config.psth_classify
                 batch_classify(animal_name, original_path, psth_path, 'classifier', '.mat', ...
-                    'pca', 'psth', config);
+                    'pca', config);
             end
 
             %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -100,7 +83,7 @@ function [] = mnts_main()
             %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
             if config.info_analysis
                 batch_info(animal_name, psth_path, 'mutual_info', ...
-                    '.mat', 'pca', 'psth', config.ignore_sessions);
+                    '.mat', config.ignore_sessions);
             end
 
             %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -130,7 +113,7 @@ function [] = mnts_main()
             %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
             if config.nv_analysis
                 batch_nv(animal_name, original_path, psth_path, 'normalized_variance_analysis', ...
-                    '.mat', 'ica', 'psth', config)
+                    '.mat', 'ica', config)
             end
 
             %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -138,7 +121,7 @@ function [] = mnts_main()
             %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
             if config.rf_analysis
                 ic_rf_path = batch_recfield(animal_name, original_path, psth_path, 'receptive_field_analysis', ...
-                    '.mat', 'ica', 'psth', config);
+                    '.mat', 'ica', config);
             else
                 ic_rf_path = [psth_path, '/receptive_field_analysis'];
             end
@@ -147,10 +130,7 @@ function [] = mnts_main()
             %%         Graph PSTH         %%
             %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
             if config.make_psth_graphs
-                batch_graph(animal_name, psth_path, 'ic_graphs', '.mat', 'ica', 'psth', ...
-                    config.bin_size, config.pre_time, config.post_time, config.pre_start, ...
-                    config.pre_end, config.post_start, config.post_end, config.rf_analysis, ic_rf_path, ...
-                    config.make_region_subplot, config.make_unit_plot, config.sub_columns, config.sub_rows, config.ignore_sessions);
+                batch_graph(animal_name, psth_path, 'ic_graphs', '.mat', config, ic_rf_path);
             end
 
             %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -158,7 +138,7 @@ function [] = mnts_main()
             %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
             if config.psth_classify
                 batch_classify(animal_name, original_path, psth_path, 'classifier', '.mat', ...
-                    'ica', 'psth', config);
+                    'ica', config);
             end
 
             %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -166,7 +146,7 @@ function [] = mnts_main()
             %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
             if config.info_analysis
                 batch_info(animal_name, psth_path, 'mutual_info', ...
-                    '.mat', 'ica', 'psth', config.ignore_sessions);
+                    '.mat', config.ignore_sessions);
             end
 
         end

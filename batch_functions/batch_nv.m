@@ -1,5 +1,5 @@
 function [] = batch_nv(animal_name, original_path, data_path, dir_name, ...
-        search_ext, filename_substring_one, filename_substring_two, config, ignore_sessions)
+        search_ext, filename_substring_one, config)
     %% Check pre time is valid for analysis
     nv_start = tic;
     
@@ -27,13 +27,8 @@ function [] = batch_nv(animal_name, original_path, data_path, dir_name, ...
     for file_index = 1:length(psth_files)
         %% Run through files
         try
-            %% pull info from filename and set up file path for analysis
             file = fullfile(data_path, psth_files(file_index).name);
-            [~, filename, ~] = fileparts(file);
-            filename = erase(filename, [filename_substring_one, '.', filename_substring_two, '.']);
-            filename = erase(filename, [filename_substring_one, '_', filename_substring_two, '_']);
-            [~, experimental_group, ~, session_num, session_date, ~] = get_filename_info(filename);
-            load(file, 'labeled_data', 'baseline_window');
+            load(file, 'labeled_data', 'baseline_window', 'filename_meta');
             %% Check psth variables to make sure they are not empty
             empty_vars = check_variables(file, baseline_window, labeled_data);
             if empty_vars
@@ -46,17 +41,18 @@ function [] = batch_nv(animal_name, original_path, data_path, dir_name, ...
                 pre_end, bin_size, epsilon, norm_var_scaling, separate_events, analysis_headers);
 
             %% Store metadata about file
-            current_meta = [{animal_name}, {experimental_group}, session_date, session_num, ...
-                pre_time, pre_start, pre_end];
+            current_meta = [{filename_meta.animal_id}, ...
+                {filename_meta.experimental_group}, filename_meta.session_date, ...
+                filename_meta.session_num, pre_time, pre_start, pre_end];
             [meta_info, all_neurons] = concat_tables(meta_headers, meta_info, current_meta, ...
                 all_neurons, neuron_activity);
 
             %% Save analysis results
-            matfile = fullfile(nv_path, ['NV_analysis_', filename, '.mat']);
+            matfile = fullfile(nv_path, ['NV_analysis_', filename_meta.filename, '.mat']);
             check_variables(matfile, labeled_data, neuron_activity);
-            save(matfile, 'labeled_data', 'neuron_activity');
+            save(matfile, 'labeled_data', 'neuron_activity', 'filename_meta');
         catch ME
-            handle_ME(ME, failed_path, filename);
+            handle_ME(ME, failed_path, filename_meta.filename);
         end
     end
     %% CSV export set up

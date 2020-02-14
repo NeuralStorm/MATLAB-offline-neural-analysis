@@ -1,6 +1,5 @@
 function [] = batch_classify(animal_name, original_path, data_path, dir_name, ...
-        search_ext, filename_substring_one, filename_substring_two, ...
-        config)
+        search_ext, filename_substring_one, config)
     classifier_start = tic;
 
     [classify_path, failed_path] = create_dir(data_path, dir_name);
@@ -32,13 +31,8 @@ function [] = batch_classify(animal_name, original_path, data_path, dir_name, ..
     for file_index = 1:length(files)
         %% Run through files
         try
-            %% pull info from filename and set up file path for analysis
             file = fullfile(data_path, files(file_index).name);
-            [~, filename, ~] = fileparts(file);
-            filename = erase(filename, [filename_substring_one, '.', filename_substring_two, '.']);
-            filename = erase(filename, [filename_substring_one, '_', filename_substring_two, '_']);
-            [~, experimental_group, ~, session_num, session_date, ~] = get_filename_info(filename);
-            load(file, 'labeled_data', 'event_ts', 'response_window');
+            load(file, 'labeled_data', 'event_ts', 'response_window', 'filename_meta');
             %% Check psth variables to make sure they are not empty
             empty_vars = check_variables(file, labeled_data, event_ts, response_window);
             if empty_vars
@@ -53,7 +47,7 @@ function [] = batch_classify(animal_name, original_path, data_path, dir_name, ..
             %% PSTH synergy redundancy
             [pop_table] = synergy_redundancy(pop_table, unit_table, config.bootstrap_classifier);
 
-            current_general_info = [{animal_name}, {experimental_group}, session_date, session_num, ...
+            current_general_info = [{filename_meta.animal_id}, {filename_meta.experimental_group}, filename_meta.session_date, filename_meta.session_num, ...
                 bin_size, pre_time, pre_start, pre_end, post_time, post_start, post_end, ...
                 bootstrap_classifier, boot_iterations];
             [pop_config_info, pop_info] = ...
@@ -61,11 +55,11 @@ function [] = batch_classify(animal_name, original_path, data_path, dir_name, ..
             [unit_config_info, unit_info] = ...
                 concat_tables(meta_headers, unit_config_info, current_general_info, unit_info, unit_table);
 
-            matfile = fullfile(classify_path, ['test_psth_classifier_', filename, '.mat']);
+            matfile = fullfile(classify_path, ['psth_classifier_', filename_meta.filename, '.mat']);
             check_variables(matfile, unit_struct, pop_struct, pop_table, unit_table);
             save(matfile, 'pop_struct', 'unit_struct', 'pop_table', 'unit_table');
         catch ME
-            handle_ME(ME, failed_path, filename);
+            handle_ME(ME, failed_path, filename_meta.filename);
         end
     end
 

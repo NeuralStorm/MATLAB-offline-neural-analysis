@@ -11,7 +11,7 @@ function [ica_path] = batch_ica(mnts_path, animal_name, config)
             [~, filename, ~] = fileparts(file);
             filename = erase(filename, 'mnts_format_');
             filename = erase(filename, 'mnts.format.');
-            load(file, 'event_ts', 'labeled_data', 'mnts_struct');
+            load(file, 'event_ts', 'labeled_data', 'mnts_struct', 'filename_meta');
             %% Check variables to make sure they are not empty
             empty_vars = check_variables(file, event_ts, labeled_data, mnts_struct);
             if empty_vars
@@ -30,7 +30,7 @@ function [ica_path] = batch_ica(mnts_path, animal_name, config)
             if empty_vars
                 continue
             end
-            save(matfile, 'labeled_data', 'event_ts', 'component_results');
+            save(matfile, 'labeled_data', 'event_ts', 'component_results', 'filename_meta');
         catch ME
             handle_ME(ME, failed_path, filename);
         end

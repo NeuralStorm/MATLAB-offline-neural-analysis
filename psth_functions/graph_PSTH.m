@@ -1,7 +1,12 @@
 function [] = graph_PSTH(save_path, psth_struct, labeled_data, sig_response, ...
-        non_sig_response, bin_size, pre_time, post_time, pre_start, pre_end, ...
-        post_start, post_end, rf_analysis, make_region_subplot, make_unit_plot,...
-        sub_cols, sub_rows, orig_filename)
+        non_sig_response, config, orig_filename)
+
+    bin_size = config.bin_size; pre_time = config.pre_time; 
+    post_time = config.post_time; pre_start = config.pre_start;
+    pre_end = config.pre_end; post_start = config.post_start; 
+    post_end = config.post_end; rf_analysis = config.rf_analysis;
+    make_region_subplot = config.make_region_subplot; sub_rows = config.sub_rows;
+    make_unit_plot = config.make_unit_plot; sub_cols = config.sub_columns;
 
     check_time(pre_time, pre_start, pre_end, post_time, post_start, post_end, bin_size)
 
