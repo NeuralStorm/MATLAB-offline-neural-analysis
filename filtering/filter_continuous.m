@@ -1,0 +1,56 @@
+function [struct_map] = filter_continuous(selected_data, sample_rate, notch_filt, ...
+    notch_freq, notch_bandwidth, notch_bandstop, filt_type, filt_freq, filt_order)
+    %TODO change notch_filt variable name --> too close to notch_filter function
+
+    unique_regions = fieldnames(selected_data);
+    region_map = [];
+    for region_i = 1:length(unique_regions)
+        region = unique_regions{region_i};
+        channel_list = [selected_data.(region).sig_channels, selected_data.(region).channel_data];
+        [tot_channels, ~] = size(channel_list);
+        filtered_region = cell(tot_channels, 3);
+        parfor channel_i = 1:tot_channels
+            channel = channel_list{channel_i, 1};
+            channel_data = channel_list{channel_i, 2};
+            %% notch filter
+            if notch_filt
+                if notch_bandstop
+                    stopband = [(notch_freq - notch_bandwidth / 2) ...
+                        (notch_freq + notch_bandwidth / 2)];
+                    %% Filter and store
+                    filtered_data = bandstop(channel_data, stopband, sample_rate);
+                else
+                    filtered_data = notch_filter(channel_data, sample_rate, ...
+                        notch_freq, notch_bandwidth);
+                end
+            else
+                %% convience of having same name variable before more filtering
+                filtered_data = channel_data;
+            end
+
+            switch filt_type
+                %TODO verify [b,a] vs [z,p,k] butter filtering
+                case {'low', 'high'}
+                    filtered_data = butterworth(filt_order, filt_freq/(sample_rate/2), ...
+                        filt_type, filtered_data);
+                case 'bandpass'
+                    assert(length(filt_freq) == 2)
+                    band_freq = filt_freq ./ (sample_rate/2);
+                    [z, p, k] = butter(filt_order, band_freq, 'bandpass');
+                    [sos, g] = zp2sos(z, p, k);
+                    filtered_data = filtfilt(sos, g, filtered_data);
+                case 'notch'
+                    if ~notch_filt
+                        warning('Inconsistent parameters in config. Notch filt set to false, but filt type was notch. Applying notch filter');
+                        filtered_data = notch_filter(channel_data, sample_rate, ...
+                            notch_freq, notch_bandwidth);
+                    end
+                otherwise
+                    error('Unsupported type: %s, try low, high, or band instead', filt_type);
+            end
+            filtered_region(channel_i, :) = [{channel}, {filtered_data}, {region}];
+        end
+        region_map = [region_map; filtered_region];
+    end
+    struct_map = cell2struct(region_map, {'sig_channels', 'data', 'label'}, 2);
+end
