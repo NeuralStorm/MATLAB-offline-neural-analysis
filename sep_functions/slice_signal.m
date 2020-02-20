@@ -1,11 +1,11 @@
-function [sliced_signals] = slice_signal(data_map, board_dig_in_data, sample_rate, sep_window)
+function [sliced_signals, stim_ts] = slice_signal(data_map, board_dig_in_data, sample_rate, sep_window)
 
     stim_ts = find_ts(board_dig_in_data, sample_rate);
     stim_ts = stim_ts(1, :);
     
     %Temporary solution to remove paired pulse time stamps   
     if length(stim_ts) > 125
-        stim_ts = stim_ts(1, 1:2:end);     
+        stim_ts = stim_ts(1, 1:2:end);
     end
     
     window_start = abs(sep_window(1)) * sample_rate; 
