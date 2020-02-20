@@ -6,12 +6,12 @@ function [struct_map] = filter_continuous(selected_data, sample_rate, notch_filt
     region_map = [];
     for region_i = 1:length(unique_regions)
         region = unique_regions{region_i};
-        channel_list = [selected_data.(region).sig_channels, selected_data.(region).channel_data];
-        [tot_channels, ~] = size(channel_list);
-        filtered_region = cell(tot_channels, 3);
+        channel_list = selected_data.(region);
+        tot_channels = height(channel_list);
+        filtered_region = cell(tot_channels, 5);
         parfor channel_i = 1:tot_channels
-            channel = channel_list{channel_i, 1};
-            channel_data = channel_list{channel_i, 2};
+            channel_info = channel_list(channel_i, :);
+            channel_data = channel_info.channel_data{1};
             %% notch filter
             if notch_filt
                 if notch_bandstop
@@ -48,9 +48,12 @@ function [struct_map] = filter_continuous(selected_data, sample_rate, notch_filt
                 otherwise
                     error('Unsupported type: %s, try low, high, or band instead', filt_type);
             end
-            filtered_region(channel_i, :) = [{channel}, {filtered_data}, {region}];
+            filtered_region(channel_i, :) = [channel_info.sig_channels(1), ...
+                channel_info.user_channels(1), channel_info.label(1), ...
+                channel_info.label_id(1), {filtered_data}];
         end
         region_map = [region_map; filtered_region];
     end
-    struct_map = cell2struct(region_map, {'sig_channels', 'data', 'label'}, 2);
+    struct_map = cell2struct(region_map, {'sig_channels', 'user_channels', ...
+        'label', 'label_id', 'data'}, 2);
 end
