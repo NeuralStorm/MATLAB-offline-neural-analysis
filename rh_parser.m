@@ -33,15 +33,25 @@ function [] = rh_parser(parsed_path, failed_path, raw_file, config, label_table)
         %% label channel map
         [~, filename, ~] = fileparts(raw_file);
         filename_meta = get_filename_info(filename);
+
+        %% Pull out event times
+        if config.paired_pulse
+            %% get ISI from filename
+            isi_cells = regexp(filename_meta.experimental_condition,'-\d*','Match');
+            isi = abs(str2double(isi_cells{end}));
+        else
+            isi = NaN;
+        end
+        event_samples = find_ts(board_dig_in_data, config.paired_pulse, isi);
+
         labeled_data = label_neurons(wideband_map, label_table, ...
             filename_meta.session_num);
-
 
         %% Saves parsed files
         matfile = fullfile(parsed_path, [filename, '.mat']);
         save(matfile, '-v7.3', 'analog_input_map', ...
             'board_dig_in_data', 't_amplifier', 'sample_rate', ...
-            'filename_meta', 'labeled_data');
+            'filename_meta', 'labeled_data', 'event_samples');
     catch ME
         handle_ME(ME, failed_path, filename);
     end
