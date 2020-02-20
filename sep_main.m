@@ -16,31 +16,22 @@ function [] = sep_main()
         animal_name = animal_names{animal};
         animal_path = [original_path, '/', animal_name];
         config = import_config(animal_path, 'sep');
-        if isempty(config.trial_range)
-            config.trial_range = [];
-        else
-            config.trial_range = str2num(config.trial_range);
-        end
-
         export_params(animal_path, 'main', config);
         % Skips animals we want to ignore
         if config.ignore_animal
             continue;
         else
-            %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-            %%           Parser           %%
-            %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-             if config.parse_files
-                 parsed_path = sep_parser(animal_name, animal_path, config);
-            else
-                parsed_path = [animal_path, '/parsed'];
+            %% Checks to see if parsed directory exists
+            parsed_path = [animal_path, '/', 'parsed'];
+            if ~exist(parsed_path, 'dir')
+                error('Parsed directory does not exist. Please run the Parser main to parse files');
             end
 
             %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
             %%            Sep_slicing           %%
             %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
             if config.sep_slicing
-                slice_path = batch_sep_slice(animal_name, parsed_path, config);
+                slice_path = batch_sep_slice(animal_path, parsed_path, config);
             else
                 slice_path = [parsed_path, '/sep'];
             end
