@@ -6,6 +6,4 @@ function [smoothed_threshold,background_rate,background_std] = pre_time_anlysis(
     smoothed_threshold = smoothed_avg_background + (threshold_scale * smoothed_std_background);
     background_rate = mean(pre_psth);
     background_std = std(pre_psth);
-
-
 end

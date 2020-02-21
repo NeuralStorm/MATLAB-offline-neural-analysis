@@ -45,7 +45,6 @@ function [unit_struct, pop_struct, pop_table, unit_table] = psth_bootstrapper( .
             region_unit_info = [];
             for region = 1:length(region_names)
                 current_region = region_names{region};
-                % region_neurons = [labeled_data.(current_region)(:,1), labeled_data.(current_region)(:,4)];
                 region_neurons = [labeled_data.(current_region).sig_channels, labeled_data.(current_region).channel_data];
                 %% Recreate relative response matrix from shuffled labels for region
                 shuffled_region = create_relative_response(region_neurons, shuffled_labels, bin_size, ...
