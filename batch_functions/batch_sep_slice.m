@@ -13,13 +13,11 @@ function [sep_path] = batch_sep_slice(animal_path, parsed_path, config)
     %% load label table
     channel_table = load_labels(animal_path, 'selected_data.csv', config.ignore_sessions);
 
-    error_list = [];
     for file_index = 1:length(file_list)
-      %% Load file contents
-        % try
+        try
+            %% Load file contents
             file = [parsed_path, '/', file_list(file_index).name];
-
-            load(file, 'labeled_data', 'board_dig_in_data', 'sample_rate', 'filename_meta')
+            load(file, 'labeled_data', 'event_samples', 'sample_rate', 'filename_meta')
 
             %% Select channels
             selected_data = select_channels(labeled_data, channel_table, ...
@@ -29,26 +27,34 @@ function [sep_path] = batch_sep_slice(animal_path, parsed_path, config)
             %%           Filter           %%
             %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
             if config.filter_raw
-                %TODO remove filter_raw from config
                 data_map = filter_continuous(selected_data, sample_rate, config.notch_filt, ...
                     config.notch_freq, config.notch_bandwidth, config.notch_bandstop, ...
                     config.sep_filt_type, config.sep_filt_freq, config.sep_filt_order);
             else
-                error('Must load data before creating SEPs');
+                unique_regions = fieldnames(selected_data);
+                data_table = table;
+                for region_i = 1:length(unique_regions)
+                    region = unique_regions{region_i};
+                    region_table = selected_data.(region);
+                    region_table = removevars(region_table, ...
+                        {'recording_session', 'date', 'recording_notes'});
+                    data_table = [data_table; region_table];
+                end
+                data_table.Properties.VariableNames = {'sig_channels', ...
+                    'user_channels', 'label', 'label_id', 'data'};
+                data_map = table2struct(data_table);
             end
 
             %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
             %%          Slicing           %%
             %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-            sep_window = [-abs(config.window_start), config.window_end];
             %TODO fix slicing
-            [sliced_signal, stim_ts] = slice_signal(data_map, board_dig_in_data, sample_rate, sep_window);
+            sep_window = [-abs(config.window_start), config.window_end];
+            sliced_signal = slice_signal(data_map, event_samples, sample_rate, sep_window);
             matfile = fullfile(sep_path, ['sliced_', filename_meta.filename, '.mat']);
-            save(matfile, '-v7.3', 'sliced_signal', 'sep_window', 'sep_log', 'filter_log', 'filename_meta', 'stim_ts');
-
-        % catch
-        %     error_list = [error_list; filename];
-        %     continue;
-        % end
+            save(matfile, '-v7.3', 'sliced_signal', 'sep_window', 'sep_log', 'filter_log', 'filename_meta', 'event_samples');
+        catch ME
+            handle_ME(ME, failed_path, filename_meta.filename);
+        end
     end
 end
