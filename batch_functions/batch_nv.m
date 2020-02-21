@@ -28,16 +28,16 @@ function [] = batch_nv(animal_name, original_path, data_path, dir_name, ...
         %% Run through files
         try
             file = fullfile(data_path, psth_files(file_index).name);
-            load(file, 'labeled_data', 'baseline_window', 'filename_meta');
+            load(file, 'selected_data', 'baseline_window', 'filename_meta');
             %% Check psth variables to make sure they are not empty
-            empty_vars = check_variables(file, baseline_window, labeled_data);
+            empty_vars = check_variables(file, baseline_window, selected_data);
             if empty_vars
-                error('Baseline_window and/or labeled_data is empty');
+                error('Baseline_window and/or selected_data is empty');
             elseif ~isstruct(baseline_window) && isnan(baseline_window)
                 error('pre_time, pre_start, and pre_end must all be non zero windows for this analysis.');
             end
             %% NV analysis
-            neuron_activity = nv_calculation(labeled_data, baseline_window, pre_start, ...
+            neuron_activity = nv_calculation(selected_data, baseline_window, pre_start, ...
                 pre_end, bin_size, epsilon, norm_var_scaling, separate_events, analysis_headers);
 
             %% Store metadata about file
@@ -49,8 +49,8 @@ function [] = batch_nv(animal_name, original_path, data_path, dir_name, ...
 
             %% Save analysis results
             matfile = fullfile(nv_path, ['NV_analysis_', filename_meta.filename, '.mat']);
-            check_variables(matfile, labeled_data, neuron_activity);
-            save(matfile, 'labeled_data', 'neuron_activity', 'filename_meta');
+            check_variables(matfile, selected_data, neuron_activity);
+            save(matfile, 'selected_data', 'neuron_activity', 'filename_meta');
         catch ME
             handle_ME(ME, failed_path, filename_meta.filename);
         end

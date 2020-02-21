@@ -1,13 +1,13 @@
-function [sig_neurons, non_sig_neurons] = receptive_field_analysis(labeled_data, ...
+function [sig_neurons, non_sig_neurons] = receptive_field_analysis(selected_data, ...
         baseline_window, response_window, bin_size, post_start, threshold_scale, sig_check, sig_bins, span, analysis_column_names)
 
     event_strings = baseline_window.all_events(:,1)';
     sig_neurons = [];
     non_sig_neurons = [];
-    region_names = fieldnames(labeled_data);
+    region_names = fieldnames(selected_data);
     for region = 1:length(region_names)
         current_region = region_names{region};
-        region_table = labeled_data.(current_region);
+        region_table = selected_data.(current_region);
         for event = 1:length(event_strings(1,:))
             current_event = event_strings{event};
             for neuron = 1:height(region_table)

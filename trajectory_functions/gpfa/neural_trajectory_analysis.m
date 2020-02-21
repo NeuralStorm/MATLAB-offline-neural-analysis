@@ -45,7 +45,7 @@ function [] = neural_trajectory_analysis(animal_name, psth_path, bin_size, total
         neuro_traj_struct = struct;
         neuro_traj_table = table();
         all_events = psth_struct.all_events;
-        unique_regions = fieldnames(labeled_data);
+        unique_regions = fieldnames(selected_data);
         for region = 1:length(unique_regions)
             region_name = unique_regions{region};
             %% Create region directory
@@ -62,8 +62,8 @@ function [] = neural_trajectory_analysis(animal_name, psth_path, bin_size, total
                 end
             end
 
-            total_region_neurons = length(labeled_data.(region_name)(:,1));          
-            region_neurons = [labeled_data.(region_name)(:,1), labeled_data.(region_name)(:,end)];
+            total_region_neurons = length(selected_data.(region_name)(:,1));          
+            region_neurons = [selected_data.(region_name)(:,1), selected_data.(region_name)(:,end)];
             region_psth = NeuroToolbox.PSTHToolbox.PSTH(region_neurons, all_events, 'bin_size', ... 
                 bin_size, 'PSTH_window', [-abs(pre_time), post_time]);
             region_template = NeuroToolbox.PSTHToolbox.SU_Classifier(region_psth);
@@ -72,7 +72,7 @@ function [] = neural_trajectory_analysis(animal_name, psth_path, bin_size, total
             correct_labels = region_decoder_output.Event(correct_trials);
             label_counts = tabulate(correct_labels);
             %! Raw data passed into trajectory code needs 1ms bin size
-            relative_response = create_relative_response(labeled_data.(region_name)(:, end), psth_struct.all_events(:,2), ...
+            relative_response = create_relative_response(selected_data.(region_name)(:, end), psth_struct.all_events(:,2), ...
                 total_trials, .001, 0, post_time);
             correct_response = [];
             for i = 1:length(correct_trials)

@@ -32,16 +32,16 @@ function [] = batch_classify(animal_name, original_path, data_path, dir_name, ..
         %% Run through files
         try
             file = fullfile(data_path, files(file_index).name);
-            load(file, 'labeled_data', 'event_ts', 'response_window', 'filename_meta');
+            load(file, 'selected_data', 'event_ts', 'response_window', 'filename_meta');
             %% Check psth variables to make sure they are not empty
-            empty_vars = check_variables(file, labeled_data, event_ts, response_window);
+            empty_vars = check_variables(file, selected_data, event_ts, response_window);
             if empty_vars
                 continue
             end
 
             %% Classify and bootstrap
             [unit_struct, pop_struct, pop_table, unit_table] = psth_bootstrapper( ...
-                labeled_data, response_window, event_ts, boot_iterations, bootstrap_classifier, ...
+                selected_data, response_window, event_ts, boot_iterations, bootstrap_classifier, ...
                 bin_size, pre_time, pre_start, pre_end, post_time, post_start, post_end, analysis_headers);
 
             %% PSTH synergy redundancy

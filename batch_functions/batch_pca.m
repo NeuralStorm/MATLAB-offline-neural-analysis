@@ -12,22 +12,22 @@ function [pca_path] = batch_pca(mnts_path, animal_name, config)
             [~, filename, ~] = fileparts(file);
             filename = erase(filename, 'mnts_format_');
             filename = erase(filename, 'mnts.format.');
-            load(file, 'event_ts', 'labeled_data', 'mnts_struct', 'filename_meta');
+            load(file, 'event_ts', 'selected_data', 'mnts_struct', 'filename_meta');
             %% Check variables to make sure they are not empty
-            empty_vars = check_variables(file, event_ts, labeled_data, mnts_struct);
+            empty_vars = check_variables(file, event_ts, selected_data, mnts_struct);
             if empty_vars
                 continue
             end
 
             %% PCA
-            [component_results, labeled_data] = calc_pca(labeled_data, ...
+            [component_results, selected_data] = calc_pca(selected_data, ...
                 mnts_struct, config.feature_filter, config.feature_value);
 
             %% Saving the file
             matfile = fullfile(pca_path, ['pc_analysis_', filename, '.mat']);
-            check_variables(matfile, component_results, labeled_data);
-            save(matfile, 'labeled_data', 'event_ts', 'component_results', 'filename_meta');
-            clear('labeled_data', 'event_ts', 'component_results');
+            check_variables(matfile, component_results, selected_data);
+            save(matfile, 'selected_data', 'event_ts', 'component_results', 'filename_meta');
+            clear('selected_data', 'event_ts', 'component_results');
         catch ME
             handle_ME(ME, failed_path, filename);
         end

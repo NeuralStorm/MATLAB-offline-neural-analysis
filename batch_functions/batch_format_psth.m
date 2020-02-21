@@ -14,7 +14,7 @@ function [psth_path] = batch_format_psth(animal_path, parent_path, dir_name, con
         wanted_events, trial_lower_bound);
 
     %% load label table
-    channel_table = load_labels(animal_path, 'selected_neurons.csv', config.ignore_sessions);
+    channel_table = load_labels(animal_path, 'selected_data.csv', config.ignore_sessions);
 
     fprintf('Calculating PSTH for %s \n', dir_name);
     %% Goes through all the files and creates PSTHs according to the parameters set in config
@@ -25,20 +25,20 @@ function [psth_path] = batch_format_psth(animal_path, parent_path, dir_name, con
             [~, filename, ~] = fileparts(file);
             load(file, 'event_ts', 'labeled_data', 'filename_meta');
             %% Select channels
-            labeled_data = select_channels(labeled_data, ...
+            selected_data = select_channels(labeled_data, ...
                 channel_table, filename_meta.session_num);
             %% Check parsed variables to make sure they are not empty
-            empty_vars = check_variables(file, event_ts, labeled_data);
+            empty_vars = check_variables(file, event_ts, selected_data);
             if empty_vars
                 continue
             end
 
             %% Format PSTH
-            [psth_struct, event_ts] = format_PSTH(event_ts, labeled_data, bin_size, ...
+            [psth_struct, event_ts] = format_PSTH(event_ts, selected_data, bin_size, ...
                 pre_time, post_time, wanted_events, trial_range, trial_lower_bound);
 
             %% Add analysis window
-            [baseline_window, response_window] = create_analysis_windows(labeled_data, ...
+            [baseline_window, response_window] = create_analysis_windows(selected_data, ...
                 psth_struct, pre_time, pre_start, pre_end, post_time, post_start, ...
                 post_end, bin_size);
 
@@ -51,7 +51,7 @@ function [psth_path] = batch_format_psth(animal_path, parent_path, dir_name, con
             end
 
             %% Save file if all variables are not empty
-            save(matfile, 'psth_struct', 'event_ts', 'labeled_data', ...
+            save(matfile, 'psth_struct', 'event_ts', 'selected_data', ...
                 'baseline_window', 'response_window', 'filename_meta');
         catch ME
             handle_ME(ME, failed_path, filename);

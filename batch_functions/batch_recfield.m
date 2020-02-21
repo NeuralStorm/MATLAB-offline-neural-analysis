@@ -36,11 +36,11 @@ function [rf_path] = batch_recfield(animal_name, original_path, data_path, dir_n
             file = fullfile(data_path, files(file_index).name);
 
             %% Load needed variables from psth and does the receptive field analysis
-            load(file, 'labeled_data', 'baseline_window', 'response_window', 'filename_meta');
+            load(file, 'selected_data', 'baseline_window', 'response_window', 'filename_meta');
             %% Check psth variables to make sure they are not empty
-            empty_vars = check_variables(file, baseline_window, response_window, labeled_data);
+            empty_vars = check_variables(file, baseline_window, response_window, selected_data);
             if empty_vars
-                error('Baseline_window, response_window, and/or labeled_data is empty');
+                error('Baseline_window, response_window, and/or selected_data is empty');
             elseif ~isstruct(baseline_window) && isnan(baseline_window)
                 error('pre_time, pre_start, and pre_end must all be non zero windows for this analysis.');
             elseif ~isstruct(response_window) && isnan(response_window)
@@ -48,7 +48,7 @@ function [rf_path] = batch_recfield(animal_name, original_path, data_path, dir_n
             end
 
             [sig_neurons, non_sig_neurons] = receptive_field_analysis( ...
-                labeled_data, baseline_window, response_window, bin_size, post_start, threshold_scale, ...
+                selected_data, baseline_window, response_window, bin_size, post_start, threshold_scale, ...
                 sig_check, sig_bins, span, analysis_headers);
 
             %% Capture data to save to csv from current day
@@ -64,7 +64,7 @@ function [rf_path] = batch_recfield(animal_name, original_path, data_path, dir_n
             %% Save receptive field matlab output
             % Does not check if variables are empty since there may/may not be significant responses in a set
             matfile = fullfile(rf_path, ['rec_field_', filename_meta.filename, '.mat']);
-            save(matfile, 'labeled_data', 'sig_neurons', 'non_sig_neurons', 'filename_meta');
+            save(matfile, 'selected_data', 'sig_neurons', 'non_sig_neurons', 'filename_meta');
         catch ME
             handle_ME(ME, failed_path, filename_meta.filename);
         end

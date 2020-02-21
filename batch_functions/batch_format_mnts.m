@@ -4,7 +4,7 @@ function [mnts_path] = batch_format_mnts(animal_path, parsed_path, animal_name, 
     parsed_files = get_file_list(parsed_path, '.mat', config.ignore_sessions);
 
     %% load label table
-    channel_table = load_labels(animal_path, 'selected_neurons.csv', config.ignore_sessions);
+    channel_table = load_labels(animal_path, 'selected_data.csv', config.ignore_sessions);
 
 
     fprintf('Calculating mnts for %s \n', animal_name);
@@ -16,29 +16,29 @@ function [mnts_path] = batch_format_mnts(animal_path, parsed_path, animal_name, 
             [~, filename, ~] = fileparts(file);
             load(file, 'event_ts', 'labeled_data', 'filename_meta');
             %% Select channels
-            labeled_data = select_channels(labeled_data, ...
+            selected_data = select_channels(labeled_data, ...
                 channel_table, filename_meta.session_num);
             %% Check parsed variables to make sure they are not empty
-            empty_vars = check_variables(file, event_ts, labeled_data);
+            empty_vars = check_variables(file, event_ts, selected_data);
             if empty_vars
                 continue
             end
 
             %% Format mnts
-            [mnts_struct, event_ts, labeled_data] = format_mnts(event_ts, ...
-                labeled_data, config.bin_size, config.pre_time, config.post_time, config.wanted_events, ...
+            [mnts_struct, event_ts, selected_data] = format_mnts(event_ts, ...
+                selected_data, config.bin_size, config.pre_time, config.post_time, config.wanted_events, ...
                 config.trial_range, config.trial_lower_bound);
 
             %% Saving outputs
             matfile = fullfile(mnts_path, ['mnts_format_', filename, '.mat']);
             %% Check PSTH output to make sure there are no issues with the output
-            empty_vars = check_variables(matfile, mnts_struct, event_ts, labeled_data);
+            empty_vars = check_variables(matfile, mnts_struct, event_ts, selected_data);
             if empty_vars
                 continue
             end
 
             %% Save file if all variables are not empty
-            save(matfile, 'mnts_struct', 'event_ts', 'labeled_data', 'filename_meta');
+            save(matfile, 'mnts_struct', 'event_ts', 'selected_data', 'filename_meta');
             export_params(mnts_path, 'mnts_psth', parsed_path, failed_path, animal_name, config);
         catch ME
             handle_ME(ME, failed_path, filename);

@@ -1,4 +1,4 @@
-function nv_data = nv_calculation(labeled_data, baseline_window, pre_start, pre_end, ...
+function nv_data = nv_calculation(selected_data, baseline_window, pre_start, pre_end, ...
         bin_size, epsilon, norm_var_scaling, separate_events, analysis_column_names)
 
     tot_bins = length(-abs(pre_start):bin_size:-abs(pre_end)) - 1;
@@ -7,11 +7,10 @@ function nv_data = nv_calculation(labeled_data, baseline_window, pre_start, pre_
     nv_data = [];
     event_strings = baseline_window.all_events(:,1);
 
-    unique_regions = fieldnames(labeled_data);
+    unique_regions = fieldnames(selected_data);
     for region = 1:length(unique_regions)
         current_region = unique_regions{region};
-        % region_neurons = labeled_data.(current_region).sig_channels;
-        region_table = labeled_data.(current_region);
+        region_table = selected_data.(current_region);
         if separate_events
             %% Handles events as different datasets
             for event = 1:length(event_strings)

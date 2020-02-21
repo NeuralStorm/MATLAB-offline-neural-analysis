@@ -45,22 +45,22 @@ function [] = psth_main()
                         [~, filename, ~] = fileparts(file);
 
                         %% Load needed variables from psth and does the receptive field analysis
-                        load(file, 'labeled_data', 'psth_struct');
+                        load(file, 'selected_data', 'psth_struct');
                         %% Check psth variables to make sure they are not empty
-                        empty_vars = check_variables(file, labeled_data, psth_struct);
+                        empty_vars = check_variables(file, selected_data, psth_struct);
                         if empty_vars
                             continue
                         end
 
                         %% Add analysis window
-                        [baseline_window, response_window] = create_analysis_windows(labeled_data, psth_struct, ...
+                        [baseline_window, response_window] = create_analysis_windows(selected_data, psth_struct, ...
                             config.pre_time, config.pre_start, config.pre_end, config.post_time, ...
                             config.post_start, config.post_end, config.bin_size);
 
                         %% Saving outputs
                         matfile = fullfile(psth_path, [filename, '.mat']);
                         %% Check PSTH output to make sure there are no issues with the output
-                        empty_vars = check_variables(matfile, psth_struct, labeled_data, baseline_window, response_window);
+                        empty_vars = check_variables(matfile, psth_struct, selected_data, baseline_window, response_window);
                         if empty_vars
                             continue
                         end

@@ -11,26 +11,26 @@ function [ica_path] = batch_ica(mnts_path, animal_name, config)
             [~, filename, ~] = fileparts(file);
             filename = erase(filename, 'mnts_format_');
             filename = erase(filename, 'mnts.format.');
-            load(file, 'event_ts', 'labeled_data', 'mnts_struct', 'filename_meta');
+            load(file, 'event_ts', 'selected_data', 'mnts_struct', 'filename_meta');
             %% Check variables to make sure they are not empty
-            empty_vars = check_variables(file, event_ts, labeled_data, mnts_struct);
+            empty_vars = check_variables(file, event_ts, selected_data, mnts_struct);
             if empty_vars
                 continue
             end
 
             %% ICA
-            [labeled_data, component_results] = calc_ica(labeled_data, mnts_struct, ...
+            [selected_data, component_results] = calc_ica(selected_data, mnts_struct, ...
                 config.ic_pc, config.extended, config.sphering, config.anneal, ...
                 config.anneal_deg, config.bias, config.momentum, config.max_steps, ...
                 config.stop, config.rnd_reset, config.verbose);
 
             %% Saving the file
             matfile = fullfile(ica_path, ['ic_analysis_', filename, '.mat']);
-            empty_vars = check_variables(matfile, labeled_data, component_results);
+            empty_vars = check_variables(matfile, selected_data, component_results);
             if empty_vars
                 continue
             end
-            save(matfile, 'labeled_data', 'event_ts', 'component_results', 'filename_meta');
+            save(matfile, 'selected_data', 'event_ts', 'component_results', 'filename_meta');
         catch ME
             handle_ME(ME, failed_path, filename);
         end

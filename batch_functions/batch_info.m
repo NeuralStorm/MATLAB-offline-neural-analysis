@@ -11,21 +11,21 @@ function [] = batch_info(animal_name, data_path, dir_name, ...
         try
             %% pull info from filename and set up file path for analysis
             file = fullfile(data_path, files(file_index).name);
-            load(file, 'response_window', 'labeled_data', 'filename_meta');
+            load(file, 'response_window', 'selected_data', 'filename_meta');
             %% Check psth variables to make sure they are not empty
-            empty_vars = check_variables(file, response_window, labeled_data);
+            empty_vars = check_variables(file, response_window, selected_data);
             if empty_vars
                 warning('Animal: %s Does not have all the variables required for this analysis. Skipping...', animal_name);
                 continue
             end
 
             %% Mutual information
-            [prob_struct, mi_results] = mutual_info(response_window, labeled_data);
+            [prob_struct, mi_results] = mutual_info(response_window, selected_data);
 
             %% Saving the file
             matfile = fullfile(info_path, ['mutual_info_', filename_meta.filename, '.mat']);
             check_variables(matfile, prob_struct, mi_results);
-            save(matfile, 'labeled_data', 'prob_struct', 'mi_results');
+            save(matfile, 'selected_data', 'prob_struct', 'mi_results');
         catch ME
             handle_ME(ME, failed_path, filename_meta.filename);
         end

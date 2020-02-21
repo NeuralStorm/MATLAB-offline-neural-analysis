@@ -11,9 +11,9 @@ function [] = batch_graph(animal_name, data_path, dir_name, search_ext, config, 
         try
             %% pull info from filename and set up file path for analysis
             file = fullfile(data_path, files(file_index).name);
-            load(file, 'psth_struct', 'labeled_data', 'filename_meta');
+            load(file, 'psth_struct', 'selected_data', 'filename_meta');
             %% Check psth variables to make sure they are not empty
-            empty_vars = check_variables(file, psth_struct, labeled_data);
+            empty_vars = check_variables(file, psth_struct, selected_data);
             if empty_vars
                 continue
             end
@@ -28,10 +28,10 @@ function [] = batch_graph(animal_name, data_path, dir_name, search_ext, config, 
                 %% Load receptive field data
                 rf_matfile = fullfile(rf_path, ['rec_field_', filename_meta.filename, '.mat']);
                 load(rf_matfile, 'sig_neurons', 'non_sig_neurons');
-                graph_PSTH(day_path, psth_struct, labeled_data, sig_neurons, non_sig_neurons, ...
+                graph_PSTH(day_path, psth_struct, selected_data, sig_neurons, non_sig_neurons, ...
                     config, filename_meta.filename)
             else
-                graph_PSTH(day_path, psth_struct, labeled_data, NaN, NaN, config, ...
+                graph_PSTH(day_path, psth_struct, selected_data, NaN, NaN, config, ...
                 filename_meta.filename)
             end
         catch ME
