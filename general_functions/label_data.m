@@ -1,4 +1,4 @@
-function [labeled_data] = label_neurons(channel_map, label_table, session_num)
+function [labeled_data] = label_data(channel_map, label_table, session_num)
     if isempty(channel_map)
         error('Channel map is empty so cannot label any channels')
     end

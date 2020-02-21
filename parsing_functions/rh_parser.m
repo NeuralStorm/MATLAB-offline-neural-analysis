@@ -44,7 +44,7 @@ function [] = rh_parser(parsed_path, failed_path, raw_file, config, label_table)
         end
         event_samples = find_ts(board_dig_in_data, config.paired_pulse, isi);
 
-        labeled_data = label_neurons(wideband_map, label_table, ...
+        labeled_data = label_data(wideband_map, label_table, ...
             filename_meta.session_num);
 
         %% Saves parsed files

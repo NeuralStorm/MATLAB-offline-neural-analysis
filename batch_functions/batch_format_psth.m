@@ -25,7 +25,7 @@ function [psth_path] = batch_format_psth(animal_path, parent_path, dir_name, con
             [~, filename, ~] = fileparts(file);
             load(file, 'event_ts', 'labeled_data', 'filename_meta');
             %% Select channels
-            selected_data = select_channels(labeled_data, ...
+            selected_data = select_data(labeled_data, ...
                 channel_table, filename_meta.session_num);
             %% Check parsed variables to make sure they are not empty
             empty_vars = check_variables(file, event_ts, selected_data);

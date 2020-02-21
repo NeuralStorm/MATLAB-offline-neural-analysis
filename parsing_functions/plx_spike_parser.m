@@ -91,7 +91,7 @@ function [] = plx_spike_parser(parsed_path, failed_path, raw_file, config, label
         %% label channel map
         [~, filename, ~] = fileparts(raw_file);
         filename_meta = get_filename_info(filename);
-        labeled_data = label_neurons(channel_map, label_table, ...
+        labeled_data = label_data(channel_map, label_table, ...
             filename_meta.session_num);
 
         %% Saves parsed files

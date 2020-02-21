@@ -38,7 +38,7 @@ function [] = batch_label(animal_path, animal_name, parsed_path)
         load(file, 'channel_map');
         check_variables(file, channel_map);
 
-        labeled_data = label_neurons(channel_map, label_table, session_num);
+        labeled_data = label_data(channel_map, label_table, session_num);
 
         check_variables(file, labeled_data);
         save(file, 'labeled_data', '-append');

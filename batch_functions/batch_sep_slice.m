@@ -20,7 +20,7 @@ function [sep_path] = batch_sep_slice(animal_path, parsed_path, config)
             load(file, 'labeled_data', 'event_samples', 'sample_rate', 'filename_meta')
 
             %% Select channels
-            selected_data = select_channels(labeled_data, channel_table, ...
+            selected_data = select_data(labeled_data, channel_table, ...
                 filename_meta.session_num);
 
             %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
