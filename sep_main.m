@@ -4,9 +4,6 @@
 % and make change in broadband_psth_main 
 
 % need to pull animal ID from the filename, not the folder
-% There is a temporary solution in slice_signal.m to removed the paried
-% pulse time stamps. Assumes that non-PP recordings have < 125 TSs
-
 function [] = sep_main()
     original_path = uigetdir(pwd);
     start_time = tic;

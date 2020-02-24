@@ -18,13 +18,10 @@ function sep_analysis_path = do_sep_analysis(animal_name, slice_path, config)
             empty_vars = check_variables(file, sliced_signal);
             if empty_vars
                 continue
-            end            
-            
+            end
             %% Average sliced data into SEP
             sep_data = average_sliced_data(sliced_signal, config.trial_range);
-            
             %% Apply sep analysis
-
             sep_analysis_results = cal_sep_analysis(filename_meta, sep_data,...
                 sep_window, config);
 
@@ -40,7 +37,7 @@ function sep_analysis_path = do_sep_analysis(animal_name, slice_path, config)
                 continue
             end
             %% Save file if all variables are not empty
-                    save(matfile, '-v7.3', 'sep_analysis_results', 'analysis_log', 'sep_log');
+            save(matfile, '-v7.3', 'sep_analysis_results', 'analysis_log', 'sep_log');
         catch ME
             handle_ME(ME, failed_path, filename);
         end
