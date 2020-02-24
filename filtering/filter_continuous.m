@@ -4,6 +4,7 @@ function [struct_map] = filter_continuous(selected_data, sample_rate, notch_filt
 
     unique_regions = fieldnames(selected_data);
     region_map = [];
+    filt_freq = filt_freq ./ (sample_rate/2);
     for region_i = 1:length(unique_regions)
         region = unique_regions{region_i};
         channel_list = selected_data.(region);
@@ -29,16 +30,14 @@ function [struct_map] = filter_continuous(selected_data, sample_rate, notch_filt
             end
 
             switch filt_type
-                %TODO verify [b,a] vs [z,p,k] butter filtering
                 case {'low', 'high'}
-                    filtered_data = butterworth(filt_order, filt_freq/(sample_rate/2), ...
+                    assert(length(filt_freq) == 1)
+                    filtered_data = butterworth(filt_order, filt_freq, ...
                         filt_type, filtered_data);
                 case 'bandpass'
                     assert(length(filt_freq) == 2)
-                    band_freq = filt_freq ./ (sample_rate/2);
-                    [z, p, k] = butter(filt_order, band_freq, 'bandpass');
-                    [sos, g] = zp2sos(z, p, k);
-                    filtered_data = filtfilt(sos, g, filtered_data);
+                    filtered_data = butterworth(filt_order, filt_freq, ...
+                        filt_type, filtered_data);
                 case 'notch'
                     if ~notch_filt
                         warning('Inconsistent parameters in config. Notch filt set to false, but filt type was notch. Applying notch filter');
