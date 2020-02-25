@@ -1,4 +1,4 @@
-function [ts] = find_ts(failed_path, filename, dig_sig, paired_pulse, isi, expected_trials)
+function [ts] = find_event_sample(failed_path, filename, dig_sig, paired_pulse, isi, expected_trials)
     %This function outputs a matrix with two rows - 
     %Row 1 contains the time stamp of the low -> high part of the pulse
     %Row 2 contains the time stamp of the high -> low part of the pulse
