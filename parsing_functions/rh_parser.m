@@ -49,6 +49,10 @@ function [] = rh_parser(parsed_path, failed_path, raw_file, config, label_table)
         labeled_data = label_data(wideband_map, label_table, ...
             filename_meta.session_num);
 
+        channel_list = wideband_map(:, 1);
+        label_list = label_table.sig_channels(filename_meta.session_num == label_table.recording_session);
+        enforce_labels(channel_list, label_list, filename_meta.session_num);
+
         %% Saves parsed files
         matfile = fullfile(parsed_path, [filename, '.mat']);
         save(matfile, '-v7.3', 'analog_input_map', ...

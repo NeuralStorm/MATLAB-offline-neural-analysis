@@ -94,6 +94,10 @@ function [] = plx_spike_parser(parsed_path, failed_path, raw_file, config, label
         labeled_data = label_data(channel_map, label_table, ...
             filename_meta.session_num);
 
+        channel_list = channel_map(:, 1);
+        label_list = label_table.sig_channels(filename_meta.session_num == label_table.recording_session);
+        enforce_labels(channel_list, label_list, filename_meta.session_num);
+
         %% Saves parsed files
         matfile = fullfile(parsed_path, [filename, '.mat']);
         save(matfile, 'event_ts', 'channel_map', 'filename_meta', 'labeled_data');

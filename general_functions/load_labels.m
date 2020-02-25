@@ -13,7 +13,7 @@ function [label_table] = load_labels(animal_path, csv_id, ignore_sessions)
     label_table = readtable(csv_file);
 
     if isempty(label_table)
-        error('Must have a labels csv in order to label channels.');
+        error('Must have valid labels in csv.');
     end
 
     label_headers = label_table.Properties.VariableNames;
