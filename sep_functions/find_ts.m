@@ -1,4 +1,4 @@
-function [ts] = find_ts(dig_sig, paired_pulse, isi)
+function [ts] = find_ts(failed_path, filename, dig_sig, paired_pulse, isi, expected_trials)
     %This function outputs a matrix with two rows - 
     %Row 1 contains the time stamp of the low -> high part of the pulse
     %Row 2 contains the time stamp of the high -> low part of the pulse
@@ -6,36 +6,22 @@ function [ts] = find_ts(dig_sig, paired_pulse, isi)
     temp_ts_low_high = [];
     temp_ts_high_low = [];
 
-    % sm_dig = smooth(dig_sig).'; %use this line when there is noise in the dig signal
-    sm_dig = (dig_sig).';       %use this line when there is NO noise in the dig signal
-
-    % trimCount = 0; 
-
-    % while sm_dig(length(sm_dig) ~= 0)
-    %     sm_dig(length(sm_dig)) = [];
-    %     trimCount = trimCount + 1;
-    % end
-
-    % sm_adc = smooth(adc_sig).';
-
-    dig_up_down = [];
-
     x = 1;
-    while x <= length(sm_dig)
-        if sm_dig(x) == 1
+    while x <= length(dig_sig)
+        if dig_sig(x) == 1
             temp_ts_low_high = [temp_ts_low_high, x];
-            while (sm_dig(x) ~= 0 && x < length(sm_dig))
+            while (dig_sig(x) ~= 0 && x < length(dig_sig))
                 x = x + 1;
             end
         end
         x = x + 1;
     end
 
-    y = length(sm_dig);
+    y = length(dig_sig);
     while y >= 1
-        if sm_dig(y) == 1
+        if dig_sig(y) == 1
             temp_ts_high_low = [temp_ts_high_low, y];
-            while sm_dig(y) ~= 0 && y > 1
+            while dig_sig(y) ~= 0 && y > 1
                 y = y - 1;
             end
         end
@@ -60,5 +46,16 @@ function [ts] = find_ts(dig_sig, paired_pulse, isi)
         temp_ts_high_low = temp_ts_high_low(:, 1:2:end);
     end
     ts = [temp_ts_low_high; temp_ts_high_low];
+    [~, tot_trials] = size(ts);
+    if tot_trials == 0
+        error('No event samples were found in the continuous event channel');
+    elseif tot_trials < expected_trials || tot_trials > expected_trials
+        try
+            error('Found %d trials, but expected %d trials', ...
+                tot_trials, expected_trials);
+        catch ME
+            handle_ME(ME, failed_path, filename)
+        end
+    end
 end
 

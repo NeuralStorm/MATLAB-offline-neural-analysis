@@ -42,7 +42,8 @@ function [] = rh_parser(parsed_path, failed_path, raw_file, config, label_table)
         else
             isi = NaN;
         end
-        event_samples = find_ts(board_dig_in_data, config.paired_pulse, isi);
+        event_samples = find_ts(failed_path, filename, board_dig_in_data, ...
+            config.paired_pulse, isi, config.trial_lower_bound);
 
         labeled_data = label_data(wideband_map, label_table, ...
             filename_meta.session_num);
