@@ -34,17 +34,7 @@ function [] = rh_parser(parsed_path, failed_path, raw_file, config, label_table)
         [~, filename, ~] = fileparts(raw_file);
         filename_meta = get_filename_info(filename);
 
-        %% Pull out event times
-        if config.paired_pulse
-            %% get ISI from filename
-            isi_cells = regexp(filename_meta.experimental_condition,'-\d*','Match');
-            isi = abs(str2double(isi_cells{end}));
-        else
-            isi = NaN;
-        end
-        event_samples = find_event_samples(failed_path, filename, ...
-            board_dig_in_data, config.paired_pulse, isi, ...
-            config.trial_lower_bound);
+        event_samples = find_event_samples(board_dig_in_data);
 
         labeled_data = label_data(wideband_map, label_table, ...
             filename_meta.session_num);
