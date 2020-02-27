@@ -21,7 +21,6 @@ function [] = parser_main()
             %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
             %%           Parser           %%
             %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-            %! Might remove the file handling in the future
             batch_parser(animal_path, animal_name, config);
         end
     end

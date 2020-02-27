@@ -1,9 +1,3 @@
-%%ISSUES: 
-% - Need to make sure that changes work with all filters
-% - Should change sep_parser to intan_parser or something not sep specific,
-% and make change in broadband_psth_main 
-
-% need to pull animal ID from the filename, not the folder
 function [] = sep_main()
     original_path = uigetdir(pwd);
     start_time = tic;
@@ -25,10 +19,19 @@ function [] = sep_main()
             end
 
             %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+            %%             Filtering            %%
+            %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+            if config.save_filtered
+                filter_path = batch_filter(animal_path, parsed_path, config);
+            else
+                filter_path = [parsed_path, '/filtered'];
+            end
+
+            %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
             %%            Sep_slicing           %%
-            %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+            %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
             if config.sep_slicing
-                slice_path = batch_sep_slice(animal_path, parsed_path, config);
+                slice_path = batch_sep_slice(animal_path, parsed_path, filter_path, config);
             else
                 slice_path = [parsed_path, '/sep'];
             end
@@ -37,13 +40,12 @@ function [] = sep_main()
                 update_sep(slice_path, config.ignore_sessions, config.trial_range);
             end
 
-             %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-            %%         Sep_analysis         %%
-             %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+            %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+            %%           Sep Analysis           %%
+            %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
             if config.sep_analysis
                 do_sep_analysis(animal_name, slice_path, config);
             end
-            
         end
     end
     toc(start_time);

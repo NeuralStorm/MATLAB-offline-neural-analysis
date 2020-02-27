@@ -1,9 +1,6 @@
 function sep_analysis_path = do_sep_analysis(animal_name, slice_path, config)
     sep_analysis_start = tic;
     fprintf('SEP analysis for %s \n', animal_name);
-    analysis_vars = {'baseline_window_start', 'baseline_window_end', 'standard_deviation_coefficient', ...
-        'early_response_start', 'early_response_end', 'late_response_start', 'late_response_end', 'ignore_sessions'};
-    analysis_log = make_struct_log(config, analysis_vars);
     [sep_analysis_path, failed_path] = create_dir(slice_path, 'sep_analysis');
     file_list = get_file_list(slice_path, '.mat', config.ignore_sessions);
     export_params(sep_analysis_path, 'sep_analysis', failed_path, config);
@@ -12,7 +9,7 @@ function sep_analysis_path = do_sep_analysis(animal_name, slice_path, config)
             %% Load file contents
             file = [slice_path, '/', file_list(file_index).name];
             [~, filename, ~] = fileparts(file);
-            load(file, 'sliced_signal', 'sep_window', 'sep_log', 'filename_meta');
+            load(file, 'sliced_signal', 'sep_window', 'filename_meta');
             %extract the file name
             %% Check sliced variables to make sure they are not empty
             empty_vars = check_variables(file, sliced_signal);
@@ -37,7 +34,8 @@ function sep_analysis_path = do_sep_analysis(animal_name, slice_path, config)
                 continue
             end
             %% Save file if all variables are not empty
-            save(matfile, '-v7.3', 'sep_analysis_results', 'analysis_log', 'sep_log');
+            config_log = config;
+            save(matfile, '-v7.3', 'sep_analysis_results', 'config_log');
         catch ME
             handle_ME(ME, failed_path, filename);
         end
