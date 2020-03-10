@@ -3,7 +3,7 @@ function [] = handle_ME(ME, failed_path, filename)
     if ~exist(failed_path, 'dir')
         mkdir(failed_path);
     end
-    filename = ['FAILED.', filename, '.mat'];
+    filename = ['FAILED_', filename, '.mat'];
     error_message = getReport(ME, 'extended', 'hyperlinks', 'on');
     warning(error_message);
     matfile = fullfile(failed_path, filename);
