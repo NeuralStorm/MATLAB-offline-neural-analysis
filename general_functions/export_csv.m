@@ -1,5 +1,4 @@
 function [] = export_csv(csv_path, column_names, general_table, analysis_table)
-    
     var_types = [];
     for column = 1:width(general_table)
         var_types = [var_types, {class(general_table.(column))}];
@@ -8,7 +7,8 @@ function [] = export_csv(csv_path, column_names, general_table, analysis_table)
     for column = 1:width(analysis_table)
         var_types = [var_types, {class(analysis_table.(column))}];
     end
-    results_table = table('Size', [0, length(column_names)], 'VariableTypes', var_types, 'VariableNames', column_names);
+    results_table = table('Size', [0, length(column_names)], 'VariableTypes', ...
+        var_types, 'VariableNames', column_names);
     if exist(csv_path, 'file')
         results_table = readtable(csv_path);
         if strcmpi(class(results_table.recording_notes), 'double')
@@ -16,11 +16,11 @@ function [] = export_csv(csv_path, column_names, general_table, analysis_table)
         end
     end
 
+    %% Append new results to existing results table
     new_results_table = [general_table analysis_table];
-
     results_table = [results_table; new_results_table];
 
-    %% Filter out repetitive rows
+    %% Creating filter columns to find unique rows in csv
     general_col_i = 1:1:width(general_table);
     non_double_col_i = [];
     for col_i = 1:width(results_table)
@@ -40,7 +40,6 @@ function [] = export_csv(csv_path, column_names, general_table, analysis_table)
             end
         end
     end
-    nan_cols
     if ~isempty(nan_cols)
         check_cols = check_cols(~ismember(check_cols, nan_cols));
     end
