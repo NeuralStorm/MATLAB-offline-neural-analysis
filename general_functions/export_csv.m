@@ -38,6 +38,11 @@ function [] = export_csv(csv_path, column_names, general_table, analysis_table)
             if any(isnan(results_table.(curr_col)))
                 nan_cols = [nan_cols, col_i];
             end
+        elseif ismember(var_types{col_i}, {'string', 'char', 'cell'})
+            curr_col = column_names{col_i};
+            if any(ismissing(results_table.(curr_col)))
+                nan_cols = [nan_cols, col_i];
+            end
         end
     end
     if ~isempty(nan_cols)
