@@ -19,5 +19,34 @@ function [] = export_csv(csv_path, column_names, general_table, analysis_table)
     new_results_table = [general_table analysis_table];
 
     results_table = [results_table; new_results_table];
+
+    %% Filter out repetitive rows
+    general_col_i = 1:1:width(general_table);
+    non_double_col_i = [];
+    for col_i = 1:width(results_table)
+        if ~strcmpi(var_types{col_i}, 'double')
+            %% Skips doubles to help prevent taking NaN in unique
+            non_double_col_i = [non_double_col_i, col_i];
+        end
+    end
+    check_cols = union(general_col_i, non_double_col_i);
+    %% Verify columns used in unique dont have nan
+    nan_cols = [];
+    for col_i = check_cols
+        if strcmpi(var_types{col_i}, 'double')
+            curr_col = column_names{col_i};
+            if any(isnan(results_table.(curr_col)))
+                nan_cols = [nan_cols, col_i];
+            end
+        end
+    end
+    nan_cols
+    if ~isempty(nan_cols)
+        check_cols = check_cols(~ismember(check_cols, nan_cols));
+    end
+
+    %% Isolate unique rows and write to csv
+    [~, ind] = unique(results_table(:, check_cols), 'rows');
+    results_table = results_table(ind,:);
     writetable(results_table, csv_path, 'Delimiter', ',');
 end
