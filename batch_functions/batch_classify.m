@@ -1,9 +1,8 @@
-function [] = batch_classify(animal_name, original_path, data_path, dir_name, ...
-        search_ext, filename_substring_one, config)
+function [] = batch_classify(project_path, save_path, failed_path, data_path, dir_name, filename_substring_one, config)
     classifier_start = tic;
-
-    [classify_path, failed_path] = create_dir(data_path, dir_name);
-    [files] = get_file_list(data_path, search_ext, config.ignore_sessions);
+    config_log = config;
+    file_list = get_file_list(data_path, '.mat');
+    file_list = update_file_list(file_list, failed_path, config.include_sessions);
 
     %% Pull variable names into workspace scope for log
     bin_size = config.bin_size; pre_time = config.pre_time; pre_start = config.pre_start;
@@ -11,9 +10,7 @@ function [] = batch_classify(animal_name, original_path, data_path, dir_name, ..
     post_end = config.post_end; bootstrap_classifier = config.bootstrap_classifier;
     boot_iterations = config.boot_iterations;
 
-    export_params(classify_path, 'classifier', failed_path, animal_name, ...
-        boot_iterations, bootstrap_classifier, bin_size, pre_time, pre_start, ...
-        pre_end, post_time, post_start, post_end);
+    %TODO create log csv
 
     meta_headers = {'animal', 'group', 'date', 'record_session', 'bin_size', ...
         'pre_time', 'pre_start', 'pre_end', 'post_time', 'post_start', 'post_end', ...
@@ -22,16 +19,16 @@ function [] = batch_classify(animal_name, original_path, data_path, dir_name, ..
         'boot_info', 'corrected_info', 'synergy_redundancy', 'synergistic', 'recording_notes'};
     csv_headers = [meta_headers, analysis_headers];
 
-    sprintf('PSTH classification for %s \n', animal_name);
+    sprintf('PSTH classification for %s \n', dir_name);
 
     pop_config_info = table;
     unit_config_info = table;
     pop_info = [];
     unit_info = [];
-    for file_index = 1:length(files)
+    for file_index = 1:length(file_list)
         %% Run through files
         try
-            file = fullfile(data_path, files(file_index).name);
+            file = fullfile(data_path, file_list(file_index).name);
             load(file, 'selected_data', 'event_ts', 'response_window', 'filename_meta');
             %% Check psth variables to make sure they are not empty
             empty_vars = check_variables(file, selected_data, event_ts, response_window);
@@ -55,20 +52,20 @@ function [] = batch_classify(animal_name, original_path, data_path, dir_name, ..
             [unit_config_info, unit_info] = ...
                 concat_tables(meta_headers, unit_config_info, current_general_info, unit_info, unit_table);
 
-            matfile = fullfile(classify_path, ['psth_classifier_', filename_meta.filename, '.mat']);
+            matfile = fullfile(save_path, ['psth_classifier_', filename_meta.filename, '.mat']);
             check_variables(matfile, unit_struct, pop_struct, pop_table, unit_table);
-            save(matfile, 'pop_struct', 'unit_struct', 'pop_table', 'unit_table');
+            save(matfile, 'pop_struct', 'unit_struct', 'pop_table', 'unit_table', 'config_log');
         catch ME
             handle_ME(ME, failed_path, filename_meta.filename);
         end
     end
 
     %% CSV set up
-    unit_csv_path = fullfile(original_path, ['unit_', filename_substring_one, '_classification_info.csv']);
-    pop_csv_path = fullfile(original_path, ['pop_', filename_substring_one, '_classification_info.csv']);
+    unit_csv_path = fullfile(project_path, ['unit_', filename_substring_one, '_classification_info.csv']);
+    pop_csv_path = fullfile(project_path, ['pop_', filename_substring_one, '_classification_info.csv']);
     export_csv(unit_csv_path, csv_headers, unit_config_info, unit_info);
     export_csv(pop_csv_path, csv_headers, pop_config_info, pop_info);
 
     fprintf('Finished PSTH classifier for %s. It took %s \n', ...
-        animal_name, num2str(toc(classifier_start)));
+        dir_name, num2str(toc(classifier_start)));
 end

@@ -1,21 +1,16 @@
-function [rf_path] = batch_recfield(animal_name, original_path, data_path, dir_name, ...
-        search_ext, filename_substring_one, config)
-    %! TODO FIX CSV NAME HANDLING
-
+function [] = batch_recfield(project_path, save_path, failed_path, data_path, dir_name, filename_substring_one, config)
     rf_start = tic;
-    
-    [rf_path, failed_path] = create_dir(data_path, dir_name);
-    [files] = get_file_list(data_path, search_ext, config.ignore_sessions);
+    config_log = config;
+    file_list = get_file_list(data_path, '.mat');
+    file_list = update_file_list(file_list, failed_path, config.include_sessions);
 
     %% Pull variable names into workspace scope for log
     pre_time = config.pre_time; pre_start = config.pre_start; pre_end = config.pre_end;
     post_time = config.post_time; post_start = config.post_start; post_end = config.post_end;
-    bin_size = config.bin_size; threshold_scale = config.threshold_scale; ignore_sessions = config.ignore_sessions;
+    bin_size = config.bin_size; threshold_scale = config.threshold_scale;
     sig_check = config.sig_check; sig_bins = config.sig_bins; span = config.span;
 
-    export_params(rf_path, 'receptive_field_analysis', rf_path, failed_path, ...
-        animal_name, pre_time, pre_start, pre_end, post_start, post_end, bin_size, ...
-        threshold_scale, sig_check, sig_bins, span, ignore_sessions);
+    %TODO create log csv
 
     meta_headers = {'animal', 'group', 'date', 'record_session', 'pre_time', ...
         'pre_start', 'pre_end', 'post_time', 'post_start', 'post_end', 'bin_size', ...
@@ -27,13 +22,13 @@ function [rf_path] = batch_recfield(animal_name, original_path, data_path, dir_n
         'total_sig_events', 'principal_event', 'norm_magnitude', 'recording_notes'};
     csv_headers = [meta_headers, analysis_headers];
 
-    sprintf('Receptive field analysis for %s \n', animal_name);
+    sprintf('Receptive field analysis for %s \n', dir_name);
     all_neurons = [];
     general_info = table;
-    for file_index = 1:length(files)
+    for file_index = 1:length(file_list)
         try
             %% pull info from filename and set up file path for analysis
-            file = fullfile(data_path, files(file_index).name);
+            file = fullfile(data_path, file_list(file_index).name);
 
             %% Load needed variables from psth and does the receptive field analysis
             load(file, 'selected_data', 'baseline_window', 'response_window', 'filename_meta');
@@ -63,17 +58,17 @@ function [rf_path] = batch_recfield(animal_name, original_path, data_path, dir_n
 
             %% Save receptive field matlab output
             % Does not check if variables are empty since there may/may not be significant responses in a set
-            matfile = fullfile(rf_path, ['rec_field_', filename_meta.filename, '.mat']);
-            save(matfile, 'selected_data', 'sig_neurons', 'non_sig_neurons', 'filename_meta');
+            matfile = fullfile(save_path, ['rec_field_', filename_meta.filename, '.mat']);
+            save(matfile, 'selected_data', 'sig_neurons', 'non_sig_neurons', 'filename_meta', 'config_log');
         catch ME
             handle_ME(ME, failed_path, filename_meta.filename);
         end
     end
 
     %% CSV export set up
-    csv_path = fullfile(original_path, [filename_substring_one, '_receptive_field_results.csv']);
+    csv_path = fullfile(project_path, [filename_substring_one, '_receptive_field_results.csv']);
     export_csv(csv_path, csv_headers, general_info, all_neurons);
 
     fprintf('Finished receptive field analysis for %s. It took %s \n', ...
-        animal_name, num2str(toc(rf_start)));
+        dir_name, num2str(toc(rf_start)));
 end

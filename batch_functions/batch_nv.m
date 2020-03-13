@@ -1,13 +1,11 @@
-function [] = batch_nv(animal_name, original_path, data_path, dir_name, ...
-        search_ext, filename_substring_one, config)
-    %% Check pre time is valid for analysis
+function [] = batch_nv(project_path, save_path, failed_path, data_path, ...
+        dir_name, filename_substring_one, config)
     nv_start = tic;
-    
+    config_log = config;
+    file_list = get_file_list(data_path, '.mat');
+    file_list = update_file_list(file_list, failed_path, config.include_sessions);
     %% NV set up
 
-    [nv_path, failed_path] = create_dir(data_path, dir_name);
-    [psth_files] = get_file_list(data_path, search_ext, config.ignore_sessions);
-    
     meta_headers = {'animal', 'group', 'date', 'record_session', 'pre_time', 'pre_start', 'pre_end'};
     analysis_headers = {'event', 'region', 'sig_channels', 'user_channels', 'avg_background_rate', ...
         'background_var', 'norm_var', 'fano', 'recording_notes'};
@@ -18,16 +16,15 @@ function [] = batch_nv(animal_name, original_path, data_path, dir_name, ...
     bin_size = config.bin_size; epsilon = config.epsilon; 
     norm_var_scaling = config.norm_var_scaling; separate_events = config.separate_events;
 
-    export_params(nv_path, 'normalized_variance', failed_path, animal_name, pre_time, ...
-        pre_start, pre_end, bin_size, epsilon, norm_var_scaling, separate_events);
+    %TODO export log
 
-    fprintf('Normalized variance analysis for %s \n', animal_name);
+    fprintf('Normalized variance analysis for %s \n', dir_name);
     all_neurons = [];
     meta_info = table;
-    for file_index = 1:length(psth_files)
+    for file_index = 1:length(file_list)
         %% Run through files
         try
-            file = fullfile(data_path, psth_files(file_index).name);
+            file = fullfile(data_path, file_list(file_index).name);
             load(file, 'selected_data', 'baseline_window', 'filename_meta');
             %% Check psth variables to make sure they are not empty
             empty_vars = check_variables(file, baseline_window, selected_data);
@@ -48,17 +45,18 @@ function [] = batch_nv(animal_name, original_path, data_path, dir_name, ...
                 all_neurons, neuron_activity);
 
             %% Save analysis results
-            matfile = fullfile(nv_path, ['NV_analysis_', filename_meta.filename, '.mat']);
+            matfile = fullfile(save_path, ['NV_analysis_', filename_meta.filename, '.mat']);
             check_variables(matfile, selected_data, neuron_activity);
-            save(matfile, 'selected_data', 'neuron_activity', 'filename_meta');
+            save(matfile, 'selected_data', 'neuron_activity', 'filename_meta', ...
+                'config_log');
         catch ME
             handle_ME(ME, failed_path, filename_meta.filename);
         end
     end
     %% CSV export set up
-    csv_path = fullfile(original_path, [filename_substring_one, '_norm_var.csv']);
+    csv_path = fullfile(project_path, [filename_substring_one, '_norm_var.csv']);
     export_csv(csv_path, csv_headers, meta_info, all_neurons);
 
     fprintf('Finished normalized variance analysis for %s. It took %s \n', ...
-        animal_name, num2str(toc(nv_start)));
+        dir_name, num2str(toc(nv_start)));
 end

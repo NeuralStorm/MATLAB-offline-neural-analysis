@@ -1,16 +1,17 @@
-function [] = batch_graph(animal_name, data_path, dir_name, search_ext, config, rf_path)
-
+function [] = batch_graph(save_path, failed_path, data_path, dir_name, config, rf_path)
+    % (project_path, save_path, failed_path, data_path, dir_name, filename_substring_one, config)
     graph_start = tic;
-    
-    [graph_path, failed_path] = create_dir(data_path, dir_name);
-    files = get_file_list(data_path, search_ext, config.ignore_sessions);
-    
-    fprintf('Graphing for %s \n', animal_name);
+    file_list = get_file_list(data_path, '.mat');
+    file_list = update_file_list(file_list, failed_path, config.include_sessions);
+
+    %TODO save config log
+
+    fprintf('Graphing for %s \n', dir_name);
     %% Goes through all the files and calculates mutual info according to the parameters set in config
-    for file_index = 1:length(files)
+    for file_index = 1:length(file_list)
         try
             %% pull info from filename and set up file path for analysis
-            file = fullfile(data_path, files(file_index).name);
+            file = fullfile(data_path, file_list(file_index).name);
             load(file, 'psth_struct', 'selected_data', 'filename_meta');
             %% Check psth variables to make sure they are not empty
             empty_vars = check_variables(file, psth_struct, selected_data);
@@ -19,9 +20,9 @@ function [] = batch_graph(animal_name, data_path, dir_name, search_ext, config, 
             end
 
             % Creates the day directory if it does not already exist
-            day_path = [graph_path, '/', num2str(filename_meta.session_num)];
+            day_path = [save_path, '/', num2str(filename_meta.session_num)];
             if ~exist(day_path, 'dir')
-                mkdir(graph_path, num2str(filename_meta.session_num));
+                mkdir(save_path, num2str(filename_meta.session_num));
             end
 
             if config.rf_analysis
@@ -39,5 +40,5 @@ function [] = batch_graph(animal_name, data_path, dir_name, search_ext, config, 
         end
     end
     fprintf('Finished graphing for %s. It took %s \n', ...
-        animal_name, num2str(toc(graph_start)));
+        dir_name, num2str(toc(graph_start)));
 end

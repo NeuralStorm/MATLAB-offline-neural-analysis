@@ -173,5 +173,5 @@ function [classify_struct, table_results] = classify_pop(region_name, psth_struc
     classify_struct.correct_trials = correct_trials;
     classify_struct.performance = performance;
     table_results = [table_results; {region_name}, {'population'}, {'population'}, {performance}, {mutual_info}, {0}, {mutual_info} ...
-        {NaN}, {NaN}, {strings}];
+        {NaN}, {NaN}, {'n/a'}];
 end
