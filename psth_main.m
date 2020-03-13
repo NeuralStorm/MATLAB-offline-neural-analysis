@@ -1,5 +1,4 @@
 function [] = psth_main()
-    %TODO add log to all files
     %% Get data directory
     project_path = uigetdir(pwd);
     start_time = tic;

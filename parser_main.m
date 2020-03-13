@@ -22,7 +22,7 @@ function [] = parser_main()
         %TODO handle scenario where both is included
         if strcmpi(dir_config.recording_type, 'spike')
             [parsed_path, failed_path]= create_dir(project_path, 'parsed_spike');
-        elseif strcmpi(recording_type, 'continuous')
+        elseif strcmpi(dir_config.recording_type, 'continuous')
             [parsed_path, failed_path]= create_dir(project_path, 'parsed_continuous');
         end
         export_params(parsed_path, 'parser', config);
