@@ -1,4 +1,4 @@
-function [] = sep_main()
+function [] = analog_main()
     original_path = uigetdir(pwd);
     start_time = tic;
     animal_list = dir(original_path);
