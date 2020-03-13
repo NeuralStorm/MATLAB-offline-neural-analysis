@@ -10,8 +10,6 @@ function [] = batch_recfield(project_path, save_path, failed_path, data_path, di
     bin_size = config.bin_size; threshold_scale = config.threshold_scale;
     sig_check = config.sig_check; sig_bins = config.sig_bins; span = config.span;
 
-    %TODO create log csv
-
     meta_headers = {'animal', 'group', 'date', 'record_session', 'pre_time', ...
         'pre_start', 'pre_end', 'post_time', 'post_start', 'post_end', 'bin_size', ...
         'sig_check', 'sig_bins', 'span', 'threshold_scale'};

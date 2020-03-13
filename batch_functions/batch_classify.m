@@ -10,8 +10,6 @@ function [] = batch_classify(project_path, save_path, failed_path, data_path, di
     post_end = config.post_end; bootstrap_classifier = config.bootstrap_classifier;
     boot_iterations = config.boot_iterations;
 
-    %TODO create log csv
-
     meta_headers = {'animal', 'group', 'date', 'record_session', 'bin_size', ...
         'pre_time', 'pre_start', 'pre_end', 'post_time', 'post_start', 'post_end', ...
         'bootstrap_classifier', 'boot_iterations'};
@@ -61,8 +59,8 @@ function [] = batch_classify(project_path, save_path, failed_path, data_path, di
     end
 
     %% CSV set up
-    unit_csv_path = fullfile(project_path, ['unit_', filename_substring_one, '_classification_info.csv']);
-    pop_csv_path = fullfile(project_path, ['pop_', filename_substring_one, '_classification_info.csv']);
+    unit_csv_path = fullfile(project_path, [filename_substring_one,'_unit_classification_info.csv']);
+    pop_csv_path = fullfile(project_path, [filename_substring_one, '_pop_classification_info.csv']);
     export_csv(unit_csv_path, csv_headers, unit_config_info, unit_info);
     export_csv(pop_csv_path, csv_headers, pop_config_info, pop_info);
 

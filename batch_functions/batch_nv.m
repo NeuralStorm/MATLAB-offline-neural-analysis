@@ -4,7 +4,6 @@ function [] = batch_nv(project_path, save_path, failed_path, data_path, ...
     config_log = config;
     file_list = get_file_list(data_path, '.mat');
     file_list = update_file_list(file_list, failed_path, config.include_sessions);
-    %% NV set up
 
     meta_headers = {'animal', 'group', 'date', 'record_session', 'pre_time', 'pre_start', 'pre_end'};
     analysis_headers = {'event', 'region', 'sig_channels', 'user_channels', 'avg_background_rate', ...
@@ -15,8 +14,6 @@ function [] = batch_nv(project_path, save_path, failed_path, data_path, ...
     pre_time = config.pre_time; pre_start = config.pre_start; pre_end = config.pre_end; 
     bin_size = config.bin_size; epsilon = config.epsilon; 
     norm_var_scaling = config.norm_var_scaling; separate_events = config.separate_events;
-
-    %TODO export log
 
     fprintf('Normalized variance analysis for %s \n', dir_name);
     all_neurons = [];

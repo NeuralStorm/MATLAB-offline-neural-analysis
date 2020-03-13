@@ -1,10 +1,7 @@
 function [] = batch_graph(save_path, failed_path, data_path, dir_name, config, rf_path)
-    % (project_path, save_path, failed_path, data_path, dir_name, filename_substring_one, config)
     graph_start = tic;
     file_list = get_file_list(data_path, '.mat');
     file_list = update_file_list(file_list, failed_path, config.include_sessions);
-
-    %TODO save config log
 
     fprintf('Graphing for %s \n', dir_name);
     %% Goes through all the files and calculates mutual info according to the parameters set in config
