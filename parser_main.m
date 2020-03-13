@@ -1,5 +1,4 @@
 function [] = parser_main()
-
     %% Get project directory and check for raw directory
     project_path = uigetdir(pwd);
     start_time = tic;
@@ -8,43 +7,36 @@ function [] = parser_main()
         error('No raw directory to parse files');
     end
 
-    %% Create parsed directory
-    [parsed_path, failed_path] = create_dir(project_path, 'parsed');
-
-    %% Import parser config
+    %% Import parser config, remove ignored animals, export log
     config = import_config(project_path, 'parser');
-    export_params(parsed_path, 'parser', config);
+    config(config.include_animal == 0, :) = [];
 
-    dir_list = dir(raw_path);
-    dir_names = {dir_list([dir_list.isdir] == 1 ...
-                    & ~contains({dir_list.name}, '.')).name};
-
-    for dir_i = 1:length(dir_names)
-        curr_dir = dir_names{dir_i};
+    dir_list = config.dir_name;
+    for dir_i = 1:length(dir_list)
+        %% Set up directories for parsing and load labels
+        curr_dir = dir_list{dir_i};
         dir_config = config(strcmpi(config.dir_name, curr_dir), :);
-        if ~ismember(curr_dir, config.dir_name)
-            try
-                error('%s is not in the config. Please add %s to parser config', ...
-                    curr_dir, curr_dir);
-            catch ME
-                handle_ME(ME, failed_path, ['missing_', curr_dir, '_config.mat']);
-            end
+        label_table = load_labels(project_path, [curr_dir, '_labels.csv']);
+
+        %% Check if spike or continuous
+        %TODO handle scenario where both is included
+        if strcmpi(dir_config.recording_type, 'spike')
+            [parsed_path, failed_path]= create_dir(project_path, 'parsed_spike');
+        elseif strcmpi(recording_type, 'continuous')
+            [parsed_path, failed_path]= create_dir(project_path, 'parsed_continuous');
         end
-        % Skips animals we want to ignore
-        if dir_config.include_animal
-            dir_path = fullfile(...
-                                    dir_list(strcmpi(dir_names{dir_i}, ...
-                                    {dir_list.name})).folder, curr_dir);
-            [dir_save_path, dir_failed_path] = create_dir(parsed_path, curr_dir);
-            %% load label table
-            label_table = load_labels(project_path, [curr_dir, '_labels.csv']);
-            %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-            %%           Parser           %%
-            %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-            batch_parser(dir_save_path, dir_failed_path, dir_path, curr_dir, dir_config, label_table);
-        else
-            continue;
-        end
+        export_params(parsed_path, 'parser', config);
+
+        %% Check to make sure paths exist for analysis and create save path
+        e_msg_1 = 'No raw directory to parse';
+        e_msg_2 = ['No ', curr_dir, ' directory to parse'];
+        raw_data_path = enforce_dir_layout(raw_path, curr_dir, failed_path, e_msg_1, e_msg_2);
+        [dir_save_path, dir_failed_path] = create_dir(parsed_path, curr_dir);
+
+        %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+        %%           Parser           %%
+        %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+        batch_parser(dir_save_path, dir_failed_path, raw_data_path, curr_dir, dir_config, label_table);
     end
     toc(start_time);
 end

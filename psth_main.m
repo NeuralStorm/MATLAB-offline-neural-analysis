@@ -22,7 +22,7 @@ function [] = psth_main()
         if dir_config.create_psth
             try
                 %% Check to make sure paths exist for analysis and create save path
-                parsed_path = [project_path, '/parsed'];
+                parsed_path = [project_path, '/parsed_spike'];
                 e_msg_1 = 'No parsed directory to create PSTHs';
                 e_msg_2 = ['No ', curr_dir, ' directory to create PSTHs'];
                 dir_psth_path = enforce_dir_layout(parsed_path, curr_dir, psth_failed_path, e_msg_1, e_msg_2);
