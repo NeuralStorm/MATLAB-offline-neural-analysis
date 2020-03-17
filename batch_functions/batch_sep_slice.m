@@ -1,68 +1,29 @@
-function [sep_path] = batch_sep_slice(animal_path, parsed_path, filter_path, config)
-
-    [sep_path, failed_path] = create_dir(parsed_path, 'sep');
-    if config.load_filtered
-        file_list = get_file_list(filter_path, '.mat', config.ignore_sessions);
-    else
-        file_list = get_file_list(parsed_path, '.mat', config.ignore_sessions);
-    end
-    export_params(sep_path, 'sep', failed_path, config);
-
-    %% load label table
-    channel_table = load_labels(animal_path, 'selected_data.csv', config.ignore_sessions);
+function [] = batch_sep_slice(save_path, failed_path, data_path, dir_name, config)
+    sep_start = tic;
+    fprintf('Creating SEP for %s \n', dir_name);
+    config_log = config;
+    file_list = get_file_list(data_path, '.mat');
+    file_list = update_file_list(file_list, failed_path, config.include_sessions);
 
     for file_index = 1:length(file_list)
         try
-            if config.load_filtered
-                if ~exist(filter_path, 'dir')
-                    error('Must save filtered files before trying to load them');
-                end
-                %% load filter file
-                filter_file = fullfile(filter_path, file_list(file_index).name);
-                load(filter_file, 'filtered_map', 'event_samples', 'sample_rate', 'filename_meta')
-            else
-                %% Load file contents
-                file = [parsed_path, '/', file_list(file_index).name];
-                load(file, 'labeled_data', 'event_samples', 'sample_rate', 'filename_meta')
+            %% pull info from filename and set up file path for analysis
+            file = fullfile(data_path, file_list(file_index).name);
 
-                %% Select channels
-                selected_data = select_data(labeled_data, channel_table, ...
-                    filename_meta.session_num);
-
-                %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-                %%           Filter           %%
-                %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-                if ~config.use_raw
-                    filtered_map = filter_continuous(selected_data, sample_rate, config.notch_filt, ...
-                        config.notch_freq, config.notch_bandwidth, config.notch_bandstop, ...
-                        config.sep_filt_type, config.sep_filt_freq, config.sep_filt_order);
-                else
-                    unique_regions = fieldnames(selected_data);
-                    data_table = table;
-                    for region_i = 1:length(unique_regions)
-                        region = unique_regions{region_i};
-                        region_table = selected_data.(region);
-                        region_table = removevars(region_table, ...
-                            {'recording_session', 'date', 'recording_notes'});
-                        data_table = [data_table; region_table];
-                    end
-                    data_table.Properties.VariableNames = {'sig_channels', ...
-                        'user_channels', 'label', 'label_id', 'data'};
-                    %% unfiltered data is called filtered for convience of calling slicing function
-                    filtered_map = table2struct(data_table);
-                end
-            end
+            %% Load needed variables from psth and does the receptive field analysis
+            load(file, 'filtered_map', 'event_samples', 'sample_rate', 'filename_meta');
 
             %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
             %%          Slicing           %%
             %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
             sep_window = [-abs(config.window_start), config.window_end];
             sliced_signal = slice_signal(filtered_map, event_samples, sample_rate, sep_window);
-            config_log = config;
-            matfile = fullfile(sep_path, ['sliced_', filename_meta.filename, '.mat']);
+            matfile = fullfile(save_path, ['sliced_', filename_meta.filename, '.mat']);
             save(matfile, '-v7.3', 'sliced_signal', 'sep_window', 'config_log', 'filename_meta', 'event_samples');
         catch ME
             handle_ME(ME, failed_path, filename_meta.filename);
         end
     end
+    fprintf('Finished SEP formatting for %s. It took %s \n', ...
+        dir_name, num2str(toc(sep_start)));
 end

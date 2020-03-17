@@ -1,20 +1,23 @@
-function [filter_path] = batch_filter(animal_path, parsed_path, config)
+function [] = batch_filter(save_path, failed_path, data_path, dir_name, ...
+        config, label_table)
+    %% Find files to filter
+    filter_start = tic;
+    config_log = config;
+    file_list = get_file_list(data_path, '.mat');
+    file_list = update_file_list(file_list, failed_path, config.include_sessions);
 
-    [filter_path, failed_path] = create_dir(parsed_path, 'filtered');
-    file_list = get_file_list(parsed_path, '.mat', config.ignore_sessions);
-    export_params(filter_path, 'filter', failed_path, config);
+    %% Remove unselected channels
+    label_table(label_table.selected_channels == 0, :) = [];
 
-    %% load label table
-    channel_table = load_labels(animal_path, 'selected_data.csv', config.ignore_sessions);
-
+    fprintf('Filtering analog data for %s \n', dir_name);
     for file_index = 1:length(file_list)
         try
             %% Load file contents
-            file = [parsed_path, '/', file_list(file_index).name];
-            load(file, 'labeled_data', 'sample_rate', 'filename_meta', 'event_samples')
+            file = [data_path, '/', file_list(file_index).name];
+            load(file, 'labeled_data', 'sample_rate', 'filename_meta', 'event_samples');
 
             %% Select channels
-            selected_data = select_data(labeled_data, channel_table, ...
+            selected_data = select_data(labeled_data, label_table, ...
                 filename_meta.session_num);
 
             %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -25,15 +28,28 @@ function [filter_path] = batch_filter(animal_path, parsed_path, config)
                     config.notch_freq, config.notch_bandwidth, config.notch_bandstop, ...
                     config.sep_filt_type, config.sep_filt_freq, config.sep_filt_order);
             else
-                error('Contradictory config settings. Cannot save filtered data when use raw is true');
+                unique_regions = fieldnames(selected_data);
+                data_table = table;
+                for region_i = 1:length(unique_regions)
+                    region = unique_regions{region_i};
+                    region_table = selected_data.(region);
+                    region_table = removevars(region_table, ...
+                        {'selected_channels', 'recording_session', 'date', 'recording_notes'});
+                    data_table = [data_table; region_table];
+                end
+                data_table.Properties.VariableNames = {'sig_channels', ...
+                    'user_channels', 'label', 'label_id', 'data'};
+                %% unfiltered data is called filtered for convience of calling slicing function
+                filtered_map = table2struct(data_table);
             end
 
-            config_log = config;
-            matfile = fullfile(filter_path, ['filtered_', filename_meta.filename]);
+            matfile = fullfile(save_path, ['filtered_', filename_meta.filename]);
             save(matfile, '-v7.3', 'filtered_map', 'sample_rate', ...
                 'event_samples', 'filename_meta', 'config_log');
         catch ME
             handle_ME(ME, failed_path, filename_meta.filename);
         end
     end
+    fprintf('Finished filtering for %s. It took %s \n', ...
+        dir_name, num2str(toc(filter_start)));
 end

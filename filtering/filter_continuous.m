@@ -2,17 +2,25 @@ function [struct_map] = filter_continuous(selected_data, sample_rate, notch_filt
     notch_freq, notch_bandwidth, notch_bandstop, filt_type, filt_freq, filt_order)
     %TODO change notch_filt variable name --> too close to notch_filter function
 
+    %% Unwrap config values that might be in a cell
+    if iscell(filt_freq)
+        filt_freq = cell2mat(filt_freq);
+    end
+    if iscell(filt_type)
+        filt_type = filt_type{:};
+    end
+
     unique_regions = fieldnames(selected_data);
     region_map = [];
     filt_freq = filt_freq ./ (sample_rate/2);
     for region_i = 1:length(unique_regions)
         region = unique_regions{region_i};
-        channel_list = selected_data.(region);
-        tot_channels = height(channel_list);
-        filtered_region = cell(tot_channels, 5);
-        parfor channel_i = 1:tot_channels
-            channel_info = channel_list(channel_i, :);
-            channel_data = channel_info.channel_data{1};
+        region_table = selected_data.(region);
+        tot_region_channels = height(region_table);
+        filtered_region = cell(tot_region_channels, 5);
+        parfor channel_i = 1:tot_region_channels
+            channel_info = region_table(channel_i, :);
+            channel_data = cell2mat(channel_info.channel_data);
             %% notch filter
             if notch_filt
                 if notch_bandstop
