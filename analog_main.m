@@ -1,4 +1,5 @@
 function [] = analog_main()
+    %TODO add error checking
     project_path = uigetdir(pwd);
     start_time = tic;
 
@@ -51,7 +52,7 @@ function [] = analog_main()
             %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
             %%            Format SEP            %%
             %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-            batch_sep_slice(dir_save_path, dir_failed_path, dir_continuous_path, curr_dir, dir_config)
+            batch_format_sep(dir_save_path, dir_failed_path, dir_continuous_path, curr_dir, dir_config)
         end
 
         if config.sep_analysis
@@ -64,7 +65,7 @@ function [] = analog_main()
             %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
             %%           Sep Analysis           %%
             %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-            do_sep_analysis(dir_save_path, dir_failed_path, dir_sep_path, curr_dir, dir_config);
+            batch_sep_analysis(dir_save_path, dir_failed_path, dir_sep_path, curr_dir, dir_config);
         end
     end
     toc(start_time);

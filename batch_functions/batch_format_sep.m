@@ -1,4 +1,4 @@
-function [] = batch_sep_slice(save_path, failed_path, data_path, dir_name, config)
+function [] = batch_format_sep(save_path, failed_path, data_path, dir_name, config)
     sep_start = tic;
     fprintf('Creating SEP for %s \n', dir_name);
     config_log = config;
@@ -17,7 +17,7 @@ function [] = batch_sep_slice(save_path, failed_path, data_path, dir_name, confi
             %%          Slicing           %%
             %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
             sep_window = [-abs(config.window_start), config.window_end];
-            sliced_signal = slice_signal(filtered_map, event_samples, sample_rate, sep_window);
+            sliced_signal = format_sep(filtered_map, event_samples, sample_rate, sep_window);
             matfile = fullfile(save_path, ['sliced_', filename_meta.filename, '.mat']);
             save(matfile, '-v7.3', 'sliced_signal', 'sep_window', 'config_log', 'filename_meta', 'event_samples');
         catch ME
