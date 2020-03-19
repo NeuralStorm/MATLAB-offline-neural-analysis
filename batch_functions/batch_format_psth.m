@@ -1,7 +1,7 @@
-function [] = batch_format_psth(save_path, failed_path, animal_path, dir_name, config, label_table)
+function [] = batch_format_psth(save_path, failed_path, data_path, dir_name, config, label_table)
     psth_start = tic;
     config_log = config;
-    file_list = get_file_list(animal_path, '.mat');
+    file_list = get_file_list(data_path, '.mat');
     file_list = update_file_list(file_list, failed_path, config.include_sessions);
 
     pre_time = config.pre_time; pre_start = config.pre_start; pre_end = config.pre_end;
@@ -18,7 +18,7 @@ function [] = batch_format_psth(save_path, failed_path, animal_path, dir_name, c
     for file_index = 1:length(file_list)
         try
             %% Load file contents
-            file = [animal_path, '/', file_list(file_index).name];
+            file = [data_path, '/', file_list(file_index).name];
             [~, filename, ~] = fileparts(file);
             load(file, 'event_ts', 'labeled_data', 'filename_meta');
             %% Select channels
