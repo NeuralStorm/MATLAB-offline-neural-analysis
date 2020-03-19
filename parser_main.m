@@ -9,7 +9,7 @@ function [] = parser_main()
 
     %% Import parser config, remove ignored animals, export log
     config = import_config(project_path, 'parser');
-    config(config.include_animal == 0, :) = [];
+    config(config.include_dir == 0, :) = [];
 
     dir_list = config.dir_name;
     for dir_i = 1:length(dir_list)

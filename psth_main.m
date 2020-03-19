@@ -5,7 +5,7 @@ function [] = psth_main()
 
     %% Import psth config and removes ignored animals
     config = import_config(project_path, 'psth');
-    config(config.include_animal == 0, :) = [];
+    config(config.include_dir == 0, :) = [];
 
     %% Creating paths to do psth formatting
     [psth_path, psth_failed_path] = create_dir(project_path, 'psth');
@@ -24,13 +24,13 @@ function [] = psth_main()
                 parsed_path = [project_path, '/parsed_spike'];
                 e_msg_1 = 'No parsed directory to create PSTHs';
                 e_msg_2 = ['No ', curr_dir, ' directory to create PSTHs'];
-                dir_psth_path = enforce_dir_layout(parsed_path, curr_dir, psth_failed_path, e_msg_1, e_msg_2);
+                parsed_dir_path = enforce_dir_layout(parsed_path, curr_dir, psth_failed_path, e_msg_1, e_msg_2);
                 [dir_save_path, dir_failed_path] = create_dir(data_path, curr_dir);
 
                 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
                 %%        Format PSTH         %%
                 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-                batch_format_psth(dir_save_path, dir_failed_path, dir_psth_path, curr_dir, dir_config, label_table);
+                batch_format_psth(dir_save_path, dir_failed_path, parsed_dir_path, curr_dir, dir_config, label_table);
             catch ME
                 handle_ME(ME, psth_failed_path, [curr_dir, '_missing_dir.mat']);
             end

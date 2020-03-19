@@ -5,7 +5,7 @@ function [] = analog_main()
 
     %% Import psth config and removes ignored animals
     config = import_config(project_path, 'analog');
-    config(config.include_animal == 0, :) = [];
+    config(config.include_dir == 0, :) = [];
 
     %% Creating paths to do continuous formatting
     [continuous_path, continuous_failed_path] = create_dir(project_path, 'continuous');
