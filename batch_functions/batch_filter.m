@@ -1,10 +1,10 @@
 function [] = batch_filter(save_path, failed_path, data_path, dir_name, ...
-        config, label_table)
+        dir_config, label_table)
     %% Find files to filter
     filter_start = tic;
-    config_log = config;
+    config_log = dir_config;
     file_list = get_file_list(data_path, '.mat');
-    file_list = update_file_list(file_list, failed_path, config.include_sessions);
+    file_list = update_file_list(file_list, failed_path, dir_config.include_sessions);
 
     %% Remove unselected channels
     label_table(label_table.selected_channels == 0, :) = [];
@@ -23,24 +23,13 @@ function [] = batch_filter(save_path, failed_path, data_path, dir_name, ...
             %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
             %%           Filter           %%
             %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-            if ~config.use_raw
-                filtered_map = filter_continuous(selected_data, sample_rate, config.notch_filt, ...
-                    config.notch_freq, config.notch_bandwidth, config.notch_bandstop, ...
-                    config.sep_filt_type, config.sep_filt_freq, config.sep_filt_order);
+            if ~dir_config.use_raw
+                filtered_map = filter_continuous(selected_data, sample_rate, dir_config.notch_filt, ...
+                    dir_config.notch_freq, dir_config.notch_bandwidth, dir_config.notch_bandstop, ...
+                    dir_config.sep_filt_type, dir_config.sep_filt_freq, dir_config.sep_filt_order);
             else
-                unique_regions = fieldnames(selected_data);
-                data_table = table;
-                for region_i = 1:length(unique_regions)
-                    region = unique_regions{region_i};
-                    region_table = selected_data.(region);
-                    region_table = removevars(region_table, ...
-                        {'selected_channels', 'recording_session', 'date', 'recording_notes'});
-                    data_table = [data_table; region_table];
-                end
-                data_table.Properties.VariableNames = {'sig_channels', ...
-                    'user_channels', 'label', 'label_id', 'data'};
-                %% unfiltered data is called filtered for convience of calling slicing function
-                filtered_map = table2struct(data_table);
+                %TODO verify if hard warning should be here
+                error('Cannot filter and use raw data for analysis');
             end
 
             matfile = fullfile(save_path, ['filtered_', filename_meta.filename]);

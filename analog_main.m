@@ -5,6 +5,7 @@ function [] = analog_main()
 
     %% Import psth config and removes ignored animals
     config = import_config(project_path, 'analog');
+    %TODO convert table values
     config(config.include_dir == 0, :) = [];
 
     %% Creating paths to do continuous formatting
@@ -40,22 +41,29 @@ function [] = analog_main()
             end
         end
 
-        if config.sep_slicing
+        if dir_config.sep_slicing
+            %TODO create data path for filter directory
             e_msg_1 = 'No data directory to find analog data';
             e_msg_2 = ['No ', curr_dir, ' analog data to create SEPs'];
-            dir_continuous_path = enforce_dir_layout(data_path, curr_dir, ...
-                continuous_failed_path, e_msg_1, e_msg_2);
+            if dir_config.use_raw
+                parsed_path = [project_path, '/parsed_continuous'];
+                sep_input_path = enforce_dir_layout(parsed_path, curr_dir, ...
+                    continuous_failed_path, e_msg_1, e_msg_2);
+            else
+                sep_input_path = enforce_dir_layout(data_path, curr_dir, ...
+                    continuous_failed_path, e_msg_1, e_msg_2);
+            end
             [sep_path, ~] = create_dir(continuous_path, 'sep');
             [sep_data_path, ~] = create_dir(sep_path, 'data');
             [dir_save_path, dir_failed_path] = create_dir(sep_data_path, curr_dir);
-            
+
             %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
             %%            Format SEP            %%
             %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-            batch_format_sep(dir_save_path, dir_failed_path, dir_continuous_path, curr_dir, dir_config)
+            batch_format_sep(dir_save_path, dir_failed_path, sep_input_path, curr_dir, dir_config, label_table)
         end
 
-        if config.sep_analysis
+        if dir_config.sep_analysis
             %TODO add check for sep stuff like in graph psth
             %TODO use_raw flag here and grab raw continuous path directly
             dir_sep_path = enforce_dir_layout(sep_data_path, curr_dir, ...
