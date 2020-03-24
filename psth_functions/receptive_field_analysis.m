@@ -74,3 +74,86 @@ function [sig_neurons, non_sig_neurons] = receptive_field_analysis(selected_data
         non_sig_neurons = cell2table(non_sig_neurons, 'VariableNames', analysis_column_names);
     end
 end
+
+function [sig_response] = sig_response_check(pre_psth,post_psth,smoothed_threshold,span,sig_bins,sig_check)
+    %% Determines significant response based on settings
+    smoothed_response = smooth(post_psth, span);
+    %% Determine if given neuron has a significant response 
+    sig_response = false;
+    reject_null = false;
+    smooth_above_threshold_indeces = find(smoothed_response > smoothed_threshold);
+    %% Determines if there was a significant response
+    %! Check to see if consecutive bin check is with smoothed or non smoothed post time
+    [consecutive, ~] = is_consecutive(smooth_above_threshold_indeces, sig_bins);
+    if consecutive
+        if sig_check == 1
+            % Unpaired ttest on pre and post windows
+            reject_null = ttest2(pre_psth, post_psth);
+        elseif sig_check == 2
+            % ks test on pre and post windows
+            reject_null = kstest2(pre_psth, post_psth);
+        elseif sig_check ~= 0
+            error('Invalid sig check. sig_check can be 0, 1 or 2, please see main documentation for more details');
+        end
+        % If the null hypothesis is rejected, then there is a significant response
+        if isnan(reject_null)
+            reject_null = false;
+        end
+        if reject_null || sig_check == 0
+            sig_response = true;
+        end
+    end
+end
+
+function [consecutive, bin_indeces] = is_consecutive(above_threshold_indeces, sig_bins)
+    %% Checks for consecutive bins
+    consecutive_bins = 0;
+    consecutive = false;
+    bin_indeces = [];
+    if length(above_threshold_indeces) >= sig_bins
+        difference = diff(above_threshold_indeces);
+        for i = 1:length(difference)
+            if difference(i) == 1
+                consecutive_bins = consecutive_bins + 1;
+                bin_indeces = [bin_indeces; above_threshold_indeces(i)];
+                if consecutive_bins >= sig_bins
+                    consecutive = true;
+                end
+            else
+                consecutive_bins = 0;
+                bin_indeces = [];
+            end
+        end
+    end
+end
+
+function [smoothed_threshold,background_rate,background_std] = pre_time_anlysis(pre_psth,span,threshold_scale)
+    %% Deal with pre window first
+    smoothed_pre_window = smooth(pre_psth, span);
+    smoothed_avg_background = mean(smoothed_pre_window);
+    smoothed_std_background = std(smoothed_pre_window);
+    smoothed_threshold = smoothed_avg_background + (threshold_scale * smoothed_std_background);
+    background_rate = mean(pre_psth);
+    background_std = std(pre_psth);
+end
+
+function [fl, ll, duration, pl, peak, corrected_peak, rm, corrected_rm] = post_time_analysis(...
+    background_rate, post_response, smoothed_threshold, bin_size, post_start, span)
+    %% Abbreviations: fl = first latency, ll = last latency, pl = peak latency
+    %% rm = response magnitude
+    %% Finds results of the receptive field analysis
+    above_threshold_indeces = find(post_response > smoothed_threshold);
+    above_threshold = post_response(above_threshold_indeces);
+    peak = max(above_threshold);
+    peak_index = find(peak == post_response);
+    pl = (peak_index(1) * bin_size) + post_start;
+    corrected_peak = peak - background_rate;
+    rm = sum(...
+        post_response(above_threshold_indeces(1):above_threshold_indeces(end)));
+    corrected_rm = rm - background_rate;
+    smoothed_response = smooth(post_response, span);
+    above_threshold_indeces = find(smoothed_response > smoothed_threshold);
+    fl = ((above_threshold_indeces(1)) * bin_size) + post_start;
+    ll = ((above_threshold_indeces(end)) * bin_size) + post_start;
+    duration = ll - fl;
+end
