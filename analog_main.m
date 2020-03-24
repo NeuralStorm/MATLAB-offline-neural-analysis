@@ -10,7 +10,7 @@ function [] = analog_main()
 
     %% Creating paths to do continuous formatting
     [continuous_path, continuous_failed_path] = create_dir(project_path, 'continuous');
-    [data_path, ~] = create_dir(continuous_path, 'data');
+    [data_path, ~] = create_dir(continuous_path, 'filtered_data');
     export_params(data_path, 'continuous', config);
 
     dir_list = config.dir_name;
@@ -54,7 +54,7 @@ function [] = analog_main()
                     continuous_failed_path, e_msg_1, e_msg_2);
             end
             [sep_path, ~] = create_dir(continuous_path, 'sep');
-            [sep_data_path, ~] = create_dir(sep_path, 'data');
+            [sep_data_path, ~] = create_dir(sep_path, 'sep_formatted_data');
             [dir_save_path, dir_failed_path] = create_dir(sep_data_path, curr_dir);
 
             %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -68,7 +68,7 @@ function [] = analog_main()
             %TODO use_raw flag here and grab raw continuous path directly
             dir_sep_path = enforce_dir_layout(sep_data_path, curr_dir, ...
                 continuous_failed_path, e_msg_1, e_msg_2);
-            [sep_analysis_path, ~] = create_dir(sep_path, 'sep_analysis');
+            [sep_analysis_path, ~] = create_dir(sep_path, 'sep_output_data');
             [dir_save_path, dir_failed_path] = create_dir(sep_analysis_path, curr_dir);
             %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
             %%           Sep Analysis           %%

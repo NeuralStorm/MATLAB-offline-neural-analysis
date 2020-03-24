@@ -49,7 +49,7 @@ function sep_gui_OpeningFcn(hObject, eventdata, handles, varargin)
 % Choose default command line output for sep_gui
 handles.output = hObject;
 %load the file and save struct to handles.sep_data
-[file_name, original_path] = uigetfile('*.mat', 'MultiSelect', 'off')
+[file_name, original_path] = uigetfile('*.mat', 'MultiSelect', 'off');
 file_path = [original_path '\' file_name];
 setappdata(0,'select_path',file_path);
 load(file_path, 'sep_analysis_results');
