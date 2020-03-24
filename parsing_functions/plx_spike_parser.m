@@ -1,6 +1,10 @@
 function [] = plx_spike_parser(parsed_path, failed_path, raw_file, config, label_table)
+    %% Get filename info
+    [~, filename, ~] = fileparts(raw_file);
+    filename_meta = get_filename_info(filename);
+
     total_trials = config.total_trials; total_events = config.total_events;
-    trial_lower_bound = config.trial_lower_bound; event_map = config.event_map;
+    trial_lower_bound = config.trial_lower_bound; event_map = config.event_map{:};
     is_non_strobed_and_strobed = config.is_non_strobed_and_strobed;
 
     % Take the spike times and event times
@@ -89,8 +93,6 @@ function [] = plx_spike_parser(parsed_path, failed_path, raw_file, config, label
         channel_map = sortrows(channel_map, 1);
 
         %% label channel map
-        [~, filename, ~] = fileparts(raw_file);
-        filename_meta = get_filename_info(filename);
         labeled_data = label_data(channel_map, label_table, ...
             filename_meta.session_num);
 
@@ -99,9 +101,9 @@ function [] = plx_spike_parser(parsed_path, failed_path, raw_file, config, label
         enforce_labels(channel_list, label_list, filename_meta.session_num);
 
         %% Saves parsed files
-        matfile = fullfile(parsed_path, [filename, '.mat']);
+        matfile = fullfile(parsed_path, [filename_meta.filename, '.mat']);
         save(matfile, 'event_ts', 'channel_map', 'filename_meta', 'labeled_data');
     catch ME
-        handle_ME(ME, failed_path, filename);
+        handle_ME(ME, failed_path, filename_meta.filename);
     end
 end

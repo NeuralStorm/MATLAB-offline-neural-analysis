@@ -15,7 +15,9 @@ function [] = export_csv(csv_path, column_names, general_table, analysis_table)
             results_table.recording_notes = num2cell(results_table.recording_notes);
         end
     end
-
+    if strcmpi(class(analysis_table.recording_notes), 'double')
+        analysis_table.recording_notes = num2cell(analysis_table.recording_notes);
+    end
     %% Append new results to existing results table
     new_results_table = [general_table analysis_table];
     results_table = [results_table; new_results_table];

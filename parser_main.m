@@ -16,6 +16,7 @@ function [] = parser_main()
         %% Set up directories for parsing and load labels
         curr_dir = dir_list{dir_i};
         dir_config = config(strcmpi(config.dir_name, curr_dir), :);
+        dir_config = convert_table_cells(dir_config);
         label_table = load_labels(project_path, [curr_dir, '_labels.csv']);
 
         %% Check if spike or continuous
