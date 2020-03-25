@@ -1,6 +1,7 @@
 function [event_strings, all_events, event_ts] = organize_events(event_ts, ...
         trial_lower_bound, trial_range, wanted_events)
     %% Double checks that event timestamps taken from parser is abve the threshold
+%{    
     event_count_table = tabulate(event_ts(:,1));
     for event = 1:length(event_count_table(:,1))
         event_num = event_count_table(event, 1);
@@ -10,6 +11,7 @@ function [event_strings, all_events, event_ts] = organize_events(event_ts, ...
             event_ts(event_ts(:,1) == event_num, :) = [];
         end
     end
+    %}
 
     % Truncates events to desired trial range from total_trials * total_events
     if ~isempty(trial_range)
@@ -35,7 +37,7 @@ function [event_strings, all_events, event_ts] = organize_events(event_ts, ...
     all_events = {};
     for event = 1: length(event_strings)
         %% Slices out the desired trials from the events matrix (Inclusive range)
-        all_events = [all_events; event_strings{event}, {event_ts(event_ts == wanted_events(event), 2)}];
+        all_events = [all_events; event_strings{event}, {event_ts(event_ts(:,1) == wanted_events(event), 2)}];
         if isempty(all_events{event, 2})
             %% Remove empty events
             all_events(event, :) = [];
