@@ -23,23 +23,26 @@ function [sig_neurons, non_sig_neurons] = receptive_field_analysis(labeled_data,
                 %% Determine if given neuron has a significant response
                  [sig_response] = sig_response_check(baseline_psth, response_psth, ...
                     smoothed_threshold, span, sig_bins, sig_check);
-
+                
+                depth_of_modulation=max(response_psth)-min(response_psth); %need to modify to detect negative modulation
+                mean_firing_rate= mean(response_psth);
+                
                 if sig_response
                     %% Finds results of the receptive field analysis
                      [first_latency, last_latency, duration, peak_latency, peak, corrected_peak,...
                          response_magnitude, corrected_response_magnitude] = ...
-                         post_time_analysis(background_rate, response_psth, smoothed_threshold, bin_size, post_start);
+                         post_time_analysis(background_rate, response_psth, smoothed_threshold, bin_size, post_start, span);
 
                     % Organizes data results into cell array
                     sig_neurons = [sig_neurons; {current_region}, {neuron_name}, {user_channels}, {current_event}, ...
                         {1}, {background_rate}, {background_std}, {smoothed_threshold}, {first_latency}, ...
                         {last_latency}, {duration}, {peak_latency}, {peak}, {corrected_peak}, ...
-                        {response_magnitude}, {corrected_response_magnitude}, {NaN}, {strings}, {NaN}, {notes}];
+                        {response_magnitude}, {corrected_response_magnitude}, {depth_of_modulation}, {mean_firing_rate}, {NaN}, {strings}, {NaN}, {notes}];
                 else
                     % Puts NaN for non significant neurons
                     non_sig_neurons = [non_sig_neurons; {current_region}, {neuron_name}, {user_channels}, {current_event}, {0}, ...
                         {background_rate}, {background_std}, {smoothed_threshold}, {NaN}, {NaN}, {NaN}, {NaN}, {NaN}, ...
-                        {NaN}, {NaN}, {NaN}, {NaN}, {strings}, {NaN}, {notes}];
+                        {NaN}, {NaN}, {NaN}, {depth_of_modulation}, {mean_firing_rate}, {NaN}, {strings}, {NaN}, {notes}];
                 end
             end
         end
