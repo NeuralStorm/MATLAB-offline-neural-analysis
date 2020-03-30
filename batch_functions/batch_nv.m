@@ -8,7 +8,7 @@ function [] = batch_nv(project_path, save_path, failed_path, data_path, ...
     meta_headers = {'animal', 'group', 'date', 'record_session', 'pre_time', 'pre_start', 'pre_end'};
     analysis_headers = {'event', 'region', 'sig_channels', 'user_channels', 'avg_background_rate', ...
         'background_var', 'norm_var', 'fano', 'recording_notes'};
-    csv_headers = [meta_headers, analysis_headers];
+    ignore_headers = {};
 
     %% Pull variable names into workspace scope for log
     pre_time = config.pre_time; pre_start = config.pre_start; pre_end = config.pre_end; 
@@ -51,8 +51,9 @@ function [] = batch_nv(project_path, save_path, failed_path, data_path, ...
         end
     end
     %% CSV export set up
+    nv_results = [meta_info, all_neurons];
     csv_path = fullfile(project_path, [filename_substring_one, '_norm_var.csv']);
-    export_csv(csv_path, csv_headers, meta_info, all_neurons);
+    export_csv(csv_path, nv_results, ignore_headers);
 
     fprintf('Finished normalized variance analysis for %s. It took %s \n', ...
         dir_name, num2str(toc(nv_start)));

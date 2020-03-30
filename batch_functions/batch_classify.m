@@ -15,7 +15,7 @@ function [] = batch_classify(project_path, save_path, failed_path, data_path, di
         'bootstrap_classifier', 'boot_iterations'};
     analysis_headers = {'region', 'sig_channels', 'user_channels', 'performance', 'mutual_info', ...
         'boot_info', 'corrected_info', 'synergy_redundancy', 'synergistic', 'recording_notes'};
-    csv_headers = [meta_headers, analysis_headers];
+    ignore_headers = {'boot_info', 'corrected_info', 'synergy_redundancy', 'synergistic'};
 
     sprintf('PSTH classification for %s \n', dir_name);
 
@@ -58,11 +58,14 @@ function [] = batch_classify(project_path, save_path, failed_path, data_path, di
         end
     end
 
-    %% CSV set up
+    %% CSV set up for unit analysis
+    unit_results = [unit_config_info, unit_info];
     unit_csv_path = fullfile(project_path, [filename_substring_one,'_unit_classification_info.csv']);
+    export_csv(unit_csv_path, unit_results, ignore_headers)
+    %% CSV set up for pop analysis
+    pop_results = [pop_config_info, pop_info];
     pop_csv_path = fullfile(project_path, [filename_substring_one, '_pop_classification_info.csv']);
-    export_csv(unit_csv_path, csv_headers, unit_config_info, unit_info);
-    export_csv(pop_csv_path, csv_headers, pop_config_info, pop_info);
+    export_csv(pop_csv_path, pop_results, ignore_headers)
 
     fprintf('Finished PSTH classifier for %s. It took %s \n', ...
         dir_name, num2str(toc(classifier_start)));

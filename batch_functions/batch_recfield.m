@@ -18,7 +18,7 @@ function [] = batch_recfield(project_path, save_path, failed_path, data_path, di
         'last_latency', 'duration', 'peak_latency', 'peak_response', ...
         'corrected_peak', 'response_magnitude', 'corrected_response_magnitude', ...
         'total_sig_events', 'principal_event', 'norm_magnitude', 'recording_notes'};
-    csv_headers = [meta_headers, analysis_headers];
+    ignore_headers = {};
 
     sprintf('Receptive field analysis for %s \n', dir_name);
     all_neurons = [];
@@ -64,8 +64,9 @@ function [] = batch_recfield(project_path, save_path, failed_path, data_path, di
     end
 
     %% CSV export set up
+    rf_results = [general_info, all_neurons];
     csv_path = fullfile(project_path, [filename_substring_one, '_receptive_field_results.csv']);
-    export_csv(csv_path, csv_headers, general_info, all_neurons);
+    export_csv(csv_path, rf_results, ignore_headers);
 
     fprintf('Finished receptive field analysis for %s. It took %s \n', ...
         dir_name, num2str(toc(rf_start)));

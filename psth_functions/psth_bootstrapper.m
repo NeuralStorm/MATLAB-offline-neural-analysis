@@ -153,6 +153,9 @@ function [classify_struct, table_results] = classify_unit(region_name, region_ta
 
         user_channels = region_table.user_channels(strcmpi(region_table.sig_channels, current_unit));
         notes = region_table.recording_notes(strcmpi(region_table.sig_channels, current_unit));
+        if strcmpi(class(notes), 'double') && isnan(notes)
+            notes = 'n/a';
+        end
         table_results = [table_results; {region_name}, {current_unit}, {user_channels}, {performance}, {mutual_info}, ...
             {0}, {mutual_info}, {NaN}, {NaN}, {notes}];
     end
