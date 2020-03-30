@@ -16,9 +16,10 @@ function [] = psth_main()
 
         if strcmpi(dir_config.psth_type, 'psth')
             %% Creating paths to do psth formatting
+            csv_modifier = 'psth';
             [psth_path, psth_failed_path] = create_dir(project_path, 'psth');
             [data_path, ~] = create_dir(psth_path, 'data');
-            export_params(data_path, 'psth', config);
+            export_params(data_path, csv_modifier, config);
             if dir_config.create_psth
                 try
                     %% Check to make sure paths exist for analysis and create save path
@@ -41,12 +42,14 @@ function [] = psth_main()
                 end
             end
         elseif strcmpi(dir_config.psth_type, 'pca')
+            csv_modifier = 'pca';
             psth_path = [project_path, '/pca_psth'];
             data_path = [psth_path, '/data'];
             if ~exist(psth_path, 'dir') || ~exist(data_path, 'dir')
                 error('Must have PSTHs to run PSTH analysis on %s', curr_dir);
             end
         elseif strcmpi(dir_config.psth_type, 'ica')
+            csv_modifier = 'ica';
             psth_path = [project_path, '/ica_psth'];
             data_path = [psth_path, '/data'];
             if ~exist(psth_path, 'dir') || ~exist(data_path, 'dir')
@@ -68,7 +71,7 @@ function [] = psth_main()
                 %%  Receptive Field Analysis  %%
                 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
                 batch_recfield(project_path, dir_save_path, dir_failed_path, ...
-                    dir_psth_path, curr_dir, 'psth', dir_config);
+                    dir_psth_path, curr_dir, csv_modifier, dir_config);
             catch ME
                 handle_ME(ME, recfield_failed_path, [curr_dir, '_missing_dir.mat']);
             end
@@ -106,7 +109,7 @@ function [] = psth_main()
                 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
                 [dir_save_path, dir_failed_path] = create_dir(classifier_path, curr_dir);
                 batch_classify(project_path, dir_save_path, dir_failed_path, ...
-                    dir_psth_path, curr_dir, 'psth', dir_config)
+                    dir_psth_path, curr_dir, csv_modifier, dir_config)
             catch ME
                 handle_ME(ME, classifier_failed_path, [curr_dir, '_missing_dir.mat']);
             end
@@ -124,7 +127,7 @@ function [] = psth_main()
                 %%     Normalized Variance    %%
                 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
                 batch_nv(project_path, dir_save_path, dir_failed_path, ...
-                    dir_psth_path, curr_dir, 'psth', dir_config);
+                    dir_psth_path, curr_dir, csv_modifier, dir_config);
             catch ME
                 handle_ME(ME, nv_failed_path, [curr_dir, '_missing_dir.mat']);
             end
