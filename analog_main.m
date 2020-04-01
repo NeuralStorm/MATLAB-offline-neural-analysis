@@ -5,10 +5,9 @@ function [] = analog_main()
 
     %% Import psth config and removes ignored animals
     config = import_config(project_path, 'analog');
-    %TODO convert table values
     config(config.include_dir == 0, :) = [];
 
-    %% Creating paths to do continuous formatting
+    %% Creating paths to do analog analysis
     [continuous_path, continuous_failed_path] = create_dir(project_path, 'continuous');
     [data_path, ~] = create_dir(continuous_path, 'filtered_data');
     export_params(data_path, 'continuous', config);
@@ -17,6 +16,7 @@ function [] = analog_main()
     for dir_i = 1:length(dir_list)
         curr_dir = dir_list{dir_i};
         dir_config = config(dir_i, :);
+        dir_config = convert_table_cells(dir_config);
         label_table = load_labels(project_path, [curr_dir, '_labels.csv']);
         if dir_config.filter_data
             try
@@ -36,8 +36,10 @@ function [] = analog_main()
                 handle_ME(ME, continuous_failed_path, [curr_dir, '_missing_dir.mat']);
             end
         else
-            if ~exist(continuous_path, 'dir') || ~exist(data_path, 'dir')
-                error('Must have continuous data for %s analysis', curr_dir);
+            if ~dir_config.use_raw
+                if ~exist(data_path, 'dir')
+                    error('Must have continuous data for %s analysis', curr_dir);
+                end
             end
         end
 
@@ -66,6 +68,10 @@ function [] = analog_main()
         if dir_config.sep_analysis
             %TODO add check for sep stuff like in graph psth
             %TODO use_raw flag here and grab raw continuous path directly
+            e_msg_1 = 'No data directory to find SEPs';
+            e_msg_2 = ['No ', curr_dir, ' for SEP analysis'];
+            sep_path = [continuous_path, '/sep'];
+            sep_data_path = [sep_path, '/sep_formatted_data'];
             dir_sep_path = enforce_dir_layout(sep_data_path, curr_dir, ...
                 continuous_failed_path, e_msg_1, e_msg_2);
             [sep_analysis_path, ~] = create_dir(sep_path, 'sep_output_data');
