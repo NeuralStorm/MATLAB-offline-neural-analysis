@@ -34,7 +34,7 @@ function [] = batch_sep_analysis(save_path, failed_path, data_path, dir_name, ..
                 continue
             end
             %% Save file if all variables are not empty
-            save(matfile, '-v7.3', 'sep_analysis_results', 'config_log');
+            save(matfile, '-v7.3', 'sep_analysis_results', 'config_log', 'filename_meta');
         catch ME
             handle_ME(ME, failed_path, filename_meta.filename);
         end
