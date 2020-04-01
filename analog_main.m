@@ -66,8 +66,6 @@ function [] = analog_main()
         end
 
         if dir_config.sep_analysis
-            %TODO add check for sep stuff like in graph psth
-            %TODO use_raw flag here and grab raw continuous path directly
             e_msg_1 = 'No data directory to find SEPs';
             e_msg_2 = ['No ', curr_dir, ' for SEP analysis'];
             sep_path = [continuous_path, '/sep'];
@@ -80,6 +78,21 @@ function [] = analog_main()
             %%           Sep Analysis           %%
             %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
             batch_sep_analysis(dir_save_path, dir_failed_path, dir_sep_path, curr_dir, dir_config);
+        end
+
+        if dir_config.make_sep_graphs
+            e_msg_1 = 'No data directory to find SEPs';
+            e_msg_2 = ['No ', curr_dir, ' for plotting'];
+            sep_path = [continuous_path, '/sep'];
+            sep_data_path = [sep_path, '/sep_output_data'];
+            dir_sep_path = enforce_dir_layout(sep_data_path, curr_dir, ...
+                continuous_failed_path, e_msg_1, e_msg_2);
+            [sep_figure_path, ~] = create_dir(sep_path, 'sep_figures');
+            [dir_save_path, dir_failed_path] = create_dir(sep_figure_path, curr_dir);
+            %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+            %%           Sep Graphing           %%
+            %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+            batch_graph_sep(dir_save_path, dir_failed_path, dir_sep_path, curr_dir, dir_config)
         end
     end
     toc(start_time);
