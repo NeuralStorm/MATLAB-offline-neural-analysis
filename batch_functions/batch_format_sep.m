@@ -18,9 +18,12 @@ function [] = batch_format_sep(save_path, failed_path, data_path, dir_name, conf
                 % Reformat parsed data into data structure for SEP formatting
                 unique_regions = fieldnames(selected_data);
                 data_table = table;
+                label_log = struct;
                 for region_i = 1:length(unique_regions)
                     region = unique_regions{region_i};
                     region_table = selected_data.(region);
+                    region_log = region_table(:, ~strcmpi(region_table.Properties.VariableNames, 'channel_data'));
+                    label_log.(region) = region_log;
                     region_table = removevars(region_table, ...
                         {'selected_channels', 'recording_session', 'date', 'recording_notes'});
                     data_table = [data_table; region_table];
@@ -36,7 +39,7 @@ function [] = batch_format_sep(save_path, failed_path, data_path, dir_name, conf
                 sep_window = [-abs(config.window_start), config.window_end];
                 sliced_signal = format_sep(raw_map, event_samples, sample_rate, sep_window);
                 matfile = fullfile(save_path, ['sliced_', filename_meta.filename, '.mat']);
-                save(matfile, '-v7.3', 'sliced_signal', 'sep_window', 'config_log', 'filename_meta', 'event_samples');
+                save(matfile, '-v7.3', 'sliced_signal', 'sep_window', 'config_log', 'filename_meta', 'event_samples', 'label_log');
             catch ME
                 handle_ME(ME, failed_path, filename_meta.filename);
             end
@@ -48,7 +51,7 @@ function [] = batch_format_sep(save_path, failed_path, data_path, dir_name, conf
                 file = fullfile(data_path, file_list(file_index).name);
     
                 %% Load needed variables from psth and does the receptive field analysis
-                load(file, 'filtered_map', 'event_samples', 'sample_rate', 'filename_meta');
+                load(file, 'filtered_map', 'event_samples', 'sample_rate', 'filename_meta', 'label_log');
     
                 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
                 %%          Slicing           %%
@@ -56,7 +59,7 @@ function [] = batch_format_sep(save_path, failed_path, data_path, dir_name, conf
                 sep_window = [-abs(config.window_start), config.window_end];
                 sliced_signal = format_sep(filtered_map, event_samples, sample_rate, sep_window);
                 matfile = fullfile(save_path, ['sliced_', filename_meta.filename, '.mat']);
-                save(matfile, '-v7.3', 'sliced_signal', 'sep_window', 'config_log', 'filename_meta', 'event_samples');
+                save(matfile, '-v7.3', 'sliced_signal', 'sep_window', 'config_log', 'filename_meta', 'event_samples', 'label_log');
             catch ME
                 handle_ME(ME, failed_path, filename_meta.filename);
             end

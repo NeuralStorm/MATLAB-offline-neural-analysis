@@ -1,4 +1,4 @@
-function [struct_map] = filter_continuous(selected_data, sample_rate, notch_filt, ...
+function [struct_map, label_log] = filter_continuous(selected_data, sample_rate, notch_filt, ...
     notch_freq, notch_bandwidth, notch_bandstop, filt_type, filt_freq, filt_order)
     %TODO change notch_filt variable name --> too close to notch_filter function
 
@@ -12,10 +12,13 @@ function [struct_map] = filter_continuous(selected_data, sample_rate, notch_filt
 
     unique_regions = fieldnames(selected_data);
     region_map = [];
+    label_log = struct;
     filt_freq = filt_freq ./ (sample_rate/2);
     for region_i = 1:length(unique_regions)
         region = unique_regions{region_i};
         region_table = selected_data.(region);
+        region_log = region_table(:, ~strcmpi(region_table.Properties.VariableNames, 'channel_data'));
+        label_log.(region) = region_log;
         tot_region_channels = height(region_table);
         filtered_region = cell(tot_region_channels, 5);
         parfor channel_i = 1:tot_region_channels
