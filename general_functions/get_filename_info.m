@@ -31,7 +31,7 @@ function [meta_struct] = get_filename_info(filename)
         end
 
         %% Get animal info 
-        meta_struct.animal_id = split_name{ end - 5};
+        meta_struct.animal_id = split_name{end - 5};
         meta_struct.experimental_group = split_name{end - 4};
         meta_struct.experimental_condition = split_name{end - 3};
 
@@ -42,7 +42,11 @@ function [meta_struct] = get_filename_info(filename)
         session_date = split_name{end - 1};
         meta_struct.session_date = str2double(session_date);
 
-        meta_struct.optional_info = split_name{end};
+        optional_info = split_name{end};
+        if strcmpi(optional_info, 'double') && isnan(optional_info)
+            optional_info = 'n/a';
+        end
+        meta_struct.optional_info = optional_info;
     else
         error('Not a supported filename format');
     end
