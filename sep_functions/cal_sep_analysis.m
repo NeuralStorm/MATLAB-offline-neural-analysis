@@ -21,8 +21,6 @@ function sepdata = cal_sep_analysis(filename_meta, sep_map, sep_window, ...
         'neg_peak3',{}, 'pos_peak3', {}, 'neg_peak_latency3',{} , 'pos_peak_latency3',{} , 'sig_response',{} ,...
         'background', {}, 'background_sd',{}, 'analysis_notes', {});
 
-    disp('Analyzing SEP...');
-
     for i = 1:size(sep,2)
         chan_data = cell2mat(sep(i));
 
