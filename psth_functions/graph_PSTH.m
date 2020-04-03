@@ -5,8 +5,8 @@ function [] = graph_PSTH(save_path, psth_struct, labeled_data, sig_response, ...
     check_time(pre_time, pre_start, pre_end, post_time, post_start, post_end, bin_size)
 
     event_strings = psth_struct.all_events(:,1)';
-    event_window = -(abs(pre_time) - bin_size):bin_size:(abs(post_time));
-    total_bins = length(event_window);
+    event_window = 1:1:120;
+    total_bins = 120;
 
     region_names = fieldnames(labeled_data);
     parfor region = 1:length(region_names)
