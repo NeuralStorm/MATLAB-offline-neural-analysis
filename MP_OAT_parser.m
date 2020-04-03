@@ -64,6 +64,16 @@ function [parsed_path] = MP_OAT_parser(dir_path, animal_name, total_trials, tota
             MatFile = [dir_path, '/', mat_files(file_index).name]; %specifiy .mat file associated with plx file;  
             event_ts = oat_build_event_ts(load(MatFile)); %build event_ts matrix from infromation in .mat file
             
+%suggested modifications for addition into general code base for treadmill experiments
+    %every plx needs an associated .mat file with the same name
+    % this .mat file must have the event_ts matrix already built in it
+    % event_ts needs three columns
+        %Column 1: event number, must be a positive whole number
+        %Column 2: event start time, must be in seconds
+            %typically start time will be LiftOff_i
+        %Column 3: event end time, also in seconds
+            %typically, end time will be LiftOff_i+1
+            
             %% Code that was replaced by above code Block
 %            event_ts = [];
 %            event_map_counter = 1;
