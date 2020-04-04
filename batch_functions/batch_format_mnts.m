@@ -1,42 +1,50 @@
-function [mnts_path] = batch_format_mnts(parsed_path, animal_name, config)
+function [] = batch_format_mnts(save_path, failed_path, data_path, dir_name, ...
+        dir_config, label_table)
     mnts_start = tic;
-    [mnts_path, failed_path] = create_dir(parsed_path, 'mnts');
-    [parsed_files] = get_file_list(parsed_path, '.mat', config.ignore_sessions);
+    config_log = dir_config;
+    file_list = get_file_list(data_path, '.mat');
+    file_list = update_file_list(file_list, failed_path, ...
+        dir_config.include_sessions);
 
-    fprintf('Calculating mnts for %s \n', animal_name);
-    %% Goes through all the files and creates mnts according to the parameters set in config
-    for file_index = 1:length(parsed_files)
+    fprintf('Calculating mnts for %s \n', dir_name);
+    %% Creates mnts from parsed data according to the parameters set in config
+    for file_index = 1:length(file_list)
         try
             %% Load file contents
-            file = [parsed_path, '/', parsed_files(file_index).name];
-            [~, filename, ~] = fileparts(file);
-            load(file, 'event_ts', 'labeled_data');
+            file = [data_path, '/', file_list(file_index).name];
+            load(file, 'event_ts', 'labeled_data', 'filename_meta');
+            %% Select channels
+            selected_data = select_data(labeled_data, ...
+                label_table, filename_meta.session_num);
             %% Check parsed variables to make sure they are not empty
-            empty_vars = check_variables(file, event_ts, labeled_data);
+            empty_vars = check_variables(file, event_ts, selected_data);
             if empty_vars
                 continue
             end
 
             %% Format mnts
-            [mnts_struct, event_ts, labeled_data] = format_mnts(event_ts, ...
-                labeled_data, config.bin_size, config.pre_time, config.post_time, config.wanted_events, ...
-                config.trial_range, config.trial_lower_bound);
+            [mnts_struct, event_ts, selected_data] = format_mnts(event_ts, ...
+                selected_data, dir_config.bin_size, dir_config.pre_time, ...
+                dir_config.post_time, dir_config.wanted_events, ...
+                dir_config.trial_range, dir_config.trial_lower_bound);
 
             %% Saving outputs
-            matfile = fullfile(mnts_path, ['mnts_format_', filename, '.mat']);
+            matfile = fullfile(save_path, ['mnts_format_', ...
+                filename_meta.filename, '.mat']);
             %% Check PSTH output to make sure there are no issues with the output
-            empty_vars = check_variables(matfile, mnts_struct, event_ts, labeled_data);
+            empty_vars = check_variables(matfile, mnts_struct, ...
+                event_ts, selected_data);
             if empty_vars
                 continue
             end
 
             %% Save file if all variables are not empty
-            save(matfile, 'mnts_struct', 'event_ts', 'labeled_data');
-            export_params(mnts_path, 'mnts_psth', parsed_path, failed_path, animal_name, config);
+            save(matfile, 'mnts_struct', 'event_ts', 'selected_data', ...
+                'filename_meta', 'config_log');
         catch ME
-            handle_ME(ME, failed_path, filename);
+            handle_ME(ME, failed_path, filename_meta.filename);
         end
     end
     fprintf('Finished calculating mnts for %s. It took %s \n', ...
-        animal_name, num2str(toc(mnts_start)));
+        dir_name, num2str(toc(mnts_start)));
 end

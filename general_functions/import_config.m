@@ -1,10 +1,10 @@
-function [config] = import_config(animal_path, analysis_type)
+function [config_table] = import_config(project_path, analysis_type)
 
     %% Grabs config file and creates labels
-    animal_csv_path = [animal_path, '/*.csv'];
-    csv_files = dir(animal_csv_path);
+    csv_path_list = [project_path, '/*.csv'];
+    csv_files = dir(csv_path_list);
     for csv = 1:length(csv_files)
-        csv_file = fullfile(animal_path, csv_files(csv).name);
+        csv_file = fullfile(project_path, csv_files(csv).name);
         if contains(csv_files(csv).name, [analysis_type, '_config.csv'])
             config_table = readtable(csv_file);
         end
@@ -14,22 +14,34 @@ function [config] = import_config(animal_path, analysis_type)
         error('Must have config file to run analysis')
     end
 
-    config = struct;
-    for i = 1:height(config_table)
-        current_name = config_table.key{i};
-        current_value = config_table.value{i};
-        value = convert_string(current_value);
-        config.(current_name) = value;
+    col_names = config_table.Properties.VariableNames;
+    for col_i = 1:length(col_names)
+        curr_col = col_names{col_i};
+        logical_col = false;
+        if ismember(class(config_table.(curr_col)), {'string', 'char', 'cell'})
+            for entry_i = 1:height(config_table)
+                if ismember(class(config_table.(curr_col){entry_i}), {'string', 'char', 'cell'})
+                    [entry_value, logical_col] = ...
+                        convert_string(config_table.(curr_col){entry_i}, logical_col);
+                    config_table.(curr_col){entry_i} = entry_value;
+                end
+            end
+        end
+        if logical_col
+            config_table.(curr_col) = cell2mat(config_table.(curr_col));
+        end
     end
 end
 
-function [value] = convert_string(string_value)
-    if all(ismember(string_value, '0123456789+-.eEdD,; '))
+function [value, logical_col] = convert_string(string_value, logical_col)
+    if all(ismember(string_value, '0123456789+-.eEdD,;: '))
         value = str2num(string_value);
     elseif strcmpi(string_value, 'true')
-        value = true;
+        value = 1;
+        logical_col = true;
     elseif strcmpi(string_value, 'false')
-        value = false;
+        value = 0;
+        logical_col = true;
     else
         value = string_value;
     end

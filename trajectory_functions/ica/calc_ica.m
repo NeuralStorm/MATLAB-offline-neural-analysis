@@ -1,4 +1,4 @@
-function [labeled_ics, ica_results] = calc_ica(labeled_data, mnts_struct, ...
+function [labeled_ics, ica_results] = calc_ica(selected_data, mnts_struct, ...
         tot_pcs, extended, sphering, anneal, anneal_deg, bias_switch, ...
         momentum, max_steps, stop_train, rnd_reset, verbose)
     %TODO add option to go straight from relative response to ica with no PCA middleman
@@ -7,7 +7,7 @@ function [labeled_ics, ica_results] = calc_ica(labeled_data, mnts_struct, ...
     ica_results = struct;
     ica_results.all_events = mnts_struct.all_events;
     labeled_ics = struct;
-    region_names = fieldnames(labeled_data);
+    region_names = fieldnames(selected_data);
     tot_regions = length(region_names);
     for region_index = 1:tot_regions
         region = region_names{region_index};
@@ -63,7 +63,7 @@ function [labeled_ics, ica_results] = calc_ica(labeled_data, mnts_struct, ...
         for component_i = 1:tot_components
             ic_names{component_i} = ['ic_', num2str(component_i)];
         end
-        region_table = labeled_data.(region)(1:tot_components, :);
+        region_table = selected_data.(region)(1:tot_components, :);
         region_table.sig_channels = ic_names; region_table.user_channels = ic_names;
         region_table.channel_data = num2cell(weighted_mnts, 1)';
         labeled_ics.(region) = region_table;
