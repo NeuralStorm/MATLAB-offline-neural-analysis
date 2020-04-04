@@ -15,7 +15,7 @@ function [] = export_csv(csv_path, new_results, ignore_columns)
         results_table.Properties.VariableNames)), ...
         'Tables Must have the same column headers for proper appending');
 
-    %% Go through double arrays and convert to strong to prevent multidimensional
+    %% Go through double arrays and convert to string to prevent multidimensional
     %% appending errors
     for col_i = 1:width(new_results)
         curr_col = headers{col_i};
