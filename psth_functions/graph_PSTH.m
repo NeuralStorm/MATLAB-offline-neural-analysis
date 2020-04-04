@@ -7,11 +7,13 @@ function [] = graph_PSTH(save_path, psth_struct, selected_data, sig_response, ..
     post_end = config.post_end; rf_analysis = config.rf_analysis;
     make_region_subplot = config.make_region_subplot; sub_rows = config.sub_rows;
     make_unit_plot = config.make_unit_plot; sub_cols = config.sub_columns;
+    span = config.span; unsmoothed_recfield_metrics = config.unsmoothed_recfield_metrics;
 
     check_time(pre_time, pre_start, pre_end, post_time, post_start, post_end, bin_size)
 
     event_strings = psth_struct.all_events(:,1)';
-    event_window = -(abs(pre_time) - bin_size):bin_size:(abs(post_time));
+    event_window = pre_time:bin_size:post_time;
+    event_window(1) = [];
     total_bins = length(event_window);
 
     region_names = fieldnames(selected_data);
@@ -49,8 +51,14 @@ function [] = graph_PSTH(save_path, psth_struct, selected_data, sig_response, ..
 
             %% Creating the PSTH graphs
             for neuron = 1:total_region_neurons
-                psth = event_psth(((1:total_bins) + ((neuron-1) * total_bins)));
                 psth_name = region_neurons{neuron};
+                if rf_analysis && ~unsmoothed_recfield_metrics
+                    %! Not the same smoothing as in receptive field since it is on entire psth
+                    %! rec field is split between baseline and response so they have different edges near 0
+                    psth = smooth(psth_struct.(current_region).(current_event).(psth_name).psth, span)
+                else
+                    psth = psth_struct.(current_region).(current_event).(psth_name).psth;
+                end
                 if make_unit_plot
                     unit_figure = plot_PSTH(psth, psth_name, current_event, event_window, ...
                         pre_start, pre_end, post_start, post_end);
@@ -84,7 +92,7 @@ function [] = graph_PSTH(save_path, psth_struct, selected_data, sig_response, ..
                     %% Plots elements from rec field analysis
                     if make_unit_plot
                         plot_recfield(psth, first_bin_latency, last_bin_latency, threshold, ...
-                            unit_figure, bin_size, pre_time);
+                            unit_figure, bin_size, pre_time, event_window);
                     end
                     if make_region_subplot
                         figure(region_figure);
@@ -95,7 +103,7 @@ function [] = graph_PSTH(save_path, psth_struct, selected_data, sig_response, ..
                         ylim([event_min event_max]);
                         
                         plot_recfield(psth, first_bin_latency, last_bin_latency, threshold, ...
-                            region_figure, bin_size, pre_time);
+                            region_figure, bin_size, pre_time, event_window);
                         line([pre_start pre_start], ylim, 'Color', 'black', 'LineWidth', 0.75, 'LineStyle', '--');
                         line([pre_end pre_end], ylim, 'Color', 'black', 'LineWidth', 0.75, 'LineStyle', '--');
                         line([post_start post_start], ylim, 'Color', 'black', 'LineWidth', 0.75, 'LineStyle', '--');
