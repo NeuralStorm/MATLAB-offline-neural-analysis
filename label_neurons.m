@@ -1,7 +1,4 @@
-function [labeled_data] = label_data(channel_map, label_table, session_num)
-    if isempty(channel_map)
-        error('Channel map is empty so cannot label any channels')
-    end
+function [labeled_data] = label_neurons(channel_map, label_table, session_num)
     unique_labels = unique(label_table.label);
     for label_index = 1:length(unique_labels)
         curr_label = unique_labels{label_index};
@@ -16,7 +13,4 @@ function [labeled_data] = label_data(channel_map, label_table, session_num)
     struct_names = fieldnames(labeled_data);
     empty = cellfun(@(x) isempty(labeled_data.(x)), struct_names);
     labeled_data = rmfield(labeled_data, struct_names(empty));
-    if isempty(fieldnames(labeled_data))
-        error('labels file failed to label any channels from channel map');
-    end
 end

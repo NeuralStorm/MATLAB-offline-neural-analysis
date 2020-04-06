@@ -1,35 +1,38 @@
-function [] = batch_info(save_path, failed_path, data_path, dir_name, config)
-    %TODO add csv output
+function [] = batch_info(animal_name, data_path, dir_name, ...
+    search_ext, filename_substring_one, filename_substring_two, ignore_sessions)
     info_start = tic;
-    config_log = config;
-    file_list = get_file_list(data_path, '.mat');
-    file_list = update_file_list(file_list, failed_path, config.include_sessions);
 
-    fprintf('Mutual Info for %s \n', dir_name);
+    [info_path, failed_path] = create_dir(data_path, dir_name);
+    [files] = get_file_list(data_path, search_ext, ignore_sessions);
+
+    fprintf('Mutual Info for %s \n', animal_name);
     %% Goes through all the files and calculates mutual info according to the parameters set in config
-    for file_index = 1:length(file_list)
+    for file_index = 1:length(files)
         try
             %% pull info from filename and set up file path for analysis
-            file = fullfile(data_path, file_list(file_index).name);
-            load(file, 'response_window', 'selected_data', 'filename_meta');
+            file = fullfile(data_path, files(file_index).name);
+            [~, filename, ~] = fileparts(file);
+            filename = erase(filename, [filename_substring_one, '.', filename_substring_two, '.']);
+            filename = erase(filename, [filename_substring_one, '_', filename_substring_two, '_']);
+            load(file, 'response_window', 'labeled_data');
             %% Check psth variables to make sure they are not empty
-            empty_vars = check_variables(file, response_window, selected_data);
+            empty_vars = check_variables(file, response_window, labeled_data);
             if empty_vars
-                warning('Animal: %s Does not have all the variables required for this analysis. Skipping...', dir_name);
+                warning('Animal: %s Does not have all the variables required for this analysis. Skipping...', animal_name);
                 continue
             end
 
             %% Mutual information
-            [prob_struct, mi_results] = mutual_info(response_window, selected_data);
+            [prob_struct, mi_results] = mutual_info(response_window, labeled_data);
 
             %% Saving the file
-            matfile = fullfile(save_path, ['mutual_info_', filename_meta.filename, '.mat']);
+            matfile = fullfile(info_path, ['mutual_info_', filename, '.mat']);
             check_variables(matfile, prob_struct, mi_results);
-            save(matfile, 'selected_data', 'prob_struct', 'mi_results', 'config_log');
+            save(matfile, 'labeled_data', 'prob_struct', 'mi_results');
         catch ME
-            handle_ME(ME, failed_path, filename_meta.filename);
+            handle_ME(ME, failed_path, filename);
         end
     end
     fprintf('Finished information analysis for %s. It took %s \n', ...
-        dir_name, num2str(toc(info_start)));
+        animal_name, num2str(toc(info_start)));
 end

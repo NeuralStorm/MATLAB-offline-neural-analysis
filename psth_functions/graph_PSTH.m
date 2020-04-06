@@ -1,25 +1,18 @@
-function [] = graph_PSTH(save_path, psth_struct, selected_data, sig_response, ...
-        non_sig_response, config, orig_filename)
-
-    bin_size = config.bin_size; pre_time = config.pre_time; 
-    post_time = config.post_time; pre_start = config.pre_start;
-    pre_end = config.pre_end; post_start = config.post_start; 
-    post_end = config.post_end; rf_analysis = config.rf_analysis;
-    make_region_subplot = config.make_region_subplot; sub_rows = config.sub_rows;
-    make_unit_plot = config.make_unit_plot; sub_cols = config.sub_columns;
-    span = config.span; unsmoothed_recfield_metrics = config.unsmoothed_recfield_metrics;
+function [] = graph_PSTH(save_path, psth_struct, labeled_data, sig_response, ...
+        non_sig_response, bin_size, pre_time, post_time, pre_start, pre_end, ...
+        post_start, post_end, rf_analysis, make_region_subplot, make_unit_plot,...
+        sub_cols, sub_rows, orig_filename)
 
     check_time(pre_time, pre_start, pre_end, post_time, post_start, post_end, bin_size)
 
     event_strings = psth_struct.all_events(:,1)';
-    event_window = pre_time:bin_size:post_time;
-    event_window(1) = [];
+    event_window = -(abs(pre_time) - bin_size):bin_size:(abs(post_time));
     total_bins = length(event_window);
 
-    region_names = fieldnames(selected_data);
+    region_names = fieldnames(labeled_data);
     parfor region = 1:length(region_names)
         current_region = region_names{region};
-        region_neurons = selected_data.(current_region).sig_channels;
+        region_neurons = labeled_data.(current_region).sig_channels;
         total_region_neurons = length(region_neurons);
         % Creates the region directory if it does not already exist
         region_path = [save_path, '/', current_region];
@@ -51,14 +44,8 @@ function [] = graph_PSTH(save_path, psth_struct, selected_data, sig_response, ..
 
             %% Creating the PSTH graphs
             for neuron = 1:total_region_neurons
+                psth = event_psth(((1:total_bins) + ((neuron-1) * total_bins)));
                 psth_name = region_neurons{neuron};
-                if rf_analysis && ~unsmoothed_recfield_metrics
-                    %! Not the same smoothing as in receptive field since it is on entire psth
-                    %! rec field is split between baseline and response so they have different edges near 0
-                    psth = smooth(psth_struct.(current_region).(current_event).(psth_name).psth, span)
-                else
-                    psth = psth_struct.(current_region).(current_event).(psth_name).psth;
-                end
                 if make_unit_plot
                     unit_figure = plot_PSTH(psth, psth_name, current_event, event_window, ...
                         pre_start, pre_end, post_start, post_end);
@@ -92,7 +79,7 @@ function [] = graph_PSTH(save_path, psth_struct, selected_data, sig_response, ..
                     %% Plots elements from rec field analysis
                     if make_unit_plot
                         plot_recfield(psth, first_bin_latency, last_bin_latency, threshold, ...
-                            unit_figure, bin_size, pre_time, event_window);
+                            unit_figure, bin_size, pre_time);
                     end
                     if make_region_subplot
                         figure(region_figure);
@@ -103,7 +90,7 @@ function [] = graph_PSTH(save_path, psth_struct, selected_data, sig_response, ..
                         ylim([event_min event_max]);
                         
                         plot_recfield(psth, first_bin_latency, last_bin_latency, threshold, ...
-                            region_figure, bin_size, pre_time, event_window);
+                            region_figure, bin_size, pre_time);
                         line([pre_start pre_start], ylim, 'Color', 'black', 'LineWidth', 0.75, 'LineStyle', '--');
                         line([pre_end pre_end], ylim, 'Color', 'black', 'LineWidth', 0.75, 'LineStyle', '--');
                         line([post_start post_start], ylim, 'Color', 'black', 'LineWidth', 0.75, 'LineStyle', '--');

@@ -1,153 +1,133 @@
 function [] = psth_main()
-    %% Get data directory
-    project_path = uigetdir(pwd);
+    %% Get directory with all animals and their data
+    original_path = uigetdir(pwd);
     start_time = tic;
-
-    %% Import psth config and removes ignored animals
-    config = import_config(project_path, 'psth');
-    config(config.include_dir == 0, :) = [];
-
-    dir_list = config.dir_name;
-    for dir_i = 1:length(dir_list)
-        curr_dir = dir_list{dir_i};
-        dir_config = config(dir_i, :);
-        dir_config = convert_table_cells(dir_config);
-        label_table = load_labels(project_path, [curr_dir, '_labels.csv']);
-
-        if strcmpi(dir_config.psth_type, 'psth')
-            %% Creating paths to do psth formatting
-            csv_modifier = 'psth';
-            [psth_path, psth_failed_path] = create_dir(project_path, 'psth');
-            [data_path, ~] = create_dir(psth_path, 'data');
-            export_params(data_path, csv_modifier, config);
-            if dir_config.create_psth
-                try
-                    %% Check to make sure paths exist for analysis and create save path
-                    parsed_path = [project_path, '/parsed_spike'];
-                    e_msg_1 = 'No parsed directory to create PSTHs';
-                    e_msg_2 = ['No ', curr_dir, ' directory to create PSTHs'];
-                    parsed_dir_path = enforce_dir_layout(parsed_path, curr_dir, psth_failed_path, e_msg_1, e_msg_2);
-                    [dir_save_path, dir_failed_path] = create_dir(data_path, curr_dir);
-
-                    %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-                    %%        Format PSTH         %%
-                    %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-                    batch_format_psth(dir_save_path, dir_failed_path, parsed_dir_path, curr_dir, dir_config, label_table);
-                catch ME
-                    handle_ME(ME, psth_failed_path, [curr_dir, '_missing_dir.mat']);
-                end
+    animal_list = dir(original_path);
+    animal_names = {animal_list([animal_list.isdir] == 1 & ~contains({animal_list.name}, '.')).name};
+    for animal = 1:length(animal_names)
+        animal_name = animal_names{animal};
+        animal_path = fullfile(...
+            animal_list(strcmpi(animal_names{animal}, {animal_list.name})).folder, animal_name);
+        config = import_config(animal_path, 'psth');
+        check_time(config.pre_time, config.pre_start, config.pre_end, config.post_time, ...
+            config.post_start, config.post_end, config.bin_size);
+        export_params(animal_path, 'main', config);
+        % Skips animals we want to ignore
+        if config.ignore_animal
+            continue;
+        else
+            %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+            %%           Parser           %%
+            %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+            if config.parse_files
+                %% Parse files
+                %! Might remove the file handling in the future
+                parsed_path = parser(animal_path, animal_name, config.total_trials, ...
+                    config.total_events, config.trial_lower_bound, ...
+                    config.is_non_strobed_and_strobed, config.event_map, config.ignore_sessions);
             else
-                if ~exist(psth_path, 'dir') || ~exist(data_path, 'dir')
-                    error('Must have PSTHs to run PSTH analysis on %s', curr_dir);
+                parsed_path = [animal_path, '/parsed'];
+            end
+
+            %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+            %%       Label Channels       %%
+            %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+            if config.label_channels
+                batch_label(animal_path, animal_name, parsed_path);
+            end
+
+            %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+            %%        Format PSTH         %%
+            %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+            if config.create_psth
+                psth_path = batch_format_psth(parsed_path, animal_name, config);
+            else
+                psth_path = [parsed_path, '/psth'];
+            end
+
+            if config.update_psth_windows
+                failed_path = [psth_path, '/failed_', 'window_slice'];
+                if exist(failed_path, 'dir') == 7
+                    delete([failed_path, '/*']);
+                    rmdir(failed_path);
+                end
+                file_list = get_file_list(psth_path, '.mat', config.ignore_sessions);
+                for file_index = 1:length(file_list)
+                    try
+                        %% pull info from filename and set up file path for analysis
+                        file = fullfile(psth_path, file_list(file_index).name);
+                        [~, filename, ~] = fileparts(file);
+
+                        %% Load needed variables from psth and does the receptive field analysis
+                        load(file, 'labeled_data', 'psth_struct');
+                        %% Check psth variables to make sure they are not empty
+                        empty_vars = check_variables(file, labeled_data, psth_struct);
+                        if empty_vars
+                            continue
+                        end
+
+                        %% Add analysis window
+                        [baseline_window, response_window] = create_analysis_windows(labeled_data, psth_struct, ...
+                            config.pre_time, config.pre_start, config.pre_end, config.post_time, ...
+                            config.post_start, config.post_end, config.bin_size);
+
+                        %% Saving outputs
+                        matfile = fullfile(psth_path, [filename, '.mat']);
+                        %% Check PSTH output to make sure there are no issues with the output
+                        empty_vars = check_variables(matfile, psth_struct, labeled_data, baseline_window, response_window);
+                        if empty_vars
+                            continue
+                        end
+                        %% Save file if all variables are not empty
+                        save(matfile, 'baseline_window', 'response_window', '-append');
+                    catch ME
+                        handle_ME(ME, failed_path, filename);
+                    end
                 end
             end
-        elseif strcmpi(dir_config.psth_type, 'pca')
-            csv_modifier = 'pca';
-            psth_path = [project_path, '/pca_psth'];
-            data_path = [psth_path, '/data'];
-            if ~exist(psth_path, 'dir') || ~exist(data_path, 'dir')
-                error('Must have PSTHs to run PSTH analysis on %s', curr_dir);
+
+            %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+            %%  Receptive Field Analysis  %%
+            %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+            if config.rf_analysis
+                rf_path = batch_recfield(animal_name, original_path, psth_path, 'receptive_field_analysis', ...
+                    '.mat', 'PSTH', 'format', config);
+            else
+                rf_path = [psth_path, '/receptive_field_analysis'];
             end
-        elseif strcmpi(dir_config.psth_type, 'ica')
-            csv_modifier = 'ica';
-            psth_path = [project_path, '/ica_psth'];
-            data_path = [psth_path, '/data'];
-            if ~exist(psth_path, 'dir') || ~exist(data_path, 'dir')
-                error('Must have PSTHs to run PSTH analysis on %s', curr_dir);
+
+            %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+            %%         Graph PSTH         %%
+            %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+            if config.make_psth_graphs
+                batch_graph(animal_name, psth_path, 'psth_graphs', '.mat', 'PSTH', 'format', ...
+                    config.bin_size, config.pre_time, config.post_time, config.pre_start, ...
+                    config.pre_end, config.post_start, config.post_end, config.rf_analysis, rf_path, ...
+                    config.make_region_subplot, config.make_unit_plot, config.sub_columns, config.sub_rows, config.ignore_sessions);
             end
-        end
 
-        e_msg_1 = 'No data directory to find PSTHs';
-        if config.rf_analysis
-            [recfield_path, recfield_failed_path] = create_dir(psth_path, 'recfield');
-            export_params(recfield_path, 'rec_field', config);
-            try
-                %% Check to make sure paths exist for analysis and create save path
-                e_msg_2 = ['No ', curr_dir, ' psth data for receptive field analysis'];
-                dir_psth_path = enforce_dir_layout(data_path, curr_dir, recfield_failed_path, e_msg_1, e_msg_2);
-                [dir_save_path, dir_failed_path] = create_dir(recfield_path, curr_dir);
-
-                %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-                %%  Receptive Field Analysis  %%
-                %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-                batch_recfield(project_path, dir_save_path, dir_failed_path, ...
-                    dir_psth_path, curr_dir, csv_modifier, dir_config);
-            catch ME
-                handle_ME(ME, recfield_failed_path, [curr_dir, '_missing_dir.mat']);
+            %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+            %%     Normalized Variance    %%
+            %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+            if config.nv_analysis
+                batch_nv(animal_name, original_path, psth_path, 'normalized_variance_analysis', ...
+                    '.mat', 'psth', 'format', config)
             end
-        end
 
-        if config.make_psth_graphs
-            [graph_path, graph_failed_path] = create_dir(psth_path, 'psth_graphs');
-            export_params(graph_path, 'psth_graph', config);
-            try
-                %% Check to make sure paths exist for analysis and create save path
-                e_msg_2 = ['No ', curr_dir, ' psth data for graphing'];
-                dir_psth_path = enforce_dir_layout(data_path, curr_dir, graph_failed_path, e_msg_1, e_msg_2);
-                [dir_save_path, dir_failed_path] = create_dir(graph_path, curr_dir);
-
-                %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-                %%         Graph PSTH         %%
-                %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-                rf_path = [psth_path, '/recfield/', curr_dir];
-                batch_graph(dir_save_path, dir_failed_path, dir_psth_path, curr_dir, dir_config, rf_path)
-            catch ME
-                handle_ME(ME, graph_failed_path, [curr_dir, '_missing_dir.mat']);
+            %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+            %%     PSTH Classification    %%
+            %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+            if config.psth_classify
+                batch_classify(animal_name, original_path, psth_path, 'classifier', '.mat', ...
+                    'PSTH', 'format', config);
             end
-        end
 
-        if config.psth_classify
-            [classifier_path, classifier_failed_path] = create_dir(psth_path, 'classifier');
-            export_params(classifier_path, 'classifier', config);
-            try
-                %% Check to make sure paths exist for analysis and create save path
-                e_msg_2 = ['No ', curr_dir, ' psth data for classifier analysis'];
-                dir_psth_path = enforce_dir_layout(data_path, curr_dir, classifier_failed_path, e_msg_1, e_msg_2);
-
-                %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-                %%     PSTH Classification    %%
-                %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-                [dir_save_path, dir_failed_path] = create_dir(classifier_path, curr_dir);
-                batch_classify(project_path, dir_save_path, dir_failed_path, ...
-                    dir_psth_path, curr_dir, csv_modifier, dir_config)
-            catch ME
-                handle_ME(ME, classifier_failed_path, [curr_dir, '_missing_dir.mat']);
-            end
-        end
-
-        if config.nv_analysis
-            [nv_path, nv_failed_path] = create_dir(psth_path, 'norm_var');
-            export_params(nv_path, 'nv_analysis', config);
-            try
-                %% Check to make sure paths exist for analysis and create save path
-                e_msg_2 = ['No ', curr_dir, ' to perform normalized variance analysis'];
-                dir_psth_path = enforce_dir_layout(data_path, curr_dir, nv_failed_path, e_msg_1, e_msg_2);
-                [dir_save_path, dir_failed_path] = create_dir(nv_path, curr_dir);
-                %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-                %%     Normalized Variance    %%
-                %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-                batch_nv(project_path, dir_save_path, dir_failed_path, ...
-                    dir_psth_path, curr_dir, csv_modifier, dir_config);
-            catch ME
-                handle_ME(ME, nv_failed_path, [curr_dir, '_missing_dir.mat']);
-            end
-        end
-
-        if config.info_analysis
-            [info_path, info_failed_path] = create_dir(psth_path, 'mutual_info');
-            export_params(info_path, 'mutual_info', config);
-            try
-                %% Check to make sure paths exist for analysis and create save path
-                e_msg_2 = ['No ', curr_dir, ' to perform info analysis'];
-                dir_psth_path = enforce_dir_layout(data_path, curr_dir, info_failed_path, e_msg_1, e_msg_2);
-
-                [dir_save_path, dir_failed_path] = create_dir(info_path, curr_dir);
-                %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-                %%   Information Analysis    %%
-                %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-                batch_info(dir_save_path, dir_failed_path, dir_psth_path, curr_dir, dir_config)
-            catch ME
-                handle_ME(ME, info_failed_path, [curr_dir, '_missing_dir.mat']);
+            %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+            %    Information Analysis    %%
+            %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+            if config.info_analysis
+                batch_info(animal_name, psth_path, 'mutual_info', ...
+                    '.mat', 'psth', 'format', config.ignore_sessions);
             end
         end
     end

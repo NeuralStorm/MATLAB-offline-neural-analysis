@@ -1,4 +1,4 @@
-function [baseline_struct, response_struct] = create_analysis_windows(selected_data, psth_struct, ...
+function [baseline_struct, response_struct] = create_analysis_windows(labeled_data, psth_struct, ...
     pre_time, pre_start, pre_end, post_time, post_start, post_end, bin_size)
 
     check_time(pre_time, pre_start, pre_end, post_time, post_start, post_end, bin_size)
@@ -21,7 +21,7 @@ function [baseline_struct, response_struct] = create_analysis_windows(selected_d
     response_struct.all_events = all_events;
     for region_index = 1:length(unique_regions)
         region = unique_regions{region_index};
-        region_labels = selected_data.(region).sig_channels;
+        region_labels = labeled_data.(region).sig_channels;
         region_response = psth_struct.(region).relative_response;
         %% Seperate pre and post response times
         [pre_response, post_response] = split_time(region_response, pre_time_bins, post_time_bins);

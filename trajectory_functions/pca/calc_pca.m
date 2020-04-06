@@ -1,11 +1,11 @@
-function [pca_results, labeled_pcs] = calc_pca(selected_data, mnts_struct, ...
+function [pca_results, labeled_pcs] = calc_pca(labeled_data, mnts_struct, ...
         feature_filter, feature_value)
 
     pca_results = struct;
     pca_results.all_events = mnts_struct.all_events;
-    labeled_pcs = selected_data;
+    labeled_pcs = labeled_data;
 
-    unique_regions = fieldnames(selected_data);
+    unique_regions = fieldnames(labeled_data);
     for region_index = 1:length(unique_regions)
         region = unique_regions{region_index};
         %% Grab z scored mnts format for current region and does PCA

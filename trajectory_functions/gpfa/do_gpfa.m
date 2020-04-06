@@ -1,18 +1,18 @@
-function [gpfa_results] = do_gpfa(animal_id, session_num, selected_data, ...
+function [gpfa_results] = do_gpfa(animal_id, session_num, labeled_data, ...
         psth_struct, bin_size, pre_time, post_time, state_dimension)
 
-    unique_regions = fieldnames(selected_data);
+    unique_regions = fieldnames(labeled_data);
     gpfa_results = struct;
     for region = 1:length(unique_regions)
         region_name = unique_regions{region};
         region_events = psth_struct.(region_name).filtered_events;
         event_strings = region_events(:,1)';
 
-        total_region_neurons = height(selected_data.(region_name));
+        total_region_neurons = height(labeled_data.(region_name));
         if bin_size ~= 0.001
             %! Yu's code expects 1ms bin size --> Reshape neural data
             total_bins = (length(-abs(pre_time):.001:abs(post_time)) - 1);
-            region_neurons = [selected_data.(region_name).sig_channels, selected_data.(region_name).channel_data];
+            region_neurons = [labeled_data.(region_name).sig_channels, labeled_data.(region_name).channel_data];
             response_struct = create_relative_response(region_neurons, ...
                 region_events, .001, pre_time, post_time);
         else

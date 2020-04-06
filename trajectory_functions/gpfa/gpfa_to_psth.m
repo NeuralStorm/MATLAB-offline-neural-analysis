@@ -1,10 +1,10 @@
-function [trajectory_struct, trajectory_labels] = gpfa_to_psth(gpfa_results, psth_struct, selected_data)
+function [trajectory_struct, trajectory_labels] = gpfa_to_psth(gpfa_results, psth_struct, labeled_data)
     %TODO then update filtered events cell array to have proper counts
     unique_regions = fieldnames(gpfa_results);
     trajectory_struct = struct;
     %! need to fix altered event list
     trajectory_struct.all_events = psth_struct.all_events;
-    trajectory_labels = selected_data;
+    trajectory_labels = labeled_data;
     all_events = [];
     for region_i = 1:length(unique_regions)
         region = unique_regions{region_i};

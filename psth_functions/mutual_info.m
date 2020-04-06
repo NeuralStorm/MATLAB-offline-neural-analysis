@@ -1,4 +1,4 @@
-function [prob_struct, mi_results] = mutual_info(response_window, selected_data)
+function [prob_struct, mi_results] = mutual_info(response_window, labeled_data)
 
     all_events = response_window.all_events;
     event_strings = all_events(:,1)';
@@ -9,10 +9,10 @@ function [prob_struct, mi_results] = mutual_info(response_window, selected_data)
 
     mi_results = struct;
     prob_struct = struct;
-    unique_regions = fieldnames(selected_data);
+    unique_regions = fieldnames(labeled_data);
     for region = 1:length(unique_regions)
         current_region = unique_regions{region};
-        neuron_names = unique(selected_data.(current_region).sig_channels);
+        neuron_names = unique(labeled_data.(current_region).sig_channels);
 
 
         % Pre-allocate fields

@@ -50,20 +50,10 @@ function sep_gui_OpeningFcn(hObject, eventdata, handles, varargin)
 handles.output = hObject;
 %load the file and save struct to handles.sep_data
 [file_name, original_path] = uigetfile('*.mat', 'MultiSelect', 'off');
-file_path = [original_path '\' file_name];
-setappdata(0,'select_path',file_path);
-load(file_path, 'sep_analysis_results', 'filename_meta', 'label_log');
-handles.file_path = file_path;
-handles.filename_meta = filename_meta;
-handles.label_log = label_log;
-%% Set up save path
-path_parts = strsplit(original_path, {'/', '\'});
-% end - 1 because uigetfile returns path with backslash at end of string
-dir_name = path_parts{end - 1};
-parent_path = [original_path, '../..'];
-[output_path, ~] = create_dir(parent_path, 'sep_gui_data');
-[dir_path, ~] = create_dir(output_path, dir_name);
-handles.save_file_path = [dir_path, '/', file_name];
+original_path = [original_path '\' file_name];
+setappdata(0,'select_path',original_path);
+load(original_path, 'sep_analysis_results');
+handles.file_path = original_path;
 handles.sep_data = sep_analysis_results;
 %initial set
 handles.index = 1;
@@ -110,11 +100,7 @@ varargout{1} = handles.output;
 function prev_button_Callback(hObject, eventdata, handles)
 if handles.index > 1
     %save the notes in textbox
-    analysis_notes = get(handles.notes_text, 'String');
-    if isempty(analysis_notes)
-        analysis_notes = 'n/a';
-    end
-    handles.sep_data(handles.index).analysis_notes = analysis_notes;
+    handles.sep_data(handles.index).analysis_notes = get(handles.notes_text, 'String');
     %switch the channel
     handles.index = handles.index - 1;
     guidata(hObject,handles);
@@ -144,11 +130,7 @@ end
 function next_button_Callback(hObject, eventdata, handles)
 %The process is the same as above
 if handles.index < length(handles.sep_data)
-    analysis_notes = get(handles.notes_text, 'String');
-    if isempty(analysis_notes)
-        analysis_notes = 'n/a';
-    end
-    handles.sep_data(handles.index).analysis_notes = analysis_notes;
+    handles.sep_data(handles.index).analysis_notes = get(handles.notes_text, 'String');
     handles.index = handles.index + 1;
     guidata(hObject,handles);
     sort_peaks(hObject, handles);%sort peaks to the ascending order
@@ -319,9 +301,7 @@ function figure1_CloseRequestFcn(hObject, eventdata, handles)
 
 % Save the file when close this window
 sep_analysis_results = handles.sep_data;
-filename_meta = handles.filename_meta;
-label_log = handles.label_log;
-save(handles.save_file_path, 'sep_analysis_results', 'filename_meta', 'label_log'); 
+save(handles.file_path, 'sep_analysis_results'); 
 
 delete(hObject);
 
@@ -434,12 +414,10 @@ function pushbutton7_Callback(hObject, eventdata, handles)
 % --- Executes on button press in discard_button.
 function discard_button_Callback(hObject, eventdata, handles)
 % load the last saved file  
-load(handles.file_path, 'sep_analysis_results', 'filename_meta', 'label_log');
+load(handles.file_path, 'sep_analysis_results');
 cla(handles.axes1);
 plot_sep_gui(handles, sep_analysis_results, handles.index);
 handles.sep_data = sep_analysis_results;
-handles.filename_meta = filename_meta;
-handles.label_log = label_log;
 check_check(handles);
 set(handles.change_button, 'Enable', 'off');
 add_check(handles);
@@ -543,18 +521,12 @@ end
 % --- Executes on button press in save_button.
 function save_button_Callback(hObject, eventdata, handles)
 %save notes
-analysis_notes = get(handles.notes_text, 'String');
-if isempty(analysis_notes)
-    analysis_notes = 'n/a';
-end
-handles.sep_data(handles.index).analysis_notes = analysis_notes;
+handles.sep_data(handles.index).analysis_notes = get(handles.notes_text, 'String');
 %save the data back to the loaded mat.flie 
 sep_analysis_results = handles.sep_data;
 %recalculates region / label based analysis
 sep_analysis_results = region_sep_analysis(sep_analysis_results);
-filename_meta = handles.filename_meta;
-label_log = handles.label_log;
-save(handles.save_file_path, 'sep_analysis_results', 'filename_meta', 'label_log');
+save(handles.file_path, 'sep_analysis_results'); 
 %refresh subplot graph
 setappdata(0, 'changed_channel_index', handles.changed_channel_index); %no use currently
 obj_sub = findobj('Name', 'all_channels_sep'); %get the Object from 'all_channels_sep' gui
@@ -670,11 +642,7 @@ function channel_switch_Callback(hObject, eventdata, handles)
 %Switch the graph to the channel selected in preview window
 
 %save the notes in textbox
-analysis_notes = get(handles.notes_text, 'String');
-if isempty(analysis_notes)
-    analysis_notes = 'n/a';
-end
-handles.sep_data(handles.index).analysis_notes = analysis_notes;
+handles.sep_data(handles.index).analysis_notes = get(handles.notes_text, 'String');
 %get the selected channel index
 handles.index = getappdata(0,'select_index');
 
@@ -719,34 +687,17 @@ function save_button_CreateFcn(hObject, eventdata, handles)
 % --- Executes on button press in load_button.
 function load_button_Callback(hObject, eventdata, handles)
 %save notes
-analysis_notes = get(handles.notes_text, 'String');
-if isempty(analysis_notes)
-    analysis_notes = 'n/a';
-end
-handles.sep_data(handles.index).analysis_notes = analysis_notes;
+handles.sep_data(handles.index).analysis_notes = get(handles.notes_text, 'String');
 %save files
 sep_analysis_results = handles.sep_data;
-filename_meta = handles.filename_meta;
-label_log = handles.label_log;
-save(handles.save_file_path, 'sep_analysis_results', 'filename_meta', 'label_log');
+save(handles.file_path, 'sep_analysis_results');
 %load new files
 [file_name, original_path] = uigetfile('*.mat', 'MultiSelect', 'off');
-path_parts = strsplit(original_path, {'/', '\'});
-% end - 1 because uigetfile returns path with backslash at end of string
-dir_name = path_parts{end - 1};
-file_path = [original_path '\' file_name];
-setappdata(0,'select_path',file_path);
-handles.file_path = file_path;
-%% set save path to modified folder
-parent_path = [original_path, '../..'];
-[output_path, ~] = create_dir(parent_path, 'sep_gui_data');
-[dir_path, ~] = create_dir(output_path, dir_name);
-handles.save_file_path = [dir_path, '/', file_name];
-%%
-load(handles.file_path, 'sep_analysis_results', 'filename_meta', 'label_log');
+original_path = [original_path '\' file_name];
+setappdata(0,'select_path',original_path);
+handles.file_path = original_path;
+load(handles.file_path, 'sep_analysis_results');
 handles.sep_data = sep_analysis_results;
-handles.filename_meta = filename_meta;
-handles.label_log = label_log;
 find_universal_peaks(handles);
 cla(handles.axes1);
 handles.index = 1;
