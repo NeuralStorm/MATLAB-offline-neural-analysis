@@ -1,31 +1,39 @@
 function [sig_neurons, non_sig_neurons] = receptive_field_analysis(...
-        selected_data, baseline_struct, response_struct, bin_size, ...
-        post_start, span, threshold_scale, sig_check, sig_alpha, ...
+        label_log, psth_struct, bin_size, pre_time, pre_start, pre_end, ...
+        post_start, post_end, span, threshold_scale, sig_check, sig_alpha, ...
         consec_bins, unsmoothed_recfield_metrics, column_names)
     %% Abbreviations: fl = first latency, ll = last latency, pl = peak latency
     %% rm = response magnitude, bfr = background firing rate
+    %% Establish baseline and response indices
+    pre_time_bins = (length(-abs(pre_time):bin_size:0)) - 1;
+    baseline_start = round(((abs(pre_time) - abs(pre_start)) / bin_size) + 1);
+    baseline_end = round(((abs(pre_time) - abs(pre_end)) / bin_size));
+    response_start = round((post_start / bin_size) + 1);
+    response_end = round(post_end / bin_size);
 
-    event_strings = baseline_struct.all_events(:,1)';
+    event_strings = psth_struct.all_events(:,1)';
     sig_neurons = [];
     non_sig_neurons = [];
-    region_names = fieldnames(selected_data);
-    for region = 1:length(region_names)
-        current_region = region_names{region};
-        region_table = selected_data.(current_region);
-        for event = 1:length(event_strings(1,:))
-            current_event = event_strings{event};
-            for neuron = 1:height(region_table)
-                neuron_name = region_table.sig_channels{neuron};
-                user_channels = region_table.user_channels(strcmpi(region_table.sig_channels, neuron_name));
-                notes = region_table.recording_notes(strcmpi(region_table.sig_channels, neuron_name));
+    unique_regions = fieldnames(label_log);
+    for region_i = 1:length(unique_regions)
+        region = unique_regions{region_i};
+        region_table = label_log.(region);
+        for event_i = 1:length(event_strings(1,:))
+            event = event_strings{event_i};
+            for neuron_i = 1:height(region_table)
+                neuron = region_table.sig_channels{neuron_i};
+                user_channels = region_table.user_channels(strcmpi(region_table.sig_channels, neuron));
+                notes = region_table.recording_notes(strcmpi(region_table.sig_channels, neuron));
                 if strcmpi(class(notes), 'double') && isnan(notes)
                     notes = 'n/a';
                 end
                 %% Get current PSTH and smooth it based on span
-                baseline_psth = baseline_struct.(current_region).(current_event).(neuron_name).psth;
-                response_psth = response_struct.(current_region).(current_event).(neuron_name).psth;
-                baseline_psth = smooth(baseline_psth, span);
-                response_psth = smooth(response_psth, span);
+                psth = psth_struct.(region).(event).(neuron).psth;
+                psth = smooth(psth, span);
+                pre_psth = psth(1:pre_time_bins);
+                post_psth = psth((pre_time_bins + 1):end);
+                baseline_psth = pre_psth(baseline_start:baseline_end);
+                response_psth = post_psth(response_start:response_end);
 
                 %% Determine if psth is signficant
                 [threshold, avg_bfr, bfr_std] = get_threshold(baseline_psth, threshold_scale);
@@ -35,9 +43,13 @@ function [sig_neurons, non_sig_neurons] = receptive_field_analysis(...
                 if is_sig
                     %% Finds results of the receptive field analysis
                     if unsmoothed_recfield_metrics
-                        baseline_psth = baseline_struct.(current_region).(current_event).(neuron_name).psth;
-                        response_psth = response_struct.(current_region).(current_event).(neuron_name).psth;
-                        %! smoothed threshold is lower, cannot use unsmoothed threshold since response may not be above
+                        psth = psth_struct.(region).(event).(neuron).psth;
+                        pre_psth = psth(1:pre_time_bins);
+                        post_psth = psth((pre_time_bins + 1):end);
+                        baseline_psth = pre_psth(baseline_start:baseline_end);
+                        response_psth = post_psth(response_start:response_end);
+                        %! smoothed threshold < unsmoothed threshold
+                        %! May not be significant response with unsmoothed version
                         [~, avg_bfr, bfr_std] = get_threshold(baseline_psth, threshold_scale);
                     end
                     [fl, ll, duration, pl, peak, corrected_peak, rm, ...
@@ -45,15 +57,15 @@ function [sig_neurons, non_sig_neurons] = receptive_field_analysis(...
                         response_psth, threshold, bin_size, post_start);
 
                     % Organizes data results into cell array
-                    sig_neurons = [sig_neurons; {current_region}, {neuron_name}, ...
-                        {user_channels}, {current_event}, {1}, {avg_bfr}, ...
+                    sig_neurons = [sig_neurons; {region}, {neuron}, ...
+                        {user_channels}, {event}, {1}, {avg_bfr}, ...
                         {bfr_std}, {threshold}, {p_val}, {fl}, {ll}, ...
                         {duration}, {pl}, {peak}, {corrected_peak}, ...
                         {rm}, {corrected_rm}, {NaN}, {strings}, {NaN}, {notes}];
                 else
                     % Puts NaN for non significant neurons
-                    non_sig_neurons = [non_sig_neurons; {current_region}, ...
-                        {neuron_name}, {user_channels}, {current_event}, {0}, ...
+                    non_sig_neurons = [non_sig_neurons; {region}, ...
+                        {neuron}, {user_channels}, {event}, {0}, ...
                         {avg_bfr}, {bfr_std}, {threshold}, {p_val}, {NaN}, ...
                         {NaN}, {NaN}, {NaN}, {NaN}, {NaN}, {NaN}, {NaN}, ...
                         {NaN}, {strings}, {NaN}, {notes}];
@@ -67,20 +79,20 @@ function [sig_neurons, non_sig_neurons] = receptive_field_analysis(...
         sig_neurons = cell2table(sig_neurons, 'VariableNames', column_names);
         %% Normalize response magnitude and find primary event for each neuron
         % Normalizes response magnitude on response magnitude, not response magnitude - background rate
-        for neuron = 1:length(sig_neurons.sig_channels)
-            neuron_name = sig_neurons.sig_channels{neuron};
-            if ~isempty(sig_neurons.sig_channels(strcmpi(sig_neurons.sig_channels, neuron_name)))
-                    sig_events = sig_neurons.event(strcmpi(sig_neurons.sig_channels, neuron_name));
-                    sig_magnitudes = sig_neurons.response_magnitude(strcmpi(sig_neurons.sig_channels, neuron_name));
+        for neuron_i = 1:length(sig_neurons.sig_channels)
+            neuron = sig_neurons.sig_channels{neuron_i};
+            if ~isempty(sig_neurons.sig_channels(strcmpi(sig_neurons.sig_channels, neuron)))
+                    sig_events = sig_neurons.event(strcmpi(sig_neurons.sig_channels, neuron));
+                    sig_magnitudes = sig_neurons.response_magnitude(strcmpi(sig_neurons.sig_channels, neuron));
                     [max_magnitude, max_index] = max(sig_magnitudes);
                     norm_magnitude = sig_magnitudes ./ max_magnitude;
                     principal_event = sig_events(max_index);
                     total_sig_events = length(sig_magnitudes);
-                    sig_neurons.total_sig_events(strcmpi(sig_neurons.sig_channels, neuron_name)) = ...
+                    sig_neurons.total_sig_events(strcmpi(sig_neurons.sig_channels, neuron)) = ...
                         total_sig_events;
-                    sig_neurons.principal_event(strcmpi(sig_neurons.sig_channels, neuron_name)) = ...
+                    sig_neurons.principal_event(strcmpi(sig_neurons.sig_channels, neuron)) = ...
                         {principal_event};
-                    sig_neurons.norm_magnitude(strcmpi(sig_neurons.sig_channels, neuron_name)) = ...
+                    sig_neurons.norm_magnitude(strcmpi(sig_neurons.sig_channels, neuron)) = ...
                         norm_magnitude;
             end
         end

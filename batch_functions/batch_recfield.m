@@ -36,21 +36,15 @@ function [] = batch_recfield(project_path, save_path, failed_path, data_path, di
             file = fullfile(data_path, file_list(file_index).name);
 
             %% Load needed variables from psth and does the receptive field analysis
-            load(file, 'selected_data', 'baseline_window', 'response_window', 'filename_meta');
+            load(file, 'psth_struct', 'label_log', 'filename_meta');
             %% Check psth variables to make sure they are not empty
-            empty_vars = check_variables(file, baseline_window, response_window, selected_data);
-            if empty_vars
-                error('Baseline_window, response_window, and/or selected_data is empty');
-            elseif ~isstruct(baseline_window) && isnan(baseline_window)
-                error('pre_time, pre_start, and pre_end must all be non zero windows for this analysis.');
-            elseif ~isstruct(response_window) && isnan(response_window)
-                error('post_time, post_start, and post_end must all be non zero windows for this analysis.');
-            end
+            %TODO add check to make sure there is baseline and response window
 
             [sig_neurons, non_sig_neurons] = receptive_field_analysis( ...
-                selected_data, baseline_window, response_window, bin_size, ...
-                post_start, span, threshold_scale, sig_check, sig_alpha, ...
-                consec_bins, unsmoothed_recfield_metrics, analysis_headers);
+                label_log, psth_struct, bin_size, pre_time, pre_start, ...
+                pre_end, post_start, post_end, span, threshold_scale, ...
+                sig_check, sig_alpha, consec_bins, ...
+                unsmoothed_recfield_metrics, analysis_headers);
 
             %% Capture data to save to csv from current day
             session_neurons = [sig_neurons; non_sig_neurons];
@@ -69,7 +63,7 @@ function [] = batch_recfield(project_path, save_path, failed_path, data_path, di
             %% Save receptive field matlab output
             % Does not check if variables are empty since there may/may not be significant responses in a set
             matfile = fullfile(save_path, ['rec_field_', filename_meta.filename, '.mat']);
-            save(matfile, 'selected_data', 'sig_neurons', 'non_sig_neurons', 'filename_meta', 'config_log');
+            save(matfile, 'label_log', 'sig_neurons', 'non_sig_neurons', 'filename_meta', 'config_log');
         catch ME
             handle_ME(ME, failed_path, filename_meta.filename);
         end
