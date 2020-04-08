@@ -31,8 +31,9 @@ function [] = batch_format_psth(save_path, failed_path, data_path, dir_name, con
             end
 
             %% Format PSTH
-            [psth_struct, event_ts] = format_PSTH(event_ts, selected_data, bin_size, ...
-                pre_time, post_time, wanted_events, trial_range, trial_lower_bound);
+            [psth_struct, event_ts, label_log] = format_PSTH(event_ts, ...
+                selected_data, bin_size, pre_time, post_time, ...
+                wanted_events, trial_range, trial_lower_bound);
 
             %% Add analysis window
             [baseline_window, response_window] = create_analysis_windows(selected_data, ...
@@ -50,7 +51,7 @@ function [] = batch_format_psth(save_path, failed_path, data_path, dir_name, con
             %% Save file if all variables are not empty
             save(matfile, 'psth_struct', 'event_ts', 'selected_data', ...
                 'baseline_window', 'response_window', 'filename_meta', ...
-                'config_log');
+                'config_log', 'label_log');
         catch ME
             handle_ME(ME, failed_path, filename);
         end
