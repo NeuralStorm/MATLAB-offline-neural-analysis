@@ -98,11 +98,21 @@ Steps(Remove,:)=[];% delete those steps
 
 %% Build an event id hash and assign it to column 5
 %if parser requires first column to be whole numbers
+j=size(Steps,1);
 for i=1:size(Steps,1)
-    if abs(Steps(i,3))>7 %steps that are far away from the obstacle...
+    if Steps(i,3)>5 || Steps(i,3)<-6 %steps that are far away from the obstacle...
         Steps(i,5)=999; %are used for the baseline event
     else
-        Steps(i,5)=(Steps(i,3)+7)*10+Steps(i,2); %steps near the obstacle are given a specific event number
+        % event 1 and 2 are for deciding if a cell is tuned to a specific paw
+        Steps(i,5)=Steps(i,2);
+        Steps=[Steps;Steps(i,:)];
+        % specific event numbers for steps near the obstacle
+        % events 101 and 102 are the leading foot step over the obstacle
+        Steps(i,5)=(Steps(i,3)+10)*10+Steps(i,2);
+        Steps=[Steps;Steps(i,:)];
+        % event 998 is for determining if the neuron is modulated during
+        % the step cycle near the obstical
+        Steps(i,5)=998;
     end
 end
 %if parser allows first column to be integers
