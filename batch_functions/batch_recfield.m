@@ -9,7 +9,9 @@ function [] = batch_recfield(project_path, save_path, failed_path, data_path, di
     post_time = config.post_time; post_start = config.post_start; post_end = config.post_end;
     bin_size = config.bin_size; threshold_scale = config.threshold_scale;
     sig_check = config.sig_check; consec_bins = config.consec_bins; span = config.span;
-    sig_alpha = config.cell_sig_alpha; unsmoothed_recfield_metrics = config.unsmoothed_recfield_metrics;
+    sig_alpha = config.cell_sig_alpha; cluster_flag = config.cluster_flag;
+    cluster_analysis = config.cluster_analysis; bin_gap = config.bin_gap;
+    unsmoothed_recfield_metrics = config.unsmoothed_recfield_metrics;
 
     meta_headers = {'filename', 'animal_id', 'exp_group', 'exp_condition', ...
         'optional_info', 'date', 'record_session', 'pre_time', ...
@@ -40,11 +42,12 @@ function [] = batch_recfield(project_path, save_path, failed_path, data_path, di
             %% Check psth variables to make sure they are not empty
             %TODO add check to make sure there is baseline and response window
 
-            [sig_neurons, non_sig_neurons] = receptive_field_analysis( ...
+            [sig_neurons, non_sig_neurons, cluster_struct] = receptive_field_analysis( ...
                 label_log, psth_struct, bin_size, pre_time, pre_start, ...
                 pre_end, post_start, post_end, span, threshold_scale, ...
                 sig_check, sig_alpha, consec_bins, ...
-                unsmoothed_recfield_metrics, analysis_headers);
+                unsmoothed_recfield_metrics, cluster_analysis, bin_gap, ...
+                cluster_flag, analysis_headers);
 
             %% Capture data to save to csv from current day
             session_neurons = [sig_neurons; non_sig_neurons];
@@ -63,7 +66,7 @@ function [] = batch_recfield(project_path, save_path, failed_path, data_path, di
             %% Save receptive field matlab output
             % Does not check if variables are empty since there may/may not be significant responses in a set
             matfile = fullfile(save_path, ['rec_field_', filename_meta.filename, '.mat']);
-            save(matfile, 'label_log', 'sig_neurons', 'non_sig_neurons', 'filename_meta', 'config_log');
+            save(matfile, 'label_log', 'sig_neurons', 'non_sig_neurons', 'filename_meta', 'config_log', 'cluster_struct');
         catch ME
             handle_ME(ME, failed_path, filename_meta.filename);
         end

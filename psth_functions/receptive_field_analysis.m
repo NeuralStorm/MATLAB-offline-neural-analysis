@@ -1,17 +1,25 @@
-function [sig_neurons, non_sig_neurons] = receptive_field_analysis(...
+function [sig_neurons, non_sig_neurons, cluster_struct] = receptive_field_analysis(...
         label_log, psth_struct, bin_size, pre_time, pre_start, pre_end, ...
         post_start, post_end, span, threshold_scale, sig_check, sig_alpha, ...
-        consec_bins, unsmoothed_recfield_metrics, column_names)
+        consec_bins, unsmoothed_recfield_metrics, cluster_analysis, bin_gap, ...
+        cluster_flag, column_names)
     %% Abbreviations: fl = first latency, ll = last latency, pl = peak latency
     %% rm = response magnitude, bfr = background firing rate
     %% Establish baseline and response indices
     pre_time_bins = (length(-abs(pre_time):bin_size:0)) - 1;
-    baseline_start = round(((abs(pre_time) - abs(pre_start)) / bin_size) + 1);
+    baseline_start = round(((abs(pre_time) - abs(pre_start)) / bin_size));
     baseline_end = round(((abs(pre_time) - abs(pre_end)) / bin_size));
-    response_start = round((post_start / bin_size) + 1);
+    response_start = round((post_start / bin_size));
     response_end = round(post_end / bin_size);
+    if baseline_start == 0
+        baseline_start = baseline_start + 1;
+    end
+    if response_start == 0
+        response_start = response_start + 1;
+    end
 
     event_strings = psth_struct.all_events(:,1)';
+    cluster_struct = struct;
     sig_neurons = [];
     non_sig_neurons = [];
     unique_regions = fieldnames(label_log);
@@ -52,16 +60,39 @@ function [sig_neurons, non_sig_neurons] = receptive_field_analysis(...
                         %! May not be significant response with unsmoothed version
                         [~, avg_bfr, bfr_std] = get_threshold(baseline_psth, threshold_scale);
                     end
-                    [fl, ll, duration, pl, peak, corrected_peak, rm, ...
-                        corrected_rm] = get_response_metrics(avg_bfr, ...
-                        response_psth, threshold, bin_size, post_start);
+                    if cluster_analysis
+                        neuron_cluster = find_clusters(response_psth, bin_gap, consec_bins, threshold);
+                        cluster_struct.(region).(event).(neuron) = neuron_cluster;
+                        cluster_struct.(region).(event).(neuron).response_psth = response_psth;
+                        cluster_struct.(region).(event).(neuron).threshold = threshold;
+                        sig_cluster_struct.(region).(event).(neuron) = neuron_cluster;
+                        supra_i = sig_cluster_struct.(region).(event).(neuron).([cluster_flag, '_cluster']);
+                        %% Determine bin offset caused by slicing cluster out of response
+                        cluster_response = response_psth(supra_i(1):supra_i(end));
+                        [fl, ll, duration, pl, peak, corrected_peak, rm, corrected_rm] = get_response_metrics(...
+                            avg_bfr, cluster_response, supra_i, bin_size, post_start);
+                        %TODO verify more carefully
+                        fl = fl - bin_size; ll = ll - bin_size;
+                        %TODO add cluster variables
+                        sig_neurons = [sig_neurons; {region}, {neuron}, ...
+                            {user_channels}, {event}, {1}, {avg_bfr}, ...
+                            {bfr_std}, {threshold}, {p_val}, {fl}, {ll}, ...
+                            {duration}, {pl}, {peak}, {corrected_peak}, ...
+                            {rm}, {corrected_rm}, {NaN}, {strings}, {NaN}, {notes}];
+                    else
+                        supra_i = find(response_psth > threshold);
+                        response_psth = response_psth(supra_i(1):supra_i(end));
+                        [fl, ll, duration, pl, peak, corrected_peak, rm, ...
+                            corrected_rm] = get_response_metrics(avg_bfr, ...
+                            response_psth, supra_i, bin_size, post_start);
 
-                    % Organizes data results into cell array
-                    sig_neurons = [sig_neurons; {region}, {neuron}, ...
-                        {user_channels}, {event}, {1}, {avg_bfr}, ...
-                        {bfr_std}, {threshold}, {p_val}, {fl}, {ll}, ...
-                        {duration}, {pl}, {peak}, {corrected_peak}, ...
-                        {rm}, {corrected_rm}, {NaN}, {strings}, {NaN}, {notes}];
+                        % Organizes data results into cell array
+                        sig_neurons = [sig_neurons; {region}, {neuron}, ...
+                            {user_channels}, {event}, {1}, {avg_bfr}, ...
+                            {bfr_std}, {threshold}, {p_val}, {fl}, {ll}, ...
+                            {duration}, {pl}, {peak}, {corrected_peak}, ...
+                            {rm}, {corrected_rm}, {NaN}, {strings}, {NaN}, {notes}];
+                    end
                 else
                     % Puts NaN for non significant neurons
                     non_sig_neurons = [non_sig_neurons; {region}, ...
@@ -167,19 +198,72 @@ function [threshold, avg_bfr, bfr_std] = get_threshold(baseline_psth, threshold_
 end
 
 function [fl, ll, duration, pl, peak, corrected_peak, rm, corrected_rm] = get_response_metrics(...
-        bfr, response_psth, threshold, bin_size, post_start)
+        bfr, above_threshold, suprathreshold_i, bin_size, post_start)
     %% Abbreviations: fl = first latency, ll = last latency, pl = peak latency
     %% rm = response magnitude
     %% Finds results of the receptive field analysis
-    suprathreshold_i = find(response_psth > threshold);
-    above_threshold = response_psth(suprathreshold_i);
-    fl = ((suprathreshold_i(1)) * bin_size) + post_start - (bin_size / 2);
-    ll = ((suprathreshold_i(end)) * bin_size) + post_start - (bin_size / 2);
+    % suprathreshold_i = find(response_psth > threshold);
+    % above_threshold = response_psth(suprathreshold_i);
+    fl = ((suprathreshold_i(1)) * bin_size) + post_start + (bin_size / 2);
+    ll = ((suprathreshold_i(end)) * bin_size) + post_start + (bin_size / 2);
     peak = max(above_threshold);
-    peak_index = find(peak == response_psth);
+    peak_index = find(peak == above_threshold);
     pl = (peak_index(1) * bin_size) + post_start - (bin_size / 2);
     corrected_peak = peak - bfr;
-    rm = sum(response_psth(suprathreshold_i(1):suprathreshold_i(end)));
+    rm = sum(above_threshold);
     corrected_rm = rm - bfr;
     duration = ll - fl;
+end
+
+function [cluster_struct] = find_clusters(response, bin_gap, consec_bins, threshold)
+    %TODO grab all indices and return them for clustering
+    suprathreshold_i = find(response > threshold);
+    cluster_struct = struct;
+    cluster_edges_i = find(diff(suprathreshold_i) >= bin_gap);
+    cluster_edges_i = [0; cluster_edges_i];
+    cluster_num = 1;
+    curr_cluster = 'cluster_1';
+    if length(cluster_edges_i) == 1
+        % cluster_indices = find(diff(suprathreshold_i) >= consec_bins)
+        cluster_indices = suprathreshold_i;
+        cluster_struct.primary_cluster = cluster_indices;
+        cluster_struct.first_cluster = cluster_indices;
+        cluster_struct.last_cluster = cluster_indices;
+        cluster_struct.(curr_cluster) = cluster_indices;
+    else
+        for cluster_i = 1:length(cluster_edges_i)
+            cluster_start = cluster_edges_i(cluster_i) + 1;
+            if cluster_i == length(cluster_edges_i)
+                cluster_end = length(suprathreshold_i);
+            else
+                cluster_end = cluster_edges_i(cluster_i + 1);
+            end
+            cluster_indices = suprathreshold_i(cluster_start:cluster_end);
+            if length(cluster_indices) < consec_bins || ~check_consec_bins(cluster_indices, consec_bins)
+                continue
+            end
+            cluster_struct.(curr_cluster) = cluster_indices;
+            if cluster_i ~= length(cluster_edges_i)
+                cluster_num = cluster_num + 1;
+                curr_cluster = ['cluster_', num2str(cluster_num)];
+            end
+        end
+        all_clusters = fieldnames(cluster_struct);
+        cluster_struct.first_cluster = cluster_struct.(all_clusters{1});
+        cluster_struct.last_cluster = cluster_struct.(all_clusters{end});
+
+        %% Find primary cluster
+        %TODO change from duration to response magnitude
+        cluster_max = 0;
+        max_cluster = '';
+        for cluster_i = 1:length(all_clusters)
+            curr_cluster = ['cluster_', num2str(cluster_i)];
+            cluster_length = length(cluster_struct.(curr_cluster));
+            if cluster_length > cluster_max
+                max_cluster = curr_cluster;
+                cluster_max = cluster_length;
+            end
+        end
+        cluster_struct.primary_cluster = cluster_struct.(max_cluster);
+    end
 end
