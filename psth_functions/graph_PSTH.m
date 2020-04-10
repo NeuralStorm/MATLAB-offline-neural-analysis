@@ -55,7 +55,7 @@ function [] = graph_PSTH(save_path, psth_struct, selected_data, sig_response, ..
                 if rf_analysis && ~unsmoothed_recfield_metrics
                     %! Not the same smoothing as in receptive field since it is on entire psth
                     %! rec field is split between baseline and response so they have different edges near 0
-                    psth = smooth(psth_struct.(current_region).(current_event).(psth_name).psth, span)
+                    psth = smooth(psth_struct.(current_region).(current_event).(psth_name).psth, span);
                 else
                     psth = psth_struct.(current_region).(current_event).(psth_name).psth;
                 end
