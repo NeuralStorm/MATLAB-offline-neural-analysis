@@ -61,7 +61,7 @@ function sepdata = cal_sep_analysis(filename_meta, sep_map, sep_window, ...
         sepdata(i).rec_session = filename_meta.session_num;
         %TODO verify these are set correctly
         sepdata(i).notch = config.notch_filt;
-        sepdata(i).filter = config.sep_filt_freq{:};
+        sepdata(i).filter = config.filt_freq{:};
         %%
         sepdata(i).sep_window = sep_window;
         sepdata(i).early_window = [config.early_response_start config.early_response_end];

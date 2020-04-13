@@ -40,7 +40,7 @@ function [] = analog_main()
             end
         end
 
-        if dir_config.sep_slicing
+        if dir_config.create_sep
             [sep_path, ~] = create_dir(continuous_path, 'sep');
             [sep_data_path, sep_failed_path] = create_dir(sep_path, 'sep_formatted_data');
             export_params(sep_data_path, 'format_sep', config);
