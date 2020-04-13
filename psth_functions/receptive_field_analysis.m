@@ -62,23 +62,35 @@ function [sig_neurons, non_sig_neurons, cluster_struct] = receptive_field_analys
                     end
                     if cluster_analysis
                         neuron_cluster = find_clusters(response_psth, bin_gap, consec_bins, threshold);
-                        cluster_struct.(region).(event).(neuron) = neuron_cluster;
-                        cluster_struct.(region).(event).(neuron).response_psth = response_psth;
-                        cluster_struct.(region).(event).(neuron).threshold = threshold;
-                        sig_cluster_struct.(region).(event).(neuron) = neuron_cluster;
-                        supra_i = sig_cluster_struct.(region).(event).(neuron).([cluster_flag, '_cluster']);
-                        %% Determine bin offset caused by slicing cluster out of response
-                        cluster_response = response_psth(supra_i(1):supra_i(end));
-                        [fl, ll, duration, pl, peak, corrected_peak, rm, corrected_rm] = get_response_metrics(...
-                            avg_bfr, cluster_response, supra_i, bin_size, post_start);
-                        %TODO verify more carefully
-                        fl = fl - bin_size; ll = ll - bin_size;
-                        %TODO add cluster variables
-                        sig_neurons = [sig_neurons; {region}, {neuron}, ...
-                            {user_channels}, {event}, {1}, {avg_bfr}, ...
-                            {bfr_std}, {threshold}, {p_val}, {fl}, {ll}, ...
-                            {duration}, {pl}, {peak}, {corrected_peak}, ...
-                            {rm}, {corrected_rm}, {NaN}, {strings}, {NaN}, {notes}];
+                        %% Go through clusters and calc receptive field measures
+                        cluster_names = fieldnames(neuron_cluster);
+                        for cluster_i = 1:length(cluster_names)
+                            curr_cluster = cluster_names{cluster_i};
+                            supra_i = neuron_cluster.(curr_cluster).cluster_indices;
+                            cluster_response = response_psth(supra_i(1):supra_i(end));
+                            [fl, ll, duration, pl, peak, corrected_peak, rm, corrected_rm] = get_response_metrics(...
+                                avg_bfr, cluster_response, supra_i, bin_size, post_start);
+                            neuron_cluster.(curr_cluster).fl = fl;
+                            neuron_cluster.(curr_cluster).ll = ll;
+                            neuron_cluster.(curr_cluster).duration = duration;
+                            neuron_cluster.(curr_cluster).pl = pl;
+                            neuron_cluster.(curr_cluster).peak = peak;
+                            neuron_cluster.(curr_cluster).corrected_peak = corrected_peak;
+                            neuron_cluster.(curr_cluster).rm = rm;
+                            neuron_cluster.(curr_cluster).corrected_rm = corrected_rm;
+                            if strcmpi(curr_cluster, [cluster_flag, '_cluster'])
+                                fl = fl - bin_size; ll = ll - bin_size;
+                                %TODO add cluster variables
+                                sig_neurons = [sig_neurons; {region}, {neuron}, ...
+                                    {user_channels}, {event}, {1}, {avg_bfr}, ...
+                                    {bfr_std}, {threshold}, {p_val}, {fl}, {ll}, ...
+                                    {duration}, {pl}, {peak}, {corrected_peak}, ...
+                                    {rm}, {corrected_rm}, {NaN}, {strings}, {NaN}, {notes}];
+                            end
+                            neuron_cluster.response_psth = response_psth;
+                            neuron_cluster.threshold = threshold;
+                            cluster_struct.(region).(event).(neuron) = neuron_cluster;
+                        end
                     else
                         supra_i = find(response_psth > threshold);
                         response_psth = response_psth(supra_i(1):supra_i(end));
@@ -224,13 +236,14 @@ function [cluster_struct] = find_clusters(response, bin_gap, consec_bins, thresh
     cluster_num = 1;
     curr_cluster = 'cluster_1';
     if length(cluster_edges_i) == 1
-        % cluster_indices = find(diff(suprathreshold_i) >= consec_bins)
         cluster_indices = suprathreshold_i;
-        cluster_struct.primary_cluster = cluster_indices;
-        cluster_struct.first_cluster = cluster_indices;
-        cluster_struct.last_cluster = cluster_indices;
-        cluster_struct.(curr_cluster) = cluster_indices;
+        cluster_struct.primary_cluster.cluster_indices= cluster_indices;
+        cluster_struct.first_cluster.cluster_indices= cluster_indices;
+        cluster_struct.last_cluster.cluster_indices= cluster_indices;
+        cluster_struct.(curr_cluster).cluster_indices= cluster_indices;
     else
+        max_rm = 0;
+        primary_cluster = curr_cluster;
         for cluster_i = 1:length(cluster_edges_i)
             cluster_start = cluster_edges_i(cluster_i) + 1;
             if cluster_i == length(cluster_edges_i)
@@ -242,7 +255,16 @@ function [cluster_struct] = find_clusters(response, bin_gap, consec_bins, thresh
             if length(cluster_indices) < consec_bins || ~check_consec_bins(cluster_indices, consec_bins)
                 continue
             end
-            cluster_struct.(curr_cluster) = cluster_indices;
+
+            %% Compare current cluster to max response
+            cluster_rm = sum(response(cluster_indices(1):cluster_indices(end)));
+            if cluster_rm > max_rm
+                max_rm = cluster_rm;
+                primary_cluster = curr_cluster;
+            end
+
+            %% Store and update cluster info
+            cluster_struct.(curr_cluster).cluster_indices = cluster_indices;
             if cluster_i ~= length(cluster_edges_i)
                 cluster_num = cluster_num + 1;
                 curr_cluster = ['cluster_', num2str(cluster_num)];
@@ -251,19 +273,6 @@ function [cluster_struct] = find_clusters(response, bin_gap, consec_bins, thresh
         all_clusters = fieldnames(cluster_struct);
         cluster_struct.first_cluster = cluster_struct.(all_clusters{1});
         cluster_struct.last_cluster = cluster_struct.(all_clusters{end});
-
-        %% Find primary cluster
-        %TODO change from duration to response magnitude
-        cluster_max = 0;
-        max_cluster = '';
-        for cluster_i = 1:length(all_clusters)
-            curr_cluster = ['cluster_', num2str(cluster_i)];
-            cluster_length = length(cluster_struct.(curr_cluster));
-            if cluster_length > cluster_max
-                max_cluster = curr_cluster;
-                cluster_max = cluster_length;
-            end
-        end
-        cluster_struct.primary_cluster = cluster_struct.(max_cluster);
+        cluster_struct.primary_cluster = cluster_struct.(primary_cluster);
     end
 end
