@@ -29,7 +29,8 @@ function [] = batch_classify(project_path, save_path, failed_path, data_path, di
         %% Run through files
         try
             file = fullfile(data_path, file_list(file_index).name);
-            load(file, 'selected_data', 'event_ts', 'response_window', 'filename_meta');
+            load(file, 'selected_data', 'event_ts', 'response_window', ...
+                'filename_meta', 'label_log');
             %% Check psth variables to make sure they are not empty
             empty_vars = check_variables(file, selected_data, event_ts, response_window);
             if empty_vars
@@ -62,7 +63,8 @@ function [] = batch_classify(project_path, save_path, failed_path, data_path, di
 
             matfile = fullfile(save_path, ['psth_classifier_', filename_meta.filename, '.mat']);
             check_variables(matfile, unit_struct, pop_struct, pop_table, unit_table);
-            save(matfile, 'pop_struct', 'unit_struct', 'pop_table', 'unit_table', 'config_log');
+            save(matfile, 'pop_struct', 'unit_struct', 'pop_table', ...
+                'unit_table', 'config_log', 'label_log');
         catch ME
             handle_ME(ME, failed_path, filename_meta.filename);
         end

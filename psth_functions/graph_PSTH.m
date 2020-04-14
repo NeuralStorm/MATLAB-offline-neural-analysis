@@ -1,4 +1,4 @@
-function [] = graph_PSTH(save_path, psth_struct, selected_data, sig_response, ...
+function [] = graph_PSTH(save_path, psth_struct, label_log, sig_response, ...
         non_sig_response, config, orig_filename)
 
     bin_size = config.bin_size; pre_time = config.pre_time; 
@@ -14,12 +14,11 @@ function [] = graph_PSTH(save_path, psth_struct, selected_data, sig_response, ..
     event_strings = psth_struct.all_events(:,1)';
     event_window = pre_time:bin_size:post_time;
     event_window(1) = [];
-    total_bins = length(event_window);
 
-    region_names = fieldnames(selected_data);
+    region_names = fieldnames(label_log);
     parfor region = 1:length(region_names)
         current_region = region_names{region};
-        region_neurons = selected_data.(current_region).sig_channels;
+        region_neurons = label_log.(current_region).sig_channels;
         total_region_neurons = length(region_neurons);
         % Creates the region directory if it does not already exist
         region_path = [save_path, '/', current_region];
