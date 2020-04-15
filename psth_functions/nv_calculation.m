@@ -1,8 +1,8 @@
-function nv_data = nv_calculation(label_log, baseline_window, pre_start, pre_end, ...
+function nv_data = nv_calculation(label_log, baseline_window, baseline_start, baseline_end, ...
         bin_size, epsilon, norm_var_scaling, separate_events, analysis_column_names)
 
-    tot_bins = length(-abs(pre_start):bin_size:-abs(pre_end)) - 1;
-    tot_time = abs(abs(pre_start) - abs(pre_end));
+    tot_bins = length(-abs(baseline_start):bin_size:-abs(baseline_end)) - 1;
+    tot_time = abs(abs(baseline_start) - abs(baseline_end));
 
     nv_data = [];
     event_strings = baseline_window.all_events(:,1);

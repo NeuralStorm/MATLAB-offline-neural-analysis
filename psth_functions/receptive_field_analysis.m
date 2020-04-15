@@ -1,16 +1,16 @@
 function [sig_neurons, non_sig_neurons, cluster_struct] = receptive_field_analysis(...
-        label_log, psth_struct, bin_size, pre_time, pre_start, pre_end, ...
-        post_start, post_end, span, threshold_scale, sig_check, sig_alpha, ...
+        label_log, psth_struct, bin_size, window_start, baseline_start, baseline_end, ...
+        response_start, response_end, span, threshold_scale, sig_check, sig_alpha, ...
         consec_bins, unsmoothed_recfield_metrics, cluster_analysis, bin_gap, ...
         column_names)
     %% Abbreviations: fl = first latency, ll = last latency, pl = peak latency
     %% rm = response magnitude, bfr = background firing rate
     %% Establish baseline and response indices
-    pre_time_bins = (length(-abs(pre_time):bin_size:0)) - 1;
-    baseline_start = round(((abs(pre_time) - abs(pre_start)) / bin_size)) + 1;
-    baseline_end = round(((abs(pre_time) - abs(pre_end)) / bin_size));
-    response_start = round((post_start / bin_size)) + 1;
-    response_end = round(post_end / bin_size);
+    pre_event_bins = (length(-abs(window_start):bin_size:0)) - 1;
+    baseline_start_i = round(((abs(window_start) - abs(baseline_start)) / bin_size)) + 1;
+    baseline_end_i = round(((abs(window_start) - abs(baseline_end)) / bin_size));
+    response_start_i = round((response_start / bin_size)) + 1;
+    response_end_i = round(response_end / bin_size);
 
     event_strings = psth_struct.all_events(:,1)';
     cluster_struct = struct;
@@ -32,10 +32,10 @@ function [sig_neurons, non_sig_neurons, cluster_struct] = receptive_field_analys
                 %% Get current PSTH and smooth it based on span
                 psth = psth_struct.(region).(event).(neuron).psth;
                 psth = smooth(psth, span);
-                pre_psth = psth(1:pre_time_bins);
-                post_psth = psth((pre_time_bins + 1):end);
-                baseline_psth = pre_psth(baseline_start:baseline_end);
-                response_psth = post_psth(response_start:response_end);
+                pre_psth = psth(1:pre_event_bins);
+                post_psth = psth((pre_event_bins + 1):end);
+                baseline_psth = pre_psth(baseline_start_i:baseline_end_i);
+                response_psth = post_psth(response_start_i:response_end_i);
 
                 %% Determine if psth is signficant
                 [threshold, avg_bfr, bfr_std] = get_threshold(baseline_psth, threshold_scale);
@@ -46,10 +46,10 @@ function [sig_neurons, non_sig_neurons, cluster_struct] = receptive_field_analys
                     %% Finds results of the receptive field analysis
                     if unsmoothed_recfield_metrics
                         psth = psth_struct.(region).(event).(neuron).psth;
-                        pre_psth = psth(1:pre_time_bins);
-                        post_psth = psth((pre_time_bins + 1):end);
-                        baseline_psth = pre_psth(baseline_start:baseline_end);
-                        response_psth = post_psth(response_start:response_end);
+                        pre_psth = psth(1:pre_event_bins);
+                        post_psth = psth((pre_event_bins + 1):end);
+                        baseline_psth = pre_psth(baseline_start_i:baseline_end_i);
+                        response_psth = post_psth(response_start_i:response_end_i);
                         %! smoothed threshold < unsmoothed threshold
                         %! May not be significant response with unsmoothed version
                         [~, avg_bfr, bfr_std] = get_threshold(baseline_psth, threshold_scale);
@@ -58,7 +58,7 @@ function [sig_neurons, non_sig_neurons, cluster_struct] = receptive_field_analys
                     overall_psth_response = response_psth(supra_i(1):supra_i(end));
                     [fl, ll, duration, pl, peak, corrected_peak, rm, ...
                         corrected_rm] = get_response_metrics(avg_bfr, ...
-                        overall_psth_response, supra_i, bin_size, post_start);
+                        overall_psth_response, supra_i, bin_size, response_start);
 
                     % Organizes data results into cell array
                     rec_data = [{region}, {neuron}, ...
@@ -77,7 +77,7 @@ function [sig_neurons, non_sig_neurons, cluster_struct] = receptive_field_analys
                             supra_i = neuron_cluster.(curr_cluster).cluster_indices;
                             cluster_response = response_psth(supra_i(1):supra_i(end));
                             [fl, ll, duration, pl, peak, corrected_peak, rm, corrected_rm] = get_response_metrics(...
-                                avg_bfr, cluster_response, supra_i, bin_size, post_start);
+                                avg_bfr, cluster_response, supra_i, bin_size, response_start);
                             neuron_cluster.(curr_cluster).fl = fl;
                             neuron_cluster.(curr_cluster).ll = ll;
                             neuron_cluster.(curr_cluster).duration = duration;
@@ -220,17 +220,17 @@ function [threshold, avg_bfr, bfr_std] = get_threshold(baseline_psth, threshold_
 end
 
 function [fl, ll, duration, pl, peak, corrected_peak, rm, corrected_rm] = get_response_metrics(...
-        bfr, above_threshold, suprathreshold_i, bin_size, post_start)
+        bfr, above_threshold, suprathreshold_i, bin_size, response_start)
     %% Abbreviations: fl = first latency, ll = last latency, pl = peak latency
     %% rm = response magnitude
     %% Finds results of the receptive field analysis
     % suprathreshold_i = find(response_psth > threshold);
     % above_threshold = response_psth(suprathreshold_i);
-    fl = ((suprathreshold_i(1)) * bin_size) + post_start + (bin_size / 2);
-    ll = ((suprathreshold_i(end)) * bin_size) + post_start + (bin_size / 2);
+    fl = ((suprathreshold_i(1)) * bin_size) + response_start + (bin_size / 2);
+    ll = ((suprathreshold_i(end)) * bin_size) + response_start + (bin_size / 2);
     peak = max(above_threshold);
     peak_index = find(peak == above_threshold);
-    pl = (peak_index(1) * bin_size) + post_start - (bin_size / 2);
+    pl = (peak_index(1) * bin_size) + response_start - (bin_size / 2);
     corrected_peak = peak - bfr;
     rm = sum(above_threshold);
     corrected_rm = rm - bfr;

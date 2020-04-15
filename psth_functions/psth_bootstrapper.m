@@ -1,7 +1,7 @@
 function [unit_struct, pop_struct, pop_table, unit_table] = psth_bootstrapper( ...
         selected_data, response_window, event_ts, boot_iterations, ...
-        bootstrap_classifier, bin_size, pre_time, pre_start, pre_end, post_time, ...
-        post_start, post_end, analysis_column_names)
+        bootstrap_classifier, bin_size, window_start, baseline_start, baseline_end, window_end, ...
+        response_start, response_end, analysis_column_names)
 
     region_names = fieldnames(selected_data);
     event_strings = response_window.all_events(:,1)';
@@ -48,13 +48,13 @@ function [unit_struct, pop_struct, pop_table, unit_table] = psth_bootstrapper( .
                 region_neurons = [selected_data.(current_region).sig_channels, selected_data.(current_region).channel_data];
                 %% Recreate relative response matrix from shuffled labels for region
                 shuffled_region = create_relative_response(region_neurons, shuffled_labels, bin_size, ...
-                    pre_time, post_time);
+                    window_start, window_end);
                 shuffled_response = struct;
                 shuffled_response.all_events = shuffled_labels;
                 shuffled_response.(current_region) = shuffled_region;
                 %% Isolate response
                 [~, shuffled_struct] = create_analysis_windows(selected_data, shuffled_response, ...
-                    pre_time, pre_start, pre_end, post_time, post_start, post_end, bin_size);
+                    window_start, baseline_start, baseline_end, window_end, response_start, response_end, bin_size);
 
                 %% Unit classification
                 unit_shuffled_info = [];

@@ -4,8 +4,8 @@ function [] = batch_format_psth(save_path, failed_path, data_path, dir_name, con
     file_list = get_file_list(data_path, '.mat');
     file_list = update_file_list(file_list, failed_path, config.include_sessions);
 
-    pre_time = config.pre_time; pre_start = config.pre_start; pre_end = config.pre_end;
-    post_time = config.post_time; post_start = config.post_start; post_end = config.post_end;
+    window_start = config.window_start; baseline_start = config.baseline_start; baseline_end = config.baseline_end;
+    window_end = config.window_end; response_start = config.response_start; response_end = config.response_end;
     bin_size = config.bin_size;
     wanted_events = config.wanted_events; trial_lower_bound = config.trial_lower_bound;
     trial_range = config.trial_range;
@@ -32,13 +32,13 @@ function [] = batch_format_psth(save_path, failed_path, data_path, dir_name, con
 
             %% Format PSTH
             [psth_struct, event_ts, label_log] = format_PSTH(event_ts, ...
-                selected_data, bin_size, pre_time, post_time, ...
+                selected_data, bin_size, window_start, window_end, ...
                 wanted_events, trial_range, trial_lower_bound);
 
             %% Add analysis window
             [baseline_window, response_window] = create_analysis_windows(selected_data, ...
-                psth_struct, pre_time, pre_start, pre_end, post_time, post_start, ...
-                post_end, bin_size);
+                psth_struct, window_start, baseline_start, baseline_end, window_end, response_start, ...
+                response_end, bin_size);
 
             %% Saving outputs
             matfile = fullfile(save_path, ['PSTH_format_', filename, '.mat']);

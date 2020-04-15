@@ -1,18 +1,18 @@
 function [baseline_struct, response_struct] = create_analysis_windows(selected_data, psth_struct, ...
-    pre_time, pre_start, pre_end, post_time, post_start, post_end, bin_size)
+    window_start, baseline_start, baseline_end, window_end, response_start, response_end, bin_size)
 
-    check_time(pre_time, pre_start, pre_end, post_time, post_start, post_end, bin_size)
+    check_time(window_start, baseline_start, baseline_end, window_end, response_start, response_end, bin_size)
 
-    pre_time_bins = (length(-abs(pre_time):bin_size:0)) - 1;
-    post_time_bins = (length(0:bin_size:abs(post_time))) - 1;
+    pre_event_bins = (length(-abs(window_start):bin_size:0)) - 1;
+    post_event_bins = (length(0:bin_size:abs(window_end))) - 1;
 
-    baseline_bins = (length(pre_start:bin_size:pre_end)) - 1;
-    response_bins = (length(post_start:bin_size:post_end)) - 1;
+    baseline_bins = (length(baseline_start:bin_size:baseline_end)) - 1;
+    response_bins = (length(response_start:bin_size:response_end)) - 1;
 
     all_events = psth_struct.all_events;
 
-    pre_start_index = round(((abs(pre_time) - abs(pre_start)) / bin_size));
-    post_start_index = round((abs(post_start) / bin_size));
+    baseline_start_i = round(((abs(window_start) - abs(baseline_start)) / bin_size));
+    response_start_i = round((abs(response_start) / bin_size));
 
     unique_regions = setdiff(fieldnames(psth_struct), 'all_events');
     baseline_struct = struct;
@@ -24,10 +24,10 @@ function [baseline_struct, response_struct] = create_analysis_windows(selected_d
         region_labels = selected_data.(region).sig_channels;
         region_response = psth_struct.(region).relative_response;
         %% Seperate pre and post response times
-        [pre_response, post_response] = split_time(region_response, pre_time_bins, post_time_bins);
+        [pre_response, post_response] = split_time(region_response, pre_event_bins, post_event_bins);
 
         %% slice out baseline window
-        baseline_response = slice_window(pre_response, pre_time_bins, pre_start_index, baseline_bins);
+        baseline_response = slice_window(pre_response, pre_event_bins, baseline_start_i, baseline_bins);
         if isnan(baseline_response)
             baseline_struct = NaN;
         else
@@ -37,7 +37,7 @@ function [baseline_struct, response_struct] = create_analysis_windows(selected_d
         end
 
         %% Slice out response window
-        response_window = slice_window(post_response, post_time_bins, post_start_index, response_bins);
+        response_window = slice_window(post_response, post_event_bins, response_start_i, response_bins);
         if isnan(response_window)
             response_struct = NaN;
         else

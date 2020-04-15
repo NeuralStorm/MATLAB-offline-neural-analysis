@@ -1,9 +1,9 @@
 function [mnts_struct, event_ts, selected_data, label_log] = format_mnts(...
-    event_ts, selected_data, bin_size, pre_time, post_time, wanted_events, ...
+    event_ts, selected_data, bin_size, window_start, window_end, wanted_events, ...
     trial_range, trial_lower_bound)
 
     mnts_struct = struct;
-    event_window = -(abs(pre_time)):bin_size:(abs(post_time));
+    event_window = -(abs(window_start)):bin_size:(abs(window_end));
     tot_bins = length(event_window) - 1;
 
     %% Organize and group timestamps
