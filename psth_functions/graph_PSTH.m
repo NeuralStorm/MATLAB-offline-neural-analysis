@@ -8,7 +8,7 @@ function [] = graph_PSTH(save_path, psth_struct, label_log, sig_response, ...
     make_region_subplot = config.make_region_subplot; sub_rows = config.sub_rows;
     make_unit_plot = config.make_unit_plot; sub_cols = config.sub_columns;
     span = config.span; unsmoothed_recfield_metrics = config.unsmoothed_recfield_metrics;
-
+    cluster_flag = config.cluster_flag; cluster_analysis = config.cluster_analysis;
     check_time(pre_time, pre_start, pre_end, post_time, post_start, post_end, bin_size)
 
     event_strings = psth_struct.all_events(:,1)';
@@ -69,14 +69,21 @@ function [] = graph_PSTH(save_path, psth_struct, label_log, sig_response, ...
                     %% Plot first & last bin latency and threshold for significant neurons
                     % otherwise plots threshold on non significant neurons
                     if ~isempty(sig_response)
+                        if cluster_analysis
+                            first = [cluster_flag, '_cluster_first_latency'];
+                            last = [cluster_flag, '_cluster_last_latency'];
+                        else
+                            first = 'first_latency';
+                            last = 'last_latency';
+                        end
                         region_sig_neurons = sig_response(strcmpi(sig_response.region, current_region), :);
                         if ~isempty(region_sig_neurons) && ~isempty(region_sig_neurons.sig_channels(strcmpi(region_sig_neurons.sig_channels, psth_name) & ...
                                 strcmpi(region_sig_neurons.event, current_event)))
                             threshold = region_sig_neurons.threshold(strcmpi(region_sig_neurons.sig_channels, psth_name) & ...
                                 strcmpi(region_sig_neurons.event, current_event));
-                            first_bin_latency = region_sig_neurons.first_latency(strcmpi(region_sig_neurons.sig_channels, psth_name) & ...
+                            first_bin_latency = region_sig_neurons.(first)(strcmpi(region_sig_neurons.sig_channels, psth_name) & ...
                                 strcmpi(region_sig_neurons.event, current_event));
-                            last_bin_latency = region_sig_neurons.last_latency(strcmpi(region_sig_neurons.sig_channels, psth_name) & ...
+                            last_bin_latency = region_sig_neurons.(last)(strcmpi(region_sig_neurons.sig_channels, psth_name) & ...
                                 strcmpi(region_sig_neurons.event, current_event));
                         end
                     end
