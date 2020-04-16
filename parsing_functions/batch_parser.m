@@ -37,7 +37,7 @@ function [] = batch_parser(parsed_path, failed_path, animal_path, dir_name, conf
                         parsing_func = 'rh_parser';
                         config.rh = 'rhd';
                     otherwise
-                        error('Parser not implemented for %s. Please create your own parser.', ...
+                        warning('Parser not implemented for %s. Please create your own parser.', ...
                             curr_ext);
                 end
                 parsing = str2func(parsing_func);
