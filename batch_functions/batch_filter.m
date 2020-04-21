@@ -29,7 +29,6 @@ function [] = batch_filter(save_path, failed_path, data_path, dir_name, ...
                     dir_config.notch_bandwidth, dir_config.filt_type, ...
                     dir_config.filt_freq, dir_config.filt_order);
             else
-                %TODO verify if hard warning should be here
                 error('Cannot filter and use raw data for analysis');
             end
 
