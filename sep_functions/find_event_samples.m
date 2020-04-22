@@ -33,7 +33,11 @@ function [event_samples] = find_event_samples(dig_sig)
     
         ts = [temp_ts_low_high; temp_ts_high_low];
         event_str = ['event_', num2str(row_i)];
-        event_samples.(event_str) = ts;
+        if isempty(ts)
+            continue
+        else
+            event_samples.(event_str) = ts;
+        end
     end
 end
 
