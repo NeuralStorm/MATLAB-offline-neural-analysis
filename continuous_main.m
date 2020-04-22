@@ -68,6 +68,10 @@ function [] = continuous_main()
         end
 
         if dir_config.sep_analysis
+            sep_path = [continuous_path, '/sep'];
+            if ~exist(sep_path, 'dir')
+                error('Must have Seps to plot');
+            end
             [sep_analysis_path, analysis_failed_path] = create_dir(sep_path, 'sep_auto_analysis_data');
             export_params(sep_analysis_path, 'sep_analysis', config);
             try
@@ -88,12 +92,15 @@ function [] = continuous_main()
         end
 
         if dir_config.make_sep_graphs
+            sep_path = [continuous_path, '/sep'];
+            if ~exist(sep_path, 'dir')
+                error('Must have Seps to plot');
+            end
             [sep_figure_path, graph_failed_path] = create_dir(sep_path, 'sep_figures');
             export_params(sep_figure_path, 'sep_analysis', config);
             try
                 e_msg_1 = 'No data directory to find SEPs';
                 e_msg_2 = ['No ', curr_dir, ' for plotting'];
-                sep_path = [continuous_path, '/sep'];
                 sep_data_path = [sep_path, '/sep_auto_analysis_data'];
                 dir_sep_path = enforce_dir_layout(sep_data_path, curr_dir, ...
                     continuous_failed_path, e_msg_1, e_msg_2);
