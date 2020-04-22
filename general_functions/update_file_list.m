@@ -14,7 +14,7 @@ function [updated_list] = update_file_list(file_list, failed_path, include_sessi
         file_meta = get_filename_info(filename);
         session_list = [session_list, file_meta.session_num];
     end
-    [~, files_i, ~] = intersect(session_list, include_sessions);
+    files_i = ismember(session_list, include_sessions);
     updated_list = file_list(files_i);
     [~, missing_i] = setdiff(include_sessions, session_list);
     if ~isempty(missing_i)
