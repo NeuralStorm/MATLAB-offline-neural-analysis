@@ -13,6 +13,11 @@ function sliced_signals = format_sep(data_map, event_samples, ...
             end
         end
 
+        if isempty(event_samples.(event))
+            warning('Empty event matrix. Skipping %s', event);
+            continue
+        end
+
         %% Skip unwanted events
         if square_pulse
             event_ts = event_samples.(event)(1,:);
