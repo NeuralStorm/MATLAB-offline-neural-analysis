@@ -37,9 +37,14 @@ function [] = batch_format_sep(save_path, failed_path, data_path, dir_name, dir_
                 %%          Slicing           %%
                 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
                 sep_window = [-abs(dir_config.window_start), dir_config.window_end];
-                sliced_signal = format_sep(raw_map, event_samples, sample_rate, sep_window, dir_config.square_pulse);
+                sliced_signal = format_sep(raw_map, event_samples, ...
+                    sample_rate, sep_window, dir_config.square_pulse, ...
+                    dir_config.wanted_events);
+
+                %% Save sep
                 matfile = fullfile(save_path, ['sliced_', filename_meta.filename, '.mat']);
-                save(matfile, '-v7.3', 'sliced_signal', 'sep_window', 'config_log', 'filename_meta', 'event_samples', 'label_log');
+                save(matfile, '-v7.3', 'sliced_signal', 'sep_window', ...
+                    'config_log', 'filename_meta', 'event_samples', 'label_log');
             catch ME
                 handle_ME(ME, failed_path, filename_meta.filename);
             end
@@ -57,9 +62,14 @@ function [] = batch_format_sep(save_path, failed_path, data_path, dir_name, dir_
                 %%          Slicing           %%
                 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
                 sep_window = [-abs(dir_config.window_start), dir_config.window_end];
-                sliced_signal = format_sep(filtered_map, event_samples, sample_rate, sep_window, dir_config.square_pulse);
+                sliced_signal = format_sep(filtered_map, event_samples, ...
+                    sample_rate, sep_window, dir_config.square_pulse, ...
+                    dir_config.wanted_events);
+
+                %% Save sep
                 matfile = fullfile(save_path, ['sliced_', filename_meta.filename, '.mat']);
-                save(matfile, '-v7.3', 'sliced_signal', 'sep_window', 'config_log', 'filename_meta', 'event_samples', 'label_log');
+                save(matfile, '-v7.3', 'sliced_signal', 'sep_window', ...
+                    'config_log', 'filename_meta', 'event_samples', 'label_log');
             catch ME
                 handle_ME(ME, failed_path, filename_meta.filename);
             end
