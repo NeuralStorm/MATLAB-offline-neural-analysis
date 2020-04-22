@@ -4,7 +4,8 @@ function [meta_struct] = get_filename_info(filename)
     if contains(filename, '.')
         % Handles file with old format
         split_name = strsplit(filename, '.');
-        if length(split_name) ~= 5
+        %% Must be at least 5 long to have the right number of fields
+        if length(split_name) >= 5
             error('Not a supported filename format');
         end
 
@@ -26,7 +27,8 @@ function [meta_struct] = get_filename_info(filename)
     elseif contains(filename, '_')
         % Handles file with new format
         split_name = strsplit(filename, '_');
-        if length(split_name) ~= 6
+        %% Must be at least 6 long to have the right number of fields
+        if length(split_name) >= 6
             error('Not a supported filename format');
         end
 
