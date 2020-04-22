@@ -137,12 +137,14 @@ function [] = graph_PSTH(save_path, psth_struct, label_log, sig_response, ...
                     filename = [psth_name, '_', current_event, '.png'];
                     saveas(gcf, fullfile(event_path, filename));
                     filename = [psth_name, '_', current_event, '.fig'];
+                    set(gcf, 'CreateFcn', 'set(gcbo,''Visible'',''on'')'); 
                     savefig(gcf, fullfile(event_path, filename));
                 end
             end
             if make_region_subplot
                 figure(region_figure);
                 filename = [orig_filename, '.fig'];
+                set(gcf, 'CreateFcn', 'set(gcbo,''Visible'',''on'')'); 
                 savefig(gcf, fullfile(event_path, filename));
             end
             close all
