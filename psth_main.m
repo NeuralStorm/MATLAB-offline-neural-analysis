@@ -55,6 +55,8 @@ function [] = psth_main()
             if ~exist(psth_path, 'dir') || ~exist(data_path, 'dir')
                 error('Must have PSTHs to run PSTH analysis on %s', curr_dir);
             end
+        else
+            error('Invalid psth type %s, must be psth, pca, or ica', dir_config.psth_type);
         end
 
         e_msg_1 = 'No data directory to find PSTHs';
