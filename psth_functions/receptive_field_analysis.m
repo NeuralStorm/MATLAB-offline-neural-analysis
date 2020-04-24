@@ -238,11 +238,11 @@ function [fl, ll, duration, pl, peak, corrected_peak, rm, corrected_rm] = get_re
 end
 
 function [cluster_struct, tot_clusters] = find_clusters(response, bin_gap, consec_bins, threshold)
-    %TODO grab all indices and return them for clustering
     cluster_struct = struct;
     suprathreshold_i = find(response > threshold);
     cluster_edges_i = find(diff(suprathreshold_i) >= bin_gap);
-    cluster_edges_i = [0; cluster_edges_i];
+    cluster_edges_i(end + 1) = 0;
+    cluster_edges_i = sort(cluster_edges_i);
     tot_clusters = 1;
     curr_cluster = 'cluster_1';
     if length(cluster_edges_i) == 1
