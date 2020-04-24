@@ -4,8 +4,17 @@ function [] = plx_spike_parser(parsed_path, failed_path, raw_file, config, label
     filename_meta = get_filename_info(filename);
 
     total_trials = config.total_trials; total_events = config.total_events;
-    trial_lower_bound = config.trial_lower_bound; event_map = config.event_map{:};
+    trial_lower_bound = config.trial_lower_bound; event_map = config.event_map;
     is_non_strobed_and_strobed = config.is_non_strobed_and_strobed;
+    %% Check event_map is set properly
+    if is_non_strobed_and_strobed
+        if isempty(event_map) || (~iscell(event_map) && all(isnan(event_map)))
+            error('Must have mapping array for events when is_non_strobed_and_strobed is set to true');
+        end
+        if iscell(event_map)
+            event_map = event_map{:};
+        end
+    end
 
     % Take the spike times and event times
     try
