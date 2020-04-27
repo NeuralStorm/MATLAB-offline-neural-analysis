@@ -44,6 +44,8 @@ function [] = batch_recfield(project_path, save_path, failed_path, data_path, di
     all_neurons = [];
     general_info = table;
     for file_index = 1:length(file_list)
+        [~, filename, ~] = fileparts(file_list(file_index).name);
+        filename_meta.filename = filename;
         try
             %% pull info from filename and set up file path for analysis
             file = fullfile(data_path, file_list(file_index).name);
@@ -79,6 +81,7 @@ function [] = batch_recfield(project_path, save_path, failed_path, data_path, di
             % Does not check if variables are empty since there may/may not be significant responses in a set
             matfile = fullfile(save_path, ['rec_field_', filename_meta.filename, '.mat']);
             save(matfile, 'label_log', 'sig_neurons', 'non_sig_neurons', 'filename_meta', 'config_log', 'cluster_struct');
+            clear('label_log', 'sig_neurons', 'non_sig_neurons', 'filename_meta', 'cluster_struct');
         catch ME
             handle_ME(ME, failed_path, filename_meta.filename);
         end

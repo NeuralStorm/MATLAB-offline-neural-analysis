@@ -6,6 +6,8 @@ function [] = batch_mnts_to_psth(save_path, failed_path, data_path, ...
     file_list = update_file_list(file_list, failed_path, dir_config.include_sessions);
 
     for file_index = 1:length(file_list)
+        [~, filename, ~] = fileparts(file_list(file_index).name);
+        filename_meta.filename = filename;
         try
             %% pull info from filename and set up file path for analysis
             file = fullfile(data_path, file_list(file_index).name);
@@ -28,6 +30,8 @@ function [] = batch_mnts_to_psth(save_path, failed_path, data_path, ...
             save(matfile, 'psth_struct', 'baseline_window', ...
                 'response_window', 'event_ts', 'filename_meta', 'config_log', ...
                 'label_log', 'selected_data');
+            clear('psth_struct', 'baseline_window', 'selected_data', ...
+                'response_window', 'event_ts', 'filename_meta', 'label_log');
         catch ME
             handle_ME(ME, failed_path, filename_meta.filename);
         end

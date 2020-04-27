@@ -6,6 +6,8 @@ function [] = batch_graph(save_path, failed_path, data_path, dir_name, config, r
     fprintf('Graphing for %s \n', dir_name);
     %% Goes through all the files and calculates mutual info according to the parameters set in config
     for file_index = 1:length(file_list)
+        [~, filename, ~] = fileparts(file_list(file_index).name);
+        filename_meta.filename = filename;
         try
             %% pull info from filename and set up file path for analysis
             file = fullfile(data_path, file_list(file_index).name);
@@ -28,9 +30,12 @@ function [] = batch_graph(save_path, failed_path, data_path, dir_name, config, r
                 load(rf_matfile, 'sig_neurons', 'non_sig_neurons');
                 graph_PSTH(day_path, psth_struct, label_log, sig_neurons, non_sig_neurons, ...
                     config, filename_meta.filename)
+                clear('psth_struct', 'label_log', 'filename_meta', ...
+                    'sig_neurons', 'non_sig_neurons');
             else
                 graph_PSTH(day_path, psth_struct, label_log, NaN, NaN, config, ...
                 filename_meta.filename)
+                clear('psth_struct', 'label_log', 'filename_meta');
             end
         catch ME
             handle_ME(ME, failed_path, filename_meta.filename);

@@ -7,6 +7,8 @@ function [] = batch_pca(save_path, failed_path, data_path, dir_name, dir_config)
     fprintf('PCA for %s \n', dir_name);
     %% Perform PCA based on MNTS data
     for file_index = 1:length(file_list)
+        [~, filename, ~] = fileparts(file_list(file_index).name);
+        filename_meta.filename = filename;
         try
             %% pull info from filename and set up file path for analysis
             file = fullfile(data_path, file_list(file_index).name);
@@ -28,7 +30,8 @@ function [] = batch_pca(save_path, failed_path, data_path, dir_name, dir_config)
             check_variables(matfile, component_results);
             save(matfile, 'selected_data', 'event_ts', 'component_results', ...
                 'filename_meta', 'config_log', 'label_log');
-            clear('label_log', 'event_ts', 'component_results');
+            clear('label_log', 'event_ts', 'component_results', 'selected_data', ...
+                'filename_meta');
         catch ME
             handle_ME(ME, failed_path, filename_meta.filename);
         end

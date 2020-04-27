@@ -7,6 +7,8 @@ function [] = batch_format_sep(save_path, failed_path, data_path, dir_name, dir_
 
     if dir_config.use_raw
         for file_index = 1:length(file_list)
+            [~, filename, ~] = fileparts(file_list(file_index).name);
+            filename_meta.filename = filename;
             try
                 %% pull info from filename and set up file path for analysis
                 file = fullfile(data_path, file_list(file_index).name);
@@ -45,12 +47,15 @@ function [] = batch_format_sep(save_path, failed_path, data_path, dir_name, dir_
                 matfile = fullfile(save_path, ['sliced_', filename_meta.filename, '.mat']);
                 save(matfile, '-v7.3', 'sliced_signal', 'sep_window', ...
                     'config_log', 'filename_meta', 'event_samples', 'label_log');
+                clear('sliced_signal', 'sep_window', 'filename_meta', 'event_samples', 'label_log');
             catch ME
                 handle_ME(ME, failed_path, filename_meta.filename);
             end
         end
     else
         for file_index = 1:length(file_list)
+            [~, filename, ~] = fileparts(file_list(file_index).name);
+            filename_meta.filename = filename;
             try
                 %% pull info from filename and set up file path for analysis
                 file = fullfile(data_path, file_list(file_index).name);
@@ -70,6 +75,7 @@ function [] = batch_format_sep(save_path, failed_path, data_path, dir_name, dir_
                 matfile = fullfile(save_path, ['sliced_', filename_meta.filename, '.mat']);
                 save(matfile, '-v7.3', 'sliced_signal', 'sep_window', ...
                     'config_log', 'filename_meta', 'event_samples', 'label_log');
+                clear('sliced_signal', 'sep_window', 'filename_meta', 'event_samples', 'label_log');
             catch ME
                 handle_ME(ME, failed_path, filename_meta.filename);
             end

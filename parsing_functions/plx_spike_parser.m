@@ -112,6 +112,7 @@ function [] = plx_spike_parser(parsed_path, failed_path, raw_file, config, label
         %% Saves parsed files
         matfile = fullfile(parsed_path, [filename_meta.filename, '.mat']);
         save(matfile, 'event_ts', 'channel_map', 'filename_meta', 'labeled_data');
+        clear('event_ts', 'channel_map', 'filename_meta', 'labeled_data');
     catch ME
         handle_ME(ME, failed_path, filename_meta.filename);
     end

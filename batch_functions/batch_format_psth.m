@@ -16,10 +16,11 @@ function [] = batch_format_psth(save_path, failed_path, data_path, dir_name, con
     fprintf('Calculating PSTH for %s \n', dir_name);
     %% Goes through all the files and creates PSTHs according to the parameters set in config
     for file_index = 1:length(file_list)
+        [~, filename, ~] = fileparts(file_list(file_index).name);
+        filename_meta.filename = filename;
         try
             %% Load file contents
             file = [data_path, '/', file_list(file_index).name];
-            [~, filename, ~] = fileparts(file);
             load(file, 'event_ts', 'labeled_data', 'filename_meta');
             %% Select channels
             selected_data = select_data(labeled_data, ...
@@ -41,7 +42,7 @@ function [] = batch_format_psth(save_path, failed_path, data_path, dir_name, con
                 response_end, bin_size);
 
             %% Saving outputs
-            matfile = fullfile(save_path, ['PSTH_format_', filename, '.mat']);
+            matfile = fullfile(save_path, ['PSTH_format_', filename_meta.filename, '.mat']);
             %% Check PSTH output to make sure there are no issues with the output
             empty_vars = check_variables(matfile, psth_struct, event_ts);
             if empty_vars
@@ -52,8 +53,10 @@ function [] = batch_format_psth(save_path, failed_path, data_path, dir_name, con
             save(matfile, 'psth_struct', 'event_ts', 'selected_data', ...
                 'baseline_window', 'response_window', 'filename_meta', ...
                 'config_log', 'label_log');
+            clear('psth_struct', 'event_ts', 'selected_data', 'label_log', ...
+                'baseline_window', 'response_window', 'filename_meta');
         catch ME
-            handle_ME(ME, failed_path, filename);
+            handle_ME(ME, failed_path, filename_meta.filename);
         end
     end
     fprintf('Finished calculating PSTH for %s. It took %s \n', ...

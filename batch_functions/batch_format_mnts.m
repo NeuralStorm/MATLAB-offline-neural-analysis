@@ -12,6 +12,8 @@ function [] = batch_format_mnts(save_path, failed_path, data_path, dir_name, ...
     fprintf('Calculating mnts for %s \n', dir_name);
     %% Creates mnts from parsed data according to the parameters set in config
     for file_index = 1:length(file_list)
+        [~, filename, ~] = fileparts(file_list(file_index).name);
+        filename_meta.filename = filename;
         try
             %% Load file contents
             file = [data_path, '/', file_list(file_index).name];
@@ -44,6 +46,7 @@ function [] = batch_format_mnts(save_path, failed_path, data_path, dir_name, ...
             %% Save file if all variables are not empty
             save(matfile, 'mnts_struct', 'event_ts', 'selected_data', ...
                 'filename_meta', 'config_log', 'label_log');
+            clear('mnts_struct', 'event_ts', 'selected_data', 'filename_meta', 'label_log');
         catch ME
             handle_ME(ME, failed_path, filename_meta.filename);
         end

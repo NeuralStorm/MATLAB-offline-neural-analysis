@@ -7,6 +7,8 @@ function [] = batch_ica(save_path, failed_path, data_path, dir_name, dir_config)
     fprintf('ICA for %s \n', dir_name);
     %% Goes through all the files and performs pca according to the parameters set in config
     for file_index = 1:length(file_list)
+        [~, filename, ~] = fileparts(file_list(file_index).name);
+        filename_meta.filename = filename;
         try
             %% pull info from filename and set up file path for analysis
             file = fullfile(data_path, file_list(file_index).name);
@@ -33,6 +35,8 @@ function [] = batch_ica(save_path, failed_path, data_path, dir_name, dir_config)
             end
             save(matfile, 'event_ts', 'component_results', 'selected_data', ...
                 'filename_meta', 'config_log', 'label_log');
+            clear('event_ts', 'component_results', 'selected_data', ...
+                'filename_meta', 'label_log');
         catch ME
             handle_ME(ME, failed_path, filename_meta.filename);
         end

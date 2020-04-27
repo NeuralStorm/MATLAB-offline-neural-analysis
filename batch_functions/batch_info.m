@@ -8,6 +8,8 @@ function [] = batch_info(save_path, failed_path, data_path, dir_name, config)
     fprintf('Mutual Info for %s \n', dir_name);
     %% Goes through all the files and calculates mutual info according to the parameters set in config
     for file_index = 1:length(file_list)
+        [~, filename, ~] = fileparts(file_list(file_index).name);
+        filename_meta.filename = filename;
         try
             %% pull info from filename and set up file path for analysis
             file = fullfile(data_path, file_list(file_index).name);
@@ -26,6 +28,7 @@ function [] = batch_info(save_path, failed_path, data_path, dir_name, config)
             matfile = fullfile(save_path, ['mutual_info_', filename_meta.filename, '.mat']);
             check_variables(matfile, prob_struct, mi_results);
             save(matfile, 'label_log', 'prob_struct', 'mi_results', 'config_log');
+            clear('label_log', 'prob_struct', 'mi_results');
         catch ME
             handle_ME(ME, failed_path, filename_meta.filename);
         end

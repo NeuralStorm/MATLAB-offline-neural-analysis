@@ -26,6 +26,8 @@ function [] = batch_classify(project_path, save_path, failed_path, data_path, di
     pop_info = [];
     unit_info = [];
     for file_index = 1:length(file_list)
+        [~, filename, ~] = fileparts(file_list(file_index).name);
+        filename_meta.filename = filename;
         %% Run through files
         try
             file = fullfile(data_path, file_list(file_index).name);
@@ -65,6 +67,7 @@ function [] = batch_classify(project_path, save_path, failed_path, data_path, di
             check_variables(matfile, unit_struct, pop_struct, pop_table, unit_table);
             save(matfile, 'pop_struct', 'unit_struct', 'pop_table', ...
                 'unit_table', 'config_log', 'label_log');
+            clear('unit_struct', 'pop_struct', 'pop_table', 'unit_table', 'label_log');
         catch ME
             handle_ME(ME, failed_path, filename_meta.filename);
         end

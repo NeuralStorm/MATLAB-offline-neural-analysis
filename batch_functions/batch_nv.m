@@ -22,6 +22,8 @@ function [] = batch_nv(project_path, save_path, failed_path, data_path, ...
     meta_info = table;
     for file_index = 1:length(file_list)
         %% Run through files
+        [~, filename, ~] = fileparts(file_list(file_index).name);
+        filename_meta.filename = filename;
         try
             file = fullfile(data_path, file_list(file_index).name);
             load(file, 'label_log', 'baseline_window', 'filename_meta');
@@ -53,6 +55,7 @@ function [] = batch_nv(project_path, save_path, failed_path, data_path, ...
             check_variables(matfile, label_log, neuron_activity);
             save(matfile, 'label_log', 'neuron_activity', 'filename_meta', ...
                 'config_log');
+            clear('label_log', 'neuron_activity', 'filename_meta');
         catch ME
             handle_ME(ME, failed_path, filename_meta.filename);
         end
