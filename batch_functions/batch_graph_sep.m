@@ -1,8 +1,9 @@
 function [] = batch_graph_sep(save_path, failed_path, data_path, ...
     dir_name, dir_config)
 
-    config_log = dir_config;
     file_list = get_file_list(data_path, '.mat');
+    file_list = update_file_list(file_list, failed_path, ...
+        dir_config.include_sessions);
 
     fprintf('Plotting SEPs for %s \n', dir_name);
     for file_i = 1:length(file_list)
