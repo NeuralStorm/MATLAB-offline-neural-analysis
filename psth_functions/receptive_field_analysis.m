@@ -53,6 +53,18 @@ function [sig_neurons, non_sig_neurons, cluster_struct] = receptive_field_analys
                         %! smoothed threshold < unsmoothed threshold
                         %! May not be significant response with unsmoothed version
                         [~, avg_bfr, bfr_std] = get_threshold(baseline_psth, threshold_scale);
+
+                        %% Verify that enough consec bins exist
+                        supra_i = find(response_psth > threshold);
+                        if ~check_consec_bins(supra_i, consec_bins)
+                            cluster_data = num2cell(nan(1, 28));
+                            non_sig_neurons = [non_sig_neurons; {region}, ...
+                                {neuron}, {user_channels}, {event}, {0}, ...
+                                {avg_bfr}, {bfr_std}, {threshold}, {p_val}, {NaN}, ...
+                                {NaN}, {NaN}, {NaN}, {NaN}, {NaN}, {NaN}, {NaN}, ...
+                                {NaN}, {strings}, {NaN}, {notes}, cluster_data];
+                            continue
+                        end
                     end
                     supra_i = find(response_psth > threshold);
                     overall_psth_response = response_psth(supra_i(1):supra_i(end));
