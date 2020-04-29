@@ -1,4 +1,6 @@
-function [animal_id, experimental_group, experimental_condition, session_num, session_date, optional_info] = get_filename_info(filename)
+function [meta_struct] = get_filename_info(filename)
+    meta_struct = struct;
+    meta_struct.filename = filename;
     if contains(filename, '.')
         % Handles file with old format
         split_name = strsplit(filename, '.');
@@ -7,20 +9,20 @@ function [animal_id, experimental_group, experimental_condition, session_num, se
         end
 
         %% Get animal info 
-        study_id = split_name{1};
-        animal_id = split_name{2};
-        animal_id = strcat(study_id, animal_id);
-        experimental_group = split_name{3};
-        experimental_condition = strings;
+        study_id = split_name{end - 4};
+        animal_id = split_name{end - 3};
+        meta_struct.animal_id = strcat(study_id, animal_id);
+        meta_struct.experimental_group = split_name{end - 2};
+        meta_struct.experimental_condition = strings;
 
         %% Get session num and date
-        session = split_name{4};
+        session = split_name{end - 1};
         session_num = regexp(session,'\d*','Match');
-        session_num = str2double(session_num{1});
+        meta_struct.session_num = str2double(session_num{1});
         session_date = split_name{end};
-        session_date = str2double(session_date);
+        meta_struct.session_date = str2double(session_date);
 
-        optional_info = strings;
+        meta_struct.optional_info = strings;
     elseif contains(filename, '_')
         % Handles file with new format
         split_name = strsplit(filename, '_');
@@ -29,18 +31,22 @@ function [animal_id, experimental_group, experimental_condition, session_num, se
         end
 
         %% Get animal info 
-        animal_id = split_name{1};
-        experimental_group = split_name{2};
-        experimental_condition = split_name{3};
+        meta_struct.animal_id = split_name{end - 5};
+        meta_struct.experimental_group = split_name{end - 4};
+        meta_struct.experimental_condition = split_name{end - 3};
 
         %% Get session num and date
-        session = split_name{4};
+        session = split_name{end - 2};
         session_num = regexp(session,'\d*','Match');
-        session_num = str2double(session_num{1});
+        meta_struct.session_num = str2double(session_num{1});
         session_date = split_name{end - 1};
-        session_date = str2double(session_date);
+        meta_struct.session_date = str2double(session_date);
 
         optional_info = split_name{end};
+        if strcmpi(optional_info, 'double') && isnan(optional_info)
+            optional_info = 'n/a';
+        end
+        meta_struct.optional_info = optional_info;
     else
         error('Not a supported filename format');
     end

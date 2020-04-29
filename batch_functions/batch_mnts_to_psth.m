@@ -1,33 +1,33 @@
-function [psth_path] = batch_mnts_to_psth(animal_name, data_path, dir_name, ...
-        search_ext, filename_substring_one, filename_substring_two, filename_substring_three, config)
+function [] = batch_mnts_to_psth(save_path, failed_path, data_path, ...
+        dir_name, filename_substring_one, dir_config)
 
-    [psth_path, failed_path] = create_dir(data_path, dir_name);
-    [files] = get_file_list(data_path, search_ext, config.ignore_sessions);
+    config_log = dir_config;
+    file_list = get_file_list(data_path, '.mat');
+    file_list = update_file_list(file_list, failed_path, dir_config.include_sessions);
 
-    for file_index = 1:length(files)
+    for file_index = 1:length(file_list)
         try
             %% pull info from filename and set up file path for analysis
-            file = fullfile(data_path, files(file_index).name);
-            [~, filename, ~] = fileparts(file);
-            filename = erase(filename, [filename_substring_one, '.', filename_substring_two, '.']);
-            filename = erase(filename, [filename_substring_one, '_', filename_substring_two, '_']);
+            file = fullfile(data_path, file_list(file_index).name);
 
             %% Load needed variables from psth and does the receptive field analysis
-            load(file, 'labeled_data', 'component_results', 'event_ts');
+            load(file, 'selected_data', 'component_results', 'event_ts', 'filename_meta');
             %% Check psth variables to make sure they are not empty
-            empty_vars = check_variables(file, labeled_data, component_results, event_ts);
+            empty_vars = check_variables(file, selected_data, component_results, event_ts);
             if empty_vars
                 continue
             end
 
-            [psth_struct, baseline_window, response_window] = reformat_mnts(labeled_data, ...
-                component_results, config.bin_size, config.pre_time, config.post_time, config.pre_start, ...
-                config.pre_end, config.post_start, config.post_end);
+            [psth_struct, baseline_window, response_window] = reformat_mnts(selected_data, ...
+                component_results, dir_config.bin_size, dir_config.pre_time, dir_config.post_time, dir_config.pre_start, ...
+                dir_config.pre_end, dir_config.post_start, dir_config.post_end);
 
-            matfile = fullfile(psth_path, [filename_substring_three, '_format_' filename, '.mat']);
-            save(matfile, 'labeled_data', 'psth_struct', 'baseline_window', 'response_window', 'event_ts');
+            matfile = fullfile(save_path, [filename_substring_one, ...
+                '_format_' filename_meta.filename, '.mat']);
+            save(matfile, 'selected_data', 'psth_struct', 'baseline_window', ...
+                'response_window', 'event_ts', 'filename_meta', 'config_log');
         catch ME
-            handle_ME(ME, failed_path, filename);
+            handle_ME(ME, failed_path, filename_meta.filename);
         end
     end
 end

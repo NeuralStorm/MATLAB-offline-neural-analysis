@@ -64,7 +64,7 @@ function [] = broadband_psth_main()
             %%        Format PSTH         %%
             %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
             if config.create_psth
-                psth_path = batch_format_psth(spikes_path, animal_name, config);
+                psth_path = batch_format_psth(animal_path, spikes_path, animal_name, config);
             else
                 psth_path = [spikes_path, '/psth'];
             end

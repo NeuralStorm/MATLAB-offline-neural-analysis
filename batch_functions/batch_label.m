@@ -35,14 +35,13 @@ function [] = batch_label(animal_path, animal_name, parsed_path)
         file = [parsed_path, '/', parsed_files(file_index).name];
         [~, file_name, ~] = fileparts(file);
         [~, ~, ~, session_num, ~, ~] = get_filename_info(file_name);
-        load(file, 'tscounts', 'evcounts', 'event_ts', 'channel_map');
-        check_variables(file, tscounts, evcounts, event_ts, channel_map);
+        load(file, 'channel_map');
+        check_variables(file, channel_map);
 
-        labeled_data = label_neurons(channel_map, label_table, session_num);
+        labeled_data = label_data(channel_map, label_table, session_num);
 
-        check_variables(file, labeled_data, tscounts, evcounts, event_ts, channel_map);
-
-        save(file, 'tscounts', 'evcounts', 'event_ts', 'channel_map', 'labeled_data');
+        check_variables(file, labeled_data);
+        save(file, 'labeled_data', '-append');
     end
     fprintf('Finished labeling for %s. It took %s\n', ...
         animal_name, num2str(toc(label_start)));

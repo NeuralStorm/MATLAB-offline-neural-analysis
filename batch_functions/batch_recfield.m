@@ -1,50 +1,46 @@
-function [rf_path] = batch_recfield(animal_name, original_path, data_path, dir_name, ...
-        search_ext, filename_substring_one, filename_substring_two, config)
-    %! TODO FIX CSV NAME HANDLING
-
+function [] = batch_recfield(project_path, save_path, failed_path, data_path, dir_name, filename_substring_one, config)
     rf_start = tic;
-    
-    [rf_path, failed_path] = create_dir(data_path, dir_name);
-    [files] = get_file_list(data_path, search_ext, config.ignore_sessions);
+    config_log = config;
+    file_list = get_file_list(data_path, '.mat');
+    file_list = update_file_list(file_list, failed_path, config.include_sessions);
 
     %% Pull variable names into workspace scope for log
     pre_time = config.pre_time; pre_start = config.pre_start; pre_end = config.pre_end;
     post_time = config.post_time; post_start = config.post_start; post_end = config.post_end;
-    bin_size = config.bin_size; threshold_scale = config.threshold_scale; ignore_sessions = config.ignore_sessions;
-    sig_check = config.sig_check; sig_bins = config.sig_bins; span = config.span;
+    bin_size = config.bin_size; threshold_scale = config.threshold_scale;
+    sig_check = config.sig_check; consec_bins = config.consec_bins; span = config.span;
+    sig_alpha = config.cell_sig_alpha; unsmoothed_recfield_metrics = config.unsmoothed_recfield_metrics;
 
-    export_params(rf_path, 'receptive_field_analysis', rf_path, failed_path, ...
-        animal_name, pre_time, pre_start, pre_end, post_start, post_end, bin_size, ...
-        threshold_scale, sig_check, sig_bins, span, ignore_sessions);
-
-    meta_headers = {'animal', 'group', 'date', 'record_session', 'pre_time', ...
+    meta_headers = {'filename', 'animal_id', 'exp_group', 'exp_condition', ...
+        'optional_info', 'date', 'record_session', 'pre_time', ...
         'pre_start', 'pre_end', 'post_time', 'post_start', 'post_end', 'bin_size', ...
-        'sig_check', 'sig_bins', 'span', 'threshold_scale'};
+        'sig_alpha', 'unsmoothed_recfield_metrics', ...
+        'sig_check', 'consec_bins', 'span', 'threshold_scale'};
     analysis_headers = {'region', 'sig_channels', 'user_channels', 'event', 'significant', ...
-        'background_rate', 'background_std', 'threshold', 'first_latency', ...
+        'background_rate', 'background_std', 'threshold', 'p_val', 'first_latency', ...
         'last_latency', 'duration', 'peak_latency', 'peak_response', ...
         'corrected_peak', 'response_magnitude', 'corrected_response_magnitude', ...
         'total_sig_events', 'principal_event', 'norm_magnitude', 'recording_notes'};
-    csv_headers = [meta_headers, analysis_headers];
+    ignore_headers = {'significant', 'background_rate', 'background_std', ...
+        'threshold', 'first_latency', 'last_latency', 'duration', ...
+        'peak_latency', 'peak_response', 'corrected_peak', ...
+        'response_magnitude', 'corrected_response_magnitude', ...
+        'total_sig_events', 'principal_event', 'norm_magnitude'};
 
-    sprintf('Receptive field analysis for %s \n', animal_name);
+    sprintf('Receptive field analysis for %s \n', dir_name);
     all_neurons = [];
     general_info = table;
-    for file_index = 1:length(files)
+    for file_index = 1:length(file_list)
         try
             %% pull info from filename and set up file path for analysis
-            file = fullfile(data_path, files(file_index).name);
-            [~, filename, ~] = fileparts(file);
-            filename = erase(filename, [filename_substring_one, '.', filename_substring_two, '.']);
-            filename = erase(filename, [filename_substring_one, '_', filename_substring_two, '_']);
-            [animal_id, experimental_group, ~, session_num, session_date, ~] = get_filename_info(filename);
+            file = fullfile(data_path, file_list(file_index).name);
 
             %% Load needed variables from psth and does the receptive field analysis
-            load(file, 'labeled_data', 'baseline_window', 'response_window');
+            load(file, 'selected_data', 'baseline_window', 'response_window', 'filename_meta');
             %% Check psth variables to make sure they are not empty
-            empty_vars = check_variables(file, baseline_window, response_window, labeled_data);
+            empty_vars = check_variables(file, baseline_window, response_window, selected_data);
             if empty_vars
-                error('Baseline_window, response_window, and/or labeled_data is empty');
+                error('Baseline_window, response_window, and/or selected_data is empty');
             elseif ~isstruct(baseline_window) && isnan(baseline_window)
                 error('pre_time, pre_start, and pre_end must all be non zero windows for this analysis.');
             elseif ~isstruct(response_window) && isnan(response_window)
@@ -52,30 +48,40 @@ function [rf_path] = batch_recfield(animal_name, original_path, data_path, dir_n
             end
 
             [sig_neurons, non_sig_neurons] = receptive_field_analysis( ...
-                labeled_data, baseline_window, response_window, bin_size, post_start, threshold_scale, ...
-                sig_check, sig_bins, span, analysis_headers);
+                selected_data, baseline_window, response_window, bin_size, ...
+                post_start, span, threshold_scale, sig_check, sig_alpha, ...
+                consec_bins, unsmoothed_recfield_metrics, analysis_headers);
 
             %% Capture data to save to csv from current day
             session_neurons = [sig_neurons; non_sig_neurons];
-            current_general_info = [{animal_id}, {experimental_group}, session_date, ...
-                session_num, pre_time, pre_start, pre_end, post_time, post_start, ...
-                post_end, bin_size, sig_check, sig_bins, span, threshold_scale];
+            current_general_info = [
+                {filename_meta.filename}, {filename_meta.animal_id}, ...
+                {filename_meta.experimental_group}, ...
+                {filename_meta.experimental_condition}, ...
+                {filename_meta.optional_info}, filename_meta.session_date, ...
+                filename_meta.session_num, pre_time, pre_start, ...
+                pre_end, post_time, post_start, post_end, bin_size, ...
+                sig_alpha, unsmoothed_recfield_metrics, ...
+                sig_check, consec_bins, span, threshold_scale];
             [general_info, all_neurons] = ...
                 concat_tables(meta_headers, general_info, current_general_info, all_neurons, session_neurons);
 
             %% Save receptive field matlab output
             % Does not check if variables are empty since there may/may not be significant responses in a set
-            matfile = fullfile(rf_path, ['rec_field_', filename, '.mat']);
-            save(matfile, 'labeled_data', 'sig_neurons', 'non_sig_neurons');
+            matfile = fullfile(save_path, ['rec_field_', filename_meta.filename, '.mat']);
+            save(matfile, 'selected_data', 'sig_neurons', 'non_sig_neurons', 'filename_meta', 'config_log');
         catch ME
-            handle_ME(ME, failed_path, filename);
+            handle_ME(ME, failed_path, filename_meta.filename);
         end
     end
 
     %% CSV export set up
-    csv_path = fullfile(original_path, [filename_substring_one, '_receptive_field_results.csv']);
-    export_csv(csv_path, csv_headers, general_info, all_neurons);
+    rf_results = [general_info, all_neurons];
+    % remove p value from receptive field csv
+    rf_results = removevars(rf_results, 'p_val');
+    csv_path = fullfile(project_path, [filename_substring_one, '_receptive_field_results.csv']);
+    export_csv(csv_path, rf_results, ignore_headers);
 
     fprintf('Finished receptive field analysis for %s. It took %s \n', ...
-        animal_name, num2str(toc(rf_start)));
+        dir_name, num2str(toc(rf_start)));
 end

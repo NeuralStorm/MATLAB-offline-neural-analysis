@@ -1,175 +1,133 @@
 function [] = mnts_main()
-    %% Get directory with all animals and their data
-    original_path = uigetdir(pwd);
+
+    %% Get data directory
+    project_path = uigetdir(pwd);
     start_time = tic;
-    animal_list = dir(original_path);
-    animal_names = {animal_list([animal_list.isdir] == 1 & ~contains({animal_list.name}, '.')).name};
-    for animal = 1:length(animal_names)
-        animal_name = animal_names{animal};
-        animal_path = fullfile(...
-            animal_list(strcmpi(animal_names{animal}, {animal_list.name})).folder, animal_name);
-        config = import_config(animal_path, 'mnts');
-        export_params(animal_path, 'main', config);
-        check_time(config.pre_time, config.pre_start, config.pre_end, config.post_time, ...
-            config.post_start, config.post_end, config.bin_size);
-        % Skips animals we want to ignore
-        if config.ignore_animal
-            continue;
+
+    %% Import psth config and removes ignored animals
+    config = import_config(project_path, 'mnts');
+    config(config.include_dir == 0, :) = [];
+
+    %% Creating paths to do psth formatting
+    [mnts_path, mnts_failed_path] = create_dir(project_path, 'mnts');
+    [data_path, ~] = create_dir(mnts_path, 'data');
+    export_params(data_path, 'mnts', config);
+
+    dir_list = config.dir_name;
+    for dir_i = 1:length(dir_list)
+        curr_dir = dir_list{dir_i};
+        dir_config = config(dir_i, :);
+        dir_config = convert_table_cells(dir_config);
+        label_table = load_labels(project_path, [curr_dir, '_labels.csv']);
+
+        if dir_config.create_mnts
+            try
+                %% Check to make sure paths exist for analysis and create save path
+                parsed_path = [project_path, '/parsed_spike'];
+                e_msg_1 = 'No parsed_spike directory to create MNTSs';
+                e_msg_2 = ['No ', curr_dir, ' directory to create MNTSs'];
+                parsed_dir_path = enforce_dir_layout(parsed_path, curr_dir, ...
+                    mnts_failed_path, e_msg_1, e_msg_2);
+                [dir_save_path, dir_failed_path] = create_dir(data_path, curr_dir);
+
+                %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+                %%        Format MNTS         %%
+                %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+                batch_format_mnts(dir_save_path, dir_failed_path, ...
+                    parsed_dir_path, curr_dir, dir_config, label_table);
+            catch ME
+                handle_ME(ME, mnts_failed_path, [curr_dir, '_missing_dir.mat']);
+            end
         else
-            %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-            %%           Parser           %%
-            %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-            if config.parse_files
-                %% Parse files
-                %! Might remove the file handling in the future
-                parsed_path = parser(animal_path, animal_name, config.total_trials, ...
-                    config.total_events, config.trial_lower_bound, ...
-                    config.is_non_strobed_and_strobed, config.event_map, config.ignore_sessions);
-            else
-                parsed_path = [animal_path, '/parsed'];
+            if ~exist(mnts_path, 'dir') || ~exist(data_path, 'dir')
+                error('Must have MNTSs to run MNTS analysis on %s', curr_dir);
             end
-
-            %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-            %%       Label Channels       %%
-            %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-            if config.label_channels
-                batch_label(animal_path, animal_name, parsed_path);
-            end
-
-            %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-            %%            MNTS            %%
-            %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-            if config.create_mnts
-                mnts_path = batch_format_mnts(parsed_path, animal_name, config);
-            else
-                mnts_path = [parsed_path, '/mnts'];
-            end
-
-            %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-            %             PCA            %%
-            %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-            if config.pc_analysis
-                pca_path = batch_pca(mnts_path, animal_name, config);
-            else
-                pca_path = [mnts_path, '/pca'];
-            end
-
-            if config.convert_mnts_psth
-                psth_path = batch_mnts_to_psth(animal_name, pca_path, 'psth', ...
-                    '.mat', 'pc', 'analysis', 'pca_psth', config);
-            end
-
-            %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-            %%     Normalized Variance    %%
-            %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-            if config.nv_analysis
-                batch_nv(animal_name, original_path, psth_path, 'normalized_variance_analysis', ...
-                    '.mat', 'pca', 'psth', config);
-            end
-
-            %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-            %%  Receptive Field Analysis  %%
-            %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-            if config.rf_analysis
-                pc_rf_path = batch_recfield(animal_name, original_path, psth_path, 'receptive_field_analysis', ...
-                    '.mat', 'pca', 'psth', config);
-            else
-                pc_rf_path = [psth_path, '/receptive_field_analysis'];
-            end
-
-            %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-            %%         Graph PSTH         %%
-            %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-            if config.make_psth_graphs
-                batch_graph(animal_name, psth_path, 'pc_graphs', '.mat', 'pca', 'psth', ...
-                    config.bin_size, config.pre_time, config.post_time, config.pre_start, ...
-                    config.pre_end, config.post_start, config.post_end, config.rf_analysis, pc_rf_path, ...
-                    config.make_region_subplot, config.make_unit_plot, config.sub_columns, config.sub_rows, config.ignore_sessions);
-            end
-
-            %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-            %%     PSTH Classification    %%
-            %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-            if config.psth_classify
-                batch_classify(animal_name, original_path, psth_path, 'classifier', '.mat', ...
-                    'pca', 'psth', config);
-            end
-
-            %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-            %    Information Analysis    %%
-            %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-            if config.info_analysis
-                batch_info(animal_name, psth_path, 'mutual_info', ...
-                    '.mat', 'pca', 'psth', config.ignore_sessions);
-            end
-
-            %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-            %             ICA            %%
-            %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-            if config.ic_analysis
-                ica_path = batch_ica(mnts_path, animal_name, config);
-            end
-
-            if config.convert_mnts_psth
-                psth_path = batch_mnts_to_psth(animal_name, ica_path, 'psth', ...
-                    '.mat', 'ic', 'analysis', 'ica_psth', config);
-            end
-
-            if config.convert_mnts_psth
-                psth_path = batch_mnts_to_psth(animal_name, ica_path, 'psth', ...
-                    '.mat', 'ic', 'analysis', 'ica_psth', config);
-            end
-
-            if config.convert_mnts_psth
-                psth_path = batch_mnts_to_psth(animal_name, ica_path, 'psth', ...
-                    '.mat', 'ic', 'analysis', 'ica_psth', config);
-            end
-
-            %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-            %%     Normalized Variance    %%
-            %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-            if config.nv_analysis
-                batch_nv(animal_name, original_path, psth_path, 'normalized_variance_analysis', ...
-                    '.mat', 'ica', 'psth', config)
-            end
-
-            %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-            %%  Receptive Field Analysis  %%
-            %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-            if config.rf_analysis
-                ic_rf_path = batch_recfield(animal_name, original_path, psth_path, 'receptive_field_analysis', ...
-                    '.mat', 'ica', 'psth', config);
-            else
-                ic_rf_path = [psth_path, '/receptive_field_analysis'];
-            end
-
-            %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-            %%         Graph PSTH         %%
-            %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-            if config.make_psth_graphs
-                batch_graph(animal_name, psth_path, 'ic_graphs', '.mat', 'ica', 'psth', ...
-                    config.bin_size, config.pre_time, config.post_time, config.pre_start, ...
-                    config.pre_end, config.post_start, config.post_end, config.rf_analysis, ic_rf_path, ...
-                    config.make_region_subplot, config.make_unit_plot, config.sub_columns, config.sub_rows, config.ignore_sessions);
-            end
-
-            %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-            %%     PSTH Classification    %%
-            %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-            if config.psth_classify
-                batch_classify(animal_name, original_path, psth_path, 'classifier', '.mat', ...
-                    'ica', 'psth', config);
-            end
-
-            %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-            %    Information Analysis    %%
-            %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-            if config.info_analysis
-                batch_info(animal_name, psth_path, 'mutual_info', ...
-                    '.mat', 'ica', 'psth', config.ignore_sessions);
-            end
-
         end
+
+        e_msg_1 = 'No data directory to find MNTSs';
+        if dir_config.pc_analysis
+            [pca_path, pca_failed_path] = create_dir(mnts_path, 'pca');
+            export_params(pca_path, 'pca', config);
+            try
+                %% Check to make sure paths exist for analysis and create save path
+                e_msg_2 = ['No ', curr_dir, ' mnts data for pca'];
+                dir_mnts_path = enforce_dir_layout(data_path, curr_dir, mnts_failed_path, e_msg_1, e_msg_2);
+                [dir_save_path, dir_failed_path] = create_dir(pca_path, curr_dir);
+
+                %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+                %             PCA            %%
+                %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+                batch_pca(dir_save_path, dir_failed_path, dir_mnts_path, ...
+                    curr_dir, dir_config)
+            catch ME
+                handle_ME(ME, pca_failed_path, [curr_dir, '_missing_dir.mat']);
+            end
+        end
+
+        e_msg_1 = 'No data directory to find PCA MNTSs';
+        if dir_config.convert_mnts_psth
+            [pca_psth_path, pca_psth_failed_path] = create_dir(project_path, 'pca_psth');
+            export_params(pca_psth_path, 'pca_psth', config);
+            try
+                %% Check to make sure paths exist for analysis and create save path
+                e_msg_2 = ['No ', curr_dir, ' pca mnts data to convert to mnts'];
+                pca_path = [mnts_path, '/pca'];
+                dir_pca_path = enforce_dir_layout(pca_path, curr_dir, pca_psth_failed_path, e_msg_1, e_msg_2);
+                [pca_data_path, ~] = create_dir(pca_psth_path, 'data');
+                [dir_save_path, dir_failed_path] = create_dir(pca_data_path, curr_dir);
+
+                %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+                %          PCA PSTH          %%
+                %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+                batch_mnts_to_psth(dir_save_path, dir_failed_path, dir_pca_path, ...
+                    curr_dir, 'pca', dir_config)
+            catch ME
+                handle_ME(ME, pca_psth_failed_path, [curr_dir, '_missing_dir.mat']);
+            end
+        end
+
+        e_msg_1 = 'No data directory to find MNTSs';
+        if dir_config.ic_analysis
+            [ica_path, ica_failed_path] = create_dir(mnts_path, 'ica');
+            export_params(ica_path, 'ica', config);
+            try
+                %% Check to make sure paths exist for analysis and create save path
+                e_msg_2 = ['No ', curr_dir, ' mnts data for ica'];
+                dir_mnts_path = enforce_dir_layout(data_path, curr_dir, mnts_failed_path, e_msg_1, e_msg_2);
+                [dir_save_path, dir_failed_path] = create_dir(ica_path, curr_dir);
+
+                %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+                %             ICA            %%
+                %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+                batch_ica(dir_save_path, dir_failed_path, dir_mnts_path, ...
+                    curr_dir, dir_config)
+            catch ME
+                handle_ME(ME, ica_failed_path, [curr_dir, '_missing_dir.mat']);
+            end
+        end
+
+        e_msg_1 = 'No data directory to find ICA MNTSs';
+        if dir_config.convert_mnts_psth
+            [ica_psth_path, ica_psth_failed_path] = create_dir(project_path, 'ica_psth');
+            export_params(ica_psth_path, 'ica_psth', config);
+            try
+                %% Check to make sure paths exist for analysis and create save path
+                e_msg_2 = ['No ', curr_dir, ' ica mnts data to convert to mnts'];
+                ica_path = [mnts_path, '/ica'];
+                dir_ica_path = enforce_dir_layout(ica_path, curr_dir, ica_psth_failed_path, e_msg_1, e_msg_2);
+                [ica_data_path, ~] = create_dir(ica_psth_path, 'data');
+                [dir_save_path, dir_failed_path] = create_dir(ica_data_path, curr_dir);
+
+                %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+                %          ICA PSTH          %%
+                %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+                batch_mnts_to_psth(dir_save_path, dir_failed_path, dir_ica_path, ...
+                    curr_dir, 'ica', dir_config)
+            catch ME
+                handle_ME(ME, ica_psth_failed_path, [curr_dir, '_missing_dir.mat']);
+            end
+        end
+
     end
     toc(start_time);
 end
