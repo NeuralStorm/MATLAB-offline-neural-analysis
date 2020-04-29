@@ -37,6 +37,8 @@ function [] = graph_sep(save_path, sep_struct, filename_meta, label_log, ...
         end
         %% Save fig
         filename = [filename_meta.filename, '_', region, '.fig'];
+        % Set CreateFcn callback
+        set(gcf, 'CreateFcn', 'set(gcbo,''Visible'',''on'')');
         savefig(gcf, fullfile(save_path, filename));
         if strcmpi(visible_plot, 'off')
             close gcf

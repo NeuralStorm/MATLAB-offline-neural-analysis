@@ -6,9 +6,14 @@ function [] = batch_format_mnts(save_path, failed_path, data_path, dir_name, ...
     file_list = update_file_list(file_list, failed_path, ...
         dir_config.include_sessions);
 
+    %% Remove unselected channels
+    label_table(label_table.selected_channels == 0, :) = [];
+
     fprintf('Calculating mnts for %s \n', dir_name);
     %% Creates mnts from parsed data according to the parameters set in config
     for file_index = 1:length(file_list)
+        [~, filename, ~] = fileparts(file_list(file_index).name);
+        filename_meta.filename = filename;
         try
             %% Load file contents
             file = [data_path, '/', file_list(file_index).name];
@@ -23,9 +28,9 @@ function [] = batch_format_mnts(save_path, failed_path, data_path, dir_name, ...
             end
 
             %% Format mnts
-            [mnts_struct, event_ts, selected_data] = format_mnts(event_ts, ...
-                selected_data, dir_config.bin_size, dir_config.pre_time, ...
-                dir_config.post_time, dir_config.wanted_events, ...
+            [mnts_struct, event_ts, selected_data, label_log] = format_mnts(...
+            event_ts, selected_data, dir_config.bin_size, dir_config.window_start, ...
+                dir_config.window_end, dir_config.wanted_events, ...
                 dir_config.trial_range, dir_config.trial_lower_bound);
 
             %% Saving outputs
@@ -40,7 +45,8 @@ function [] = batch_format_mnts(save_path, failed_path, data_path, dir_name, ...
 
             %% Save file if all variables are not empty
             save(matfile, 'mnts_struct', 'event_ts', 'selected_data', ...
-                'filename_meta', 'config_log');
+                'filename_meta', 'config_log', 'label_log');
+            clear('mnts_struct', 'event_ts', 'selected_data', 'filename_meta', 'label_log');
         catch ME
             handle_ME(ME, failed_path, filename_meta.filename);
         end

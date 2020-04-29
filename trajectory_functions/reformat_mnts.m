@@ -1,16 +1,16 @@
-function [psth_struct, baseline_struct, response_struct] = reformat_mnts(selected_data, component_struct, bin_size, ...
-        pre_time, post_time, pre_start, pre_end, post_start, post_end)
+function [psth_struct, baseline_struct, response_struct] = reformat_mnts(label_log, component_struct, bin_size, ...
+        window_start, window_end, baseline_start, baseline_end, response_start, response_end)
 
     psth_struct = struct;
     all_events = component_struct.all_events;
     psth_struct.all_events = all_events;
 
-    unique_regions = fieldnames(selected_data);
-    tot_bins = length(-abs(pre_time):bin_size:post_time) - 1;
+    unique_regions = fieldnames(label_log);
+    tot_bins = length(-abs(window_start):bin_size:window_end) - 1;
     %% Convert weighted mnts into relative response
     for region_index = 1:length(unique_regions)
         region = unique_regions{region_index};
-        region_labels = selected_data.(region).sig_channels;
+        region_labels = label_log.(region).sig_channels;
         region_mnts = component_struct.(region).weighted_mnts;
         [tot_rows, tot_components] = size(region_mnts);
         tot_trials = tot_rows / tot_bins;
@@ -21,7 +21,7 @@ function [psth_struct, baseline_struct, response_struct] = reformat_mnts(selecte
     end
 
     %% Create the analysis windows for PSTH analysis
-    [baseline_struct, response_struct] = create_analysis_windows(selected_data, psth_struct, ...
-        pre_time, pre_start, pre_end, post_time, post_start, post_end, bin_size);
+    [baseline_struct, response_struct] = create_analysis_windows(label_log, psth_struct, ...
+        window_start, baseline_start, baseline_end, window_end, response_start, response_end, bin_size);
 
 end

@@ -1,16 +1,16 @@
-function [response_struct] = create_relative_response(neurons, all_events, bin_size, pre_time, post_time)
+function [response_struct] = create_relative_response(neurons, all_events, bin_size, window_start, window_end)
     %% Input parameters
     % neurons - column 1: unit label column 2: spike time cell array for unit label on same row
     % all_events - Same as neurons, but with events
     % bin_size - size of bin
-    % pre_time - pre time window
-    % post_time - post time window
+    % window_start - pre event start
+    % window_end - post event end
 
     %% Output
     % response_struct - layered struct that stores unit's response and psth for each event
     % and region response
 
-    event_window = -(abs(pre_time)):bin_size:(abs(post_time));
+    event_window = -(abs(window_start)):bin_size:(abs(window_end));
     tot_bins = length(event_window) - 1;
     event_labels = all_events(:,1)';
     [tot_neurons, ~] = size(neurons);

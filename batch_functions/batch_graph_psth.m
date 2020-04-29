@@ -1,4 +1,4 @@
-function [] = batch_graph(save_path, failed_path, data_path, dir_name, config, rf_path)
+function [] = batch_graph_psth(save_path, failed_path, data_path, dir_name, config, rf_path)
     graph_start = tic;
     file_list = get_file_list(data_path, '.mat');
     file_list = update_file_list(file_list, failed_path, config.include_sessions);
@@ -6,12 +6,14 @@ function [] = batch_graph(save_path, failed_path, data_path, dir_name, config, r
     fprintf('Graphing for %s \n', dir_name);
     %% Goes through all the files and calculates mutual info according to the parameters set in config
     for file_index = 1:length(file_list)
+        [~, filename, ~] = fileparts(file_list(file_index).name);
+        filename_meta.filename = filename;
         try
             %% pull info from filename and set up file path for analysis
             file = fullfile(data_path, file_list(file_index).name);
-            load(file, 'psth_struct', 'selected_data', 'filename_meta');
+            load(file, 'psth_struct', 'label_log', 'filename_meta');
             %% Check psth variables to make sure they are not empty
-            empty_vars = check_variables(file, psth_struct, selected_data);
+            empty_vars = check_variables(file, psth_struct, label_log);
             if empty_vars
                 continue
             end
@@ -26,11 +28,14 @@ function [] = batch_graph(save_path, failed_path, data_path, dir_name, config, r
                 %% Load receptive field data
                 rf_matfile = fullfile(rf_path, ['rec_field_', filename_meta.filename, '.mat']);
                 load(rf_matfile, 'sig_neurons', 'non_sig_neurons');
-                graph_PSTH(day_path, psth_struct, selected_data, sig_neurons, non_sig_neurons, ...
+                graph_PSTH(day_path, psth_struct, label_log, sig_neurons, non_sig_neurons, ...
                     config, filename_meta.filename)
+                clear('psth_struct', 'label_log', 'filename_meta', ...
+                    'sig_neurons', 'non_sig_neurons');
             else
-                graph_PSTH(day_path, psth_struct, selected_data, NaN, NaN, config, ...
+                graph_PSTH(day_path, psth_struct, label_log, NaN, NaN, config, ...
                 filename_meta.filename)
+                clear('psth_struct', 'label_log', 'filename_meta');
             end
         catch ME
             handle_ME(ME, failed_path, filename_meta.filename);

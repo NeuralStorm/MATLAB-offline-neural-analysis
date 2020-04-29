@@ -318,10 +318,10 @@ function figure1_CloseRequestFcn(hObject, eventdata, handles)
 % handles    structure with handles and user data (see GUIDATA)
 
 % Save the file when close this window
-sep_analysis_results = handles.sep_data;
-filename_meta = handles.filename_meta;
-label_log = handles.label_log;
-save(handles.save_file_path, 'sep_analysis_results', 'filename_meta', 'label_log'); 
+% sep_analysis_results = handles.sep_data;
+% filename_meta = handles.filename_meta;
+% label_log = handles.label_log;
+% save(handles.save_file_path, 'sep_analysis_results', 'filename_meta', 'label_log'); 
 
 delete(hObject);
 
@@ -725,10 +725,10 @@ if isempty(analysis_notes)
 end
 handles.sep_data(handles.index).analysis_notes = analysis_notes;
 %save files
-sep_analysis_results = handles.sep_data;
-filename_meta = handles.filename_meta;
-label_log = handles.label_log;
-save(handles.save_file_path, 'sep_analysis_results', 'filename_meta', 'label_log');
+% sep_analysis_results = handles.sep_data;
+% filename_meta = handles.filename_meta;
+% label_log = handles.label_log;
+% save(handles.save_file_path, 'sep_analysis_results', 'filename_meta', 'label_log');
 %load new files
 [file_name, original_path] = uigetfile('*.mat', 'MultiSelect', 'off');
 path_parts = strsplit(original_path, {'/', '\'});

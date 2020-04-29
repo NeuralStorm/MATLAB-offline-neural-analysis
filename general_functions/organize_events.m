@@ -17,7 +17,7 @@ function [event_strings, all_events, event_ts] = organize_events(event_ts, ...
         end
     end
 
-    % Truncates events to desired trial range from total_trials * total_events
+    % Truncates events to desired trial range
     if ~isempty(trial_range) && ~all(isnan(trial_range))
         try
             event_ts = event_ts(trial_range, :);

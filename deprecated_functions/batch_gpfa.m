@@ -8,7 +8,7 @@ function [trajectory_path] = batch_gpfa(psth_path, config)
         load(psth_file, 'selected_data', 'psth_struct');
         [animal_id, ~, ~, session_num, ~, ~] = get_filename_info(psth_filename);
         [gpfa_results] = do_gpfa(animal_id, session_num, selected_data, psth_struct, ...
-            config.bin_size, config.pre_time, config.post_time, config.state_dimension);
+            config.bin_size, config.window_start, config.window_end, config.state_dimension);
 
         %% GPFA to PSTH
         [psth_struct, selected_data] = gpfa_to_psth(gpfa_results, psth_struct, selected_data);
@@ -21,7 +21,4 @@ function [trajectory_path] = batch_gpfa(psth_path, config)
         save(matfile, 'gpfa_results', 'psth_struct', 'selected_data');
 
     end
-    % psth_path, bin_size, total_trials, pre_time, post_time, ...
-    % optimize_state_dimension, state_dimension, prediction_error_dimensions, ...
-    % plot_trials, dimsToPlot
 end

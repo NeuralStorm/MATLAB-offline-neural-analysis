@@ -6,14 +6,14 @@ function [] = batch_nv(project_path, save_path, failed_path, data_path, ...
     file_list = update_file_list(file_list, failed_path, config.include_sessions);
 
     meta_headers = {'filename', 'animal_id', 'exp_group', 'exp_condition', ...
-    'optional_info', 'date', 'record_session', 'bin_size', 'pre_time', ...
-    'pre_start', 'pre_end', 'epsilon', 'norm_var_scaling', 'separate_events'};
+    'optional_info', 'date', 'record_session', 'bin_size', 'window_start', ...
+    'baseline_start', 'baseline_end', 'epsilon', 'norm_var_scaling', 'separate_events'};
     analysis_headers = {'event', 'region', 'sig_channels', 'user_channels', 'avg_background_rate', ...
         'background_var', 'norm_var', 'fano', 'recording_notes'};
     ignore_headers = {'avg_background_rate', 'background_var', 'norm_var', 'fano'};
 
     %% Pull variable names into workspace scope for log
-    pre_time = config.pre_time; pre_start = config.pre_start; pre_end = config.pre_end; 
+    window_start = config.window_start; baseline_start = config.baseline_start; baseline_end = config.baseline_end; 
     bin_size = config.bin_size; epsilon = config.epsilon; 
     norm_var_scaling = config.norm_var_scaling; separate_events = config.separate_events;
 
@@ -22,19 +22,21 @@ function [] = batch_nv(project_path, save_path, failed_path, data_path, ...
     meta_info = table;
     for file_index = 1:length(file_list)
         %% Run through files
+        [~, filename, ~] = fileparts(file_list(file_index).name);
+        filename_meta.filename = filename;
         try
             file = fullfile(data_path, file_list(file_index).name);
-            load(file, 'selected_data', 'baseline_window', 'filename_meta');
+            load(file, 'label_log', 'baseline_window', 'filename_meta');
             %% Check psth variables to make sure they are not empty
-            empty_vars = check_variables(file, baseline_window, selected_data);
+            empty_vars = check_variables(file, baseline_window, label_log);
             if empty_vars
-                error('Baseline_window and/or selected_data is empty');
+                error('Baseline_window and/or label_log is empty');
             elseif ~isstruct(baseline_window) && isnan(baseline_window)
-                error('pre_time, pre_start, and pre_end must all be non zero windows for this analysis.');
+                error('window_start, baseline_start, and baseline_end must all be non zero windows for this analysis.');
             end
             %% NV analysis
-            neuron_activity = nv_calculation(selected_data, baseline_window, pre_start, ...
-                pre_end, bin_size, epsilon, norm_var_scaling, separate_events, analysis_headers);
+            neuron_activity = nv_calculation(label_log, baseline_window, baseline_start, ...
+                baseline_end, bin_size, epsilon, norm_var_scaling, separate_events, analysis_headers);
 
             %% Store metadata about file
             current_meta = [
@@ -42,17 +44,18 @@ function [] = batch_nv(project_path, save_path, failed_path, data_path, ...
                 {filename_meta.experimental_group}, ...
                 {filename_meta.experimental_condition}, ...
                 {filename_meta.optional_info}, filename_meta.session_date, ...
-                filename_meta.session_num, bin_size, pre_time, pre_start, ...
-                pre_end, epsilon, norm_var_scaling, separate_events
+                filename_meta.session_num, bin_size, window_start, baseline_start, ...
+                baseline_end, epsilon, norm_var_scaling, separate_events
             ];
             [meta_info, all_neurons] = concat_tables(meta_headers, meta_info, current_meta, ...
                 all_neurons, neuron_activity);
 
             %% Save analysis results
             matfile = fullfile(save_path, ['NV_analysis_', filename_meta.filename, '.mat']);
-            check_variables(matfile, selected_data, neuron_activity);
-            save(matfile, 'selected_data', 'neuron_activity', 'filename_meta', ...
+            check_variables(matfile, label_log, neuron_activity);
+            save(matfile, 'label_log', 'neuron_activity', 'filename_meta', ...
                 'config_log');
+            clear('label_log', 'neuron_activity', 'filename_meta');
         catch ME
             handle_ME(ME, failed_path, filename_meta.filename);
         end

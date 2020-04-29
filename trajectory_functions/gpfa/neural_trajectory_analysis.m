@@ -1,5 +1,5 @@
 % ! TODO SKIP EVENTS WITH TOO FEW CORRECT TRIALS (<10 for right now)
-function [] = neural_trajectory_analysis(animal_name, psth_path, bin_size, total_trials, pre_time, post_time, ...
+function [] = neural_trajectory_analysis(animal_name, psth_path, bin_size, total_trials, window_start, window_end, ...
                                         optimize_state_dimension, state_dimension, prediction_error_dimensions, ...
                                         plot_trials, dimsToPlot)
 
@@ -25,7 +25,7 @@ function [] = neural_trajectory_analysis(animal_name, psth_path, bin_size, total
         rmdir(failed_path);
     end
 
-    gpfa_post_time_bins = (length([-abs(0):0.001:post_time])) - 1;
+    post_event_bins = (length([-abs(0):0.001:window_end])) - 1;
 
     %% Iterates through all the psth formated files
     for file = 1: length(psth_files)
@@ -65,7 +65,7 @@ function [] = neural_trajectory_analysis(animal_name, psth_path, bin_size, total
             total_region_neurons = length(selected_data.(region_name)(:,1));          
             region_neurons = [selected_data.(region_name)(:,1), selected_data.(region_name)(:,end)];
             region_psth = NeuroToolbox.PSTHToolbox.PSTH(region_neurons, all_events, 'bin_size', ... 
-                bin_size, 'PSTH_window', [-abs(pre_time), post_time]);
+                bin_size, 'PSTH_window', [-abs(window_start), window_end]);
             region_template = NeuroToolbox.PSTHToolbox.SU_Classifier(region_psth);
             region_decoder_output = region_template.classify(region_neurons, all_events, 'SameDataSet', true);
             correct_trials = cellfun(@strcmp, region_decoder_output.Decision, region_decoder_output.Event);
@@ -73,7 +73,7 @@ function [] = neural_trajectory_analysis(animal_name, psth_path, bin_size, total
             label_counts = tabulate(correct_labels);
             %! Raw data passed into trajectory code needs 1ms bin size
             relative_response = create_relative_response(selected_data.(region_name)(:, end), psth_struct.all_events(:,2), ...
-                total_trials, .001, 0, post_time);
+                total_trials, .001, 0, window_end);
             correct_response = [];
             for i = 1:length(correct_trials)
                 if correct_trials(i)
@@ -106,7 +106,7 @@ function [] = neural_trajectory_analysis(animal_name, psth_path, bin_size, total
                 for trial = 1:length(event_response(:,1))
                     gpfa_format(trial).trialId = trial;
                     current_response = event_response(trial, :);
-                    spikes = reshape(current_response, total_region_neurons, gpfa_post_time_bins);
+                    spikes = reshape(current_response, total_region_neurons, post_event_bins);
                     gpfa_format(trial).spikes = spikes;
                 end
 

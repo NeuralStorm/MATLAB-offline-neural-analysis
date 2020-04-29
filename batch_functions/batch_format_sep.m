@@ -1,12 +1,14 @@
-function [] = batch_format_sep(save_path, failed_path, data_path, dir_name, config, label_table)
+function [] = batch_format_sep(save_path, failed_path, data_path, dir_name, dir_config, label_table)
     sep_start = tic;
     fprintf('Creating SEP for %s \n', dir_name);
-    config_log = config;
+    config_log = dir_config;
     file_list = get_file_list(data_path, '.mat');
-    file_list = update_file_list(file_list, failed_path, config.include_sessions);
+    file_list = update_file_list(file_list, failed_path, dir_config.include_sessions);
 
-    if config.use_raw
+    if dir_config.use_raw
         for file_index = 1:length(file_list)
+            [~, filename, ~] = fileparts(file_list(file_index).name);
+            filename_meta.filename = filename;
             try
                 %% pull info from filename and set up file path for analysis
                 file = fullfile(data_path, file_list(file_index).name);
@@ -36,16 +38,24 @@ function [] = batch_format_sep(save_path, failed_path, data_path, dir_name, conf
                 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
                 %%          Slicing           %%
                 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-                sep_window = [-abs(config.window_start), config.window_end];
-                sliced_signal = format_sep(raw_map, event_samples, sample_rate, sep_window);
+                sep_window = [-abs(dir_config.window_start), dir_config.window_end];
+                sliced_signal = format_sep(raw_map, event_samples, ...
+                    sample_rate, sep_window, dir_config.square_pulse, ...
+                    dir_config.wanted_events);
+
+                %% Save sep
                 matfile = fullfile(save_path, ['sliced_', filename_meta.filename, '.mat']);
-                save(matfile, '-v7.3', 'sliced_signal', 'sep_window', 'config_log', 'filename_meta', 'event_samples', 'label_log');
+                save(matfile, '-v7.3', 'sliced_signal', 'sep_window', ...
+                    'config_log', 'filename_meta', 'event_samples', 'label_log');
+                clear('sliced_signal', 'sep_window', 'filename_meta', 'event_samples', 'label_log');
             catch ME
                 handle_ME(ME, failed_path, filename_meta.filename);
             end
         end
     else
         for file_index = 1:length(file_list)
+            [~, filename, ~] = fileparts(file_list(file_index).name);
+            filename_meta.filename = filename;
             try
                 %% pull info from filename and set up file path for analysis
                 file = fullfile(data_path, file_list(file_index).name);
@@ -56,10 +66,16 @@ function [] = batch_format_sep(save_path, failed_path, data_path, dir_name, conf
                 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
                 %%          Slicing           %%
                 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-                sep_window = [-abs(config.window_start), config.window_end];
-                sliced_signal = format_sep(filtered_map, event_samples, sample_rate, sep_window);
+                sep_window = [-abs(dir_config.window_start), dir_config.window_end];
+                sliced_signal = format_sep(filtered_map, event_samples, ...
+                    sample_rate, sep_window, dir_config.square_pulse, ...
+                    dir_config.wanted_events);
+
+                %% Save sep
                 matfile = fullfile(save_path, ['sliced_', filename_meta.filename, '.mat']);
-                save(matfile, '-v7.3', 'sliced_signal', 'sep_window', 'config_log', 'filename_meta', 'event_samples', 'label_log');
+                save(matfile, '-v7.3', 'sliced_signal', 'sep_window', ...
+                    'config_log', 'filename_meta', 'event_samples', 'label_log');
+                clear('sliced_signal', 'sep_window', 'filename_meta', 'event_samples', 'label_log');
             catch ME
                 handle_ME(ME, failed_path, filename_meta.filename);
             end

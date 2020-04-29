@@ -8,6 +8,7 @@ sep_window = sep_analysis_results(channel_index).sep_window;
 early_window = sep_analysis_results(channel_index).early_window;
 late_window = sep_analysis_results(channel_index).late_window;
 channel_name = sep_analysis_results(channel_index).channel_name;
+event_name = sep_analysis_results(channel_index).event;
 neg_peak(1) = sep_analysis_results(channel_index).neg_peak1;
 neg_peak_latency(1) = sep_analysis_results(channel_index).neg_peak_latency1;
 pos_peak(1) = sep_analysis_results(channel_index).pos_peak1;
@@ -75,8 +76,8 @@ line([late_window(2) late_window(2)], ylim, 'Color', 'black', 'LineWidth',...
 set(gca,'tag',num2str(channel_index));
 set(gca,'ButtonDownFcn', @channel_select);
 %add comments
-title_text=['Channel: ', channel_name];
-  title(title_text, 'FontSize', 9);
+title_text=[event_name, channel_name];
+title(title_text, 'FontSize', 7);
 hold off
 
 end

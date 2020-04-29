@@ -1,5 +1,5 @@
 function [struct_map, label_log] = filter_continuous(selected_data, sample_rate, notch_filt, ...
-    notch_freq, notch_bandwidth, notch_bandstop, filt_type, filt_freq, filt_order)
+    notch_freq, notch_bandwidth, filt_type, filt_freq, filt_order)
     %TODO change notch_filt variable name --> too close to notch_filter function
 
     %% Unwrap config values that might be in a cell
@@ -26,15 +26,8 @@ function [struct_map, label_log] = filter_continuous(selected_data, sample_rate,
             channel_data = cell2mat(channel_info.channel_data);
             %% notch filter
             if notch_filt
-                if notch_bandstop
-                    stopband = [(notch_freq - notch_bandwidth / 2) ...
-                        (notch_freq + notch_bandwidth / 2)];
-                    %% Filter and store
-                    filtered_data = bandstop(channel_data, stopband, sample_rate);
-                else
-                    filtered_data = notch_filter(channel_data, sample_rate, ...
-                        notch_freq, notch_bandwidth);
-                end
+                filtered_data = notch_filter(channel_data, sample_rate, ...
+                    notch_freq, notch_bandwidth);
             else
                 %% convience of having same name variable before more filtering
                 filtered_data = channel_data;

@@ -1,11 +1,12 @@
-function [pca_results, labeled_pcs] = calc_pca(selected_data, mnts_struct, ...
+function [pca_results, labeled_pcs, pc_log] = calc_pca(label_log, mnts_struct, ...
         feature_filter, feature_value)
 
     pca_results = struct;
     pca_results.all_events = mnts_struct.all_events;
-    labeled_pcs = selected_data;
+    labeled_pcs = label_log;
 
-    unique_regions = fieldnames(selected_data);
+    unique_regions = fieldnames(label_log);
+    pc_log = struct;
     for region_index = 1:length(unique_regions)
         region = unique_regions{region_index};
         %% Grab z scored mnts format for current region and does PCA
@@ -32,6 +33,7 @@ function [pca_results, labeled_pcs] = calc_pca(selected_data, mnts_struct, ...
             end
         elseif strcmpi(feature_filter, 'eigen')
             %TODO check eigenvalues and recreate pca scores with new weights
+            error('Eigen option not implemented yet');
             % subthreshold_i = find(eigenvalues < feature_filter);
             % eigenvalues(subthreshold_i) = [];
         elseif strcmpi(feature_filter, 'percent_var')
@@ -63,5 +65,7 @@ function [pca_results, labeled_pcs] = calc_pca(selected_data, mnts_struct, ...
         labeled_pcs.(region).sig_channels = pc_names;
         labeled_pcs.(region).user_channels = pc_names;
         labeled_pcs.(region).channel_data = num2cell(pca_score, 1)';
+
+        pc_log.(region) = removevars(labeled_pcs.(region), 'channel_data');
     end
 end

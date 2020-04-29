@@ -55,6 +55,8 @@ function [] = psth_main()
             if ~exist(psth_path, 'dir') || ~exist(data_path, 'dir')
                 error('Must have PSTHs to run PSTH analysis on %s', curr_dir);
             end
+        else
+            error('Invalid psth type %s, must be psth, pca, or ica', dir_config.psth_type);
         end
 
         e_msg_1 = 'No data directory to find PSTHs';
@@ -90,7 +92,7 @@ function [] = psth_main()
                 %%         Graph PSTH         %%
                 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
                 rf_path = [psth_path, '/recfield/', curr_dir];
-                batch_graph(dir_save_path, dir_failed_path, dir_psth_path, curr_dir, dir_config, rf_path)
+                batch_graph_psth(dir_save_path, dir_failed_path, dir_psth_path, curr_dir, dir_config, rf_path)
             catch ME
                 handle_ME(ME, graph_failed_path, [curr_dir, '_missing_dir.mat']);
             end

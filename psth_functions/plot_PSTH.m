@@ -1,4 +1,4 @@
-function [psth_figure] = plot_PSTH(psth, psth_name, event, event_window, pre_start, pre_end, post_start, post_end)
+function [psth_figure] = plot_PSTH(psth, psth_name, event, event_window, baseline_start, baseline_end, response_start, response_end)
     psth_figure = figure('visible','off');
     figure(psth_figure);
     unit_handle = bar(event_window, psth,'BarWidth', 1);
@@ -14,10 +14,10 @@ function [psth_figure] = plot_PSTH(psth, psth_name, event, event_window, pre_sta
     end
     set(unit_handle, 'EdgeAlpha', 0);
     hold on
-    line([pre_start pre_start], ylim, 'Color', 'black', 'LineWidth', 0.75, 'LineStyle', '--');
-    line([pre_end pre_end], ylim, 'Color', 'black', 'LineWidth', 0.75, 'LineStyle', '--');
-    line([post_start post_start], ylim, 'Color', 'black', 'LineWidth', 0.75, 'LineStyle', '--');
-    line([post_end post_end], ylim, 'Color', 'black', 'LineWidth', 0.75, 'LineStyle', '--');
+    line([baseline_start baseline_start], ylim, 'Color', 'black', 'LineWidth', 0.75, 'LineStyle', '--');
+    line([baseline_end baseline_end], ylim, 'Color', 'black', 'LineWidth', 0.75, 'LineStyle', '--');
+    line([response_start response_start], ylim, 'Color', 'black', 'LineWidth', 0.75, 'LineStyle', '--');
+    line([response_end response_end], ylim, 'Color', 'black', 'LineWidth', 0.75, 'LineStyle', '--');
     hold off
     xtickformat('%.2f')
     text=['Normalized Histogram: ', psth_name, ' event: ', event];

@@ -1,25 +1,24 @@
-function [] = graph_PSTH(save_path, psth_struct, selected_data, sig_response, ...
+function [] = graph_PSTH(save_path, psth_struct, label_log, sig_response, ...
         non_sig_response, config, orig_filename)
 
-    bin_size = config.bin_size; pre_time = config.pre_time; 
-    post_time = config.post_time; pre_start = config.pre_start;
-    pre_end = config.pre_end; post_start = config.post_start; 
-    post_end = config.post_end; rf_analysis = config.rf_analysis;
+    bin_size = config.bin_size; window_start = config.window_start; 
+    window_end = config.window_end; baseline_start = config.baseline_start;
+    baseline_end = config.baseline_end; response_start = config.response_start; 
+    response_end = config.response_end; rf_analysis = config.rf_analysis;
     make_region_subplot = config.make_region_subplot; sub_rows = config.sub_rows;
     make_unit_plot = config.make_unit_plot; sub_cols = config.sub_columns;
     span = config.span; unsmoothed_recfield_metrics = config.unsmoothed_recfield_metrics;
-
-    check_time(pre_time, pre_start, pre_end, post_time, post_start, post_end, bin_size)
+    cluster_flag = config.cluster_flag; cluster_analysis = config.cluster_analysis;
+    check_time(window_start, baseline_start, baseline_end, window_end, response_start, response_end, bin_size)
 
     event_strings = psth_struct.all_events(:,1)';
-    event_window = pre_time:bin_size:post_time;
+    event_window = window_start:bin_size:window_end;
     event_window(1) = [];
-    total_bins = length(event_window);
 
-    region_names = fieldnames(selected_data);
+    region_names = fieldnames(label_log);
     parfor region = 1:length(region_names)
         current_region = region_names{region};
-        region_neurons = selected_data.(current_region).sig_channels;
+        region_neurons = label_log.(current_region).sig_channels;
         total_region_neurons = length(region_neurons);
         % Creates the region directory if it does not already exist
         region_path = [save_path, '/', current_region];
@@ -55,13 +54,13 @@ function [] = graph_PSTH(save_path, psth_struct, selected_data, sig_response, ..
                 if rf_analysis && ~unsmoothed_recfield_metrics
                     %! Not the same smoothing as in receptive field since it is on entire psth
                     %! rec field is split between baseline and response so they have different edges near 0
-                    psth = smooth(psth_struct.(current_region).(current_event).(psth_name).psth, span)
+                    psth = smooth(psth_struct.(current_region).(current_event).(psth_name).psth, span);
                 else
                     psth = psth_struct.(current_region).(current_event).(psth_name).psth;
                 end
                 if make_unit_plot
                     unit_figure = plot_PSTH(psth, psth_name, current_event, event_window, ...
-                        pre_start, pre_end, post_start, post_end);
+                        baseline_start, baseline_end, response_start, response_end);
                 end
                 if rf_analysis
                     threshold = NaN;
@@ -70,14 +69,21 @@ function [] = graph_PSTH(save_path, psth_struct, selected_data, sig_response, ..
                     %% Plot first & last bin latency and threshold for significant neurons
                     % otherwise plots threshold on non significant neurons
                     if ~isempty(sig_response)
+                        if cluster_analysis
+                            first = [cluster_flag, '_cluster_first_latency'];
+                            last = [cluster_flag, '_cluster_last_latency'];
+                        else
+                            first = 'first_latency';
+                            last = 'last_latency';
+                        end
                         region_sig_neurons = sig_response(strcmpi(sig_response.region, current_region), :);
                         if ~isempty(region_sig_neurons) && ~isempty(region_sig_neurons.sig_channels(strcmpi(region_sig_neurons.sig_channels, psth_name) & ...
                                 strcmpi(region_sig_neurons.event, current_event)))
                             threshold = region_sig_neurons.threshold(strcmpi(region_sig_neurons.sig_channels, psth_name) & ...
                                 strcmpi(region_sig_neurons.event, current_event));
-                            first_bin_latency = region_sig_neurons.first_latency(strcmpi(region_sig_neurons.sig_channels, psth_name) & ...
+                            first_bin_latency = region_sig_neurons.(first)(strcmpi(region_sig_neurons.sig_channels, psth_name) & ...
                                 strcmpi(region_sig_neurons.event, current_event));
-                            last_bin_latency = region_sig_neurons.last_latency(strcmpi(region_sig_neurons.sig_channels, psth_name) & ...
+                            last_bin_latency = region_sig_neurons.(last)(strcmpi(region_sig_neurons.sig_channels, psth_name) & ...
                                 strcmpi(region_sig_neurons.event, current_event));
                         end
                     end
@@ -92,7 +98,7 @@ function [] = graph_PSTH(save_path, psth_struct, selected_data, sig_response, ..
                     %% Plots elements from rec field analysis
                     if make_unit_plot
                         plot_recfield(psth, first_bin_latency, last_bin_latency, threshold, ...
-                            unit_figure, bin_size, pre_time, event_window);
+                            unit_figure, bin_size, window_start, event_window);
                     end
                     if make_region_subplot
                         figure(region_figure);
@@ -103,11 +109,11 @@ function [] = graph_PSTH(save_path, psth_struct, selected_data, sig_response, ..
                         ylim([event_min event_max]);
                         
                         plot_recfield(psth, first_bin_latency, last_bin_latency, threshold, ...
-                            region_figure, bin_size, pre_time, event_window);
-                        line([pre_start pre_start], ylim, 'Color', 'black', 'LineWidth', 0.75, 'LineStyle', '--');
-                        line([pre_end pre_end], ylim, 'Color', 'black', 'LineWidth', 0.75, 'LineStyle', '--');
-                        line([post_start post_start], ylim, 'Color', 'black', 'LineWidth', 0.75, 'LineStyle', '--');
-                        line([post_end post_end], ylim, 'Color', 'black', 'LineWidth', 0.75, 'LineStyle', '--');
+                            region_figure, bin_size, window_start, event_window);
+                        line([baseline_start baseline_start], ylim, 'Color', 'black', 'LineWidth', 0.75, 'LineStyle', '--');
+                        line([baseline_end baseline_end], ylim, 'Color', 'black', 'LineWidth', 0.75, 'LineStyle', '--');
+                        line([response_start response_start], ylim, 'Color', 'black', 'LineWidth', 0.75, 'LineStyle', '--');
+                        line([response_end response_end], ylim, 'Color', 'black', 'LineWidth', 0.75, 'LineStyle', '--');
                         title(psth_name);
                         hold off
                     end
@@ -119,10 +125,10 @@ function [] = graph_PSTH(save_path, psth_struct, selected_data, sig_response, ..
                     region_handle = bar(event_window, psth,'BarWidth', 1);
                     set(region_handle, 'EdgeAlpha', 0);
                     ylim([event_min event_max]);
-                    line([pre_start pre_start], ylim, 'Color', 'black', 'LineWidth', 0.75, 'LineStyle', '--');
-                    line([pre_end pre_end], ylim, 'Color', 'black', 'LineWidth', 0.75, 'LineStyle', '--');
-                    line([post_start post_start], ylim, 'Color', 'black', 'LineWidth', 0.75, 'LineStyle', '--');
-                    line([post_end post_end], ylim, 'Color', 'black', 'LineWidth', 0.75, 'LineStyle', '--');
+                    line([baseline_start baseline_start], ylim, 'Color', 'black', 'LineWidth', 0.75, 'LineStyle', '--');
+                    line([baseline_end baseline_end], ylim, 'Color', 'black', 'LineWidth', 0.75, 'LineStyle', '--');
+                    line([response_start response_start], ylim, 'Color', 'black', 'LineWidth', 0.75, 'LineStyle', '--');
+                    line([response_end response_end], ylim, 'Color', 'black', 'LineWidth', 0.75, 'LineStyle', '--');
                     title(psth_name);
                     hold off
                 end
@@ -131,12 +137,14 @@ function [] = graph_PSTH(save_path, psth_struct, selected_data, sig_response, ..
                     filename = [psth_name, '_', current_event, '.png'];
                     saveas(gcf, fullfile(event_path, filename));
                     filename = [psth_name, '_', current_event, '.fig'];
+                    set(gcf, 'CreateFcn', 'set(gcbo,''Visible'',''on'')'); 
                     savefig(gcf, fullfile(event_path, filename));
                 end
             end
             if make_region_subplot
                 figure(region_figure);
                 filename = [orig_filename, '.fig'];
+                set(gcf, 'CreateFcn', 'set(gcbo,''Visible'',''on'')'); 
                 savefig(gcf, fullfile(event_path, filename));
             end
             close all

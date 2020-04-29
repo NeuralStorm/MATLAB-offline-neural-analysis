@@ -1,16 +1,16 @@
-function nv_data = nv_calculation(selected_data, baseline_window, pre_start, pre_end, ...
+function nv_data = nv_calculation(label_log, baseline_window, baseline_start, baseline_end, ...
         bin_size, epsilon, norm_var_scaling, separate_events, analysis_column_names)
 
-    tot_bins = length(-abs(pre_start):bin_size:-abs(pre_end)) - 1;
-    tot_time = abs(abs(pre_start) - abs(pre_end));
+    tot_bins = length(-abs(baseline_start):bin_size:-abs(baseline_end)) - 1;
+    tot_time = abs(abs(baseline_start) - abs(baseline_end));
 
     nv_data = [];
     event_strings = baseline_window.all_events(:,1);
 
-    unique_regions = fieldnames(selected_data);
+    unique_regions = fieldnames(label_log);
     for region = 1:length(unique_regions)
         current_region = unique_regions{region};
-        region_table = selected_data.(current_region);
+        region_table = label_log.(current_region);
         if separate_events
             %% Handles events as different datasets
             for event = 1:length(event_strings)

@@ -1,9 +1,9 @@
-function [] = analog_main()
+function [] = continuous_main()
     project_path = uigetdir(pwd);
     start_time = tic;
 
     %% Import psth config and removes ignored animals
-    config = import_config(project_path, 'analog');
+    config = import_config(project_path, 'continuous');
     config(config.include_dir == 0, :) = [];
 
     %% Creating paths to do analog analysis
@@ -40,7 +40,7 @@ function [] = analog_main()
             end
         end
 
-        if dir_config.sep_slicing
+        if dir_config.create_sep
             [sep_path, ~] = create_dir(continuous_path, 'sep');
             [sep_data_path, sep_failed_path] = create_dir(sep_path, 'sep_formatted_data');
             export_params(sep_data_path, 'format_sep', config);
@@ -68,7 +68,11 @@ function [] = analog_main()
         end
 
         if dir_config.sep_analysis
-            [sep_analysis_path, analysis_failed_path] = create_dir(sep_path, 'sep_output_data');
+            sep_path = [continuous_path, '/sep'];
+            if ~exist(sep_path, 'dir')
+                error('Must have Seps to plot');
+            end
+            [sep_analysis_path, analysis_failed_path] = create_dir(sep_path, 'sep_auto_analysis_data');
             export_params(sep_analysis_path, 'sep_analysis', config);
             try
                 e_msg_1 = 'No data directory to find SEPs';
@@ -88,13 +92,16 @@ function [] = analog_main()
         end
 
         if dir_config.make_sep_graphs
+            sep_path = [continuous_path, '/sep'];
+            if ~exist(sep_path, 'dir')
+                error('Must have Seps to plot');
+            end
             [sep_figure_path, graph_failed_path] = create_dir(sep_path, 'sep_figures');
             export_params(sep_figure_path, 'sep_analysis', config);
             try
                 e_msg_1 = 'No data directory to find SEPs';
                 e_msg_2 = ['No ', curr_dir, ' for plotting'];
-                sep_path = [continuous_path, '/sep'];
-                sep_data_path = [sep_path, '/sep_output_data'];
+                sep_data_path = [sep_path, '/sep_auto_analysis_data'];
                 dir_sep_path = enforce_dir_layout(sep_data_path, curr_dir, ...
                     continuous_failed_path, e_msg_1, e_msg_2);
                 [dir_save_path, dir_failed_path] = create_dir(sep_figure_path, curr_dir);

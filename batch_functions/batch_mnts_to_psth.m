@@ -6,26 +6,32 @@ function [] = batch_mnts_to_psth(save_path, failed_path, data_path, ...
     file_list = update_file_list(file_list, failed_path, dir_config.include_sessions);
 
     for file_index = 1:length(file_list)
+        [~, filename, ~] = fileparts(file_list(file_index).name);
+        filename_meta.filename = filename;
         try
             %% pull info from filename and set up file path for analysis
             file = fullfile(data_path, file_list(file_index).name);
 
             %% Load needed variables from psth and does the receptive field analysis
-            load(file, 'selected_data', 'component_results', 'event_ts', 'filename_meta');
+            load(file, 'component_results', 'event_ts', 'selected_data', ...
+                'filename_meta', 'label_log');
             %% Check psth variables to make sure they are not empty
-            empty_vars = check_variables(file, selected_data, component_results, event_ts);
+            empty_vars = check_variables(file, component_results, event_ts);
             if empty_vars
                 continue
             end
 
-            [psth_struct, baseline_window, response_window] = reformat_mnts(selected_data, ...
-                component_results, dir_config.bin_size, dir_config.pre_time, dir_config.post_time, dir_config.pre_start, ...
-                dir_config.pre_end, dir_config.post_start, dir_config.post_end);
+            [psth_struct, baseline_window, response_window] = reformat_mnts(label_log, ...
+                component_results, dir_config.bin_size, dir_config.window_start, dir_config.window_end, dir_config.baseline_start, ...
+                dir_config.baseline_end, dir_config.response_start, dir_config.response_end);
 
             matfile = fullfile(save_path, [filename_substring_one, ...
                 '_format_' filename_meta.filename, '.mat']);
-            save(matfile, 'selected_data', 'psth_struct', 'baseline_window', ...
-                'response_window', 'event_ts', 'filename_meta', 'config_log');
+            save(matfile, 'psth_struct', 'baseline_window', ...
+                'response_window', 'event_ts', 'filename_meta', 'config_log', ...
+                'label_log', 'selected_data');
+            clear('psth_struct', 'baseline_window', 'selected_data', ...
+                'response_window', 'event_ts', 'filename_meta', 'label_log');
         catch ME
             handle_ME(ME, failed_path, filename_meta.filename);
         end
