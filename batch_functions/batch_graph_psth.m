@@ -1,4 +1,4 @@
-function [] = batch_graph(save_path, failed_path, data_path, dir_name, config, rf_path)
+function [] = batch_graph_psth(save_path, failed_path, data_path, dir_name, config, rf_path)
     graph_start = tic;
     file_list = get_file_list(data_path, '.mat');
     file_list = update_file_list(file_list, failed_path, config.include_sessions);

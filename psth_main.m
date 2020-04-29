@@ -92,7 +92,7 @@ function [] = psth_main()
                 %%         Graph PSTH         %%
                 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
                 rf_path = [psth_path, '/recfield/', curr_dir];
-                batch_graph(dir_save_path, dir_failed_path, dir_psth_path, curr_dir, dir_config, rf_path)
+                batch_graph_psth(dir_save_path, dir_failed_path, dir_psth_path, curr_dir, dir_config, rf_path)
             catch ME
                 handle_ME(ME, graph_failed_path, [curr_dir, '_missing_dir.mat']);
             end
