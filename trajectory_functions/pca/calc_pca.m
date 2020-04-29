@@ -33,6 +33,7 @@ function [pca_results, labeled_pcs, pc_log] = calc_pca(label_log, mnts_struct, .
             end
         elseif strcmpi(feature_filter, 'eigen')
             %TODO check eigenvalues and recreate pca scores with new weights
+            error('Eigen option not implemented yet');
             % subthreshold_i = find(eigenvalues < feature_filter);
             % eigenvalues(subthreshold_i) = [];
         elseif strcmpi(feature_filter, 'percent_var')
