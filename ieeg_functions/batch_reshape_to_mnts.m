@@ -25,7 +25,8 @@ function [] = batch_reshape_to_mnts(save_path, failed_path, data_path, ...
 
             %% Format mnts
             %TODO parameters: trial selection, bin size, time window
-            [mnts_struct, label_log] = reshape_to_mnts(session_labels, GTH, dir_config.select_powers);
+            [mnts_struct, label_log] = reshape_to_mnts(session_labels, GTH, ...
+                dir_config.select_powers, dir_config.select_regions);
 
             %% Saving outputs
             matfile = fullfile(save_path, ['mnts_format_', ...
