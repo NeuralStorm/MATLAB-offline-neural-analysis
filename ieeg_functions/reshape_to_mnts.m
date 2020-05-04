@@ -4,6 +4,8 @@ function [mnts_struct, label_log] = reshape_to_mnts(label_table, GTH, ...
     spectrum_names = fieldnames(GTH);
     spectrum_names = spectrum_names(~ismember(spectrum_names, ...
         {'anat', 'beh', 'zpowspctrm'}));
+    %% Create label log
+    label_log = struct;
 
     %% If select powers is empty, use all powers in GTH
     if isempty(select_powers) ...
@@ -37,6 +39,7 @@ function [mnts_struct, label_log] = reshape_to_mnts(label_table, GTH, ...
 
         %% Cycle through selected powers
         pow_struct = struct;
+        pow_log = struct;
         for spectrum_i = 1:length(combined_spectrums)
             curr_spectrum = combined_spectrums{spectrum_i};
             %% Verify power spectrum is valid
@@ -93,43 +96,23 @@ function [mnts_struct, label_log] = reshape_to_mnts(label_table, GTH, ...
                         mnts = [mnts, unit_response];
                         z_mnts = [z_mnts, z_response];
                     end
-                    %% Check if region already exists and if it does, append to mnts
+                    %% Check if region already exists and if it does, append to mnts and label log
+                    region_chans = label_table(ismember(label_table.label, region), :);
                     if isfield(pow_struct, curr_region)
                         pow_struct.(curr_region).mnts = [pow_struct.(curr_region).mnts, mnts];
                         pow_struct.(curr_region).z_mnts = [pow_struct.(curr_region).z_mnts, z_mnts];
+                        pow_log.(curr_region) = [pow_log.(curr_region); region_chans];
                     else
                         pow_struct.(curr_region).mnts = mnts;
                         pow_struct.(curr_region).z_mnts = z_mnts;
+                        pow_log.(curr_region) = region_chans;
                     end
                 end
             end
             mnts_struct.(selected_pow) = pow_struct;
-            mnts_struct.(selected_pow) = pow_struct;
-        end
-    end
-
-    %% Create label log
-    label_log = struct;
-    for split_region_i = 1:length(split_regions)
-        %% Grab current region and remove whitespace
-        curr_region = strrep(split_regions{split_region_i}, ' ', '');
-        %% Check if current power selection has multiple powers
-        if contains(curr_region, '+')
-            combined_regions = strsplit(curr_region, '+');
-            curr_region = strrep(curr_region, '+', '_');
-        else
-            combined_regions = {curr_region};
-        end
-
-        for region_i = 1:length(combined_regions)
-            region = combined_regions{region_i};
-            region_chans = label_table(ismember(label_table.label, region), :);
-            %% Check if region already exists and if it does, append to mnts
-            if isfield(label_log, curr_region)
-                label_log.(curr_region) = [label_log.(curr_region); region_chans];
-            else
-                label_log.(curr_region) = region_chans;
-            end
+            label_log.(selected_pow) = pow_log;
+            all_events = ['event_1', {GTH.beh.gambles}];
+            mnts_struct.(selected_pow).all_events = all_events;
         end
     end
 end
