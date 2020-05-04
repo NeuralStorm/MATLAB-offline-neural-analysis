@@ -19,10 +19,19 @@ function [] = batch_power_pca(save_path, failed_path, data_path, dir_name, dir_c
                 continue
             end
 
-            %% PCA
-            [component_results, label_log] = calc_power_pca(label_log, ...
-                mnts_struct, dir_config.feature_filter, dir_config.feature_value);
-
+            component_results = struct;
+            powerband_names = fieldnames(mnts_struct);
+            pc_log = struct;
+            for powerband_i = 1:length(powerband_names)
+                curr_power = powerband_names{powerband_i};
+                %% PCA
+                [power_results, pow_log] = calc_power_pca(label_log.(curr_power), ...
+                    mnts_struct.(curr_power), dir_config.use_z_mnts, ...
+                    dir_config.feature_filter, dir_config.feature_value);
+                component_results.(curr_power) = power_results;
+                pc_log.(curr_power) = pow_log;
+            end
+            label_log = pc_log;
             %% Saving the file
             matfile = fullfile(save_path, ['pc_analysis_', ...
                 filename_meta.filename, '.mat']);
