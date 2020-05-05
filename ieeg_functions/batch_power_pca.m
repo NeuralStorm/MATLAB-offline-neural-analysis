@@ -31,13 +31,12 @@ function [] = batch_power_pca(save_path, failed_path, data_path, dir_name, dir_c
                 component_results.(curr_power) = power_results;
                 pc_log.(curr_power) = pow_log;
             end
-            label_log = pc_log;
             %% Saving the file
             matfile = fullfile(save_path, ['pc_analysis_', ...
                 filename_meta.filename, '.mat']);
             check_variables(matfile, component_results);
             save(matfile, 'component_results', ...
-                'filename_meta', 'config_log', 'label_log');
+                'filename_meta', 'config_log', 'label_log', 'pc_log');
             clear('label_log', 'component_results', 'filename_meta');
         catch ME
             handle_ME(ME, failed_path, filename_meta.filename);
