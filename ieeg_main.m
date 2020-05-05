@@ -63,11 +63,11 @@ function [] = ieeg_main()
             end
         end
 
-        e_msg_1 = 'No data directory to find MNTSs';
         if dir_config.do_pca %TODO change to pc_analysis
             try
                 [pca_path, pca_failed_path] = create_dir(mnts_path, 'pca');
                 %% Check to make sure paths exist for analysis and create save path
+                e_msg_1 = 'No data directory to find MNTSs';
                 e_msg_2 = ['No ', curr_dir, ' mnts data for pca'];
                 dir_mnts_path = enforce_dir_layout(data_path, curr_dir, mnts_failed_path, e_msg_1, e_msg_2);
                 [dir_save_path, dir_failed_path] = create_dir(pca_path, curr_dir);
@@ -79,6 +79,25 @@ function [] = ieeg_main()
                     curr_dir, dir_config)
             catch ME
                 handle_ME(ME, mnts_failed_path, [curr_dir, '_missing_dir.mat']);
+            end
+        end
+
+        if config.make_pca_plots
+            [graph_path, graph_failed_path] = create_dir(mnts_path, 'pca_graphs');
+            export_params(graph_path, 'pca_graph', config);
+            try
+                %% Check to make sure paths exist for analysis and create save path
+                e_msg_1 = 'No data directory to find PCAs';
+                e_msg_2 = ['No ', curr_dir, ' pca data for graphing'];
+                pca_path = [mnts_path, '/pca'];
+                dir_pca_path = enforce_dir_layout(pca_path, curr_dir, graph_failed_path, e_msg_1, e_msg_2);
+
+                %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+                %%         Graph PSTH         %%
+                %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+                batch_plot_pca_weights(graph_failed_path, dir_pca_path, curr_dir, dir_config)
+            catch ME
+                handle_ME(ME, graph_failed_path, [curr_dir, '_missing_dir.mat']);
             end
         end
     end
