@@ -46,21 +46,32 @@ function [] = plot_pca_weights(save_path, component_results, label_log, feature_
             end
             %% Determine if there are too many rows/cols and reduces to make subplot bigger
             if (sub_cols * sub_rows) > tot_components
-                plot_rows = round(tot_components / 2);
-                plot_cols = tot_components - plot_rows;
+                plot_cols = round(tot_components / 2) + 1;
+                plot_rows = tot_components - plot_cols;
+                if plot_rows < 1
+                    plot_rows = 1;
+                end
             else
                 plot_rows = sub_rows;
-                plot_cols = sub_cols;
+                plot_cols = (sub_cols + 1);
             end
             %% Create figure
             figure('visible', 'off')
             title_txt = strrep([curr_pow ' ' region], '_', ' ');
             sgtitle(title_txt);
+
+            %% Plot PC variance
+            scrollsubplot(plot_rows, plot_cols, 1);
+            bar(component_results.(curr_pow).(region).component_variance, ...
+                'EdgeColor', 'none');
+            xlabel('PC #');
+            ylabel('% Variance');
+            title('Percent Variance Explained')
+
             for comp_i = 1:tot_components
                 comp_weights = pca_weights(:, comp_i);
-                if tot_components > 1
-                    scrollsubplot(plot_rows, plot_cols, comp_i);
-                elseif tot_components == 0
+                scrollsubplot(plot_rows, plot_cols, (comp_i + 1));
+                if tot_components == 0
                     continue
                 end
                 if multi_powers
@@ -107,7 +118,7 @@ function [] = plot_pca_weights(save_path, component_results, label_log, feature_
                     end
                     hold off
                 elseif multi_regs
-                    %TODO: Case multi regions only
+                    %% Case multi regions only
                     reg_start = 1;
                     color_counter = 1;
                     for reg_i = 1:tot_sub_regs
@@ -128,9 +139,11 @@ function [] = plot_pca_weights(save_path, component_results, label_log, feature_
                         end
                     end
                 else
+                    hold on;
                     bar(comp_weights, ...
                         'FaceColor', color_map(1, :), ...
                         'EdgeColor', 'none');
+                    hold off;
                 end
                 %% Creates Legends
                 if multi_regs
