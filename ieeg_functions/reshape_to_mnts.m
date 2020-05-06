@@ -9,7 +9,8 @@ function [mnts_struct, label_log] = reshape_to_mnts(label_table, GTH, ...
 
     %% If select powers is empty, use all powers in GTH
     if isempty(select_powers) ...
-            || (~iscell(select_powers) && any(isnan(select_powers)))
+            || (~iscell(select_powers) && any(isnan(select_powers))) ...
+            || iscell(select_powers) && isempty(select_powers{:})
         split_powers = spectrum_names;
     else
         split_powers = strsplit(select_powers, ',');
@@ -18,7 +19,8 @@ function [mnts_struct, label_log] = reshape_to_mnts(label_table, GTH, ...
     %% If select powers is empty, use all powers in GTH
     unique_regions = unique(label_table.label);
     if isempty(select_regions) ...
-        || (~iscell(select_regions) && any(isnan(select_regions)))
+        || (~iscell(select_regions) && any(isnan(select_regions))) ...
+        || iscell(select_powers) && isempty(select_powers{:})
         split_regions = unique_regions;
     else
         split_regions = strsplit(select_regions, ',');
@@ -51,7 +53,11 @@ function [mnts_struct, label_log] = reshape_to_mnts(label_table, GTH, ...
             %% Grab logical indices of selected channels
             channel_i = ismember(spectrum_channels, label_table.sig_channels);
             powspctrm = GTH.(curr_spectrum).powspctrm(:, channel_i, :, :);
-            zpowspctrm = GTH.zpowspctrm.(curr_spectrum)(:, channel_i, :, :);
+            if ~isfield(GTH, 'zpowspctrm')
+                zpowspctrm = zscore(GTH.(curr_spectrum).powspctrm,0,4);
+            else
+                zpowspctrm = GTH.zpowspctrm.(curr_spectrum)(:, channel_i, :, :);
+            end
             [tot_trials, ~, tot_pows, tot_bins] = size(powspctrm);
             assert(tot_pows == 1, 'Too many power spectrums. Expected only 1 for reshaping');
             %% Cycle through selected regions
