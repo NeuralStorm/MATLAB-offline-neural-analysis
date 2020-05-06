@@ -1,5 +1,5 @@
 function [] = plot_pca_weights(save_path, component_results, label_log, feature_filter, ...
-        feature_value, ymax_scale, sub_rows, sub_cols)
+        feature_value, ymax_scale, sub_rows, sub_cols, session_num)
 
     color_map = [0 0 0 % black
                 1 0 0 % red
@@ -34,6 +34,9 @@ function [] = plot_pca_weights(save_path, component_results, label_log, feature_
             pca_weights = component_results.(curr_pow).(region).coeff;
             y_max = max(max(pca_weights)) + (ymax_scale * max(max(pca_weights)));
             y_min = min(min(pca_weights));
+            if max(max(pca_weights)) == y_min
+                y_min = -y_min;
+            end
             [tot_chans, tot_components] = size(pca_weights);
             if strcmpi(feature_filter, 'pcs')
                 %% Grabs desired number of principal components weights
@@ -114,11 +117,9 @@ function [] = plot_pca_weights(save_path, component_results, label_log, feature_
                         subreg_table = subreg_table(ind, :);
                         tot_sub_chans = height(subreg_table);
                         reg_end = reg_start + tot_sub_chans - 1;
-                        for k = reg_start:reg_end
-                            bar(k, comp_weights(k), ...
+                        bar(reg_start:reg_end, comp_weights(reg_start:reg_end), ...
                             'FaceColor', color_map(color_counter, :), ...
                             'EdgeColor', 'none');
-                        end
                         reg_start = reg_end + 1;
                         if color_counter < tot_colors
                             color_counter = color_counter + 1;
@@ -127,7 +128,9 @@ function [] = plot_pca_weights(save_path, component_results, label_log, feature_
                         end
                     end
                 else
-                    bar(comp_weights, 'b', 'EdgeColor', 'none');
+                    bar(comp_weights, ...
+                        'FaceColor', color_map(1, :), ...
+                        'EdgeColor', 'none');
                 end
                 %% Creates Legends
                 if multi_regs
@@ -144,11 +147,11 @@ function [] = plot_pca_weights(save_path, component_results, label_log, feature_
                 ylabel('Coefficient Weight');
                 sub_title = strrep(['PC ' num2str(comp_i)], '_', ' ');
                 title(sub_title)
-
-                filename = [curr_pow, '_', region, '.fig'];
-                set(gcf, 'CreateFcn', 'set(gcbo,''Visible'',''on'')'); 
-                savefig(gcf, fullfile(save_path, filename));
             end
+            filename = [num2str(session_num), '_', curr_pow, '_', region, '.fig'];
+            set(gcf, 'CreateFcn', 'set(gcbo,''Visible'',''on'')'); 
+            savefig(gcf, fullfile(save_path, filename));
+            close all
         end
     end
 end
