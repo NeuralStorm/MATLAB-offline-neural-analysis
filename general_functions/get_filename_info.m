@@ -24,6 +24,36 @@ function [meta_struct] = get_filename_info(filename)
         meta_struct.session_date = str2double(session_date);
 
         meta_struct.optional_info = strings;
+    elseif contains(filename, '_') && contains(filename, 'GTH')
+        %% GTH specific filename
+        % Handles file with new format
+        split_name = strsplit(filename, '_');
+        %% Must be at least 6 long to have the right number of fields
+        if length(split_name) < 3
+            error('Not a supported filename format');
+        end
+
+        %% Get animal info 
+        meta_struct.animal_id = split_name{end - 3};
+        %% Get session num and date
+        session = split_name{end};
+        session_num = regexp(session,'\d*','Match');
+        session_num = str2double(session_num{1});
+        meta_struct.session_num = session_num;
+        meta_struct.session_date = 000000;
+        
+        meta_struct.experimental_group = split_name{end - 3};
+        if session_num == 2
+            meta_struct.experimental_condition = 'baseline';
+        else
+            meta_struct.experimental_condition = 'experiment';
+        end
+
+        optional_info = split_name{end};
+        if strcmpi(optional_info, 'double') && isnan(optional_info)
+            optional_info = 'n/a';
+        end
+        meta_struct.optional_info = optional_info;
     elseif contains(filename, '_')
         % Handles file with new format
         split_name = strsplit(filename, '_');
