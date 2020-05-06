@@ -91,11 +91,12 @@ function [] = ieeg_main()
                 e_msg_2 = ['No ', curr_dir, ' pca data for graphing'];
                 pca_path = [mnts_path, '/pca'];
                 dir_pca_path = enforce_dir_layout(pca_path, curr_dir, graph_failed_path, e_msg_1, e_msg_2);
+                [dir_save_path, dir_failed_path] = create_dir(graph_path, curr_dir);
 
                 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
                 %%         Graph PSTH         %%
                 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-                batch_plot_pca_weights(graph_failed_path, dir_pca_path, curr_dir, dir_config)
+                batch_plot_pca_weights(dir_save_path, dir_failed_path, dir_pca_path, curr_dir, dir_config)
             catch ME
                 handle_ME(ME, graph_failed_path, [curr_dir, '_missing_dir.mat']);
             end

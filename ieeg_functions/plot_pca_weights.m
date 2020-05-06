@@ -1,5 +1,5 @@
-function [] = plot_pca_weights(component_results, label_log, feature_filter, ...
-        feature_value, sub_rows, sub_cols)
+function [] = plot_pca_weights(save_path, component_results, label_log, feature_filter, ...
+        feature_value, ymax_scale, sub_rows, sub_cols)
 
     color_map = [0 0 0 % black
                 1 0 0 % red
@@ -32,6 +32,8 @@ function [] = plot_pca_weights(component_results, label_log, feature_filter, ...
                 multi_regs = false;
             end
             pca_weights = component_results.(curr_pow).(region).coeff;
+            y_max = max(max(pca_weights)) + (ymax_scale * max(max(pca_weights)));
+            y_min = min(min(pca_weights));
             [tot_chans, tot_components] = size(pca_weights);
             if strcmpi(feature_filter, 'pcs')
                 %% Grabs desired number of principal components weights
@@ -48,7 +50,7 @@ function [] = plot_pca_weights(component_results, label_log, feature_filter, ...
                 plot_cols = sub_cols;
             end
             %% Create figure
-            figure
+            figure('visible', 'off')
             title_txt = strrep([curr_pow ' ' region], '_', ' ');
             sgtitle(title_txt);
             for comp_i = 1:tot_components
@@ -58,13 +60,12 @@ function [] = plot_pca_weights(component_results, label_log, feature_filter, ...
                 elseif tot_components == 0
                     continue
                 end
-                % b = bar(comp_weights, 'b');
                 if multi_powers
+                    hold on
                     tot_pow_pc = tot_chans / tot_pows;
                     splits = [0, tot_pow_pc:tot_pow_pc:(tot_chans - 1)];
                     if multi_regs
                         % Case: multi powers and regions
-                        hold on
                         for split_i = 1:length(splits)
                             color_counter = 1;
                             feature_start = splits(split_i) + 1;
@@ -76,9 +77,9 @@ function [] = plot_pca_weights(component_results, label_log, feature_filter, ...
                                 subreg_table = subreg_table(ind, :);
                                 tot_sub_chans = height(subreg_table);
                                 reg_end = reg_start + tot_sub_chans - 1;
-                                for k = reg_start:reg_end
-                                    bar(k, comp_weights(k), 'FaceColor', color_map(color_counter, :));
-                                end
+                                bar(reg_start:reg_end, comp_weights(reg_start:reg_end), ...
+                                    'FaceColor', color_map(color_counter, :), ...
+                                    'EdgeColor', 'none');
                                 reg_start = reg_end + 1;
                                 if color_counter < tot_colors
                                     color_counter = color_counter + 1;
@@ -87,17 +88,19 @@ function [] = plot_pca_weights(component_results, label_log, feature_filter, ...
                                 end
                             end
                         end
-                        hold off
                     else
                         % Case: Multi powers, single region
-                        bar(comp_weights, 'b');
+                        bar(comp_weights, 'b', 'EdgeColor', 'none');
                     end
                     %% Add power line marking
-                    hold on
                     for split_i = 2:length(splits)
                         feature_split = splits(split_i);
                         % + .5 to center vertical line between bars
-                        xline((feature_split + .5),'k');
+                        xline((feature_split + .5), 'k', ...
+                            [split_powers{split_i - 1}, ' ' split_powers{split_i}], ...
+                            'LabelOrientation', 'horizontal', ...
+                            'LabelHorizontalAlignment', 'center', ...
+                            'HandleVisibility', 'off');
                     end
                     hold off
                 elseif multi_regs
@@ -112,7 +115,9 @@ function [] = plot_pca_weights(component_results, label_log, feature_filter, ...
                         tot_sub_chans = height(subreg_table);
                         reg_end = reg_start + tot_sub_chans - 1;
                         for k = reg_start:reg_end
-                            bar(k, comp_weights(k), 'FaceColor', color_map(color_counter, :));
+                            bar(k, comp_weights(k), ...
+                            'FaceColor', color_map(color_counter, :), ...
+                            'EdgeColor', 'none');
                         end
                         reg_start = reg_end + 1;
                         if color_counter < tot_colors
@@ -122,68 +127,27 @@ function [] = plot_pca_weights(component_results, label_log, feature_filter, ...
                         end
                     end
                 else
-                    bar(comp_weights, 'b');
+                    bar(comp_weights, 'b', 'EdgeColor', 'none');
+                end
+                %% Creates Legends
+                if multi_regs
+                    warning('off','all')
+                    lg = legend(split_regions);
+                    legend('boxoff');
+                    lg.Location = 'BestOutside';
+                    lg.Orientation = 'Horizontal';
+                    warning('on','all')
                 end
 
-
-
-
-
-
-
-
-                % if multi_regs
-                %     hold on
-                %     if multi_powers
-                %         tot_pow_pc = tot_chans / tot_pows;
-                %         splits = [0, tot_pow_pc:tot_pow_pc:(tot_chans - 1)]
-                %         for split_i = 1:(length(splits) - 1)
-                %             color_counter = 1;
-                %             feature_start = splits(split_i) + 1;
-                %             reg_start = feature_start
-                %             % feature_end = splits(split_i + 1);
-                %             for reg_i = 1:tot_regs
-                %                 sub_reg = split_regions{reg_i};
-                %                 subreg_table = label_log.(curr_pow).(sub_reg);
-                %                 [~, ind] = unique(subreg_table, 'rows');
-                %                 subreg_table = subreg_table(ind, :);
-                %                 tot_sub_chans = height(subreg_table)
-                %                 reg_end = reg_start + tot_sub_chans - 1
-                %                 for k = reg_start:reg_end
-                %                     bar(k, comp_weights(k), 'FaceColor', color_map(color_counter, :));
-                %                     % b(k).FaceColor = color_map(color_counter, :);
-                %                 end
-                %                 % bar(comp_weights(reg_start:reg_end), ...
-                %                 %     'FaceColor', color_map(color_counter, :));
-                %                 % 'finished bar'
-                %                 % set(b(reg_start:reg_end), 'FaceColor', color_map(color_counter, :));
-                %                 % b(reg_start:reg_end).FaceColor = color_map(color_counter, :);
-                %                 reg_start = reg_end + 1
-                %                 if color_counter < tot_colors
-                %                     color_counter = color_counter + 1;
-                %                 else
-                %                     color_counter = 1;
-                %                 end
-                %             end
-                %         end
-                %     else
-                %         %TODO
-                %     end
-                %     hold off
-                % end
-                % if multi_powers
-                %     hold on
-                %     tot_pow_pc = tot_chans / tot_pows;
-                %     splits = tot_pow_pc:tot_pow_pc:(tot_chans - 1);
-                %     for split_i = 1:length(splits)
-                %         feature_split = splits(split_i);
-                %         % + .5 to center vertical line between bars
-                %         xline((feature_split + .5),'k');
-                %     end
-                %     hold off
-                % end
+                ylim([y_min y_max]);
+                xlabel('Electrode #');
+                ylabel('Coefficient Weight');
                 sub_title = strrep(['PC ' num2str(comp_i)], '_', ' ');
                 title(sub_title)
+
+                filename = [curr_pow, '_', region, '.fig'];
+                set(gcf, 'CreateFcn', 'set(gcbo,''Visible'',''on'')'); 
+                savefig(gcf, fullfile(save_path, filename));
             end
         end
     end
