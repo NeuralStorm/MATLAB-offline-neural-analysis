@@ -13,6 +13,12 @@ function [label_table] = create_ieeg_labels(label_table, ieeg_anat, filename_met
     assert(length(sig_channels) == length(labels), ...
         'Must have number of labels as channels in file');
 
+    [sig_rows, ~] = size(sig_channels);
+    [~, label_cols] = size(labels);
+    if sig_rows == label_cols
+        labels = labels';
+    end
+
     label_id = zeros(size(labels));
     recording_session = repmat(filename_meta.session_num, size(sig_channels));
     recording_notes = repmat({'n/a'}, size(sig_channels));
