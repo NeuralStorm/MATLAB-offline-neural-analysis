@@ -1,5 +1,5 @@
 function [unit_struct, pop_struct, pop_table, unit_table] = psth_bootstrapper( ...
-        selected_data, response_window, event_ts, boot_iterations, ...
+        selected_data, response_window, event_ts, wanted_events, boot_iterations, ...
         bootstrap_classifier, bin_size, window_start, baseline_start, baseline_end, window_end, ...
         response_start, response_end, analysis_column_names)
 
@@ -9,6 +9,8 @@ function [unit_struct, pop_struct, pop_table, unit_table] = psth_bootstrapper( .
     pop_struct = struct;
     unit_results = [];
     pop_results = [];
+
+    event_ts(~ismember(event_ts(:, 1), wanted_events), :) = [];
 
     %% Standard classification
     total_neurons = 0;
