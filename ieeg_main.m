@@ -94,12 +94,54 @@ function [] = ieeg_main()
                 [dir_save_path, dir_failed_path] = create_dir(graph_path, curr_dir);
 
                 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-                %%         Graph PSTH         %%
+                %%      Graph PCA Weights     %%
                 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
                 batch_plot_pca_weights(dir_save_path, dir_failed_path, dir_pca_path, curr_dir, dir_config)
             catch ME
                 handle_ME(ME, graph_failed_path, [curr_dir, '_missing_dir.mat']);
             end
         end
+
+        e_msg_1 = 'No data directory to find PCA MNTSs';
+        if dir_config.convert_mnts_psth
+            [pca_psth_path, pca_psth_failed_path] = create_dir(project_path, 'pca_psth');
+            export_params(pca_psth_path, 'pca_psth', config);
+            try
+                %% Check to make sure paths exist for analysis and create save path
+                e_msg_2 = ['No ', curr_dir, ' pca mnts data to convert to mnts'];
+                pca_path = [mnts_path, '/pca'];
+                dir_pca_path = enforce_dir_layout(pca_path, curr_dir, pca_psth_failed_path, e_msg_1, e_msg_2);
+                [pca_data_path, ~] = create_dir(pca_psth_path, 'data');
+                [dir_save_path, dir_failed_path] = create_dir(pca_data_path, curr_dir);
+
+                %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+                %          PCA PSTH          %%
+                %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+                batch_power_mnts_to_psth(dir_save_path, dir_failed_path, dir_pca_path, ...
+                    curr_dir, 'pca', dir_config)
+            catch ME
+                handle_ME(ME, pca_psth_failed_path, [curr_dir, '_missing_dir.mat']);
+            end
+        end
+
+        if config.make_psth_graphs
+            [graph_path, graph_failed_path] = create_dir(pca_psth_path, 'psth_graphs');
+            export_params(graph_path, 'psth_graph', config);
+            data_path = [pca_psth_path, '/data'];
+            try
+                %% Check to make sure paths exist for analysis and create save path
+                e_msg_2 = ['No ', curr_dir, ' psth data for graphing'];
+                dir_psth_path = enforce_dir_layout(data_path, curr_dir, graph_failed_path, e_msg_1, e_msg_2);
+                [dir_save_path, dir_failed_path] = create_dir(graph_path, curr_dir);
+
+                %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+                %%         Graph PSTH         %%
+                %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+                batch_power_graph_psth(dir_save_path, dir_failed_path, dir_psth_path, curr_dir, dir_config)
+            catch ME
+                handle_ME(ME, graph_failed_path, [curr_dir, '_missing_dir.mat']);
+            end
+        end
+
     end
 end
