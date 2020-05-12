@@ -1,9 +1,7 @@
-function [] = batch_power_graph_psth(graph_path, failed_path, data_path, dir_name, config)
+function [] = batch_power_graph_psth(save_path, failed_path, data_path, dir_name, config)
     graph_start = tic;
     file_list = get_file_list(data_path, '.mat');
     file_list = update_file_list(file_list, failed_path, config.include_sessions);
-
-    config.make_unit_plot = false;
 
     fprintf('Graphing for %s \n', dir_name);
     %% Goes through all the files and calculates mutual info according to the parameters set in config
@@ -20,17 +18,8 @@ function [] = batch_power_graph_psth(graph_path, failed_path, data_path, dir_nam
                 continue
             end
 
-            % Creates the day directory if it does not already exist
-            unique_powers = fieldnames(pc_log);
-            for pow_i = 1:length(unique_powers)
-                bandname = unique_powers{pow_i};
-                power_path = [graph_path, '/', bandname];
-                if ~exist(power_path, 'dir')
-                    mkdir(graph_path, bandname);
-                end
-
-                power_graph_PSTH(power_path, psth_struct.(bandname), pc_log.(bandname), config);
-            end
+            % make psths
+            power_graph_PSTH(save_path, psth_struct, pc_log, config);
             clear('psth_struct', 'pc_log', 'filename_meta');
         catch ME
             handle_ME(ME, failed_path, filename_meta.filename);
