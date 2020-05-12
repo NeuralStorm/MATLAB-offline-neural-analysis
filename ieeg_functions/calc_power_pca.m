@@ -2,6 +2,7 @@ function [pca_results, pc_log] = calc_power_pca(label_log, mnts_struct, ...
         use_z_mnts, feature_filter, feature_value)
 
     pca_results = struct;
+    pca_results.all_events = mnts_struct.all_events;
 
     unique_regions = fieldnames(label_log);
     pc_log = label_log;

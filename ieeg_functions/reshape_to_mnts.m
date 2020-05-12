@@ -1,6 +1,5 @@
 function [mnts_struct, label_log] = reshape_to_mnts(label_table, GTH, ...
     select_powers, select_regions)
-    %TODO select channels - 50ms bin size?
     spectrum_names = fieldnames(GTH);
     spectrum_names = spectrum_names(~ismember(spectrum_names, ...
         {'anat', 'beh', 'zpowspctrm'}));
@@ -117,7 +116,10 @@ function [mnts_struct, label_log] = reshape_to_mnts(label_table, GTH, ...
             end
             mnts_struct.(selected_pow) = pow_struct;
             label_log.(selected_pow) = pow_log;
-            all_events = ['event_1', {GTH.beh.gambles}];
+            all_events = [
+                'event_1', {ones(size(GTH.beh.gambles))};
+                'event_2', {GTH.beh.gambles}
+                'event_3', {GTH.beh.safebet}];
             mnts_struct.(selected_pow).all_events = all_events;
         end
     end
