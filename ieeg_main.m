@@ -130,14 +130,56 @@ function [] = ieeg_main()
             data_path = [pca_psth_path, '/data'];
             try
                 %% Check to make sure paths exist for analysis and create save path
+                e_msg_1 = 'No data directory to find PCA PSTH';
                 e_msg_2 = ['No ', curr_dir, ' psth data for graphing'];
-                dir_psth_path = enforce_dir_layout(data_path, curr_dir, graph_failed_path, e_msg_1, e_msg_2);
+                dir_psth_path = enforce_dir_layout(data_path, curr_dir, ...
+                    graph_failed_path, e_msg_1, e_msg_2);
                 [dir_save_path, dir_failed_path] = create_dir(graph_path, curr_dir);
 
                 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
                 %%         Graph PSTH         %%
                 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-                batch_power_graph_psth(dir_save_path, dir_failed_path, dir_psth_path, curr_dir, dir_config)
+                batch_power_graph_psth(dir_save_path, dir_failed_path, ...
+                    dir_psth_path, curr_dir, dir_config)
+            catch ME
+                handle_ME(ME, graph_failed_path, [curr_dir, '_missing_dir.mat']);
+            end
+        end
+
+        if config.make_tfr_pca_psth
+            [graph_path, graph_failed_path] = create_dir(project_path, 'tfr_pca_psth');
+            export_params(graph_path, 'tfr_pca_psth', config);
+            pca_path = [project_path, '/mnts/pca'];
+            psth_path = [project_path, '/pca_psth/data'];
+            tfr_path = [project_path, '/tfr_plots'];
+            try
+                %% PCA weight path
+                e_msg_1 = 'No data directory to find PCAs';
+                e_msg_2 = ['No ', curr_dir, ' pca data for graphing'];
+                dir_pca_path = enforce_dir_layout(pca_path, curr_dir, ...
+                    graph_failed_path, e_msg_1, e_msg_2);
+
+                %% PCA PSTH path
+                e_msg_1 = 'No data directory to find PCA PSTH';
+                e_msg_2 = ['No ', curr_dir, ' psth data for graphing'];
+                dir_psth_path = enforce_dir_layout(psth_path, curr_dir, ...
+                    graph_failed_path, e_msg_1, e_msg_2);
+
+                %% tfr path
+                e_msg_1 = 'No TFR plot directory to find TFRs';
+                e_msg_2 = ['No ', curr_dir, ' TFR plots'];
+                dir_tfr_path = enforce_dir_layout(tfr_path, curr_dir, ...
+                    graph_failed_path, e_msg_1, e_msg_2);
+
+                [dir_save_path, dir_failed_path] = create_dir(graph_path, curr_dir);
+
+                %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+                %%         Graph PSTH         %%
+                %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+                %TODO add fig path
+                batch_plot_tfr_pca_psth(dir_save_path, dir_failed_path, ...
+                    dir_tfr_path, dir_pca_path, dir_psth_path, dir_config);
+
             catch ME
                 handle_ME(ME, graph_failed_path, [curr_dir, '_missing_dir.mat']);
             end
