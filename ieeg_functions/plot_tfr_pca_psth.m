@@ -9,7 +9,18 @@ function [] = plot_tfr_pca_psth(save_path, tfr_path, tfr_file_list, component_re
     baseline_start = -3; baseline_end = 0;
     response_start = 0; response_end = 2;
     transparency = .3;
+    feature_filter = 'pcs';
+    feature_value = 5;
     event_window = window_start:bin_size:window_end;
+
+    color_map = [0 0 0 % black
+                1 0 0 % red
+                0 0 1 % blue
+                0 1 0 % green
+                1 0 1 % magenta
+                1 1 0]; % yellow
+    [~, tot_colors] = size(color_map);
+
 
     freq_list = {'highfreq', 'lowfreq'};
     unique_powers = fieldnames(label_log);
@@ -26,7 +37,6 @@ function [] = plot_tfr_pca_psth(save_path, tfr_path, tfr_file_list, component_re
 
         psth_struct = pow_struct.(bandname)
 
-        %% Add TFRs to subplot
         unique_regions = fieldnames(label_log.(bandname));
         for region_i = 1:length(unique_regions)
             region = unique_regions{region_i};
@@ -42,6 +52,7 @@ function [] = plot_tfr_pca_psth(save_path, tfr_path, tfr_file_list, component_re
 
             main_plot = figure;
             %TODO add more info to title plot
+            %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
             %% Text plot
             % Position: 1st row, last column
             description = [bandname, ' ', region];
@@ -51,6 +62,8 @@ function [] = plot_tfr_pca_psth(save_path, tfr_path, tfr_file_list, component_re
             annotation('textbox', pos, 'String', description, ...
                 'FitBoxToText','off');
 
+            %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
             %% Var plot
             % Position: 2nd row, last column
             scrollsubplot(sub_rows, sub_cols, (sub_cols * 2));
@@ -59,6 +72,7 @@ function [] = plot_tfr_pca_psth(save_path, tfr_path, tfr_file_list, component_re
             xlabel('PC #');
             ylabel('% Variance');
             title('Percent Variance Explained')
+            %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
             % Frequency is not an issue since we plot all the frequencies
             tot_pows = length(freq_list);
@@ -82,13 +96,16 @@ function [] = plot_tfr_pca_psth(save_path, tfr_path, tfr_file_list, component_re
                     hold on
                     scrollsubplot(sub_rows, sub_cols, tfr_counter);
                     contourf(xdata, ydata, zdata, 40, 'linecolor','none')
-                    colorbar
+                    colorbar('northoutside')
                     hold off
                     tfr_counter = tfr_counter + sub_cols;
                     close(tfr_fig);
                 end
             end
+            %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+            weight_counter = tfr_counter + 1;
 
+            %% Time course
             %TODO extrapolate to multiple events
             event_strings = psth_struct.all_events(1,1)';
             region_neurons = pc_log.(bandname).(region).sig_channels;
@@ -139,22 +156,122 @@ function [] = plot_tfr_pca_psth(save_path, tfr_path, tfr_file_list, component_re
                     tfr_counter = tfr_counter + sub_cols;
                 end
             end
+            %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+            %% Plot PCA weights
+            pca_weights = component_results.(bandname).(region).coeff;
+            y_max = max(max(pca_weights)) + (ymax_scale * max(max(pca_weights)));
+            y_min = min(min(pca_weights));
+            if max(max(pca_weights)) == y_min
+                y_min = -y_min;
+            end
+            [tot_chans, tot_components] = size(pca_weights);
+            if strcmpi(feature_filter, 'pcs')
+                %% Grabs desired number of principal components weights
+                if feature_value < tot_components
+                    tot_components = feature_value;
+                end
+            end
+            for comp_i = 1:tot_components
+                comp_weights = pca_weights(:, comp_i);
+                scrollsubplot(sub_rows, sub_cols, weight_counter);
+                if tot_components == 0
+                    continue
+                end
+                if multi_powers
+                    hold on
+                    tot_pow_pc = tot_chans / tot_pows;
+                    splits = [0, tot_pow_pc:tot_pow_pc:(tot_chans - 1)];
+                    if multi_regs
+                        % Case: multi powers and regions
+                        for split_i = 1:length(splits)
+                            color_counter = 1;
+                            feature_start = splits(split_i) + 1;
+                            reg_start = feature_start;
+                            for reg_i = 1:tot_sub_regs
+                                sub_reg = split_regions{reg_i};
+                                subreg_table = label_log.(bandname).(sub_reg);
+                                [~, ind] = unique(subreg_table, 'rows');
+                                subreg_table = subreg_table(ind, :);
+                                tot_sub_chans = height(subreg_table);
+                                reg_end = reg_start + tot_sub_chans - 1;
+                                bar(reg_start:reg_end, comp_weights(reg_start:reg_end), ...
+                                    'FaceColor', color_map(color_counter, :), ...
+                                    'EdgeColor', 'none');
+                                reg_start = reg_end + 1;
+                                if color_counter < tot_colors
+                                    color_counter = color_counter + 1;
+                                else
+                                    color_counter = 1;
+                                end
+                            end
+                        end
+                    else
+                        % Case: Multi powers, single region
+                        bar(comp_weights, 'b', 'EdgeColor', 'none');
+                    end
+                    %% Add power line marking
+                    for split_i = 2:length(splits)
+                        feature_split = splits(split_i);
+                        % + .5 to center vertical line between bars
+                        xline((feature_split + .5), 'k', ...
+                            [split_powers{split_i - 1}, ' ' split_powers{split_i}], ...
+                            'LabelOrientation', 'horizontal', ...
+                            'LabelHorizontalAlignment', 'center', ...
+                            'HandleVisibility', 'off');
+                    end
+                    hold off
+                elseif multi_regs
+                    %% Case multi regions only
+                    reg_start = 1;
+                    color_counter = 1;
+                    for reg_i = 1:tot_sub_regs
+                        sub_reg = split_regions{reg_i};
+                        subreg_table = label_log.(bandname).(sub_reg);
+                        [~, ind] = unique(subreg_table, 'rows');
+                        subreg_table = subreg_table(ind, :);
+                        tot_sub_chans = height(subreg_table);
+                        reg_end = reg_start + tot_sub_chans - 1;
+                        bar(reg_start:reg_end, comp_weights(reg_start:reg_end), ...
+                            'FaceColor', color_map(color_counter, :), ...
+                            'EdgeColor', 'none');
+                        reg_start = reg_end + 1;
+                        if color_counter < tot_colors
+                            color_counter = color_counter + 1;
+                        else
+                            color_counter = 1;
+                        end
+                    end
+                else
+                    hold on;
+                    bar(comp_weights, ...
+                        'FaceColor', color_map(1, :), ...
+                        'EdgeColor', 'none');
+                    hold off;
+                end
+                %% Creates Legends
+                if multi_regs
+                    warning('off','all')
+                    lg = legend(split_regions);
+                    legend('boxoff');
+                    lg.Location = 'BestOutside';
+                    lg.Orientation = 'Horizontal';
+                    warning('on','all')
+                end
 
-
+                ylim([y_min y_max]);
+                xlabel('Electrode #');
+                ylabel('Coefficient Weight');
+                sub_title = strrep(['PC ' num2str(comp_i)], '_', ' ');
+                title(sub_title)
+                weight_counter = weight_counter + sub_cols;
+            end
+            %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
             figure(main_plot);
             filename = [bandname, '_', region, '.fig'];
             set(gcf, 'CreateFcn', 'set(gcbo,''Visible'',''on'')'); 
             savefig(gcf, fullfile(save_path, filename));
             close all
         end
-
-        %% Add text plot
-
-        %% Add variance plot -> Always in position 2,2
-
-
-        %% Plot PSTHs
-
         %% Plot PCA weights
 
     end
