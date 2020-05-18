@@ -1,16 +1,9 @@
-function [] = plot_tfr_pca_psth(save_path, tfr_path, tfr_file_list, component_results, ...
-    label_log, pow_struct, pc_log, ymax_scale)
+function [] = plot_tfr_pca_psth(save_path, tfr_path, tfr_file_list, ...
+    pc_log, component_results, pow_struct, bin_size, window_start, ...
+    window_end, baseline_start, baseline_end, response_start, response_end, ...
+    feature_filter, feature_value, sub_rows, sub_cols, st_type, ymax_scale, ...
+    transparency)
 
-    %TODO move to config
-    sub_rows = 5;
-    sub_cols = 2;
-    st_type = 'std';
-    window_start = -3; window_end = 2; bin_size = .05;
-    baseline_start = -3; baseline_end = 0;
-    response_start = 0; response_end = 2;
-    transparency = .3;
-    feature_filter = 'pcs';
-    feature_value = 5;
     event_window = window_start:bin_size:window_end;
 
     color_map = [0 0 0 % black
@@ -23,7 +16,7 @@ function [] = plot_tfr_pca_psth(save_path, tfr_path, tfr_file_list, component_re
 
 
     freq_list = {'highfreq', 'lowfreq'};
-    unique_powers = fieldnames(label_log);
+    unique_powers = fieldnames(pc_log);
     parfor pow_i = 1:length(unique_powers)
         bandname = unique_powers{pow_i};
         %% Shade different powers in plot
@@ -37,7 +30,7 @@ function [] = plot_tfr_pca_psth(save_path, tfr_path, tfr_file_list, component_re
 
         psth_struct = pow_struct.(bandname)
 
-        unique_regions = fieldnames(label_log.(bandname));
+        unique_regions = fieldnames(pc_log.(bandname));
         for region_i = 1:length(unique_regions)
             region = unique_regions{region_i};
             if contains(region, '_')
@@ -96,7 +89,8 @@ function [] = plot_tfr_pca_psth(save_path, tfr_path, tfr_file_list, component_re
                     hold on
                     scrollsubplot(sub_rows, sub_cols, tfr_counter);
                     contourf(xdata, ydata, zdata, 40, 'linecolor','none')
-                    colorbar('northoutside')
+                    scrollsubplot(sub_rows, sub_cols, 2);
+                    colorbar('westoutside')
                     hold off
                     tfr_counter = tfr_counter + sub_cols;
                     close(tfr_fig);
@@ -134,11 +128,12 @@ function [] = plot_tfr_pca_psth(save_path, tfr_path, tfr_file_list, component_re
                 for neuron = 1:total_region_neurons
                     psth_name = region_neurons{neuron};
                     psth = psth_struct.(region).(event).(psth_name).psth;
+                    relative_response = psth_struct.(region).(event).(psth_name).relative_response;
                     if strcmpi(st_type, 'std')
-                        relative_response = psth_struct.(region).(event).(psth_name).relative_response;
                         st_vec = std(relative_response);
                     elseif strcmpi(st_type, 'ste')
-
+                        [~, tot_obs] = size(relative_response);
+                        st_vec = std(relative_response) ./ sqrt(tot_obs);
                     end
                     figure(main_plot);
                     scrollsubplot(sub_rows, sub_cols, tfr_counter);
@@ -189,7 +184,7 @@ function [] = plot_tfr_pca_psth(save_path, tfr_path, tfr_file_list, component_re
                             reg_start = feature_start;
                             for reg_i = 1:tot_sub_regs
                                 sub_reg = split_regions{reg_i};
-                                subreg_table = label_log.(bandname).(sub_reg);
+                                subreg_table = pc_log.(bandname).(sub_reg);
                                 [~, ind] = unique(subreg_table, 'rows');
                                 subreg_table = subreg_table(ind, :);
                                 tot_sub_chans = height(subreg_table);
@@ -226,7 +221,7 @@ function [] = plot_tfr_pca_psth(save_path, tfr_path, tfr_file_list, component_re
                     color_counter = 1;
                     for reg_i = 1:tot_sub_regs
                         sub_reg = split_regions{reg_i};
-                        subreg_table = label_log.(bandname).(sub_reg);
+                        subreg_table = pc_log.(bandname).(sub_reg);
                         [~, ind] = unique(subreg_table, 'rows');
                         subreg_table = subreg_table(ind, :);
                         tot_sub_chans = height(subreg_table);
@@ -272,8 +267,5 @@ function [] = plot_tfr_pca_psth(save_path, tfr_path, tfr_file_list, component_re
             savefig(gcf, fullfile(save_path, filename));
             close all
         end
-        %% Plot PCA weights
-
     end
-
 end
