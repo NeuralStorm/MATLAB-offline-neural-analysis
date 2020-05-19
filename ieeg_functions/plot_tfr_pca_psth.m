@@ -2,7 +2,7 @@ function [] = plot_tfr_pca_psth(save_path, tfr_path, tfr_file_list, label_log, .
     pc_log, component_results, pow_struct, bin_size, window_start, ...
     window_end, baseline_start, baseline_end, response_start, response_end, ...
     feature_filter, feature_value, sub_rows, sub_cols, st_type, ymax_scale, ...
-    transparency)
+    transparency, min_components)
 
     event_window = window_start:bin_size:window_end;
 
@@ -28,7 +28,7 @@ function [] = plot_tfr_pca_psth(save_path, tfr_path, tfr_file_list, label_log, .
             split_powers = {bandname};
         end
 
-        psth_struct = pow_struct.(bandname)
+        psth_struct = pow_struct.(bandname);
 
         unique_regions = fieldnames(pc_log.(bandname));
         for region_i = 1:length(unique_regions)
@@ -43,72 +43,13 @@ function [] = plot_tfr_pca_psth(save_path, tfr_path, tfr_file_list, label_log, .
                 tot_sub_regs = 1;
             end
 
-            main_plot = figure;
-            %TODO add more info to title plot
-            %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-            %% Text plot
-            % Position: 1st row, last column
-            description = [bandname, ' ', region];
-            figure(main_plot);
-            ax = scrollsubplot(sub_rows, sub_cols, sub_cols);
-            pos=get(ax, 'Position');
-            annotation('textbox', pos, 'String', description, ...
-                'FitBoxToText','off');
-
-            %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
-            %% Var plot
-            % Position: 2nd row, last column
-            scrollsubplot(sub_rows, sub_cols, (sub_cols * 2));
-            bar(component_results.(bandname).(region).component_variance, ...
-                'EdgeColor', 'none');
-            xlabel('PC #');
-            ylabel('% Variance');
-            title('Percent Variance Explained')
-            %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
-            % Frequency is not an issue since we plot all the frequencies
-            tot_pows = length(freq_list);
-            tot_tfrs = tot_pows * tot_sub_regs;
-            tfr_counter = 1;
-            for sub_pow_i = 1:tot_pows
-                curr_freq = freq_list{sub_pow_i};
-                for sub_reg_i = 1:tot_sub_regs
-                    sub_reg = split_regions{sub_reg_i};
-                    %% load figure
-                    tfr_i = contains({tfr_file_list.name}, curr_freq) ...
-                        & contains({tfr_file_list.name}, sub_reg);
-                    tfr_filename = tfr_file_list(tfr_i).name;
-                    tfr_file = fullfile(tfr_path, tfr_filename);
-                    tfr_fig = openfig(tfr_file);
-                    tfr_ax = get(gca,'Children');
-                    xdata = get(tfr_ax, 'XData');
-                    ydata = get(tfr_ax, 'YData');
-                    zdata = get(tfr_ax, 'CData');
-                    figure(main_plot);
-                    hold on
-                    scrollsubplot(sub_rows, sub_cols, tfr_counter);
-                    contourf(xdata, ydata, zdata, 40, 'linecolor','none')
-                    % Put color bar on text plot
-                    scrollsubplot(sub_rows, sub_cols, sub_cols);
-                    colorbar('westoutside')
-                    hold off
-                    tfr_counter = tfr_counter + sub_cols;
-                    close(tfr_fig);
-                end
-            end
-            %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-            weight_counter = tfr_counter + 1;
-
-            %% Time course
-            %TODO extrapolate to multiple events
-            event_strings = psth_struct.all_events(1,1)';
+            event_strings = psth_struct.all_events(:,1)';
             region_neurons = pc_log.(bandname).(region).sig_channels;
             total_region_neurons = length(region_neurons);
-            for event_i = 1:length(event_strings(1,:))
+            for event_i = 1:length(event_strings)
                 event = event_strings{event_i};
                 if strcmpi(event, 'event_1')
-                    event_type = 'all_trials';
+                    event_type = 'all';
                 elseif strcmpi(event, 'event_2')
                     event_type = 'gamble';
                 elseif strcmpi(event, 'event_3')
@@ -116,6 +57,74 @@ function [] = plot_tfr_pca_psth(save_path, tfr_path, tfr_file_list, label_log, .
                 else
                     error('Unexpected event: %s', event);
                 end
+                %% Skip events without TFRs
+                if isempty(tfr_file_list(contains({tfr_file_list.name}, event_type)))
+                    continue
+                end
+                main_plot = figure;
+                %TODO add more info to title plot
+                component_var = component_results.(bandname).(region).component_variance;
+                tot_components = length(component_var);
+                if tot_components < min_components
+                    continue
+                end
+                %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+                %% Text plot
+                % Position: 1st row, last column
+                description = [bandname, ' ', region, ' ' event_type, 'tot components: ', num2str(tot_components)];
+                description = strrep(description, '_', ' ');
+                figure(main_plot);
+                ax = scrollsubplot(sub_rows, sub_cols, sub_cols);
+                pos=get(ax, 'Position');
+                annotation('textbox', pos, 'String', description, ...
+                    'FitBoxToText','off');
+                axis off;
+                %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+                %% Var plot
+                % Position: 2nd row, last column
+                scrollsubplot(sub_rows, sub_cols, (sub_cols * 2));
+                bar(component_var, 'EdgeColor', 'none');
+                xlabel('PC #');
+                ylabel('% Variance');
+                title('Percent Variance Explained')
+                %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+                % Frequency is not an issue since we plot all the frequencies
+                tot_pows = length(freq_list);
+                tot_tfrs = tot_pows * tot_sub_regs;
+                tfr_counter = 1;
+                for sub_pow_i = 1:tot_pows
+                    curr_freq = freq_list{sub_pow_i};
+                    for sub_reg_i = 1:tot_sub_regs
+                        sub_reg = split_regions{sub_reg_i};
+                        %% load figure
+                        tfr_i = contains({tfr_file_list.name}, curr_freq) ...
+                            & contains({tfr_file_list.name}, sub_reg) ...
+                            & contains({tfr_file_list.name}, event_type);
+                        tfr_filename = tfr_file_list(tfr_i).name;
+                        tfr_file = fullfile(tfr_path, tfr_filename);
+                        tfr_fig = openfig(tfr_file);
+                        tfr_ax = get(gca,'Children');
+                        xdata = get(tfr_ax, 'XData');
+                        xlabel('Time (s)');
+                        ydata = get(tfr_ax, 'YData');
+                        ylabel('Frequency')
+                        zdata = get(tfr_ax, 'CData');
+                        figure(main_plot);
+                        hold on
+                        scrollsubplot(sub_rows, sub_cols, tfr_counter);
+                        contourf(xdata, ydata, zdata, 40, 'linecolor','none')
+                        % Put color bar on text plot
+                        scrollsubplot(sub_rows, sub_cols, sub_cols);
+                        colorbar('westoutside')
+                        hold off
+                        tfr_counter = tfr_counter + sub_cols;
+                        close(tfr_fig);
+                    end
+                end
+                %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+                weight_counter = tfr_counter + 1;
                 event_psth = psth_struct.(region).(event).psth;
 
                 event_max = 1.1 * max(event_psth) + eps;
@@ -148,24 +157,26 @@ function [] = plot_tfr_pca_psth(save_path, tfr_path, tfr_file_list, label_log, .
                     line([response_start response_start], ylim, 'Color', 'black', 'LineWidth', 0.75, 'LineStyle', '--');
                     line([response_end response_end], ylim, 'Color', 'black', 'LineWidth', 0.75, 'LineStyle', '--');
                     title(psth_name);
+                    xlabel('Time (s)');
+                    ylabel('Avg. Pow');
                     hold off
                     tfr_counter = tfr_counter + sub_cols;
                 end
+                %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+                %% Plot PCA weights
+                plot_incrememnt = sub_cols;
+                pca_weights = component_results.(bandname).(region).coeff;
+                region_table = label_log.(bandname);
+                plot_weights(pca_weights, ymax_scale, feature_filter, feature_value, ...
+                    color_map, multi_regs, tot_sub_regs, split_regions, region_table, multi_powers, tot_pows, split_powers, ...
+                    sub_rows, sub_cols, weight_counter, plot_incrememnt);
+                %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+                figure(main_plot);
+                filename = [bandname, '_', region, '_', event_type, '.fig'];
+                set(gcf, 'CreateFcn', 'set(gcbo,''Visible'',''on'')'); 
+                savefig(gcf, fullfile(save_path, filename));
+                close all
             end
-            %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-            %% Plot PCA weights
-            plot_incrememnt = sub_cols
-            pca_weights = component_results.(bandname).(region).coeff;
-            region_table = label_log.(bandname);
-            plot_weights(pca_weights, ymax_scale, feature_filter, feature_value, ...
-                color_map, multi_regs, tot_sub_regs, split_regions, region_table, multi_powers, tot_pows, split_powers, ...
-                sub_rows, sub_cols, weight_counter, plot_incrememnt);
-            %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-            figure(main_plot);
-            filename = [bandname, '_', region, '.fig'];
-            set(gcf, 'CreateFcn', 'set(gcbo,''Visible'',''on'')'); 
-            savefig(gcf, fullfile(save_path, filename));
-            close all
         end
     end
 end
