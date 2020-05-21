@@ -16,6 +16,7 @@ function [] = plot_tfr_pca_psth(save_path, tfr_path, tfr_file_list, label_log, .
 
 
     freq_list = {'highfreq', 'lowfreq'};
+    tot_tfrs = length(freq_list);
     unique_powers = fieldnames(pc_log);
     parfor pow_i = 1:length(unique_powers)
         bandname = unique_powers{pow_i};
@@ -23,9 +24,11 @@ function [] = plot_tfr_pca_psth(save_path, tfr_path, tfr_file_list, label_log, .
         if contains(bandname, '_')
             multi_powers = true;
             split_powers = strsplit(bandname, '_');
+            tot_pows = numel(split_powers);
         else
             multi_powers = false;
             split_powers = {bandname};
+            tot_pows = numel(split_powers);
         end
 
         psth_struct = pow_struct.(bandname);
@@ -91,10 +94,8 @@ function [] = plot_tfr_pca_psth(save_path, tfr_path, tfr_file_list, label_log, .
                 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
                 % Frequency is not an issue since we plot all the frequencies
-                tot_pows = length(freq_list);
-                tot_tfrs = tot_pows * tot_sub_regs;
                 tfr_counter = 1;
-                for sub_pow_i = 1:tot_pows
+                for sub_pow_i = 1:tot_tfrs
                     curr_freq = freq_list{sub_pow_i};
                     for sub_reg_i = 1:tot_sub_regs
                         sub_reg = split_regions{sub_reg_i};
@@ -166,7 +167,7 @@ function [] = plot_tfr_pca_psth(save_path, tfr_path, tfr_file_list, label_log, .
                 %% Plot PCA weights
                 plot_incrememnt = sub_cols;
                 pca_weights = component_results.(bandname).(region).coeff;
-                region_table = label_log.(bandname);
+                region_table = label_log.(bandname).(region);
                 plot_weights(pca_weights, ymax_scale, feature_filter, feature_value, ...
                     color_map, multi_regs, tot_sub_regs, split_regions, region_table, multi_powers, tot_pows, split_powers, ...
                     sub_rows, sub_cols, weight_counter, plot_incrememnt);

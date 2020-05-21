@@ -107,6 +107,8 @@ function [mnts_struct, label_log] = reshape_to_mnts(label_table, GTH, ...
                         pow_struct.(curr_region).mnts = [pow_struct.(curr_region).mnts, mnts];
                         pow_struct.(curr_region).z_mnts = [pow_struct.(curr_region).z_mnts, z_mnts];
                         pow_log.(curr_region) = [pow_log.(curr_region); region_chans];
+                        [~, ind] = unique(pow_log.(curr_region), 'rows');
+                        pow_log.(curr_region) = pow_log.(curr_region)(ind, :);
                     else
                         pow_struct.(curr_region).mnts = mnts;
                         pow_struct.(curr_region).z_mnts = z_mnts;

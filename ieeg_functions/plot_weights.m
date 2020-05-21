@@ -34,9 +34,7 @@ function [] = plot_weights(pca_weights, ymax_scale, feature_filter, feature_valu
                     reg_start = feature_start;
                     for reg_i = 1:tot_sub_regs
                         sub_reg = split_regions{reg_i};
-                        subreg_table = region_table.(sub_reg);
-                        [~, ind] = unique(subreg_table, 'rows');
-                        subreg_table = subreg_table(ind, :);
+                        subreg_table = region_table(strcmpi(region_table.label, sub_reg), :);
                         tot_sub_chans = height(subreg_table);
                         reg_end = reg_start + tot_sub_chans - 1;
                         bar(reg_start:reg_end, comp_weights(reg_start:reg_end), ...
@@ -71,9 +69,7 @@ function [] = plot_weights(pca_weights, ymax_scale, feature_filter, feature_valu
             color_counter = 1;
             for reg_i = 1:tot_sub_regs
                 sub_reg = split_regions{reg_i};
-                subreg_table = region_table.(sub_reg);
-                [~, ind] = unique(subreg_table, 'rows');
-                subreg_table = subreg_table(ind, :);
+                subreg_table = region_table(strcmpi(region_table.label, sub_reg), :);
                 tot_sub_chans = height(subreg_table);
                 reg_end = reg_start + tot_sub_chans - 1;
                 bar(reg_start:reg_end, comp_weights(reg_start:reg_end), ...

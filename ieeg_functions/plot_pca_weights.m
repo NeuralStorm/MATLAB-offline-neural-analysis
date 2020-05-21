@@ -7,7 +7,6 @@ function [] = plot_pca_weights(save_path, component_results, label_log, feature_
                 0 1 0 % green
                 1 0 1 % magenta
                 1 1 0]; % yellow
-    [~, tot_colors] = size(color_map);
 
     unique_powers = fieldnames(label_log);
     for pow_i = 1:length(unique_powers)
@@ -64,7 +63,7 @@ function [] = plot_pca_weights(save_path, component_results, label_log, feature_
             pca_weights = component_results.(curr_pow).(region).coeff;
             plot_start = 2;
             plot_increment = 1;
-            region_table = label_log.(curr_pow);
+            region_table = label_log.(curr_pow).(region);
             plot_weights(pca_weights, ymax_scale, feature_filter, feature_value, ...
             color_map, multi_regs, tot_sub_regs, split_regions, region_table, multi_powers, tot_pows, split_powers, ...
             plot_rows, plot_cols, plot_start, plot_increment);
