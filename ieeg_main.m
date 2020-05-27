@@ -176,14 +176,35 @@ function [] = ieeg_main()
                 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
                 %%         Graph PSTH         %%
                 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-                %TODO add fig path
                 batch_plot_tfr_pca_psth(dir_save_path, dir_failed_path, ...
                     dir_tfr_path, dir_pca_path, dir_psth_path, dir_config);
-
             catch ME
                 handle_ME(ME, graph_failed_path, [curr_dir, '_missing_dir.mat']);
             end
         end
 
+        if dir_config.do_lds
+            mnts_path = [project_path, '/mnts'];
+            [lds_path, lds_failed_path] = create_dir(mnts_path, 'lds');
+            export_params(lds_path, 'lds', config);
+            try
+                %% Check to make sure paths exist for analysis and create save path
+                e_msg_1 = 'No data directory to find PCA MNTSs';
+                e_msg_2 = ['No ', curr_dir, ' pca mnts data to create lds'];
+                %TODO option to use pca or raw
+                pca_path = [mnts_path, '/pca'];
+                dir_pca_path = enforce_dir_layout(pca_path, curr_dir, pca_psth_failed_path, e_msg_1, e_msg_2);
+                [dir_save_path, dir_failed_path] = create_dir(lds_path, curr_dir);
+
+                %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+                %%            LDS            %%
+                %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+                batch_run_lds(dir_save_path, dir_failed_path, dir_pca_path, ...
+                    curr_dir, dir_config)
+            catch ME
+                handle_ME(ME, pca_psth_failed_path, [curr_dir, '_missing_dir.mat']);
+            end
+        end
     end
+    toc(start_time);
 end
