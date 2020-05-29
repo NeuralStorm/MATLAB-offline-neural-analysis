@@ -232,20 +232,18 @@ function [threshold, avg_bfr, bfr_std] = get_threshold(baseline_psth, threshold_
 end
 
 function [fl, ll, duration, pl, peak, corrected_peak, rm, corrected_rm] = get_response_metrics(...
-        bfr, above_threshold, suprathreshold_i, bin_size, response_start)
+        bfr, sig_response_bins, suprathreshold_i, bin_size, response_start)
     %% Abbreviations: fl = first latency, ll = last latency, pl = peak latency
     %% rm = response magnitude
     %% Finds results of the receptive field analysis
-    % suprathreshold_i = find(response_psth > threshold);
-    % above_threshold = response_psth(suprathreshold_i);
     fl = ((suprathreshold_i(1)) * bin_size) + response_start + (bin_size / 2);
     ll = ((suprathreshold_i(end)) * bin_size) + response_start + (bin_size / 2);
-    peak = max(above_threshold);
-    peak_index = find(peak == above_threshold);
-    pl = (peak_index(1) * bin_size) + response_start - (bin_size / 2);
+    peak = max(sig_response_bins);
+    peak_index = find(peak == sig_response_bins);
+    pl = (peak_index(1) * bin_size) + fl - bin_size;
     corrected_peak = peak - bfr;
-    rm = sum(above_threshold);
-    corrected_rm = rm - bfr;
+    rm = sum(sig_response_bins);
+    corrected_rm = rm - (bfr * (suprathreshold_i(end) - suprathreshold_i(1)));
     duration = ll - fl;
 end
 
