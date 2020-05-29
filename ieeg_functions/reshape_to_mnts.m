@@ -1,128 +1,119 @@
-function [mnts_struct, label_log] = reshape_to_mnts(label_table, GTH, ...
-    select_powers, select_regions)
-    spectrum_names = fieldnames(GTH);
-    spectrum_names = spectrum_names(~ismember(spectrum_names, ...
+function [mnts_struct, label_log] = reshape_to_mnts(label_table, GTH, select_features)
+    unique_bands = fieldnames(GTH);
+    unique_bands = unique_bands(~ismember(unique_bands, ...
         {'anat', 'beh', 'zpowspctrm'}));
-    %% Create label log
+    unique_regions = unique(label_table.label);
     label_log = struct;
 
-    %% If select powers is empty, use all powers in GTH
-    if isempty(select_powers) ...
-            || (~iscell(select_powers) && any(isnan(select_powers))) ...
-            || iscell(select_powers) && isempty(select_powers{:})
-        split_powers = spectrum_names;
-    else
-        split_powers = strsplit(select_powers, ',');
-    end
-
-    %% If select powers is empty, use all powers in GTH
-    unique_regions = unique(label_table.label);
-    if isempty(select_regions) ...
-        || (~iscell(select_regions) && any(isnan(select_regions))) ...
-        || iscell(select_powers) && isempty(select_powers{:})
-        split_regions = unique_regions;
-    else
-        split_regions = strsplit(select_regions, ',');
-    end
-
     mnts_struct = struct;
-    for pow_i = 1:length(split_powers)
-        %% Grab current power and remove whitespace
-        selected_pow = strrep(split_powers{pow_i}, ' ', '');
+    all_events = [
+        'event_1', {ones(size(GTH.beh.gambles))};
+        'event_2', {GTH.beh.gambles}
+        'event_3', {GTH.beh.safebet}];
+    mnts_struct.all_events = all_events;
+    if isempty(select_features) ...
+            || (~iscell(select_features) && any(isnan(select_features))) ...
+            || iscell(select_features) && isempty(select_features{:})
+        %% Default: Combine all powers and regions together
+        for band_i = 1:numel(unique_bands)
+            bandname = unique_bands{band_i};
+            [powspctrm, zpowspctrm] = get_powspctrm(bandname, GTH, label_table);
+            for region_i = 1:numel(unique_regions)
+                region = unique_regions{region_i};
+                region_channel_i = ismember(label_table.label, region);
+                %% Grab power spectrums
+                region_powspctrm = powspctrm(:, region_channel_i, 1, :);
+                region_zpowspctrm = zpowspctrm(:, region_channel_i, 1, :);
+                [mnts, z_mnts] = create_mnts(region_powspctrm, region_zpowspctrm);
 
-        %% Check if current power selection has multiple powers
-        if contains(selected_pow, '+')
-            combined_spectrums = strsplit(selected_pow, '+');
-            selected_pow = strrep(selected_pow, '+', '_');
-        else
-            combined_spectrums = {selected_pow};
+                % create and add feature to feature space
+                feature = [bandname, '_', region];
+                mnts_struct.(feature).mnts = mnts;
+                mnts_struct.(feature).z_mnts = z_mnts;
+                region_chans = label_table(ismember(label_table.label, region), :);
+                label_log.(feature) = region_chans;
+            end
         end
+    else
+        %% Case: Specified feature space with combos of powers + regions
+        select_features = strrep(select_features, ' ', '');
+        split_features = strsplit(select_features, ';');
+        for feature_i = 1:numel(split_features)
+            %% Split into separate feature spaces based on ';'
+            feature = split_features{feature_i};
+            sub_feature = strsplit(feature, ',');
+            %% set feature variables
+            feature = replace(feature, {':', '+', ','}, '_');
+            label_log.(feature) = [];
+            mnts_struct.(feature).mnts = [];
+            mnts_struct.(feature).z_mnts = [];
+            for sub_feature_i = 1:numel(sub_feature)
+                %% Split into powers and regions
+                pow_regs = sub_feature{sub_feature_i};
+                split_pow_reg = strsplit(pow_regs, ':');
+                pows = split_pow_reg{1};
+                split_powers = strsplit(pows, '+');
+                regs = split_pow_reg{2};
+                split_regions = strsplit(regs, '+');
+                for band_i = 1:numel(split_powers)
+                    %% iterate through powers
+                    bandname = split_powers{band_i};
+                    [powspctrm, zpowspctrm] = get_powspctrm(bandname, GTH, label_table);
+                    for region_i = 1:numel(split_regions)
+                        %% Iterate through regions
+                        region = split_regions{region_i};
+                        region_channel_i = ismember(label_table.label, region);
+                        %% Grab power spectrums
+                        region_powspctrm = powspctrm(:, region_channel_i, 1, :);
+                        region_zpowspctrm = zpowspctrm(:, region_channel_i, 1, :);
 
-        %% Cycle through selected powers
-        pow_struct = struct;
-        pow_log = struct;
-        for spectrum_i = 1:length(combined_spectrums)
-            curr_spectrum = combined_spectrums{spectrum_i};
-            %% Verify power spectrum is valid
-            if ~ismember(spectrum_names, curr_spectrum)
-                warning('%s is not a valid power. Skipping', curr_spectrum);
-                continue
-            end
-            spectrum_channels = GTH.(curr_spectrum).label;
-            %% Grab logical indices of selected channels
-            channel_i = ismember(spectrum_channels, label_table.sig_channels);
-            powspctrm = GTH.(curr_spectrum).powspctrm(:, channel_i, :, :);
-            if ~isfield(GTH, 'zpowspctrm')
-                zpowspctrm = zscore(GTH.(curr_spectrum).powspctrm,0,4);
-            else
-                zpowspctrm = GTH.zpowspctrm.(curr_spectrum)(:, channel_i, :, :);
-            end
-            [tot_trials, ~, tot_pows, tot_bins] = size(powspctrm);
-            assert(tot_pows == 1, 'Too many power spectrums. Expected only 1 for reshaping');
-            %% Cycle through selected regions
-            for split_region_i = 1:length(split_regions)
-                %% Grab current region and remove whitespace
-                curr_region = strrep(split_regions{split_region_i}, ' ', '');
-                %% Check if current power selection has multiple powers
-                if contains(curr_region, '+')
-                    combined_regions = strsplit(curr_region, '+');
-                    curr_region = strrep(curr_region, '+', '_');
-                else
-                    combined_regions = {curr_region};
-                end
+                        %% Reshape into MNTS and store in mnts_struct for feature
+                        [region_mnts, region_z_mnts] = create_mnts(region_powspctrm, region_zpowspctrm);
+                        mnts_struct.(feature).mnts = [mnts_struct.(feature).mnts, region_mnts];
+                        mnts_struct.(feature).z_mnts = [mnts_struct.(feature).z_mnts, region_z_mnts];
 
-                for region_i = 1:length(combined_regions)
-                    region = combined_regions{region_i};
-                    %% Verify region is valid
-                    if ~ismember(unique_regions, region)
-                        warning('%s is not a valid region. Skipping', region);
-                        continue
-                    end
-                    region_channel_i = ismember(label_table.label, region);
-                    %% Grab power spectrums
-                    region_powspctrm = powspctrm(:, region_channel_i, 1, :);
-                    region_zpowspctrm = zpowspctrm(:, region_channel_i, 1, :);
-                    [~, tot_region_elecs, ~, ~] = size(region_powspctrm);
-                    mnts = [];
-                    z_mnts = [];
-                    for unit_i = 1:tot_region_elecs
-                        unit_response = [];
-                        z_response = [];
-                        for trial_i = 1:tot_trials
-                            %% Power spectrum
-                            trial_response = region_powspctrm(trial_i, unit_i, 1, :);
-                            trial_response = reshape(trial_response, tot_bins, 1);
-                            unit_response = [unit_response; trial_response];
-                            %% Z scored power spectrum
-                            trial_response = region_zpowspctrm(trial_i, unit_i, 1, :);
-                            trial_response = reshape(trial_response, tot_bins, 1);
-                            z_response = [z_response; trial_response];
-                        end
-                        mnts = [mnts, unit_response];
-                        z_mnts = [z_mnts, z_response];
-                    end
-                    %% Check if region already exists and if it does, append to mnts and label log
-                    region_chans = label_table(ismember(label_table.label, region), :);
-                    if isfield(pow_struct, curr_region)
-                        pow_struct.(curr_region).mnts = [pow_struct.(curr_region).mnts, mnts];
-                        pow_struct.(curr_region).z_mnts = [pow_struct.(curr_region).z_mnts, z_mnts];
-                        pow_log.(curr_region) = [pow_log.(curr_region); region_chans];
-                        [~, ind] = unique(pow_log.(curr_region), 'rows');
-                        pow_log.(curr_region) = pow_log.(curr_region)(ind, :);
-                    else
-                        pow_struct.(curr_region).mnts = mnts;
-                        pow_struct.(curr_region).z_mnts = z_mnts;
-                        pow_log.(curr_region) = region_chans;
+                        %% label log
+                        region_chans = label_table(ismember(label_table.label, region), :);
+                        label_log.(feature) = [label_log.(feature); region_chans];
+                        [~, ind] = unique(label_log.(feature), 'rows');
+                        label_log.(feature) = label_log.(feature)(ind, :);
                     end
                 end
             end
-            mnts_struct.(selected_pow) = pow_struct;
-            label_log.(selected_pow) = pow_log;
-            all_events = [
-                'event_1', {ones(size(GTH.beh.gambles))};
-                'event_2', {GTH.beh.gambles}
-                'event_3', {GTH.beh.safebet}];
-            mnts_struct.(selected_pow).all_events = all_events;
         end
+    end
+end
+
+function [powspctrm, zpowspctrm] = get_powspctrm(bandname, GTH, label_table)
+    spectrum_channels = GTH.(bandname).label;
+    %% Grab logical indices of selected channels
+    channel_i = ismember(spectrum_channels, label_table.sig_channels);
+    powspctrm = GTH.(bandname).powspctrm(:, channel_i, :, :);
+    if ~isfield(GTH, 'zpowspctrm')
+        zpowspctrm = zscore(GTH.(bandname).powspctrm,0,4);
+    else
+        zpowspctrm = GTH.zpowspctrm.(bandname)(:, channel_i, :, :);
+    end
+end
+
+function [mnts, z_mnts] = create_mnts(powspctrm, zpowspctrm)
+    [tot_trials, tot_elecs, ~, tot_bins] = size(powspctrm);
+    mnts = [];
+    z_mnts = [];
+    for unit_i = 1:tot_elecs
+        unit_response = [];
+        z_response = [];
+        for trial_i = 1:tot_trials
+            %% Power spectrum
+            trial_response = powspctrm(trial_i, unit_i, 1, :);
+            trial_response = reshape(trial_response, tot_bins, 1);
+            unit_response = [unit_response; trial_response];
+            %% Z scored power spectrum
+            trial_response = zpowspctrm(trial_i, unit_i, 1, :);
+            trial_response = reshape(trial_response, tot_bins, 1);
+            z_response = [z_response; trial_response];
+        end
+        mnts = [mnts, unit_response];
+        z_mnts = [z_mnts, z_response];
     end
 end
