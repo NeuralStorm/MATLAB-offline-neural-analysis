@@ -1,16 +1,22 @@
 function [pca_results, labeled_pcs, pc_log] = calc_pca(label_log, mnts_struct, ...
-        feature_filter, feature_value)
+        feature_filter, feature_value, use_z_mnts)
 
     pca_results = struct;
     pca_results.all_events = mnts_struct.all_events;
     labeled_pcs = label_log;
+
+    if use_z_mnts
+        mnts_type = 'z_mnts';
+    else
+        mnts_type = 'mnts';
+    end
 
     unique_regions = fieldnames(label_log);
     pc_log = struct;
     for region_index = 1:length(unique_regions)
         region = unique_regions{region_index};
         %% Grab z scored mnts format for current region and does PCA
-        pca_input = mnts_struct.(region).z_mnts;
+        pca_input = mnts_struct.(region).(mnts_type);
         [coeff, pca_score, eigenvalues, ~, pc_variance, estimated_mean] = pca(pca_input);
 
         %% Store PCA results
@@ -52,7 +58,7 @@ function [pca_results, labeled_pcs, pc_log] = calc_pca(label_log, mnts_struct, .
             end
             pca_results.(region).original_weighted_mnts = pca_score;
             %% Recalculate the scores with the new set of coefficients
-            pca_score = (mnts_struct.(region).z_mnts - estimated_mean) * coeff(:,1:tot_pcs);
+            pca_score = (mnts_struct.(region).(mnts_type) - estimated_mean) * coeff(:,1:tot_pcs);
             labeled_pcs.(region) = labeled_pcs.(region)(1:tot_pcs, :);
         end
         pca_results.(region).weighted_mnts = pca_score;
