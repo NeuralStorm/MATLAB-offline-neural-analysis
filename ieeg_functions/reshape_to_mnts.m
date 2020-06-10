@@ -6,10 +6,14 @@ function [mnts_struct, label_log] = reshape_to_mnts(label_table, GTH, select_fea
     label_log = struct;
 
     mnts_struct = struct;
+    gambles = GTH.beh.gambles;
+    gambles(gambles == 0) = [];
+    safebet = GTH.beh.safebet;
+    safebet(safebet == 0) = [];
     all_events = [
         'event_1', {ones(size(GTH.beh.gambles))};
-        'event_2', {GTH.beh.gambles}
-        'event_3', {GTH.beh.safebet}];
+        'event_2', {gambles}
+        'event_3', {safebet}];
     mnts_struct.all_events = all_events;
     if isempty(select_features) ...
             || (~iscell(select_features) && any(isnan(select_features))) ...
