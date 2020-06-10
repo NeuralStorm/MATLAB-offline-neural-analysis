@@ -8,7 +8,6 @@ function [] = plot_pca_weights(save_path, component_results, label_log, feature_
                 0 1 0 % green
                 1 0 1 % magenta
                 1 1 0]; % yellow
-    [tot_colors, ~] = size(color_map);
     plot_start = 2;
     plot_increment = 1;
 
@@ -49,76 +48,23 @@ function [] = plot_pca_weights(save_path, component_results, label_log, feature_
         ylabel('% Variance');
         title('Percent Variance Explained')
 
-        %% Find powers and regions in feature
+        %% Find powers feature
         sub_features = strsplit(feature, '_');
         band_locs = ~ismember(sub_features, label_log.(feature).label);
         band_list = sub_features(band_locs);
-        region_list = sub_features(~band_locs);
 
-        %% Set color map pairing for each unique region that appears
-        color_struct = struct;
-        color_i = 1;
-        coeff_i = 1;
-        for region_i = 1:numel(region_list)
-            region = region_list{region_i};
-            if isfield(color_struct, region)
-                tot_region_chans = color_struct.(region).tot_region_chans;
-                color_struct.(region).indices = [color_struct.(region).indices, coeff_i:(coeff_i + tot_region_chans - 1)];
-                coeff_i = coeff_i + tot_region_chans;
-            else
-                %% Set indices in coefficients
-                tot_region_chans = numel(label_log.(feature).sig_channels(strcmpi(label_log.(feature).label, region)));
-                color_struct.(region).tot_region_chans = tot_region_chans;
-                color_struct.(region).indices = coeff_i:(coeff_i + tot_region_chans - 1);
-                coeff_i = coeff_i + tot_region_chans;
-                %% set region color
-                color_struct.(region).color = color_map(color_i, :);
-                if color_i == tot_colors
-                    color_i = 1;
-                else
-                    color_i = color_i + 1;
-                end
-            end
-        end
+        %% Create color struct for each unique region in feature
+        [color_struct, ~] = create_color_struct(color_map, ...
+            feature, label_log.(feature));
+
+        %% Plot out weights for each pc
         tot_plots = plot_weights(pca_weights, ymax_scale, color_struct, ...
             plot_rows, plot_cols, plot_start, plot_increment);
 
-        if numel(band_list) > 1
-            %% Only make power transitions if there are more than 1 power
-            band_splits = struct;
-            shift_i = 0;
-            for loc_i = 1:numel(band_locs)
-                loc_bool = band_locs(loc_i);
-                if loc_bool
-                    if shift_i ~= 0
-                        band_shift = [bandname, '_', sub_features{loc_i}];
-                        band_splits.(band_shift) = shift_i;
-                    end
-                    bandname = sub_features{loc_i};
-                else
-                    region = sub_features{loc_i};
-                    tot_region_chans = numel(label_log.(feature).sig_channels(strcmpi(label_log.(feature).label, region)));
-                    shift_i = shift_i + tot_region_chans;
-                end
-            end
-            unique_shifts = fieldnames(band_splits);
-
-            %% Plot power shifts
-            for comp_i = 2:tot_plots
-                scrollsubplot(plot_rows, plot_cols, comp_i);
-                hold on;
-                for split_i = 1:numel(unique_shifts)
-                    power_shift = unique_shifts{split_i};
-                    % + .5 to center vertical line between bars
-                    xline((band_splits.(power_shift) + 0.5), 'k', ...
-                        strrep(power_shift, '_', ' '), ...
-                        'LabelOrientation', 'horizontal', ...
-                        'LabelHorizontalAlignment', 'center', ...
-                        'HandleVisibility', 'off');
-                end
-                hold off;
-            end
-        end
+        %% Add vertical lines denoting shift in power
+        plot_power_shifts(label_log.(feature), sub_features, band_list, ...
+            band_locs, tot_plots, plot_start, plot_increment, ...
+            plot_rows, plot_cols);
 
         %% save subplot
         filename = ['test_', num2str(session_num), '_', feature, '.fig'];

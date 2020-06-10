@@ -1,22 +1,19 @@
-function [] = power_graph_PSTH(save_path, pow_struct, pow_log, config)
+function [] = power_graph_PSTH(save_path, psth_struct, label_log, config)
+    %TODO add subplot title
 
-bin_size = config.bin_size; window_start = config.window_start;
-window_end = config.window_end; baseline_start = config.baseline_start;
-baseline_end = config.baseline_end; response_start = config.response_start;
-response_end = config.response_end;
-sub_rows = config.sub_rows;
-make_unit_plot = config.make_unit_plot; sub_cols = config.sub_columns;
-check_time(window_start, baseline_start, baseline_end, window_end, response_start, response_end, bin_size)
+    bin_size = config.bin_size; window_start = config.window_start;
+    window_end = config.window_end; baseline_start = config.baseline_start;
+    baseline_end = config.baseline_end; response_start = config.response_start;
+    response_end = config.response_end;
+    sub_rows = config.sub_rows;
+    make_unit_plot = config.make_unit_plot; sub_cols = config.sub_columns;
+    check_time(window_start, baseline_start, baseline_end, window_end, response_start, response_end, bin_size)
 
-unique_powers = fieldnames(pow_log);
-parfor pow_i = 1:length(unique_powers)
-    bandname = unique_powers{pow_i};
-    psth_struct = pow_struct.(bandname);
-    label_log = pow_log.(bandname);
     event_strings = psth_struct.all_events(:,1)';
     event_window = window_start:bin_size:window_end;
+    event_window(1) = [];
     region_names = fieldnames(label_log);
-    for region = 1:length(region_names)
+    parfor region = 1:length(region_names)
         current_region = region_names{region};
         region_neurons = label_log.(current_region).sig_channels;
         total_region_neurons = length(region_neurons);
@@ -64,15 +61,15 @@ parfor pow_i = 1:length(unique_powers)
                 hold off
                 if make_unit_plot
                     figure(unit_figure);
-                    filename = [bandname, '_', current_region, '_', event_type, '.png'];
+                    filename = [current_region, '_', event_type, '.png'];
                     saveas(gcf, fullfile(save_path, filename));
-                    filename = [bandname, '_', current_region, '_', event_type, '.fig'];
+                    filename = [current_region, '_', event_type, '.fig'];
                     set(gcf, 'CreateFcn', 'set(gcbo,''Visible'',''on'')'); 
                     savefig(gcf, fullfile(save_path, filename));
                 end
             end
             figure(region_figure);
-            filename = [bandname, '_', current_region, '_', event_type, '.fig'];
+            filename = [current_region, '_', event_type, '.fig'];
             set(gcf, 'CreateFcn', 'set(gcbo,''Visible'',''on'')'); 
             savefig(gcf, fullfile(save_path, filename));
             close all

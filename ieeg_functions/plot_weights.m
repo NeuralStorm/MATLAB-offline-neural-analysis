@@ -1,6 +1,7 @@
 function [tot_plots] = plot_weights(pca_weights, ymax_scale, color_struct, ...
         sub_rows, sub_cols, plot_counter, plot_increment)
     %TODO rename to plot_feature_weights()
+    %TODO add figure to parameters
 
     y_max = max(max(pca_weights)) + (ymax_scale * max(max(pca_weights)));
     y_min = min(min(pca_weights));
