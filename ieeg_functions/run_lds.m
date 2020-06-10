@@ -1,16 +1,12 @@
 function [net] = run_lds(pca_struct, pc_log, latent_variables, cyc, tol)
     %TODO unhard code
     tot_bins = 101;
-    unique_powers = fieldnames(pc_log);
     lds_input = [];
-    for bandname_i = 1:numel(unique_powers)
-        bandname = unique_powers{bandname_i};
-        unique_regions = fieldnames(pc_log.(bandname));
-        for region_i = 1:numel(unique_regions)
-            region = unique_regions{region_i};
-            weighted_mnts = pca_struct.(bandname).(region).weighted_mnts;
-            lds_input = [lds_input, weighted_mnts];
-        end
+    unique_regions = fieldnames(pc_log);
+    for region_i = 1:numel(unique_regions)
+        region = unique_regions{region_i};
+        weighted_mnts = pca_struct.(region).weighted_mnts;
+        lds_input = [lds_input, weighted_mnts];
     end
 
     net = lds(lds_input(102:end, :), latent_variables, tot_bins, cyc, tol);
