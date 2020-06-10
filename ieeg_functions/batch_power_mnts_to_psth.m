@@ -21,20 +21,18 @@ function [] = batch_power_mnts_to_psth(save_path, failed_path, data_path, ...
                 continue
             end
 
-            psth_struct = struct;
-            unique_powers = fieldnames(pc_log);
-            for power_i = 1:length(unique_powers)
-                bandname = unique_powers{power_i};
-                %TODO add back baseline and response structs if necessary
-                psth_struct.(bandname) = power_reformat_mnts(pc_log.(bandname), ...
-                    component_results.(bandname), dir_config.bin_size, dir_config.window_start, dir_config.window_end);
-            end
+            %% Convert features into psth and add in gamble and safebet events 
+            [psth_struct, baseline_struct, response_struct] = power_reformat_mnts(...
+                pc_log, component_results, dir_config.bin_size, dir_config.window_start, ...
+                dir_config.window_end, dir_config.baseline_start, dir_config.baseline_end, ...
+                dir_config.response_start, dir_config.response_end, dir_config.window_shift_time);
 
             matfile = fullfile(save_path, [filename_substring_one, ...
                 '_format_' filename_meta.filename, '.mat']);
-            save(matfile, 'psth_struct',  'filename_meta', 'config_log', ...
-                'label_log', 'pc_log');
-            clear('psth_struct', 'filename_meta', 'label_log', 'pc_log');
+            save(matfile, 'psth_struct', 'baseline_struct', 'response_struct', ...
+                 'filename_meta', 'config_log', 'label_log', 'pc_log');
+            clear('psth_struct', 'baseline_struct', 'response_struct', ...
+                'filename_meta', 'label_log', 'pc_log');
         catch ME
             handle_ME(ME, failed_path, filename_meta.filename);
         end

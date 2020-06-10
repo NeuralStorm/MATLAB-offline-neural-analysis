@@ -1,10 +1,10 @@
 function [baseline_struct, response_struct] = create_analysis_windows(selected_data, psth_struct, ...
-    window_start, baseline_start, baseline_end, window_end, response_start, response_end, bin_size)
+    window_start, baseline_start, baseline_end, window_end, response_start, response_end, bin_size, window_shift_time)
 
     check_time(window_start, baseline_start, baseline_end, window_end, response_start, response_end, bin_size)
 
-    pre_event_bins = (length(-abs(window_start):bin_size:0)) - 1;
-    post_event_bins = (length(0:bin_size:abs(window_end))) - 1;
+    pre_event_bins = (length(window_start:bin_size:window_shift_time)) - 1;
+    post_event_bins = (length(window_shift_time:bin_size:window_end)) - 1;
 
     baseline_bins = (length(baseline_start:bin_size:baseline_end)) - 1;
     response_bins = (length(response_start:bin_size:response_end)) - 1;
@@ -12,7 +12,7 @@ function [baseline_struct, response_struct] = create_analysis_windows(selected_d
     all_events = psth_struct.all_events;
 
     baseline_start_i = round(((abs(window_start) - abs(baseline_start)) / bin_size));
-    response_start_i = round((abs(response_start) / bin_size));
+    response_start_i = round((abs(window_shift_time) - abs(response_start) / bin_size));
 
     unique_regions = setdiff(fieldnames(psth_struct), 'all_events');
     baseline_struct = struct;

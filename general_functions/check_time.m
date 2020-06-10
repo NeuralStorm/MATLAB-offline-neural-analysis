@@ -36,19 +36,10 @@ function [] = check_time(window_start, baseline_start, baseline_end, window_end,
         error('Post start must occur before post end');
     end
 
-    if mod(window_start, bin_size) ~= 0
-        error('Pre time must be cleanly divisible by bin size');
-    end
-
-    if mod(window_end, bin_size) ~= 0
-        error('Post time must be cleanly divisible by bin size');
-    end
-
     pre_difference = baseline_end - baseline_start;
     if mod(pre_difference, bin_size) ~= 0
         error('Baseline window must be cleanly divisible by bin size');
     end
-
 
     post_difference = response_end - response_start;
     if mod(post_difference, bin_size) ~= 0
