@@ -23,6 +23,12 @@ function [] = batch_power_pca(save_path, failed_path, data_path, dir_name, dir_c
                 mnts_struct, dir_config.feature_filter, ...
                 dir_config.feature_value, dir_config.use_z_mnts);
 
+            %% Add tfr to component_results
+            unique_features = fieldnames(label_log);
+            for feature_i = 1:numel(unique_features)
+                feature = unique_features{feature_i};
+                component_results.(feature).tfr = mnts_struct.(feature).tfr;
+            end
             %% Saving the file
             matfile = fullfile(save_path, ['pc_analysis_', ...
                 filename_meta.filename, '.mat']);
