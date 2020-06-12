@@ -1,7 +1,7 @@
 function [] = plot_tfr_pca_psth(save_path, tfr_path, tfr_file_list, label_log, ...
     pc_log, component_results, psth_struct, bin_size, window_start, ...
     window_end, baseline_start, baseline_end, response_start, response_end, ...
-    feature_filter, feature_value, sub_rows, sub_cols, st_type, ymax_scale, ...
+    feature_filter, feature_value, sub_rows, sub_cols, use_z, st_type, ymax_scale, ...
     transparency, min_components)
 
     color_map = [0 0 0 % black
@@ -63,21 +63,13 @@ function [] = plot_tfr_pca_psth(save_path, tfr_path, tfr_file_list, label_log, .
             axis off;
             %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-            %% Var plot
-            % Position: 2nd row, last column
-            scrollsubplot(sub_rows, sub_cols, (sub_cols * 2));
-            bar(component_var, 'EdgeColor', 'none');
-            xlabel('PC #');
-            ylabel('% Variance');
-            title('Percent Variance Explained')
             %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
             % Frequency is not an issue since we plot all the frequencies
             tfr_counter = 1;
-            for sub_pow_i = 1:tot_tfrs
-                curr_freq = freq_list{sub_pow_i};
-                for sub_reg_i = 1:numel(region_list)
-                    sub_reg = region_list{sub_reg_i};
+            for sub_reg_i = 1:numel(region_list)
+                sub_reg = region_list{sub_reg_i};
+                for sub_pow_i = 1:tot_tfrs
+                    curr_freq = freq_list{sub_pow_i};
                     %% load figure
                     tfr_i = contains({tfr_file_list.name}, curr_freq) ...
                         & contains({tfr_file_list.name}, sub_reg) ...
@@ -95,6 +87,9 @@ function [] = plot_tfr_pca_psth(save_path, tfr_path, tfr_file_list, label_log, .
                     hold on
                     scrollsubplot(sub_rows, sub_cols, tfr_counter);
                     contourf(xdata, ydata, zdata, 40, 'linecolor','none')
+                    title([curr_freq, ' ', sub_reg, ' ', event_type])
+                    ylabel('Frequency (Hz)');
+                    xlabel('Time(s)');
                     % Put color bar on text plot
                     scrollsubplot(sub_rows, sub_cols, sub_cols);
                     colorbar('westoutside')
@@ -103,6 +98,17 @@ function [] = plot_tfr_pca_psth(save_path, tfr_path, tfr_file_list, label_log, .
                     close(tfr_fig);
                 end
             end
+
+            %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+            %% Var plot
+            % Position: 2nd row, last column
+            scrollsubplot(sub_rows, sub_cols, (tfr_counter - 1));
+            bar(component_var, 'EdgeColor', 'none');
+            xlabel('PC #');
+            ylabel('% Variance');
+            title('Percent Variance Explained')
+            %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
             %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
             weight_counter = tfr_counter + 1;
             event_psth = psth_struct.(feature).(event).psth;
@@ -129,14 +135,16 @@ function [] = plot_tfr_pca_psth(save_path, tfr_path, tfr_file_list, label_log, .
                 scrollsubplot(sub_rows, sub_cols, tfr_counter);
                 hold on
                 yyaxis left
-                [l,p] = boundedline(event_window, psth, st_vec, ...
+                [l, ~] = boundedline(event_window, psth, st_vec, ...
                     'transparency', transparency);
+                legend_lines = l;
                 %TODO do more manipulation of shading
                 ylim([event_min event_max]);
                 line([baseline_start baseline_start], ylim, 'Color', 'black', 'LineWidth', 0.75, 'LineStyle', '--');
                 line([baseline_end baseline_end], ylim, 'Color', 'black', 'LineWidth', 0.75, 'LineStyle', '--');
                 line([response_start response_start], ylim, 'Color', 'black', 'LineWidth', 0.75, 'LineStyle', '--');
                 line([response_end response_end], ylim, 'Color', 'black', 'LineWidth', 0.75, 'LineStyle', '--');
+                ylabel('PC Space');
                 %%TODO plot avg tfr
                 %TODO add events to tfr
                 %TODO add switch for plotting avg tfr
@@ -146,23 +154,24 @@ function [] = plot_tfr_pca_psth(save_path, tfr_path, tfr_file_list, label_log, .
                 color_i = 1;
                 for tfr_i = 1:numel(unique_tfrs)
                     curr_tfr = unique_tfrs{tfr_i};
-                    %TODO add flag for z score
-                    avg_tfr = tfr_struct.(curr_tfr).avg_tfr;
-                    if strcmpi(st_type, 'std')
-                        st_tfr = tfr_struct.(curr_tfr).std_tfr;
-                    elseif strcmpi(st_type, 'ste')
-                        st_tfr = tfr_struct.(curr_tfr).ste_tfr;
+                    if use_z
+                        avg_tfr = tfr_struct.(curr_tfr).avg_z_tfr;
+                        st_tfr = tfr_struct.(curr_tfr).([st_type, '_tfr']);
+                    else
+                        avg_tfr = tfr_struct.(curr_tfr).avg_tfr;
+                        st_tfr = tfr_struct.(curr_tfr).([st_type, '_z_tfr']);
                     end
-                    %TODO plot on separate y axis
-                    [l,p] = boundedline(event_window, avg_tfr, st_tfr, 'cmap', color_map(color_i, :), ...
+                    [l, ~] = boundedline(event_window, avg_tfr, st_tfr, 'cmap', color_map(color_i, :), ...
                         'transparency', transparency);
+                    legend_lines = [legend_lines, l];
                     if color_i < size(color_map, 1)
                         color_i = color_i + 1;
                     else
                         color_i = 1;
                     end
                 end
-                lg = legend(unique_tfrs);
+                lg = legend(legend_lines, [{'pc'}; unique_tfrs])
+                % lg = legend(unique_tfrs);
                 legend('boxoff');
                 lg.Location = 'Best';
                 lg.Orientation = 'Horizontal';

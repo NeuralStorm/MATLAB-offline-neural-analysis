@@ -83,6 +83,7 @@ function [] = ieeg_main()
         end
 
         if config.make_pca_plots
+            %TODO add mnts path
             [graph_path, graph_failed_path] = create_dir(mnts_path, 'pca_graphs');
             export_params(graph_path, 'pca_graph', config);
             try
@@ -146,7 +147,7 @@ function [] = ieeg_main()
             end
         end
 
-        if config.make_tfr_pca_psth
+        if dir_config.make_tfr_pca_psth
             [graph_path, graph_failed_path] = create_dir(project_path, 'tfr_pca_psth');
             export_params(graph_path, 'tfr_pca_psth', config);
             pca_path = [project_path, '/mnts/pca'];
