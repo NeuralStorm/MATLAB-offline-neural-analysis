@@ -128,6 +128,7 @@ function [] = plot_tfr_pca_psth(save_path, tfr_path, tfr_file_list, label_log, .
                 figure(main_plot);
                 scrollsubplot(sub_rows, sub_cols, tfr_counter);
                 hold on
+                yyaxis left
                 [l,p] = boundedline(event_window, psth, st_vec, ...
                     'transparency', transparency);
                 %TODO do more manipulation of shading
@@ -136,6 +137,35 @@ function [] = plot_tfr_pca_psth(save_path, tfr_path, tfr_file_list, label_log, .
                 line([baseline_end baseline_end], ylim, 'Color', 'black', 'LineWidth', 0.75, 'LineStyle', '--');
                 line([response_start response_start], ylim, 'Color', 'black', 'LineWidth', 0.75, 'LineStyle', '--');
                 line([response_end response_end], ylim, 'Color', 'black', 'LineWidth', 0.75, 'LineStyle', '--');
+                %%TODO plot avg tfr
+                %TODO add events to tfr
+                %TODO add switch for plotting avg tfr
+                yyaxis right
+                tfr_struct = component_results.(feature).tfr;
+                unique_tfrs = fieldnames(tfr_struct);
+                color_i = 1;
+                for tfr_i = 1:numel(unique_tfrs)
+                    curr_tfr = unique_tfrs{tfr_i};
+                    %TODO add flag for z score
+                    avg_tfr = tfr_struct.(curr_tfr).avg_tfr;
+                    if strcmpi(st_type, 'std')
+                        st_tfr = tfr_struct.(curr_tfr).std_tfr;
+                    elseif strcmpi(st_type, 'ste')
+                        st_tfr = tfr_struct.(curr_tfr).ste_tfr;
+                    end
+                    %TODO plot on separate y axis
+                    [l,p] = boundedline(event_window, avg_tfr, st_tfr, 'cmap', color_map(color_i, :), ...
+                        'transparency', transparency);
+                    if color_i < size(color_map, 1)
+                        color_i = color_i + 1;
+                    else
+                        color_i = 1;
+                    end
+                end
+                lg = legend(unique_tfrs);
+                legend('boxoff');
+                lg.Location = 'Best';
+                lg.Orientation = 'Horizontal';
                 title(psth_name);
                 xlabel('Time (s)');
                 ylabel('Avg. Pow');
