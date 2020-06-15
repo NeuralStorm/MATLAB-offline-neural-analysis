@@ -2,7 +2,7 @@ function [] = plot_tfr_pca_psth(save_path, tfr_path, tfr_file_list, label_log, .
     pc_log, component_results, psth_struct, bin_size, window_start, ...
     window_end, baseline_start, baseline_end, response_start, response_end, ...
     feature_filter, feature_value, sub_rows, sub_cols, use_z, st_type, ymax_scale, ...
-    transparency, min_components)
+    transparency, min_components, plot_avg_pow)
 
     color_map = [0 0 0 % black
                 1 0 0 % red
@@ -145,39 +145,38 @@ function [] = plot_tfr_pca_psth(save_path, tfr_path, tfr_file_list, label_log, .
                 line([response_start response_start], ylim, 'Color', 'black', 'LineWidth', 0.75, 'LineStyle', '--');
                 line([response_end response_end], ylim, 'Color', 'black', 'LineWidth', 0.75, 'LineStyle', '--');
                 ylabel('PC Space');
-                %%TODO plot avg tfr
-                %TODO add events to tfr
-                %TODO add switch for plotting avg tfr
-                yyaxis right
-                tfr_struct = component_results.(feature).tfr;
-                unique_tfrs = fieldnames(tfr_struct);
-                color_i = 1;
-                for tfr_i = 1:numel(unique_tfrs)
-                    curr_tfr = unique_tfrs{tfr_i};
-                    if use_z
-                        avg_tfr = tfr_struct.(curr_tfr).avg_z_tfr;
-                        st_tfr = tfr_struct.(curr_tfr).([st_type, '_tfr']);
-                    else
-                        avg_tfr = tfr_struct.(curr_tfr).avg_tfr;
-                        st_tfr = tfr_struct.(curr_tfr).([st_type, '_z_tfr']);
+
+                if plot_avg_pow
+                    yyaxis right
+                    tfr_struct = component_results.(feature).tfr;
+                    unique_tfrs = fieldnames(tfr_struct);
+                    color_i = 1;
+                    for tfr_i = 1:numel(unique_tfrs)
+                        curr_tfr = unique_tfrs{tfr_i};
+                        if use_z
+                            avg_tfr = tfr_struct.(curr_tfr).(event).avg_z_tfr;
+                            st_tfr = tfr_struct.(curr_tfr).(event).([st_type, '_tfr']);
+                        else
+                            avg_tfr = tfr_struct.(curr_tfr).(event).avg_tfr;
+                            st_tfr = tfr_struct.(curr_tfr).(event).([st_type, '_z_tfr']);
+                        end
+                        [l, ~] = boundedline(event_window, avg_tfr, st_tfr, 'cmap', color_map(color_i, :), ...
+                            'transparency', transparency);
+                        legend_lines = [legend_lines, l];
+                        if color_i < size(color_map, 1)
+                            color_i = color_i + 1;
+                        else
+                            color_i = 1;
+                        end
                     end
-                    [l, ~] = boundedline(event_window, avg_tfr, st_tfr, 'cmap', color_map(color_i, :), ...
-                        'transparency', transparency);
-                    legend_lines = [legend_lines, l];
-                    if color_i < size(color_map, 1)
-                        color_i = color_i + 1;
-                    else
-                        color_i = 1;
-                    end
+                    lg = legend(legend_lines, [{'pc'}; unique_tfrs])
+                    legend('boxoff');
+                    lg.Location = 'Best';
+                    lg.Orientation = 'Horizontal';
+                    ylabel('Avg. Pow');
                 end
-                lg = legend(legend_lines, [{'pc'}; unique_tfrs])
-                % lg = legend(unique_tfrs);
-                legend('boxoff');
-                lg.Location = 'Best';
-                lg.Orientation = 'Horizontal';
                 title(psth_name);
                 xlabel('Time (s)');
-                ylabel('Avg. Pow');
                 xlim([round(window_start) round(window_end)]);
                 hold off
                 tfr_counter = tfr_counter + sub_cols;
@@ -201,7 +200,6 @@ function [] = plot_tfr_pca_psth(save_path, tfr_path, tfr_file_list, label_log, .
             plot_power_shifts(label_log.(feature), sub_features, band_list, ...
                 band_locs, tot_plots, weight_counter, plot_incrememnt, ...
                 sub_rows, sub_cols);
-            %TODO mark power shift lines
             %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
             figure(main_plot);
             filename = [feature, '_', event_type, '.fig'];
