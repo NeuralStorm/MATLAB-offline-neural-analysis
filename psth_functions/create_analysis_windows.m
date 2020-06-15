@@ -12,7 +12,7 @@ function [baseline_struct, response_struct] = create_analysis_windows(selected_d
     all_events = psth_struct.all_events;
 
     baseline_start_i = round(((abs(window_start) - abs(baseline_start)) / bin_size));
-    response_start_i = round((abs(window_shift_time) - abs(response_start) / bin_size));
+    response_start_i = round(abs((abs(window_shift_time) - abs(response_start)) / bin_size));
 
     unique_regions = setdiff(fieldnames(psth_struct), 'all_events');
     baseline_struct = struct;
