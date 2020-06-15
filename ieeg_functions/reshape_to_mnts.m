@@ -7,10 +7,8 @@ function [mnts_struct, label_log] = reshape_to_mnts(label_table, GTH, ...
     label_log = struct;
 
     mnts_struct = struct;
-    gambles = GTH.beh.gambles;
-    gambles(gambles == 0) = [];
-    safebet = GTH.beh.safebet;
-    safebet(safebet == 0) = [];
+    gambles = find(GTH.beh.gambles);
+    safebet = find(GTH.beh.safebet);
     all_events = [
         'event_1', {ones(size(GTH.beh.gambles))};
         'event_2', {gambles}
@@ -22,33 +20,36 @@ function [mnts_struct, label_log] = reshape_to_mnts(label_table, GTH, ...
         %% Default: Combine all powers and regions together
         for band_i = 1:numel(unique_bands)
             bandname = unique_bands{band_i};
+            tfr_struct = make_tfr_struct(all_events);
             [powspctrm, zpowspctrm] = get_powspctrm(bandname, GTH, label_table);
             for region_i = 1:numel(unique_regions)
                 region = unique_regions{region_i};
                 region_channel_i = ismember(label_table.label, region);
-                %% Grab power spectrums
+                %% Grab region power spectrums
                 region_powspctrm = powspctrm(:, region_channel_i, 1, :);
                 region_zpowspctrm = zpowspctrm(:, region_channel_i, 1, :);
                 [mnts, z_mnts] = create_mnts(region_powspctrm, region_zpowspctrm);
-                %% Create tfr
-                [tfr, z_tfr] = create_tfr(region_powspctrm, region_zpowspctrm);
-                avg_tfr = mean(tfr);
-                std_tfr = std(tfr);
-                ste_tfr = std_tfr ./ size(tfr, 1);
-                %% z tfr
-                avg_z_tfr = mean(z_tfr);
-                std_z_tfr = std(z_tfr);
-                ste_z_tfr = std_z_tfr ./ size(z_tfr, 1);
-                %% create and add feature to feature space
+                %% Create tfr mean, std, and ste
+                for event_i = 1:size(all_events, 1)
+                    %% Grab power spectrums
+                    event_powspctrm = powspctrm(all_events{event_i, 2}, region_channel_i, 1, :);
+                    event_zpowspctrm = zpowspctrm(all_events{event_i, 2}, region_channel_i, 1, :);
+                    [event_tfr, event_z_tfr] = create_tfr(event_powspctrm, event_zpowspctrm);
+                    %% TFR
+                    [tfr_struct.(['event_', num2str(event_i)]).avg_tfr, ...
+                        tfr_struct.(['event_', num2str(event_i)]).std_tfr, ...
+                        tfr_struct.(['event_', num2str(event_i)]).ste_tfr] = ...
+                        get_tfr_stats(event_tfr);
+                    %% Z tfr
+                    [tfr_struct.(['event_', num2str(event_i)]).avg_z_tfr, ...
+                        tfr_struct.(['event_', num2str(event_i)]).std_z_tfr, ...
+                        tfr_struct.(['event_', num2str(event_i)]).ste_z_tfr] = ...
+                        get_tfr_stats(event_z_tfr);
+                end
                 feature = [bandname, '_', region];
                 mnts_struct.(feature).mnts = mnts;
                 mnts_struct.(feature).z_mnts = z_mnts;
-                mnts_struct.(feature).tfr.(bandname).avg_tfr = avg_tfr;
-                mnts_struct.(feature).tfr.(bandname).std_tfr = std_tfr;
-                mnts_struct.(feature).tfr.(bandname).ste_tfr = ste_tfr;
-                mnts_struct.(feature).tfr.(bandname).avg_z_tfr = avg_z_tfr;
-                mnts_struct.(feature).tfr.(bandname).std_z_tfr = std_z_tfr;
-                mnts_struct.(feature).tfr.(bandname).ste_z_tfr = ste_z_tfr;
+                mnts_struct.(feature).tfr.(bandname) = tfr_struct;
                 region_chans = label_table(ismember(label_table.label, region), :);
                 label_log.(feature) = region_chans;
             end
@@ -75,12 +76,10 @@ function [mnts_struct, label_log] = reshape_to_mnts(label_table, GTH, ...
                 regs = split_pow_reg{2};
                 split_regions = strsplit(regs, '+');
                 for band_i = 1:numel(split_powers)
-                    %TODO create separate tfrs for different powers
                     %% iterate through powers
                     bandname = split_powers{band_i};
                     [powspctrm, zpowspctrm] = get_powspctrm(bandname, GTH, label_table);
-                    tfr = [];
-                    z_tfr = [];
+                    tfr_struct = make_tfr_struct(all_events);
                     for region_i = 1:numel(split_regions)
                         %% Iterate through regions
                         region = split_regions{region_i};
@@ -94,10 +93,14 @@ function [mnts_struct, label_log] = reshape_to_mnts(label_table, GTH, ...
                         mnts_struct.(feature).mnts = [mnts_struct.(feature).mnts, region_mnts];
                         mnts_struct.(feature).z_mnts = [mnts_struct.(feature).z_mnts, region_z_mnts];
 
-                        [region_tfr, region_z_tfr] = create_tfr(region_powspctrm, region_zpowspctrm);
-                        tfr = [tfr; region_tfr];
-                        z_tfr = [z_tfr; region_z_tfr];
-
+                        for event_i = 1:size(all_events, 1)
+                            %% Grab power spectrums
+                            event_powspctrm = powspctrm(all_events{event_i, 2}, region_channel_i, 1, :);
+                            event_zpowspctrm = zpowspctrm(all_events{event_i, 2}, region_channel_i, 1, :);
+                            [event_tfr, event_z_tfr] = create_tfr(event_powspctrm, event_zpowspctrm);
+                            tfr_struct.(['event_', num2str(event_i)]).avg_tfr = [tfr_struct.(['event_', num2str(event_i)]).avg_tfr; event_tfr];
+                            tfr_struct.(['event_', num2str(event_i)]).avg_z_tfr = [tfr_struct.(['event_', num2str(event_i)]).avg_z_tfr; event_z_tfr];
+                        end
 
                         %% label log
                         region_chans = label_table(ismember(label_table.label, region), :);
@@ -105,20 +108,19 @@ function [mnts_struct, label_log] = reshape_to_mnts(label_table, GTH, ...
                         [~, ind] = unique(label_log.(feature), 'rows');
                         label_log.(feature) = label_log.(feature)(ind, :);
                     end
-                    avg_tfr = mean(tfr);
-                    std_tfr = std(tfr);
-                    ste_tfr = std_tfr ./ size(tfr, 1);
-                    %% z tfr
-                    avg_z_tfr = mean(z_tfr);
-                    std_z_tfr = std(z_tfr);
-                    ste_z_tfr = std_z_tfr ./ size(z_tfr, 1);
-
-                    mnts_struct.(feature).tfr.(bandname).avg_tfr = avg_tfr;
-                    mnts_struct.(feature).tfr.(bandname).std_tfr = std_tfr;
-                    mnts_struct.(feature).tfr.(bandname).ste_tfr = ste_tfr;
-                    mnts_struct.(feature).tfr.(bandname).avg_z_tfr = avg_z_tfr;
-                    mnts_struct.(feature).tfr.(bandname).std_z_tfr = std_z_tfr;
-                    mnts_struct.(feature).tfr.(bandname).ste_z_tfr = ste_z_tfr;
+                    for event_i = 1:size(all_events, 1)
+                        %% Find mean, std, and ste of tfr and z tfr
+                        [tfr_struct.(['event_', num2str(event_i)]).avg_tfr, ...
+                            tfr_struct.(['event_', num2str(event_i)]).std_tfr, ...
+                            tfr_struct.(['event_', num2str(event_i)]).ste_tfr] = ...
+                            get_tfr_stats(tfr_struct.(['event_', num2str(event_i)]).avg_tfr);
+                        %% Z tfr
+                        [tfr_struct.(['event_', num2str(event_i)]).avg_z_tfr, ...
+                            tfr_struct.(['event_', num2str(event_i)]).std_z_tfr, ...
+                            tfr_struct.(['event_', num2str(event_i)]).ste_z_tfr] = ...
+                            get_tfr_stats(tfr_struct.(['event_', num2str(event_i)]).avg_z_tfr);
+                    end
+                    mnts_struct.(feature).tfr.(bandname) = tfr_struct;
                 end
             end
         end
@@ -159,6 +161,13 @@ function [mnts, z_mnts] = create_mnts(powspctrm, zpowspctrm)
     end
 end
 
+function [tfr_struct] = make_tfr_struct(all_events)
+    for event_i = 1:size(all_events, 1)
+        tfr_struct.(['event_', num2str(event_i)]).avg_tfr = [];
+        tfr_struct.(['event_', num2str(event_i)]).avg_z_tfr = [];
+    end
+end
+
 function [tfr, z_tfr] = create_tfr(powspctrm, zpowspctrm)
     %TODO add events
     [tot_trials, tot_elecs, ~, tot_bins] = size(powspctrm);
@@ -180,4 +189,10 @@ function [tfr, z_tfr] = create_tfr(powspctrm, zpowspctrm)
         tfr = [tfr; unit_response];
         z_tfr = [z_tfr; z_response];
     end
+end
+
+function [avg_tfr, std_tfr, ste_tfr] = get_tfr_stats(tfr)
+    avg_tfr = mean(tfr);
+    std_tfr = std(tfr);
+    ste_tfr = std_tfr ./ size(tfr, 1);
 end
