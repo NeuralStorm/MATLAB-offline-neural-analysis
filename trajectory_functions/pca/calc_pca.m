@@ -1,6 +1,56 @@
 function [pca_results, labeled_pcs, pc_log] = calc_pca(label_log, mnts_struct, ...
         feature_filter, feature_value, use_z_mnts)
 
+    %% Purpose: Run Principal Component Analysis (pca) on feature sets stored in mnts_struct
+    %% Input
+    % label_log: struct w/ fields for each feature set
+    %            field: table with columns
+    %                       'sig_channels': String with name of channel
+    %                       'selected_channels': Boolean if channel is used
+    %                       'user_channels': String with user defined mapping
+    %                       'label': String: associated region or grouping of electrodes
+    %                       'label_id': Int: unique id used for labels
+    %                       'recording_session': Int: File recording session number that above applies to
+    %                       'recording_notes': String with user defined notes for channel
+    % mnts_struct: struct w/ fields for each feature set matching the feature set in label_log
+    %              fields:
+    %                     'all_events': Nx2 cell array where N is the number of events
+    %                                   Column 1: event label (ex: event_1)
+    %                                   Column 2: Numeric array with timestamps for events
+    %                     feature_name: struct with fields:
+    %                                       Note: Order of observations are assumed to be group by event types for later separation
+    %                                       mnts: Numeric input array for PCA
+    %                                             Columns: Features (typically electrodes)
+    %                                             Rows: Observations (typically trials * time value)
+    %                                       z_mnts: Numeric input z scored array for PCA
+    % feature_filter: String with description for pcs
+    %                 'all': keep all pcs after PCA
+    %                 'pcs': Keep # of pcs set in feature_value
+    %                 'percent_var': Use X# of PCs that meet set % in feature_value
+    % feature_value: Int matched to feature_filter
+    %                'all': unused
+    %                'pcs': Int for # of pcs to keep
+    %                'percent_var': % of variance desired to be explained by pcs
+    % use_z_mnts: Boolean
+    %             1: use z_mnts for input into PCA
+    %             0: use mnts for input into PCA
+    %% Output
+    % pca_results: struct w/ fields for each feature set ran through PCA
+    %              fields:
+    %                      'all_events': copied from mnts_struct
+    %                      feature_name: struct with fields
+    %                                        componenent_variance: Vector with % variance explained by each component
+    %                                        eigenvalues: Vector with eigen values
+    %                                        coeff: NxN (N = tot features) matrix with coeff weights used to scale mnts into PC space
+    %                                                   Columns: Component Row: Feature
+    %                                        estimated_mean: Vector with estimated means for each feature
+    %                                        original_weighted_mnts: mnts mapped into pc space without any filtering
+    %                                        weighted_mnts: mnts mapped into pc space with feature filter applied
+    % labeled_pcs: similar to label_log, but sig_channels is replaced with pc # since channels have been mapped
+    % labeled_pcs: Same as labeled_pcs, but with feature filter applied (ex: 3 pcs would only contain 3 pc names)
+
+    %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
     pca_results = struct;
     pca_results.all_events = mnts_struct.all_events;
     labeled_pcs = label_log;
