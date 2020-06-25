@@ -32,12 +32,22 @@ function [] = output_sep_csv()
                 filename_cells = repmat(filename_info, [height(sep_table),1]);
                 filename_table = cell2table(filename_cells, 'VariableNames', fieldnames(filename_meta)');
                 output_table = [filename_table, sep_table];
-                % export_csv(csv_path, column_names, filename_table, sep_table)
-                final_table = [final_table; output_table]; 
+
+                %% Go through double arrays and convert to string to prevent multidimensional
+                %% appending errors with final table
+                headers = output_table.Properties.VariableNames;
+                for col_i = 1:width(output_table)
+                    curr_col = headers{col_i};
+                    curr_type = class(output_table.(curr_col));
+                    if ismember(curr_type, 'double')
+                        output_table.(curr_col) = cellstr(num2str(output_table.(curr_col)));
+                    end
+                end
+
+                final_table = [final_table; output_table];
             catch ME
-                handle_ME(ME, export_csv_failed_path, [filename_meta.filename, '_failed.mat']);                 
+                handle_ME(ME, export_csv_failed_path, [filename_meta.filename, '_failed.mat']);
             end
-                
         end
     end
     disp('Saving CSV...');
