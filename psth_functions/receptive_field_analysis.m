@@ -236,8 +236,8 @@ function [fl, ll, duration, pl, peak, corrected_peak, rm, corrected_rm] = get_re
     %% Abbreviations: fl = first latency, ll = last latency, pl = peak latency
     %% rm = response magnitude
     %% Finds results of the receptive field analysis
-    fl = ((suprathreshold_i(1)) * bin_size) + response_start + (bin_size / 2);
-    ll = ((suprathreshold_i(end)) * bin_size) + response_start + (bin_size / 2);
+    fl = ((suprathreshold_i(1)) * bin_size) + response_start;
+    ll = ((suprathreshold_i(end)) * bin_size) + response_start + bin_size;
     peak = max(sig_response_bins);
     peak_index = find(peak == sig_response_bins);
     pl = (peak_index(1) * bin_size) + fl - bin_size;
