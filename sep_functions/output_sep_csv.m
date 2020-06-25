@@ -1,12 +1,19 @@
 function [] = output_sep_csv()
     project_path = uigetdir();
+
+    %% Set up failed path and removed past failed directory
+    failed_path = [project_path, '\', 'failed_export_csv'];
+    if exist(failed_path, 'dir') == 7
+        delete([failed_path, '/*']);
+        rmdir(failed_path);
+    end
+
     %% See if csv already exists
     dir_list = dir(project_path);
     dir_list = dir_list([dir_list.isdir] == 1 ...
-        & ~contains({dir_list.name}, {'.', '..'}));
+        & ~contains({dir_list.name}, {'.', '..', 'failed'}));
     csv_path = fullfile(project_path, 'sep_analysis_results.csv');
-    export_csv_failed_path = [project_path, '\', 'failed_export_csv']; 
-    final_table = table; 
+    final_table = table;
     for dir_i = 1:length(dir_list)
         %% Go through directories present
         curr_dir = dir_list(dir_i).name;
@@ -46,7 +53,7 @@ function [] = output_sep_csv()
 
                 final_table = [final_table; output_table];
             catch ME
-                handle_ME(ME, export_csv_failed_path, [filename_meta.filename, '_failed.mat']);
+                handle_ME(ME, failed_path, [filename_meta.filename, '_failed.mat']);
             end
         end
     end
