@@ -20,7 +20,6 @@ function [] = plot_tfr_pca_psth(save_path, tfr_path, tfr_file_list, label_log, .
     unique_regions = fieldnames(pc_log);
     parfor feature_i = 1:length(unique_regions)
         feature = unique_regions{feature_i};
-        event_type = '';
         st_vec = [];
 
         [color_struct, region_list] = create_color_struct(color_map, ...
@@ -30,17 +29,8 @@ function [] = plot_tfr_pca_psth(save_path, tfr_path, tfr_file_list, label_log, .
         total_region_neurons = length(region_neurons);
         for event_i = 1:length(event_strings)
             event = event_strings{event_i};
-            if strcmpi(event, 'event_1')
-                event_type = 'all';
-            elseif strcmpi(event, 'event_2')
-                event_type = 'gamble';
-            elseif strcmpi(event, 'event_3')
-                event_type = 'safebet';
-            else
-                error('Unexpected event: %s', event);
-            end
             %% Skip events without TFRs
-            if isempty(tfr_file_list(contains({tfr_file_list.name}, event_type)))
+            if isempty(tfr_file_list(contains({tfr_file_list.name}, event)))
                 continue
             end
             main_plot = figure;
@@ -53,7 +43,7 @@ function [] = plot_tfr_pca_psth(save_path, tfr_path, tfr_file_list, label_log, .
             %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
             %% Text plot
             % Position: 1st row, last column
-            description = [feature, ' ' event_type, 'tot components: ', num2str(tot_components)];
+            description = [feature, ' ' event, 'tot components: ', num2str(tot_components)];
             description = strrep(description, '_', ' ');
             figure(main_plot);
             ax = scrollsubplot(sub_rows, sub_cols, sub_cols);
@@ -73,7 +63,7 @@ function [] = plot_tfr_pca_psth(save_path, tfr_path, tfr_file_list, label_log, .
                     %% load figure
                     tfr_i = contains({tfr_file_list.name}, curr_freq) ...
                         & contains({tfr_file_list.name}, sub_reg) ...
-                        & contains({tfr_file_list.name}, event_type);
+                        & contains({tfr_file_list.name}, event);
                     tfr_filename = tfr_file_list(tfr_i).name;
                     tfr_file = fullfile(tfr_path, tfr_filename);
                     tfr_fig = openfig(tfr_file);
@@ -87,7 +77,7 @@ function [] = plot_tfr_pca_psth(save_path, tfr_path, tfr_file_list, label_log, .
                     hold on
                     scrollsubplot(sub_rows, sub_cols, tfr_counter);
                     contourf(xdata, ydata, zdata, 40, 'linecolor','none')
-                    title([curr_freq, ' ', sub_reg, ' ', event_type])
+                    title([curr_freq, ' ', sub_reg, ' ', event])
                     ylabel('Frequency (Hz)');
                     xlabel('Time(s)');
                     % Put color bar on text plot
@@ -202,7 +192,7 @@ function [] = plot_tfr_pca_psth(save_path, tfr_path, tfr_file_list, label_log, .
                 sub_rows, sub_cols);
             %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
             figure(main_plot);
-            filename = [feature, '_', event_type, '.fig'];
+            filename = [feature, '_', event, '.fig'];
             set(gcf, 'CreateFcn', 'set(gcbo,''Visible'',''on'')'); 
             savefig(gcf, fullfile(save_path, filename));
             close all

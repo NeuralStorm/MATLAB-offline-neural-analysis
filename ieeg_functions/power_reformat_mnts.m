@@ -20,19 +20,19 @@ function [psth_struct, baseline_struct, response_struct] = power_reformat_mnts(l
             all_events(1, :), tot_bins);
         psth_struct.(region).relative_response = relative_response;
 
+        unique_events = all_events(:, 1);
+        unique_events = unique_events(~ismember(unique_events, 'all'));
+        for event_i = 1:numel(unique_events)
+            event = unique_events{event_i};
+            event_indices = all_events{ismember(all_events(:, 1), event), 2};
+            event_response = relative_response(event_indices, :);
+            [tot_events, ~] = size(event_response);
+            event_struct = split_relative_response(event_response, region_labels, ...
+                [{event}, {ones(tot_events, 1)}], tot_bins);
+            psth_struct.(region).(event) = event_struct.(event);
+            relative_response = [relative_response; event_response];
+        end
 
-        gamble_relative = relative_response(all_events{2,2}, :);
-        [tot_gambles, ~] = size(gamble_relative);
-        event_struct = split_relative_response(gamble_relative, region_labels, ...
-            [{'event_2'}, {ones(tot_gambles, 1)}], tot_bins);
-        psth_struct.(region).event_2 = event_struct.event_2;
-
-        safe_relative = relative_response(all_events{3,2}, :);
-        [tot_safe, ~] = size(safe_relative);
-        event_struct = split_relative_response(safe_relative, region_labels, ...
-            [{'event_3'}, {ones(tot_safe, 1)}], tot_bins);
-        psth_struct.(region).event_3 = event_struct.event_3;
-        relative_response = [relative_response; gamble_relative; safe_relative];
         psth_struct.(region).relative_response = relative_response;
     end
 

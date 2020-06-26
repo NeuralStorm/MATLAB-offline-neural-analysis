@@ -1,5 +1,55 @@
 function [mnts_struct, label_log] = reshape_to_mnts(label_table, GTH, ...
         select_features)
+    %% Purpose: Reshape output from filtering process
+    %% Input
+    % label_table: table with information of current recording
+    %              field: table with columns
+    %                         'sig_channels': String with name of channel
+    %                         'selected_channels': Boolean if channel is used
+    %                         'user_channels': String with user defined mapping
+    %                         'label': String: associated region or grouping of electrodes
+    %                         'label_id': Int: unique id used for labels
+    %                         'recording_session': Int: File recording session number that above applies to
+    %                         'recording_notes': String with user defined notes for channel
+    % GTH: Struct with following fields:
+    %      anat: struct with fields
+    %                channels: cell vector with names of channels
+    %                ROIs: cell vector with regions channels belong to
+    %      beh: 
+    %      bandname: struct with fields:
+    %                    region: struct with fields
+    %                                label: cell vector with electrode names
+    %                                dimord: description of 4d dimensions
+    %                                freq: frequency of band
+    %                                time: time vector stepped by bin size
+    %                                powspctrm: 4D matrix with dimension trials x channels x band x time
+    %                                cfg: struct log of how data was processed to create powspctrm
+    %      zpowspctrm: struct with fields
+    %                      bandname: 4D matrix with dimension trials x channels x band x time
+    % select_features: string that determines how to combine powers and regions to make features
+    %                  format layout: power:region, power+power:region+region;power:region, etc
+    %% Output:
+    % mnts_struct: struct w/ fields for each feature set matching the feature set in label_log
+    %              fields:
+    %                     'all_events': Nx2 cell array where N is the number of events
+    %                                   Column 1: event label (ex: event_1)
+    %                                   Column 2: Numeric array with timestamps for events
+    %                     feature_name: struct with fields:
+    %                                       Note: Order of observations are assumed to be group by event types for later separation
+    %                                       mnts: Numeric input array for PCA
+    %                                             Columns: Features (typically electrodes)
+    %                                             Rows: Observations (typically trials * time value)
+    %                                       z_mnts: Numeric input z scored array for PCA
+    % label_log: struct w/ fields for each feature set
+    %            field: table with columns
+    %                       'sig_channels': String with name of channel
+    %                       'selected_channels': Boolean if channel is used
+    %                       'user_channels': String with user defined mapping
+    %                       'label': String: associated region or grouping of electrodes
+    %                       'label_id': Int: unique id used for labels
+    %                       'recording_session': Int: File recording session number that above applies to
+    %                       'recording_notes': String with user defined notes for channel
+
     unique_bands = fieldnames(GTH);
     unique_bands = unique_bands(~ismember(unique_bands, ...
         {'anat', 'beh', 'zpowspctrm'}));
@@ -7,12 +57,19 @@ function [mnts_struct, label_log] = reshape_to_mnts(label_table, GTH, ...
     label_log = struct;
 
     mnts_struct = struct;
-    gambles = find(GTH.beh.gambles);
-    safebet = find(GTH.beh.safebet);
-    all_events = [
-        'event_1', {ones(size(GTH.beh.gambles))};
-        'event_2', {gambles}
-        'event_3', {safebet}];
+    all_events = [];
+    unique_events = fieldnames(GTH.beh);
+    for event_i = 1:numel(unique_events)
+        event = unique_events{event_i};
+        if event_i == 1
+            all_events = [
+                all_events;
+                'all', {ones(size(GTH.beh.(event)))}
+            ];
+        end
+        all_events = [all_events; {event, find(GTH.beh.(event))}];
+    end
+
     mnts_struct.all_events = all_events;
     if isempty(select_features) ...
             || (~iscell(select_features) && any(isnan(select_features))) ...
@@ -31,19 +88,20 @@ function [mnts_struct, label_log] = reshape_to_mnts(label_table, GTH, ...
                 [mnts, z_mnts] = create_mnts(region_powspctrm, region_zpowspctrm);
                 %% Create tfr mean, std, and ste
                 for event_i = 1:size(all_events, 1)
+                    event = all_events{event_i, 1};
                     %% Grab power spectrums
                     event_powspctrm = powspctrm(all_events{event_i, 2}, region_channel_i, 1, :);
                     event_zpowspctrm = zpowspctrm(all_events{event_i, 2}, region_channel_i, 1, :);
                     [event_tfr, event_z_tfr] = create_tfr(event_powspctrm, event_zpowspctrm);
                     %% TFR
-                    [tfr_struct.(['event_', num2str(event_i)]).avg_tfr, ...
-                        tfr_struct.(['event_', num2str(event_i)]).std_tfr, ...
-                        tfr_struct.(['event_', num2str(event_i)]).ste_tfr] = ...
+                    [tfr_struct.(event).avg_tfr, ...
+                        tfr_struct.(event).std_tfr, ...
+                        tfr_struct.(event).ste_tfr] = ...
                         get_tfr_stats(event_tfr);
                     %% Z tfr
-                    [tfr_struct.(['event_', num2str(event_i)]).avg_z_tfr, ...
-                        tfr_struct.(['event_', num2str(event_i)]).std_z_tfr, ...
-                        tfr_struct.(['event_', num2str(event_i)]).ste_z_tfr] = ...
+                    [tfr_struct.(event).avg_z_tfr, ...
+                        tfr_struct.(event).std_z_tfr, ...
+                        tfr_struct.(event).ste_z_tfr] = ...
                         get_tfr_stats(event_z_tfr);
                 end
                 feature = [bandname, '_', region];
@@ -94,12 +152,13 @@ function [mnts_struct, label_log] = reshape_to_mnts(label_table, GTH, ...
                         mnts_struct.(feature).z_mnts = [mnts_struct.(feature).z_mnts, region_z_mnts];
 
                         for event_i = 1:size(all_events, 1)
+                            event = all_events{event_i, 1};
                             %% Grab power spectrums
                             event_powspctrm = powspctrm(all_events{event_i, 2}, region_channel_i, 1, :);
                             event_zpowspctrm = zpowspctrm(all_events{event_i, 2}, region_channel_i, 1, :);
                             [event_tfr, event_z_tfr] = create_tfr(event_powspctrm, event_zpowspctrm);
-                            tfr_struct.(['event_', num2str(event_i)]).avg_tfr = [tfr_struct.(['event_', num2str(event_i)]).avg_tfr; event_tfr];
-                            tfr_struct.(['event_', num2str(event_i)]).avg_z_tfr = [tfr_struct.(['event_', num2str(event_i)]).avg_z_tfr; event_z_tfr];
+                            tfr_struct.(event).avg_tfr = [tfr_struct.(event).avg_tfr; event_tfr];
+                            tfr_struct.(event).avg_z_tfr = [tfr_struct.(event).avg_z_tfr; event_z_tfr];
                         end
 
                         %% label log
@@ -109,16 +168,17 @@ function [mnts_struct, label_log] = reshape_to_mnts(label_table, GTH, ...
                         label_log.(feature) = label_log.(feature)(ind, :);
                     end
                     for event_i = 1:size(all_events, 1)
+                        event = all_events{event_i, 1};
                         %% Find mean, std, and ste of tfr and z tfr
-                        [tfr_struct.(['event_', num2str(event_i)]).avg_tfr, ...
-                            tfr_struct.(['event_', num2str(event_i)]).std_tfr, ...
-                            tfr_struct.(['event_', num2str(event_i)]).ste_tfr] = ...
-                            get_tfr_stats(tfr_struct.(['event_', num2str(event_i)]).avg_tfr);
+                        [tfr_struct.(event).avg_tfr, ...
+                            tfr_struct.(event).std_tfr, ...
+                            tfr_struct.(event).ste_tfr] = ...
+                            get_tfr_stats(tfr_struct.(event).avg_tfr);
                         %% Z tfr
-                        [tfr_struct.(['event_', num2str(event_i)]).avg_z_tfr, ...
-                            tfr_struct.(['event_', num2str(event_i)]).std_z_tfr, ...
-                            tfr_struct.(['event_', num2str(event_i)]).ste_z_tfr] = ...
-                            get_tfr_stats(tfr_struct.(['event_', num2str(event_i)]).avg_z_tfr);
+                        [tfr_struct.(event).avg_z_tfr, ...
+                            tfr_struct.(event).std_z_tfr, ...
+                            tfr_struct.(event).ste_z_tfr] = ...
+                            get_tfr_stats(tfr_struct.(event).avg_z_tfr);
                     end
                     mnts_struct.(feature).tfr.(bandname) = tfr_struct;
                 end
@@ -163,8 +223,9 @@ end
 
 function [tfr_struct] = make_tfr_struct(all_events)
     for event_i = 1:size(all_events, 1)
-        tfr_struct.(['event_', num2str(event_i)]).avg_tfr = [];
-        tfr_struct.(['event_', num2str(event_i)]).avg_z_tfr = [];
+        event = all_events{event_i, 1};
+        tfr_struct.(event).avg_tfr = [];
+        tfr_struct.(event).avg_z_tfr = [];
     end
 end
 
