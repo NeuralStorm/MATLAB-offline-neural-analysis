@@ -1,3 +1,11 @@
+%This script creates a 'lookup table' which links original file names to
+%new file names which are formatted correctly for the codebase. This script
+%DOES NOT rename files - it only creates the table. 
+%
+%sort_list should be exported to a .xls file and placed in the folder which
+%contains the files to be renamed. Then use batch_file_rename to use the
+%lookup table to rename the files. 
+
 path = 'C:\Users\garyh\Box\MoxonLab\Projects\CSM Chronic Sensorimotor Study\Evoked Potential Experiment CODEBASE Data\raw\CSM012';
 file_list = dir([path, '/*.rhs']);
 

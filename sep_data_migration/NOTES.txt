@@ -1,0 +1,7 @@
+The scripts in this folder are used to rename .rhs intan recordings to the proper format for the codebase 
+(only for recordings made before the codebase file-tree revamp in early 2020). In order to prevent accidental destructive changes to file names, 
+and to assign recording session IDs to recordings in the order in which they were recorded, a filename ‘lookup table’ is created using 
+file_rename_lookup_table.m. This table links original filenames to the new, properly formatted filename. It does not do the actual file renaming. 
+The output of this scrip should be exported to a excel file, and placed in the folder which contains the files to be renamed. 
+Run batch_file_rename.m to rename files. This script compares the files in the folder, with the original filenames in the lookup table. 
+If a filename is found, it renames the file to the associated properly formatted filename. 
