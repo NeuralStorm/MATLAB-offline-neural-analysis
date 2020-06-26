@@ -4,51 +4,55 @@ function [mnts_struct, label_log] = reshape_to_mnts(label_table, GTH, ...
     %% Input
     % label_table: table with information of current recording
     %              field: table with columns
-    %                         'sig_channels': String with name of channel
-    %                         'selected_channels': Boolean if channel is used
-    %                         'user_channels': String with user defined mapping
-    %                         'label': String: associated region or grouping of electrodes
-    %                         'label_id': Int: unique id used for labels
-    %                         'recording_session': Int: File recording session number that above applies to
-    %                         'recording_notes': String with user defined notes for channel
+    %                     'sig_channels': String with name of channel
+    %                     'selected_channels': Boolean if channel is used
+    %                     'user_channels': String with user defined mapping
+    %                     'label': String: associated region or grouping of electrodes
+    %                     'label_id': Int: unique id used for labels
+    %                     'recording_session': Int: File recording session number that above applies to
+    %                     'recording_notes': String with user defined notes for channel
     % GTH: Struct with following fields:
     %      anat: struct with fields
     %                channels: cell vector with names of channels
     %                ROIs: cell vector with regions channels belong to
-    %      beh: 
+    %      beh: struct with fields for event types
+    %           event_type: logical array with length of tot_trials where 1 means the event_type occured
     %      bandname: struct with fields:
     %                    region: struct with fields
-    %                                label: cell vector with electrode names
-    %                                dimord: description of 4d dimensions
-    %                                freq: frequency of band
-    %                                time: time vector stepped by bin size
-    %                                powspctrm: 4D matrix with dimension trials x channels x band x time
-    %                                cfg: struct log of how data was processed to create powspctrm
+    %                            label: cell vector with electrode names
+    %                            dimord: description of 4d dimensions
+    %                            freq: frequency of band
+    %                            time: time vector stepped by bin size
+    %                            powspctrm: 4D matrix with dimension trials x channels x band x time
+    %                            cfg: struct log of how data was processed to create powspctrm
     %      zpowspctrm: struct with fields
     %                      bandname: 4D matrix with dimension trials x channels x band x time
     % select_features: string that determines how to combine powers and regions to make features
     %                  format layout: power:region, power+power:region+region;power:region, etc
     %% Output:
     % mnts_struct: struct w/ fields for each feature set matching the feature set in label_log
-    %              fields:
-    %                     'all_events': Nx2 cell array where N is the number of events
-    %                                   Column 1: event label (ex: event_1)
-    %                                   Column 2: Numeric array with timestamps for events
-    %                     feature_name: struct with fields:
-    %                                       Note: Order of observations are assumed to be group by event types for later separation
-    %                                       mnts: Numeric input array for PCA
-    %                                             Columns: Features (typically electrodes)
-    %                                             Rows: Observations (typically trials * time value)
-    %                                       z_mnts: Numeric input z scored array for PCA
+    %                 'all_events': Nx2 cell array where N is the number of events
+    %                               Column 1: event label (ex: event_1)
+    %                               Column 2: Numeric array with timestamps for events
+    %                 feature_name: struct with fields:
+    %                               Note: Order of observations are assumed to be group by event types for later separation
+    %                               mnts: Numeric input array for PCA
+    %                                     Columns: Features (typically electrodes)
+    %                                     Rows: Observations (typically trials * time value)
+    %                               z_mnts: Numeric input z scored array for PCA
+    %                               tfr: struct with fields for each power
+    %                                    bandname: struct with fields for each event type
+    %                                              event: struct with fields with tfr & z tfr avg, std, ste
+    %                                                     fieldnames: avg_tfr, avg_z_tfr, std_tfr, std_z_tfr, ste_tfr, & ste_z_tfr
     % label_log: struct w/ fields for each feature set
     %            field: table with columns
-    %                       'sig_channels': String with name of channel
-    %                       'selected_channels': Boolean if channel is used
-    %                       'user_channels': String with user defined mapping
-    %                       'label': String: associated region or grouping of electrodes
-    %                       'label_id': Int: unique id used for labels
-    %                       'recording_session': Int: File recording session number that above applies to
-    %                       'recording_notes': String with user defined notes for channel
+    %                   'sig_channels': String with name of channel
+    %                   'selected_channels': Boolean if channel is used
+    %                   'user_channels': String with user defined mapping
+    %                   'label': String: associated region or grouping of electrodes
+    %                   'label_id': Int: unique id used for labels
+    %                   'recording_session': Int: File recording session number that above applies to
+    %                   'recording_notes': String with user defined notes for channel
 
     unique_bands = fieldnames(GTH);
     unique_bands = unique_bands(~ismember(unique_bands, ...

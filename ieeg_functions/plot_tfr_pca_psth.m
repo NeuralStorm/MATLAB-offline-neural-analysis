@@ -4,6 +4,79 @@ function [] = plot_tfr_pca_psth(save_path, tfr_path, tfr_file_list, label_log, .
     feature_filter, feature_value, sub_rows, sub_cols, use_z, st_type, ymax_scale, ...
     transparency, min_components, plot_avg_pow)
 
+    %% Purpose: Create subplot with tfrs, percent variance, pc time courses, and electrode
+    %           weighting to look at the entire data set for given session
+    %% Input
+    % save_path: path where subplots are saved
+    % tfr_path: path to contour tfr plots gor given subject and recording session
+    % tfr_file_list: list of .fig files at tfr_path
+    %                (can be created by calling get_file_list(tfr_path, '.fig')
+    % label_log: struct w/ fields for each feature set
+    %            field: table with columns
+    %                   'sig_channels': String with name of channel
+    %                   'selected_channels': Boolean if channel is used
+    %                   'user_channels': String with user defined mapping
+    %                   'label': String: associated region or grouping of electrodes
+    %                   'label_id': Int: unique id used for labels
+    %                   'recording_session': Int: File recording session number that above applies to
+    %                   'recording_notes': String with user defined notes for channel
+    % component_results: struct w/ fields for each feature set ran through PCA
+    %                    'all_events': Nx2 cell array where N is the number of events
+    %                                  Column 1: event label (ex: event_1)
+    %                    feature_name: struct with fields
+    %                                  componenent_variance: Vector with % variance explained by each component
+    %                                  eigenvalues: Vector with eigen values
+    %                                  coeff: NxN (N = tot features) matrix with coeff weights used to scale mnts into PC space
+    %                                             Columns: Component Row: Feature
+    %                                  estimated_mean: Vector with estimated means for each feature
+    %                                  original_weighted_mnts: mnts mapped into pc space without any filtering
+    %                                  weighted_mnts: mnts mapped into pc space with feature filter applied
+    %                                  tfr: struct with fields for each power
+    %                                       (Note: This was added in the batch_power_pca function and not in the calc_pca call)
+    %                                       bandname: struct with fields for each event type
+    %                                                 event: struct with fields with tfr & z tfr avg, std, ste
+    %                                                        fieldnames: avg_tfr, avg_z_tfr, std_tfr, std_z_tfr, ste_tfr, & ste_z_tfr
+    % psth_struct: struct w/ fields for each feature
+    %              'all_events': Nx2 cell array where N is the number of events
+    %                            Column 1: event label (ex: event_1)
+    %              feature_name: struct typically based on regions and powers
+    %                            relative_response: Numerical matrix with dimensions Trials x ((tot pcs or channels) * tot bins)
+    %                            event: struct with fields:
+    %                                   relative_response: Numerical matrix w/ dims Trials x ((tot pcs or channels) * tot bins)
+    %                                   psth: Numerical matrix w/ dims 1 X ((tot pcs or channels) * tot bins)
+    %                                         Mathematically: Sum of trials in relative response
+    %                                   componenet: struct based on components (either pc or channel) used to create relative response
+    %                                               relative_response: Numerical matrix w/ dims Trials x tot bins
+    %                                               psth: Numerical matrix w/ dims 1 X tot bins
+    % bin_size: size of bins
+    % window_start: start time of window
+    % window_end: end time of window
+    % baseline_start: baseline window start
+    % baseline_end: baseline window end
+    % response_start: response window start
+    % response_end: response window end
+    % feature_filter: String with description for pcs
+    %                 'all': keep all pcs after PCA
+    %                 'pcs': Keep # of pcs set in feature_value
+    %                 'percent_var': Use X# of PCs that meet set % in feature_value
+    % feature_value: Int matched to feature_filter
+    %                'all': left empty
+    %                'pcs': Int for # of pcs to keep
+    %                'percent_var': % of variance desired to be explained by pcs
+    % sub_rows: Int: desired rows to be shown on subplot (default is typically 5)
+    % sub_cols: Int: desired cols to be shown on subplot (default is typically 2)
+    % use_z: Boolean
+    %             1: use z_tfr for plotting
+    %             0: use tfr for plotting
+    % st_type: String: 'std' to use std or 'ste' to use ste for shading
+    % ymax_scale: Float: how much to scale y max to give room for words
+    % transparency: Float: how dark should the shading be for st_type
+    % min_components: Int: min componenets needed to make subplot
+    % plot_avg_pow: Boolean
+    %               0: Does not plot avg power time course
+    %               1: Plot avg power time course
+    %% Output: There is no return. The graphs are saved directly to the path indicated by save_path
+
     color_map = [0 0 0 % black
                 1 0 0 % red
                 0 0 1 % blue
@@ -180,7 +253,6 @@ function [] = plot_tfr_pca_psth(save_path, tfr_path, tfr_file_list, label_log, .
                 %% Grabs desired number of principal components weights
                 pca_weights = pca_weights(:, 1:feature_value);
             end
-            % region_table = label_log.(feature);
             tot_plots = plot_weights(pca_weights, ymax_scale, color_struct, ...
                 sub_rows, sub_cols, weight_counter, plot_incrememnt);
 

@@ -1,5 +1,27 @@
 function [] = batch_reshape_to_mnts(save_path, failed_path, data_path, ...
     dir_name, dir_config, label_table)
+    %% Purpose: Go through file list and reshape tfr data into mnts format
+    % tfr: time frequency representation
+    %      trials x channels x frequency x bins
+    % mnts: multineuron time series
+    %       Observations (trials * tot bins) x Features (channels)
+    %% Input:
+    % save_path: path to save files at
+    % failed_path: path to save errors at
+    % data_path: path to load files from before analysis is ran
+    % dir_name: Name of dir that data came from (usually subject #)
+    % dir_config: config settings for that subject
+    % label_table: table with information of current recording
+    %              field: table with columns
+    %                     'sig_channels': String with name of channel
+    %                     'selected_channels': Boolean if channel is used
+    %                     'user_channels': String with user defined mapping
+    %                     'label': String: associated region or grouping of electrodes
+    %                     'label_id': Int: unique id used for labels
+    %                     'recording_session': Int: File recording session number that above applies to
+    %                     'recording_notes': String with user defined notes for channel
+    %% Output:
+    %  No output, analysis results are saved in file at specified save location
     mnts_start = tic;
     config_log = dir_config;
     file_list = get_file_list(data_path, '.mat');

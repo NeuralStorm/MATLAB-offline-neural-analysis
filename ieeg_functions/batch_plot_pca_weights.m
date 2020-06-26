@@ -1,4 +1,13 @@
 function [] = batch_plot_pca_weights(save_path, failed_path, data_path, dir_name, dir_config)
+    %% Purpose: Go through file list and plot electrode weights across components
+    %% Input:
+    % save_path: path to save files at
+    % failed_path: path to save errors at
+    % data_path: path to load files from before analysis is ran
+    % dir_name: Name of dir that data came from (usually subject #)
+    % dir_config: config settings for that subject
+    %% Output:
+    %  No output, plots are saved at specified save location
     file_list = get_file_list(data_path, '.mat');
     file_list = update_file_list(file_list, failed_path, dir_config.include_sessions);
 

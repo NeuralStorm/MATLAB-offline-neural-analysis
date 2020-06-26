@@ -2,6 +2,48 @@ function [] = plot_pca_weights(save_path, component_results, label_log, feature_
         feature_value, ymax_scale, sub_rows, sub_cols, session_num)
     %TODO rename to plot_power_features()
 
+    %% Purpose: Create subplot of electrode weights across components
+    %% Input
+    % save_path: path where subplots are saved
+    % component_results: struct w/ fields for each feature set ran through PCA
+    %                    'all_events': Nx2 cell array where N is the number of events
+    %                                  Column 1: event label (ex: event_1)
+    %                    feature_name: struct with fields
+    %                                  componenent_variance: Vector with % variance explained by each component
+    %                                  eigenvalues: Vector with eigen values
+    %                                  coeff: NxN (N = tot features) matrix with coeff weights used to scale mnts into PC space
+    %                                         Columns: Component Row: Feature
+    %                                  estimated_mean: Vector with estimated means for each feature
+    %                                  original_weighted_mnts: mnts mapped into pc space without any filtering
+    %                                  weighted_mnts: mnts mapped into pc space with feature filter applied
+    %                                  tfr: struct with fields for each power
+    %                                       (Note: This was added in the batch_power_pca function and not in the calc_pca call)
+    %                                       bandname: struct with fields for each event type
+    %                                                 event: struct with fields with tfr & z tfr avg, std, ste
+    %                                                        fieldnames: avg_tfr, avg_z_tfr, std_tfr, std_z_tfr, ste_tfr, & ste_z_tfr
+    % label_log: struct w/ fields for each feature set
+    %            field: table with columns
+    %                   'sig_channels': String with name of channel
+    %                   'selected_channels': Boolean if channel is used
+    %                   'user_channels': String with user defined mapping
+    %                   'label': String: associated region or grouping of electrodes
+    %                   'label_id': Int: unique id used for labels
+    %                   'recording_session': Int: File recording session number that above applies to
+    %                   'recording_notes': String with user defined notes for channel
+    % feature_filter: String with description for pcs
+    %                 'all': keep all pcs after PCA
+    %                 'pcs': Keep # of pcs set in feature_value
+    %                 'percent_var': Use X# of PCs that meet set % in feature_value
+    % feature_value: Int matched to feature_filter
+    %                'all': left empty
+    %                'pcs': Int for # of pcs to keep
+    %                'percent_var': % of variance desired to be explained by pcs
+    % ymax_scale: Float: how much to scale y max to give room for words
+    % sub_rows: Int: desired rows to be shown on subplot
+    % sub_cols: Int: desired cols to be shown on subplot
+    % session_num: Int with session num for file
+    %% Output: There is no return. The graphs are saved directly to the path indicated by save_path
+
     color_map = [0 0 0 % black
                 1 0 0 % red
                 0 0 1 % blue
