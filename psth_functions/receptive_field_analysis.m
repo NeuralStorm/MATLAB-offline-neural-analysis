@@ -31,12 +31,17 @@ function [sig_neurons, non_sig_neurons, cluster_struct] = receptive_field_analys
                 end
                 %% Get current PSTH and smooth it based on span
                 psth = psth_struct.(region).(event).(neuron).psth;
+                post_psth_unsmooth= psth((pre_event_bins + 1):end);
+                response_psth_unsmooth=post_psth_unsmooth(response_start_i:response_end_i);
+                %%average response  in the respone window, span=1
+                avg_response=mean(response_psth_unsmooth);
+                   %% Get current PSTH and smooth it based on span
                 psth = smooth(psth, span);
                 pre_psth = psth(1:pre_event_bins);
                 post_psth = psth((pre_event_bins + 1):end);
                 baseline_psth = pre_psth(baseline_start_i:baseline_end_i);
                 response_psth = post_psth(response_start_i:response_end_i);
-                avg_response=mean(response_psth);
+                
 
                 %% Determine if psth is signficant
                 [threshold, avg_bfr, bfr_std,neg_threshold] = get_threshold(baseline_psth, threshold_scale);
@@ -62,7 +67,8 @@ function [sig_neurons, non_sig_neurons, cluster_struct] = receptive_field_analys
 
                         %% Verify that enough consec bins exist
                         supra_i = find(response_psth > threshold);
-                        if ~check_consec_bins(supra_i, consec_bins)
+                        neg_i=find(response_psth<neg_threshold);
+                        if ~check_consec_bins(supra_i,neg_i, consec_bins)
                             cluster_data = num2cell(nan(1, 28));
                             non_sig_neurons = [non_sig_neurons; {region}, ...
                                 {neuron}, {user_channels}, {event}, {0}, ...
@@ -137,7 +143,7 @@ function [sig_neurons, non_sig_neurons, cluster_struct] = receptive_field_analys
                     cluster_data = num2cell(nan(1, 28));
                     non_sig_neurons = [non_sig_neurons; {region}, ...
                         {neuron}, {user_channels}, {event}, {0}, ...
-                        {avg_bfr},{avg_response},{stats_test}, {bfr_std}, {threshold},,{is_inhibition}, {p_val}, {NaN}, ...
+                        {avg_bfr},{avg_response},{stats_test}, {bfr_std}, {threshold},{is_inhibition}, {p_val}, {NaN}, ...
                         {NaN}, {NaN}, {NaN}, {NaN}, {NaN}, {NaN}, {NaN}, ...
                         {NaN}, {strings}, {NaN}, {notes},{fil},{lil},{inhibition_duration},{pil},{rim},{corrected_rim}, cluster_data];
                 end
@@ -293,6 +299,8 @@ function [is_consecutive_cluster] = check_consec_bins_cluster(suprathreshold_i, 
     
 end
 
+
+
 function [threshold, avg_bfr, bfr_std,neg_threshold] = get_threshold(baseline_psth, threshold_scale)
     avg_bfr = mean(baseline_psth);
     bfr_std = std(baseline_psth);
@@ -345,6 +353,7 @@ else
     pil=NaN;
     rim=NaN;
     corrected_rim=NaN;
+end
 end
 
 function [cluster_struct, tot_clusters] = find_clusters(response, bin_gap, consec_bins, threshold)
