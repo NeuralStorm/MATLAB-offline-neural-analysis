@@ -38,9 +38,14 @@ function [sig_neurons, non_sig_neurons, cluster_struct] = receptive_field_analys
                 response_psth = post_psth(response_start_i:response_end_i);
 
                 %% Determine if psth is signficant
-                [threshold, avg_bfr, bfr_std] = get_threshold(baseline_psth, threshold_scale);
-                [is_sig, p_val] = check_significance(baseline_psth, ...
-                    response_psth, threshold, consec_bins, sig_check, sig_alpha);
+                [threshold, avg_bfr, bfr_std,neg_threshold] = get_threshold(baseline_psth, threshold_scale);
+                [is_sig, p_val,is_inhibition,stats_test] = check_significance(baseline_psth, ...
+                    response_psth, threshold,neg_threshold, consec_bins, sig_check, sig_alpha);
+                 negthreshold_i=find(response_psth<neg_threshold);
+                
+                 [fil, lil, inhibition_duration, pil,rim,corrected_rim] = get_response_metrics_inhibition(...
+        avg_bfr,negthreshold_i, bin_size, response_start,is_inhibition,response_psth);
+
 
                 if is_sig
                     %% Finds results of the receptive field analysis
@@ -60,9 +65,9 @@ function [sig_neurons, non_sig_neurons, cluster_struct] = receptive_field_analys
                             cluster_data = num2cell(nan(1, 28));
                             non_sig_neurons = [non_sig_neurons; {region}, ...
                                 {neuron}, {user_channels}, {event}, {0}, ...
-                                {avg_bfr}, {bfr_std}, {threshold}, {p_val}, {NaN}, ...
+                                {avg_bfr}, {bfr_std}, {threshold},{is_inhibition}, {p_val}, {NaN}, ...
                                 {NaN}, {NaN}, {NaN}, {NaN}, {NaN}, {NaN}, {NaN}, ...
-                                {NaN}, {strings}, {NaN}, {notes}, cluster_data];
+                                {NaN}, {strings}, {NaN}, {notes},{fil},{lil},{inhibition_duration},{pil},{rim},{corrected_rim},cluster_data];
                             continue
                         end
                     end
@@ -75,10 +80,10 @@ function [sig_neurons, non_sig_neurons, cluster_struct] = receptive_field_analys
                     % Organizes data results into cell array
                     rec_data = [{region}, {neuron}, ...
                         {user_channels}, {event}, {1}, {avg_bfr}, ...
-                        {bfr_std}, {threshold}, {p_val}, {fl}, {ll}, ...
+                        {bfr_std}, {threshold},{is_inhibition}, {p_val}, {fl}, {ll}, ...
                         {duration}, {pl}, {peak}, {corrected_peak}, ...
                         {rm}, {corrected_rm}, {NaN}, {strings}, {NaN}, ...
-                        {notes}];
+                        {notes},{fil},{lil},{inhibition_duration},{pil},{rim},{corrected_rim}];
                     if cluster_analysis
                         [neuron_cluster, tot_clusters] = find_clusters(...
                             response_psth, bin_gap, consec_bins, threshold);
@@ -131,9 +136,9 @@ function [sig_neurons, non_sig_neurons, cluster_struct] = receptive_field_analys
                     cluster_data = num2cell(nan(1, 28));
                     non_sig_neurons = [non_sig_neurons; {region}, ...
                         {neuron}, {user_channels}, {event}, {0}, ...
-                        {avg_bfr}, {bfr_std}, {threshold}, {p_val}, {NaN}, ...
+                        {avg_bfr}, {bfr_std}, {threshold},,{is_inhibition}, {p_val}, {NaN}, ...
                         {NaN}, {NaN}, {NaN}, {NaN}, {NaN}, {NaN}, {NaN}, ...
-                        {NaN}, {strings}, {NaN}, {notes}, cluster_data];
+                        {NaN}, {strings}, {NaN}, {notes},{fil},{lil},{inhibition_duration},{pil},{rim},{corrected_rim}, cluster_data];
                 end
             end
         end
@@ -168,42 +173,54 @@ function [sig_neurons, non_sig_neurons, cluster_struct] = receptive_field_analys
     end
 end
 
-function [is_sig, p_val] = check_significance(baseline_psth, response_psth, ...
-        threshold, consec_bins, sig_check, sig_alpha)
+function [is_sig, p_val,is_inhibition,stats_test] = check_significance(baseline_psth, response_psth, ...
+    threshold,neg_threshold, consec_bins, sig_check, sig_alpha)
     %% Determine if response psth is significant
     is_sig = false;
     reject_null = false;
     p_val = NaN;
+    is_inhibition=0;
     %% Find above threshold indices and check consecutive bin length
     suprathreshold_i = find(response_psth > threshold);
-    is_consec = check_consec_bins(suprathreshold_i, consec_bins);
-    if is_consec
-        %% IF consecutive --> statistical testing on baseline and response
-        if sig_check == 1
-            % Unpaired ttest on pre and post windows
-            [reject_null, p_val] = ttest2(baseline_psth, response_psth, ...
-                'Alpha', sig_alpha);
-        elseif sig_check == 2
-            % ks test on pre and post windows
-            [reject_null, p_val] = kstest2(baseline_psth, response_psth, ...
-                'Alpha', sig_alpha);
-        elseif sig_check ~= 0
-            error('Invalid sig check. Valid checks = 0, 1, 2.');
-        end
-        % If the null hypothesis is rejected, then there is a significant response
-        if isnan(reject_null)
-            reject_null = false;
-        end
-        if reject_null || sig_check == 0
-            is_sig = true;
-        end
+    negthreshold_i=find(response_psth<neg_threshold);
+    [is_consec,neg_consec]=check_consec_bins(suprathreshold_i,negthreshold_i,consec_bins);
+   
+
+     if sig_check == 1
+        % Unpaired ttest on pre and post windows
+        [reject_null, p_val] = ttest2(baseline_psth, response_psth, ...
+            'Alpha', sig_alpha);
+    elseif sig_check == 2
+        % ks test on pre and post windows
+        [reject_null, p_val] = kstest2(baseline_psth, response_psth, ...
+            'Alpha', sig_alpha);
+    elseif sig_check ~= 0
+        error('Invalid sig check. Valid checks = 0, 1, 2.');
     end
+    % If the null hypothesis is rejected, then there is a significant response
+    if isnan(reject_null)
+        reject_null = false;
+    end
+    if reject_null || sig_check == 0
+        is_sig = true;
+    end
+    %% stats test for all types
+    stats_test=is_sig;
+    %% response criteria consecutive bins& stats test;
+    is_sig=(stats_test)&(is_consec);
+    %%if stats_test is significant and 5 consecutive bins below threshold... (inhibitory)
+    %% chesking for neg_consec bins might be most sensitive, adding stats_test is a more conservative approach
+    if (stats_test && neg_consec)
+        is_inhibition=1;
+     end
 end
 
-function [is_consecutive] = check_consec_bins(suprathreshold_i, consec_bins)
+
+function [is_consecutive,neg_consecutive] = check_consec_bins(suprathreshold_i,negthreshold_i, consec_bins)
     %% Checks for consecutive bins
     tot_consec = 1;
     is_consecutive = false;
+    neg_consecutive=0;
     if length(suprathreshold_i) == 1 && consec_bins == 1
         is_consecutive = true;
         return
@@ -223,12 +240,63 @@ function [is_consecutive] = check_consec_bins(suprathreshold_i, consec_bins)
             end
         end
     end
+    
+    if length(negthreshold_i) == 1 && consec_bins == 1
+        neg_consecutive = true;
+        return
+    elseif length(negthreshold_i) == 1 && consec_bins ~= 1
+        return
+         elseif length(negthreshold_i) >= consec_bins
+        for i = 2:length(negthreshold_i)
+            index_gap = negthreshold_i(i) - negthreshold_i(i - 1);
+            if index_gap == 1
+                tot_consec = tot_consec + 1;
+                if tot_consec >= consec_bins
+                    neg_consecutive =1;
+                    return
+                end
+            else
+                tot_consec = 1;
+            end
+        end
+    end
+    
 end
 
-function [threshold, avg_bfr, bfr_std] = get_threshold(baseline_psth, threshold_scale)
+function [is_consecutive_cluster] = check_consec_bins_cluster(suprathreshold_i, consec_bins)
+    %% Checks for consecutive bins
+    tot_consec = 1;
+    is_consecutive_cluster= false;
+    
+    if length(suprathreshold_i) == 1 && consec_bins == 1
+        is_consecutive_cluster = true;
+        return
+    elseif length(suprathreshold_i) == 1 && consec_bins ~= 1
+        return
+    elseif length(suprathreshold_i) >= consec_bins
+        for i = 2:length(suprathreshold_i)
+            index_gap = suprathreshold_i(i) - suprathreshold_i(i - 1);
+            if index_gap == 1
+                tot_consec = tot_consec + 1;
+                if tot_consec >= consec_bins
+                    is_consecutive_cluster = true;
+                    return
+                end
+            else
+                tot_consec = 1;
+            end
+        end
+    end
+    
+    
+    
+end
+
+function [threshold, avg_bfr, bfr_std,neg_threshold] = get_threshold(baseline_psth, threshold_scale)
     avg_bfr = mean(baseline_psth);
     bfr_std = std(baseline_psth);
     threshold = avg_bfr + (threshold_scale * bfr_std);
+    neg_threshold=avg_bfr-(threshold_scale * bfr_std);
 end
 
 function [fl, ll, duration, pl, peak, corrected_peak, rm, corrected_rm] = get_response_metrics(...
@@ -245,6 +313,37 @@ function [fl, ll, duration, pl, peak, corrected_peak, rm, corrected_rm] = get_re
     rm = sum(sig_response_bins);
     corrected_rm = rm - (bfr * (suprathreshold_i(end) - suprathreshold_i(1)));
     duration = ll - fl;
+end
+
+function [fil, lil, inhibition_duration, pil,rim, corrected_rim] = get_response_metrics_inhibition(...
+    bfr,negthreshold_i, bin_size, response_start,is_inhibition,response_psth)
+%% Abbreviations: fl = first latency, ll = last latency, pl = peak latency
+%% rm = response magnitude
+%% Finds results of the receptive field analysis
+% suprathreshold_i = find(response_psth > threshold);
+% above_threshold = response_psth(suprathreshold_i);
+if (is_inhibition==1)
+below_threshold=response_psth(negthreshold_i);
+
+%     fil = ((negthreshold_i(1)) * bin_size) + response_start + (bin_size / 2);
+fil = ((negthreshold_i(1)) * bin_size) + response_start;
+lil = ((negthreshold_i(end)) * bin_size) + response_start + bin_size;
+peak = min(below_threshold);
+peak_index = find(peak == below_threshold);
+pil = (peak_index(1) * bin_size) + response_start + fil-bin_size;
+  %pl = (peak_index(1) * bin_size) + response_start - (bin_size / 2);
+%     corrected_peak = peak - bfr;
+%     rm = sum(above_threshold);
+rim=sum(below_threshold);%% line 248 changed 
+corrected_rim = rim - (bfr*(length(below_threshold)));
+inhibition_duration = lil - fil;
+else
+    fil=NaN;
+    lil=NaN;
+    inhibition_duration=NaN;
+    pil=NaN;
+    rim=NaN;
+    corrected_rim=NaN;
 end
 
 function [cluster_struct, tot_clusters] = find_clusters(response, bin_gap, consec_bins, threshold)
@@ -272,7 +371,7 @@ function [cluster_struct, tot_clusters] = find_clusters(response, bin_gap, conse
                 cluster_end = cluster_edges_i(cluster_i + 1);
             end
             cluster_indices = suprathreshold_i(cluster_start:cluster_end);
-            if length(cluster_indices) < consec_bins || ~check_consec_bins(cluster_indices, consec_bins)
+            if length(cluster_indices) < consec_bins || ~check_consec_bins_cluster(cluster_indices, consec_bins)
                 continue
             end
 
