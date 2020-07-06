@@ -32,7 +32,8 @@ function [] = batch_brain_weights(save_path, failed_path, elec_path, ...
             load(pca_file, 'component_results', 'filename_meta', 'label_log');
 
             plot_brain_weights(save_path, mesh_struct, elec, component_results, ...
-                label_log, dir_config.min_components);
+                label_log, dir_config.min_components, dir_config.feature_filter, ...
+                dir_config.feature_value);
 
         catch ME
             handle_ME(ME, failed_path, filename_meta.filename);
