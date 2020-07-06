@@ -250,6 +250,37 @@ function [] = ieeg_main()
             end
         end
 
+        if dir_config.make_brain_plots
+            [graph_path, graph_failed_path] = create_dir(project_path, 'brain_pca');
+            export_params(graph_path, 'brain_pca', config);
+            pca_path = [project_path, '/mnts/pca'];
+            pial_path = [project_path, '/recons'];
+            try
+                %% PCA weight path
+                e_msg_1 = 'No data directory to find PCAs';
+                e_msg_2 = ['No ', curr_dir, ' pca data for graphing'];
+                dir_pca_path = enforce_dir_layout(pca_path, curr_dir, ...
+                    graph_failed_path, e_msg_1, e_msg_2);
+
+                %% tfr path
+                e_msg_1 = 'No recon plot directory to find recons';
+                e_msg_2 = ['No ', curr_dir, ' TFR plots'];
+                dir_elec_path = enforce_dir_layout(pial_path, curr_dir, ...
+                    graph_failed_path, e_msg_1, e_msg_2);
+
+                [dir_save_path, dir_failed_path] = create_dir(graph_path, curr_dir);
+
+                %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+                %%         Graph PSTH         %%
+                %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+                %! Figure out how to store .pial files
+                batch_brain_weights(dir_save_path, dir_failed_path, ...
+                    dir_elec_path, pial_path, dir_pca_path, dir_config);
+            catch ME
+                handle_ME(ME, graph_failed_path, [curr_dir, '_missing_dir.mat']);
+            end
+        end
+
         if dir_config.do_lds
             mnts_path = [project_path, '/mnts'];
             [lds_path, lds_failed_path] = create_dir(mnts_path, 'lds');
