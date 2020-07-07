@@ -1,4 +1,4 @@
-function [] = plot_brain_weights(save_path, mesh_struct, elec_struct, component_results, ...
+function [] = plot_brain_weights(save_path, dir_name, mesh_struct, elec_struct, component_results, ...
         label_log, min_components, feature_filter, feature_value)
 
     plot_rows = 2; plot_cols = 2;
@@ -37,17 +37,16 @@ function [] = plot_brain_weights(save_path, mesh_struct, elec_struct, component_
             comp_coeff = coeff(:, comp_i);
             [~, ia, ~] = intersect(elec_struct.label, component_results.(curr_space).elec_order);
             elec_pos = elec_struct.chanpos(ia,:);
-    
+
+            %% Assign colors to color map
             color_map = zeros(size(coeff, 1), 3);
-            for r = 1:numel(comp_coeff)
-                if comp_coeff(r) > 0
-                    color_map(r, :) = pos_weight;
-                elseif comp_coeff(r) < 0
-                    color_map(r, :) = neg_weight;
-                elseif comp_coeff(r) == 0
-                    color_map(r, :) = neutral_weight;
-                end
-            end
+            pos_i = find(comp_coeff > 0);
+            color_map(pos_i, :) = repmat(pos_weight, [numel(pos_i), 1]);
+            neg_i = find(comp_coeff < 0);
+            color_map(neg_i, :) = repmat(neg_weight, [numel(neg_i), 1]);
+            neutral_i = find(comp_coeff == 0);
+            color_map(neutral_i, :) = repmat(neutral_weight, [numel(neutral_i), 1]);
+
             elec_weights = rescale(abs(comp_coeff), 1, 250);
 
             %% Plotting
@@ -73,6 +72,7 @@ function [] = plot_brain_weights(save_path, mesh_struct, elec_struct, component_
             plot_brain(brain_view, left_mesh, right_mesh, elec_pos, elec_weights, color_map);
 
             %% Save subplot for feature space
+            sgtitle([dir_name, ' PC ', num2str(comp_i), ' ', strrep(curr_space, '_', ' ')]);
             filename = [num2str(comp_i), '_', curr_space, '.fig'];
             set(gcf, 'CreateFcn', 'set(gcbo,''Visible'',''on'')'); 
             savefig(gcf, fullfile(save_path, filename));

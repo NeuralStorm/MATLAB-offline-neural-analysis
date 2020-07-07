@@ -274,7 +274,7 @@ function [] = ieeg_main()
                 %%         Graph PSTH         %%
                 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
                 %! Figure out how to store .pial files
-                batch_brain_weights(dir_save_path, dir_failed_path, ...
+                batch_brain_weights(curr_dir, dir_save_path, dir_failed_path, ...
                     dir_elec_path, pial_path, dir_pca_path, dir_config);
             catch ME
                 handle_ME(ME, graph_failed_path, [curr_dir, '_missing_dir.mat']);
