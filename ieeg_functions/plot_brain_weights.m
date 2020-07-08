@@ -1,5 +1,6 @@
-function [] = plot_brain_weights(save_path, dir_name, mesh_struct, elec_struct, component_results, ...
-        label_log, min_components, feature_filter, feature_value)
+function [] = plot_brain_weights(save_path, dir_name, mesh_struct, elec_struct, ...
+        component_results, label_log, min_components, feature_filter, ...
+        feature_value, save_png)
 
     plot_rows = 2; plot_cols = 2;
     left_plot = 1; right_plot = 2; ventral_plot = 3; frontal_plot = 4;
@@ -35,6 +36,7 @@ function [] = plot_brain_weights(save_path, dir_name, mesh_struct, elec_struct, 
 
         for comp_i = 1:tot_components
             comp_coeff = coeff(:, comp_i);
+            %! Does not work if region is repeated in component
             [~, ia, ~] = intersect(elec_struct.label, component_results.(curr_space).elec_order);
             elec_pos = elec_struct.chanpos(ia,:);
 
@@ -74,8 +76,12 @@ function [] = plot_brain_weights(save_path, dir_name, mesh_struct, elec_struct, 
             %% Save subplot for feature space
             sgtitle([dir_name, ' PC ', num2str(comp_i), ' ', strrep(curr_space, '_', ' ')]);
             filename = [num2str(comp_i), '_', curr_space, '.fig'];
-            set(gcf, 'CreateFcn', 'set(gcbo,''Visible'',''on'')'); 
+            set(gcf, 'CreateFcn', 'set(gcbo,''Visible'',''on'')');
             savefig(gcf, fullfile(save_path, filename));
+            if save_png
+                filename = [num2str(comp_i), '_', curr_space, '.png'];
+                saveas(gcf, fullfile(save_path, filename));
+            end
         end
     end
 end
