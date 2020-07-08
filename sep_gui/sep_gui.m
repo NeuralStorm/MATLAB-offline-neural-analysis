@@ -22,7 +22,7 @@ function varargout = sep_gui(varargin)
 
 % Edit the above text to modify the response to help sep_gui
 
-% Last Modified by GUIDE v2.5 27-Aug-2019 11:54:00
+% Last Modified by GUIDE v2.5 06-Jul-2020 17:03:01
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
@@ -50,7 +50,7 @@ function sep_gui_OpeningFcn(hObject, eventdata, handles, varargin)
 handles.output = hObject;
 %load the file and save struct to handles.sep_data
 [file_name, original_path] = uigetfile('*.mat', 'MultiSelect', 'off');
-file_path = [original_path '\' file_name];
+file_path = [original_path, file_name];
 setappdata(0,'select_path',file_path);
 load(file_path, 'sep_analysis_results', 'filename_meta', 'label_log');
 handles.file_path = file_path;
@@ -60,10 +60,12 @@ handles.label_log = label_log;
 path_parts = strsplit(original_path, {'/', '\'});
 % end - 1 because uigetfile returns path with backslash at end of string
 dir_name = path_parts{end - 1};
-parent_path = [original_path, '../..'];
+parent_path = [original_path, '..\..'];
 [output_path, ~] = create_dir(parent_path, 'sep_gui_data');
 [dir_path, ~] = create_dir(output_path, dir_name);
-handles.save_file_path = [dir_path, '/', file_name];
+save_file_path = [dir_path, '/', file_name];
+setappdata(0,'save_path', save_file_path);
+handles.save_file_path = save_file_path;
 handles.sep_data = sep_analysis_results;
 %initial set
 handles.index = 1;
@@ -118,7 +120,7 @@ if handles.index > 1
     %switch the channel
     handles.index = handles.index - 1;
     guidata(hObject,handles);
-    sort_peaks(hObject, handles); %sort peaks to the ascending order
+%     sort_peaks(hObject, handles); %sort peaks to the ascending order
     handles = guidata(hObject);
     %plot new graph 
     cla(handles.axes1);
@@ -137,6 +139,20 @@ if handles.index > 1
     set(handles.addpos_check, 'Value', 0); 
     set(handles.addneg_check, 'Value', 0);  
     set(handles.add_button, 'Enable', 'off');
+    
+    set(handles.pos1_changeTo, 'Enable', 'off');
+    set(handles.pos2_changeTo, 'Enable', 'off');
+    set(handles.pos3_changeTo, 'Enable', 'off');
+    set(handles.neg1_changeTo, 'Enable', 'off');  
+    set(handles.neg2_changeTo, 'Enable', 'off');
+    set(handles.neg3_changeTo, 'Enable', 'off'); 
+    
+    set(handles.pos1_changeTo, 'Value', 0);
+    set(handles.pos2_changeTo, 'Value', 0);
+    set(handles.pos3_changeTo, 'Value', 0);
+    set(handles.neg1_changeTo, 'Value', 0);
+    set(handles.neg2_changeTo, 'Value', 0);
+    set(handles.neg3_changeTo, 'Value', 0);
 end
 
 
@@ -151,7 +167,7 @@ if handles.index < length(handles.sep_data)
     handles.sep_data(handles.index).analysis_notes = analysis_notes;
     handles.index = handles.index + 1;
     guidata(hObject,handles);
-    sort_peaks(hObject, handles);%sort peaks to the ascending order
+%     sort_peaks(hObject, handles);%sort peaks to the ascending order
     handles = guidata(hObject); 
     cla(handles.axes1);
     plot_sep_gui(handles, handles.sep_data, handles.index);
@@ -168,6 +184,20 @@ if handles.index < length(handles.sep_data)
     set(handles.addpos_check, 'Value', 0); 
     set(handles.addneg_check, 'Value', 0);  
     set(handles.add_button, 'Enable', 'off');
+    
+    set(handles.pos1_changeTo, 'Enable', 'off');
+    set(handles.pos2_changeTo, 'Enable', 'off');
+    set(handles.pos3_changeTo, 'Enable', 'off');
+    set(handles.neg1_changeTo, 'Enable', 'off');  
+    set(handles.neg2_changeTo, 'Enable', 'off');
+    set(handles.neg3_changeTo, 'Enable', 'off'); 
+    
+    set(handles.pos1_changeTo, 'Value', 0);
+    set(handles.pos2_changeTo, 'Value', 0);
+    set(handles.pos3_changeTo, 'Value', 0);
+    set(handles.neg1_changeTo, 'Value', 0);
+    set(handles.neg2_changeTo, 'Value', 0);
+    set(handles.neg3_changeTo, 'Value', 0);
 end
 
 
@@ -202,12 +232,45 @@ if get(handles.pos1_check, 'Value')
         handles.sep_data(handles.index).pos_peak_latency1 = (position(1)*1000);
         handles.sep_data(handles.index).pos_peak1 = position(2);
     end
+    
+    if get(handles.pos2_changeTo, 'Value')
+        handles.sep_data(handles.index).pos_peak_latency2 = handles.sep_data(handles.index).pos_peak_latency1;
+        handles.sep_data(handles.index).pos_peak2 = handles.sep_data(handles.index).pos_peak1; 
+        
+        handles.sep_data(handles.index).pos_peak_latency1 = nan;
+        handles.sep_data(handles.index).pos_peak1 = nan;
+    elseif get(handles.pos3_changeTo, 'Value')    
+        handles.sep_data(handles.index).pos_peak_latency3 = handles.sep_data(handles.index).pos_peak_latency1;
+        handles.sep_data(handles.index).pos_peak3 = handles.sep_data(handles.index).pos_peak1; 
+        
+        handles.sep_data(handles.index).pos_peak_latency1 = nan;
+        handles.sep_data(handles.index).pos_peak1 = nan;
+    else
+        sort_peaks(hObject, handles); 
+    end
+    
 end
 
 if get(handles.pos2_check, 'Value')
     if ~isempty(position)
         handles.sep_data(handles.index).pos_peak_latency2 = (position(1)*1000);
         handles.sep_data(handles.index).pos_peak2 = position(2);
+    end
+    
+    if get(handles.pos1_changeTo, 'Value')
+        handles.sep_data(handles.index).pos_peak_latency1 = handles.sep_data(handles.index).pos_peak_latency2;
+        handles.sep_data(handles.index).pos_peak1 = handles.sep_data(handles.index).pos_peak2; 
+        
+        handles.sep_data(handles.index).pos_peak_latency2 = nan;
+        handles.sep_data(handles.index).pos_peak2 = nan;
+    elseif get(handles.pos3_changeTo, 'Value')    
+        handles.sep_data(handles.index).pos_peak_latency3 = handles.sep_data(handles.index).pos_peak_latency2;
+        handles.sep_data(handles.index).pos_peak3 = handles.sep_data(handles.index).pos_peak2; 
+        
+        handles.sep_data(handles.index).pos_peak_latency2 = nan;
+        handles.sep_data(handles.index).pos_peak2 = nan;
+    else
+        sort_peaks(hObject, handles); 
     end
 end
 
@@ -216,6 +279,22 @@ if get(handles.pos3_check, 'Value')
         handles.sep_data(handles.index).pos_peak_latency3 = (position(1)*1000);
         handles.sep_data(handles.index).pos_peak3 = position(2);
     end
+    
+    if get(handles.pos1_changeTo, 'Value')
+        handles.sep_data(handles.index).pos_peak_latency1 = handles.sep_data(handles.index).pos_peak_latency3;
+        handles.sep_data(handles.index).pos_peak1 = handles.sep_data(handles.index).pos_peak3; 
+        
+        handles.sep_data(handles.index).pos_peak_latency3 = nan;
+        handles.sep_data(handles.index).pos_peak3 = nan;
+    elseif get(handles.pos2_changeTo, 'Value')    
+        handles.sep_data(handles.index).pos_peak_latency2 = handles.sep_data(handles.index).pos_peak_latency3;
+        handles.sep_data(handles.index).pos_peak2 = handles.sep_data(handles.index).pos_peak3; 
+        
+        handles.sep_data(handles.index).pos_peak_latency3 = nan;
+        handles.sep_data(handles.index).pos_peak3 = nan;
+    else
+        sort_peaks(hObject, handles); 
+    end
 end
 
 if get(handles.neg1_check, 'Value')
@@ -223,12 +302,44 @@ if get(handles.neg1_check, 'Value')
         handles.sep_data(handles.index).neg_peak_latency1 = (position(1)*1000);
         handles.sep_data(handles.index).neg_peak1 = position(2);
     end 
+    
+    if get(handles.neg2_changeTo, 'Value')
+        handles.sep_data(handles.index).neg_peak_latency2 = handles.sep_data(handles.index).neg_peak_latency1;
+        handles.sep_data(handles.index).neg_peak2 = handles.sep_data(handles.index).neg_peak1; 
+        
+        handles.sep_data(handles.index).neg_peak_latency1 = nan;
+        handles.sep_data(handles.index).neg_peak1 = nan;
+    elseif get(handles.neg3_changeTo, 'Value')    
+        handles.sep_data(handles.index).neg_peak_latency3 = handles.sep_data(handles.index).neg_peak_latency1;
+        handles.sep_data(handles.index).neg_peak3 = handles.sep_data(handles.index).neg_peak1; 
+        
+        handles.sep_data(handles.index).neg_peak_latency1 = nan;
+        handles.sep_data(handles.index).neg_peak1 = nan;
+    else
+        sort_peaks(hObject, handles); 
+    end
 end
 
 if get(handles.neg2_check, 'Value')
     if ~isempty(position)
         handles.sep_data(handles.index).neg_peak_latency2 = (position(1)*1000);
         handles.sep_data(handles.index).neg_peak2 = position(2);
+    end
+    
+     if get(handles.neg1_changeTo, 'Value')
+        handles.sep_data(handles.index).neg_peak_latency1 = handles.sep_data(handles.index).neg_peak_latency2;
+        handles.sep_data(handles.index).neg_peak1 = handles.sep_data(handles.index).neg_peak2; 
+        
+        handles.sep_data(handles.index).neg_peak_latency2 = nan;
+        handles.sep_data(handles.index).neg_peak2 = nan;
+    elseif get(handles.neg3_changeTo, 'Value')    
+        handles.sep_data(handles.index).neg_peak_latency3 = handles.sep_data(handles.index).neg_peak_latency2;
+        handles.sep_data(handles.index).neg_peak3 = handles.sep_data(handles.index).neg_peak2; 
+        
+        handles.sep_data(handles.index).neg_peak_latency2 = nan;
+        handles.sep_data(handles.index).neg_peak2 = nan;
+    else
+        sort_peaks(hObject, handles); 
     end
 end
 
@@ -237,12 +348,28 @@ if get(handles.neg3_check, 'Value')
         handles.sep_data(handles.index).neg_peak_latency3 = (position(1)*1000);
         handles.sep_data(handles.index).neg_peak3 = position(2);
     end
+    
+    if get(handles.neg1_changeTo, 'Value')
+        handles.sep_data(handles.index).neg_peak_latency1 = handles.sep_data(handles.index).neg_peak_latency3;
+        handles.sep_data(handles.index).neg_peak1 = handles.sep_data(handles.index).neg_peak3; 
+        
+        handles.sep_data(handles.index).neg_peak_latency3 = nan;
+        handles.sep_data(handles.index).neg_peak3 = nan;
+    elseif get(handles.neg2_changeTo, 'Value')    
+        handles.sep_data(handles.index).neg_peak_latency2 = handles.sep_data(handles.index).neg_peak_latency3;
+        handles.sep_data(handles.index).neg_peak2 = handles.sep_data(handles.index).neg_peak3; 
+        
+        handles.sep_data(handles.index).neg_peak_latency3 = nan;
+        handles.sep_data(handles.index).neg_peak3 = nan;
+    else
+        sort_peaks(hObject, handles); 
+    end
 end
 %record the changed channel index (no use in the current) 
 handles.changed_channel_index = [handles.changed_channel_index handles.index];
 
 guidata(hObject, handles);
-sort_peaks(hObject, handles); %sort peaks to the ascending order
+% sort_peaks(hObject, handles); %sort peaks to the ascending order
 handles = guidata(hObject); 
 %plot the new curve
 cla(handles.axes1);
@@ -256,59 +383,27 @@ set(handles.pos3_check, 'Value', 0);
 set(handles.neg1_check, 'Value', 0);
 set(handles.neg2_check, 'Value', 0);
 set(handles.neg3_check, 'Value', 0);
+
+set(handles.pos1_changeTo, 'Enable', 'off');
+set(handles.pos2_changeTo, 'Enable', 'off');
+set(handles.pos3_changeTo, 'Enable', 'off');
+set(handles.neg1_changeTo, 'Enable', 'off');  
+set(handles.neg2_changeTo, 'Enable', 'off');
+set(handles.neg3_changeTo, 'Enable', 'off'); 
+
+set(handles.pos1_changeTo, 'Value', 0);
+set(handles.pos2_changeTo, 'Value', 0);
+set(handles.pos3_changeTo, 'Value', 0);
+set(handles.neg1_changeTo, 'Value', 0);
+set(handles.neg2_changeTo, 'Value', 0);
+set(handles.neg3_changeTo, 'Value', 0);
+    
 check_check(handles);
 set(handles.change_button, 'Enable', 'off');
 set(handles.delete_button, 'Enable', 'off');
+changeTo_check(handles);
+
 set(0, 'userdata', []);
-
-
-
-
- 
-% --- Executes on button press in pos1_check.
-function pos1_check_Callback(hObject, eventdata, handles)
-% hObject    handle to pos1_check (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    structure with handles and user data (see GUIDATA)
-
-% Hint: get(hObject,'Value') returns toggle state of pos1_check
-pos_check = get(handles.pos1_check, 'Value');
-if pos_check == 1
-    set(handles.pos2_check, 'Enable', 'off');
-    set(handles.pos3_check, 'Enable', 'off');
-    set(handles.neg1_check, 'Enable', 'off');
-    set(handles.neg2_check, 'Enable', 'off');
-    set(handles.neg3_check, 'Enable', 'off');
-    set(handles.change_button, 'Enable', 'on');
-    set(handles.delete_button, 'Enable', 'on');
-else
-    check_check(handles);
-    set(handles.change_button, 'Enable', 'off');
-    set(handles.delete_button, 'Enable', 'off');
-end
-
-
-% --- Executes on button press in neg1_check.
-function neg1_check_Callback(hObject, eventdata, handles)
-% hObject    handle to neg1_check (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    structure with handles and user data (see GUIDATA)
-
-% Hint: get(hObject,'Value') returns toggle state of neg1_check
-neg_check = get(handles.neg1_check, 'Value');
-if neg_check == 1
-    set(handles.pos2_check, 'Enable', 'off');
-    set(handles.pos3_check, 'Enable', 'off');
-    set(handles.pos1_check, 'Enable', 'off');
-    set(handles.neg2_check, 'Enable', 'off');
-    set(handles.neg3_check, 'Enable', 'off');
-    set(handles.change_button, 'Enable', 'on');
-    set(handles.delete_button, 'Enable', 'on');
-else
-    check_check(handles);
-    set(handles.change_button, 'Enable', 'off');
-    set(handles.delete_button, 'Enable', 'off');
-end
 
 
 % --- Executes when user attempts to close figure1.
@@ -412,25 +507,6 @@ set(handles.change_button, 'Enable', 'off');
 set(0, 'userdata', []);
 
 
-
-
-
-
-
-% --- Executes on button press in pushbutton6.
-function pushbutton6_Callback(hObject, eventdata, handles)
-% hObject    handle to pushbutton6 (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    structure with handles and user data (see GUIDATA)
-
-
-% --- Executes on button press in pushbutton7.
-function pushbutton7_Callback(hObject, eventdata, handles)
-% hObject    handle to pushbutton7 (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    structure with handles and user data (see GUIDATA)
-
-
 % --- Executes on button press in discard_button.
 function discard_button_Callback(hObject, eventdata, handles)
 % load the last saved file  
@@ -448,6 +524,81 @@ set(handles.add_button, 'Enable', 'off');
 guidata(hObject, handles);
 
 
+% --- Executes on button press in pos1_check.
+function pos1_check_Callback(hObject, eventdata, handles)
+% hObject    handle to pos1_check (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+% Hint: get(hObject,'Value') returns toggle state of pos1_check
+pos_check = get(handles.pos1_check, 'Value');
+if pos_check == 1
+    set(handles.pos2_check, 'Enable', 'off');
+    set(handles.pos3_check, 'Enable', 'off');
+    set(handles.neg1_check, 'Enable', 'off');
+    set(handles.neg2_check, 'Enable', 'off');
+    set(handles.neg3_check, 'Enable', 'off');
+    set(handles.change_button, 'Enable', 'on');
+    set(handles.delete_button, 'Enable', 'on');
+    changeTo_check(handles); 
+else
+    check_check(handles);
+    set(handles.change_button, 'Enable', 'off');
+    set(handles.delete_button, 'Enable', 'off');
+    
+    set(handles.pos1_changeTo, 'Enable', 'off');
+    set(handles.pos2_changeTo, 'Enable', 'off');
+    set(handles.pos3_changeTo, 'Enable', 'off');
+    set(handles.neg1_changeTo, 'Enable', 'off');  
+    set(handles.neg2_changeTo, 'Enable', 'off');
+    set(handles.neg3_changeTo, 'Enable', 'off'); 
+    
+    set(handles.pos1_changeTo, 'Value', 0);
+    set(handles.pos2_changeTo, 'Value', 0);
+    set(handles.pos3_changeTo, 'Value', 0);
+    set(handles.neg1_changeTo, 'Value', 0);
+    set(handles.neg2_changeTo, 'Value', 0);
+    set(handles.neg3_changeTo, 'Value', 0);
+end
+
+
+% --- Executes on button press in neg1_check.
+function neg1_check_Callback(hObject, eventdata, handles)
+% hObject    handle to neg1_check (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+% Hint: get(hObject,'Value') returns toggle state of neg1_check
+neg_check = get(handles.neg1_check, 'Value');
+if neg_check == 1
+    set(handles.pos2_check, 'Enable', 'off');
+    set(handles.pos3_check, 'Enable', 'off');
+    set(handles.pos1_check, 'Enable', 'off');
+    set(handles.neg2_check, 'Enable', 'off');
+    set(handles.neg3_check, 'Enable', 'off');
+    set(handles.change_button, 'Enable', 'on');
+    set(handles.delete_button, 'Enable', 'on');
+    changeTo_check(handles);
+else
+    check_check(handles);
+    set(handles.change_button, 'Enable', 'off');
+    set(handles.delete_button, 'Enable', 'off');
+    
+    set(handles.pos1_changeTo, 'Enable', 'off');
+    set(handles.pos2_changeTo, 'Enable', 'off');
+    set(handles.pos3_changeTo, 'Enable', 'off');
+    set(handles.neg1_changeTo, 'Enable', 'off');  
+    set(handles.neg2_changeTo, 'Enable', 'off');
+    set(handles.neg3_changeTo, 'Enable', 'off'); 
+    
+    set(handles.pos1_changeTo, 'Value', 0);
+    set(handles.pos2_changeTo, 'Value', 0);
+    set(handles.pos3_changeTo, 'Value', 0);
+    set(handles.neg1_changeTo, 'Value', 0);
+    set(handles.neg2_changeTo, 'Value', 0);
+    set(handles.neg3_changeTo, 'Value', 0);
+end
+
 % --- Executes on button press in pos2_check.
 function pos2_check_Callback(hObject, eventdata, handles)
 % hObject    handle to pos2_check (see GCBO)
@@ -464,10 +615,25 @@ if pos_check == 1
     set(handles.neg3_check, 'Enable', 'off');
     set(handles.change_button, 'Enable', 'on');
     set(handles.delete_button, 'Enable', 'on');
+    changeTo_check(handles);
 else
     check_check(handles);
     set(handles.change_button, 'Enable', 'off');
     set(handles.delete_button, 'Enable', 'off');
+    
+    set(handles.pos1_changeTo, 'Enable', 'off');
+    set(handles.pos2_changeTo, 'Enable', 'off');
+    set(handles.pos3_changeTo, 'Enable', 'off');
+    set(handles.neg1_changeTo, 'Enable', 'off');  
+    set(handles.neg2_changeTo, 'Enable', 'off');
+    set(handles.neg3_changeTo, 'Enable', 'off'); 
+    
+    set(handles.pos1_changeTo, 'Value', 0);
+    set(handles.pos2_changeTo, 'Value', 0);
+    set(handles.pos3_changeTo, 'Value', 0);
+    set(handles.neg1_changeTo, 'Value', 0);
+    set(handles.neg2_changeTo, 'Value', 0);
+    set(handles.neg3_changeTo, 'Value', 0);
 end
 
 
@@ -487,10 +653,25 @@ if neg_check == 1
     set(handles.neg3_check, 'Enable', 'off');
     set(handles.change_button, 'Enable', 'on');
     set(handles.delete_button, 'Enable', 'on');
+    changeTo_check(handles);
 else
     check_check(handles);
     set(handles.change_button, 'Enable', 'off');
     set(handles.delete_button, 'Enable', 'off');
+    
+    set(handles.pos1_changeTo, 'Enable', 'off');
+    set(handles.pos2_changeTo, 'Enable', 'off');
+    set(handles.pos3_changeTo, 'Enable', 'off');
+    set(handles.neg1_changeTo, 'Enable', 'off');  
+    set(handles.neg2_changeTo, 'Enable', 'off');
+    set(handles.neg3_changeTo, 'Enable', 'off'); 
+    
+    set(handles.pos1_changeTo, 'Value', 0);
+    set(handles.pos2_changeTo, 'Value', 0);
+    set(handles.pos3_changeTo, 'Value', 0);
+    set(handles.neg1_changeTo, 'Value', 0);
+    set(handles.neg2_changeTo, 'Value', 0);
+    set(handles.neg3_changeTo, 'Value', 0);
 end
 
 
@@ -510,10 +691,25 @@ if pos_check == 1
     set(handles.neg3_check, 'Enable', 'off');
     set(handles.change_button, 'Enable', 'on');
     set(handles.delete_button, 'Enable', 'on');
+    changeTo_check(handles);
 else
     check_check(handles);
     set(handles.change_button, 'Enable', 'off');
     set(handles.delete_button, 'Enable', 'off');
+    
+    set(handles.pos1_changeTo, 'Enable', 'off');
+    set(handles.pos2_changeTo, 'Enable', 'off');
+    set(handles.pos3_changeTo, 'Enable', 'off');
+    set(handles.neg1_changeTo, 'Enable', 'off');  
+    set(handles.neg2_changeTo, 'Enable', 'off');
+    set(handles.neg3_changeTo, 'Enable', 'off'); 
+    
+    set(handles.pos1_changeTo, 'Value', 0);
+    set(handles.pos2_changeTo, 'Value', 0);
+    set(handles.pos3_changeTo, 'Value', 0);
+    set(handles.neg1_changeTo, 'Value', 0);
+    set(handles.neg2_changeTo, 'Value', 0);
+    set(handles.neg3_changeTo, 'Value', 0);
 end
 
 
@@ -533,10 +729,25 @@ if neg_check == 1
     set(handles.pos1_check, 'Enable', 'off');
     set(handles.change_button, 'Enable', 'on');
     set(handles.delete_button, 'Enable', 'on');
+    changeTo_check(handles);
 else
     check_check(handles);
     set(handles.change_button, 'Enable', 'off');
     set(handles.delete_button, 'Enable', 'off');
+    
+    set(handles.pos1_changeTo, 'Enable', 'off');
+    set(handles.pos2_changeTo, 'Enable', 'off');
+    set(handles.pos3_changeTo, 'Enable', 'off');
+    set(handles.neg1_changeTo, 'Enable', 'off');  
+    set(handles.neg2_changeTo, 'Enable', 'off');
+    set(handles.neg3_changeTo, 'Enable', 'off'); 
+    
+    set(handles.pos1_changeTo, 'Value', 0);
+    set(handles.pos2_changeTo, 'Value', 0);
+    set(handles.pos3_changeTo, 'Value', 0);
+    set(handles.neg1_changeTo, 'Value', 0);
+    set(handles.neg2_changeTo, 'Value', 0);
+    set(handles.neg3_changeTo, 'Value', 0);
 end
 
 
@@ -679,7 +890,7 @@ handles.sep_data(handles.index).analysis_notes = analysis_notes;
 handles.index = getappdata(0,'select_index');
 
 guidata(hObject,handles);
-sort_peaks(hObject, handles);
+% sort_peaks(hObject, handles);
 handles = guidata(hObject);
 cla(handles.axes1);
 %plot the selected channel
@@ -750,7 +961,7 @@ handles.label_log = label_log;
 find_universal_peaks(handles);
 cla(handles.axes1);
 handles.index = 1;
-sort_peaks(hObject, handles);
+% sort_peaks(hObject, handles);
 handles = guidata(hObject);
 plot_sep_gui(handles, sep_analysis_results, handles.index);
 %checkbox status
@@ -775,3 +986,131 @@ all_channels_sep('subplot_refresh_Callback', handles_sub.subplot_refresh, [], ha
 handles.changed_channel_index = [];
 % Update handles structure
 guidata(hObject, handles);
+
+
+% --- Executes on button press in pos1_changeTo.
+function pos1_changeTo_Callback(hObject, eventdata, handles)
+% hObject    handle to pos1_changeTo (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+% Hint: get(hObject,'Value') returns toggle state of pos1_changeTo
+
+checkbox_check = get(handles.pos1_changeTo, 'Value'); 
+
+if checkbox_check == 1
+   set(handles.pos2_changeTo, 'Enable', 'off');
+   set(handles.pos3_changeTo, 'Enable', 'off'); 
+   set(handles.neg1_changeTo, 'Enable', 'off'); 
+   set(handles.neg2_changeTo, 'Enable', 'off'); 
+   set(handles.neg3_changeTo, 'Enable', 'off'); 
+else
+   changeTo_check(handles);
+end
+
+
+
+% --- Executes on button press in pos2_changeTo.
+function pos2_changeTo_Callback(hObject, eventdata, handles)
+% hObject    handle to pos2_changeTo (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+% Hint: get(hObject,'Value') returns toggle state of pos2_changeTo
+
+checkbox_check = get(handles.pos2_changeTo, 'Value'); 
+
+if checkbox_check == 1
+   set(handles.pos1_changeTo, 'Enable', 'off');
+   set(handles.pos3_changeTo, 'Enable', 'off'); 
+   set(handles.neg1_changeTo, 'Enable', 'off'); 
+   set(handles.neg2_changeTo, 'Enable', 'off'); 
+   set(handles.neg3_changeTo, 'Enable', 'off'); 
+else
+   changeTo_check(handles);
+end
+
+
+% --- Executes on button press in pos3_changeTo.
+function pos3_changeTo_Callback(hObject, eventdata, handles)
+% hObject    handle to pos3_changeTo (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+% Hint: get(hObject,'Value') returns toggle state of pos3_changeTo
+
+checkbox_check = get(handles.pos3_changeTo, 'Value'); 
+
+if checkbox_check == 1
+   set(handles.pos1_changeTo, 'Enable', 'off');
+   set(handles.pos2_changeTo, 'Enable', 'off'); 
+   set(handles.neg1_changeTo, 'Enable', 'off'); 
+   set(handles.neg2_changeTo, 'Enable', 'off'); 
+   set(handles.neg3_changeTo, 'Enable', 'off'); 
+else
+   changeTo_check(handles);
+end
+
+
+% --- Executes on button press in neg1_changeTo.
+function neg1_changeTo_Callback(hObject, eventdata, handles)
+% hObject    handle to neg1_changeTo (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+% Hint: get(hObject,'Value') returns toggle state of neg1_changeTo
+
+checkbox_check = get(handles.neg1_changeTo, 'Value'); 
+
+if checkbox_check == 1
+   set(handles.pos1_changeTo, 'Enable', 'off'); 
+   set(handles.pos2_changeTo, 'Enable', 'off');
+   set(handles.pos3_changeTo, 'Enable', 'off'); 
+   set(handles.neg2_changeTo, 'Enable', 'off'); 
+   set(handles.neg3_changeTo, 'Enable', 'off'); 
+else
+   changeTo_check(handles);
+end
+
+
+% --- Executes on button press in neg2_changeTo.
+function neg2_changeTo_Callback(hObject, eventdata, handles)
+% hObject    handle to neg2_changeTo (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+% Hint: get(hObject,'Value') returns toggle state of neg2_changeTo
+
+checkbox_check = get(handles.neg2_changeTo, 'Value'); 
+
+if checkbox_check == 1
+   set(handles.pos1_changeTo, 'Enable', 'off'); 
+   set(handles.pos2_changeTo, 'Enable', 'off');
+   set(handles.pos3_changeTo, 'Enable', 'off'); 
+   set(handles.neg1_changeTo, 'Enable', 'off'); 
+   set(handles.neg3_changeTo, 'Enable', 'off'); 
+else
+   changeTo_check(handles);
+end
+
+
+% --- Executes on button press in neg3_changeTo.
+function neg3_changeTo_Callback(hObject, eventdata, handles)
+% hObject    handle to neg3_changeTo (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+% Hint: get(hObject,'Value') returns toggle state of neg3_changeTo
+
+checkbox_check = get(handles.neg3_changeTo, 'Value'); 
+
+if checkbox_check == 1
+   set(handles.pos1_changeTo, 'Enable', 'off'); 
+   set(handles.pos2_changeTo, 'Enable', 'off');
+   set(handles.pos3_changeTo, 'Enable', 'off'); 
+   set(handles.neg1_changeTo, 'Enable', 'off'); 
+   set(handles.neg2_changeTo, 'Enable', 'off'); 
+else
+   changeTo_check(handles);
+end
+
