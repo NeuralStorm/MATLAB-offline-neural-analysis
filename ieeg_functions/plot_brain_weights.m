@@ -2,6 +2,41 @@ function [] = plot_brain_weights(save_path, dir_name, mesh_struct, elec_struct, 
         component_results, label_log, min_components, feature_filter, ...
         feature_value, save_png)
 
+    %% Purpose: Create subplot w/ electrode weights from pca plotted on brain mesh
+    %% Input
+    % save_path: path where subplots are saved
+    % dir_name: name of directory used to create brain mesh plots
+    % mesh_struct: struct w/ fields for left and right meshes
+    %              Not all fields are list, only fields used in this function
+    %              mesh is used to create 3D brain mesh plot
+    %              mesh_filename: name must include left or right w/ fields
+    %                             fields are auto generated after loading in pial
+    %                             using fieldtrip or using fieldtrip .mat file
+    % elect_struct: struct w/ info on electrode and anatomy
+    %               Not all fields are list, only fields used in this function
+    %               label: Cell array with electrode name. Must match names used when doing pca
+    %               chanpos: x, y, z coordinate matrix for electrode placement
+    %                        rows: electrode col: 3 (x, y, z)
+    % component_results: struct w/ fields for each feature set ran through PCA --> created by calc_pca.m
+    %                    Not all fields are list, only fields used in this function
+    %                    feature_name: struct with fields
+    %                                  coeff: NxN (N = tot features) matrix with coeff weights used to scale mnts into PC space
+    %                                             Columns: Component Row: Feature
+    %                                  elec_order: order of electrodes in feature space
+    % label_log: struct with fieldnames for each feature space --> only used to get unique feature spaces for loop
+    % min_components: Int: min componenets needed to make subplot
+    % feature_filter: String with description for pcs
+    %                 'all': keep all pcs after PCA
+    %                 'pcs': Keep # of pcs set in feature_value
+    %                 'percent_var': Use X# of PCs that meet set % in feature_value
+    % feature_value: Int matched to feature_filter
+    %                'all': left empty
+    %                'pcs': Int for # of pcs to keep
+    %                'percent_var': % of variance desired to be explained by pcs
+    % save_png: Boolean: 1: save subplot as png as well 0: only save subplot as fig
+    %% Output: There is no return. The graphs are saved directly to the path indicated by save_path
+
+    %% Set up plotting parameters
     plot_rows = 2; plot_cols = 2;
     left_plot = 1; right_plot = 2; ventral_plot = 3; frontal_plot = 4;
     neutral_weight = [0 0 0]; % black

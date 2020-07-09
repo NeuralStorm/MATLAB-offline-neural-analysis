@@ -64,6 +64,9 @@ function [] = ieeg_main()
     %          latent_variables: Int: How many desired latent variables should be found
     %          em_cycles: Int: Max cycles allowed when look for convergence of paramters for lds
     %          tolerance: Float: tolerance of change (ex: if it bottoms out in a local min)
+    %          make_brain_plots: boolean: 1: create 3D brain mesh, 0: skip plotting
+    %          is_pial: boolean: 1: use .pial files to get mesh, 0: use .mat from fieldtrip to create mesh
+    %          save_png: boolean: 1: save png of brain mesh subplot (very slow) 0: only save subplot as fig
 
     %% Get data directory
     project_path = uigetdir(pwd);

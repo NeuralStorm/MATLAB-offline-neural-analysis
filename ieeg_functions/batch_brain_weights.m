@@ -1,23 +1,35 @@
 function [] = batch_brain_weights(dir_name, save_path, failed_path, elec_path, ...
-    pial_path, pca_data_path, dir_config)
+    mesh_path, pca_data_path, dir_config)
+
+    %% Purpose: Go through file list and plot electrode weights onto 3D brain mesh
+    %% Input:
+    % dir_name: Name of dir that data came from (usually subject #)
+    % save_path: path to save files at
+    % failed_path: path to save errors at
+    % elec_path: path to load files with electrode anatomy
+    % mesh_path: path where pial or fieldtrip .mat files contain brain mesh for plotting
+    % pca_data_path: path to load pca results from
+    % dir_config: config settings for that subject
+    %% Output:
+    %  No output, plots are saved at specified save location
 
     %% Load mesh files into mesh struct
     %! move to main potentially?
     if dir_config.is_pial
-        pial_list = get_file_list(pial_path, '.pial');
+        mesh_list = get_file_list(mesh_path, '.pial'); 
         mesh_struct = struct;
-        for file_i = 1:numel(pial_list)
-            [~, pial_name, ~] = fileparts(pial_list(file_i).name);
-            pial_file_path = fullfile(pial_path, pial_list(file_i).name);
+        for file_i = 1:numel(mesh_list)
+            [~, pial_name, ~] = fileparts(mesh_list(file_i).name);
+            pial_file_path = fullfile(mesh_path, mesh_list(file_i).name);
             mesh_output = ft_read_headshape(pial_file_path);
             mesh_struct.(pial_name) = mesh_output;
         end
     else
-        pial_list = get_file_list(pial_path, '.mat');
+        mesh_list = get_file_list(mesh_path, '.mat');
         mesh_struct = struct;
-        for file_i = 1:numel(pial_list)
-            [~, pial_name, ~] = fileparts(pial_list(file_i).name);
-            pial_file_path = fullfile(pial_path, pial_list(file_i).name);
+        for file_i = 1:numel(mesh_list)
+            [~, pial_name, ~] = fileparts(mesh_list(file_i).name);
+            pial_file_path = fullfile(mesh_path, mesh_list(file_i).name);
             load(pial_file_path, 'mesh');
             mesh_struct.(pial_name) = mesh;
         end
