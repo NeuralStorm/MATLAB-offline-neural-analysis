@@ -880,6 +880,22 @@ add_check(handles);
 check_check(handles);
 set(handles.change_button, 'Enable', 'off');
 set(handles.delete_button, 'Enable', 'off');
+
+set(handles.pos1_changeTo, 'Enable', 'off');
+set(handles.pos2_changeTo, 'Enable', 'off');
+set(handles.pos3_changeTo, 'Enable', 'off');
+set(handles.neg1_changeTo, 'Enable', 'off');  
+set(handles.neg2_changeTo, 'Enable', 'off');
+set(handles.neg3_changeTo, 'Enable', 'off'); 
+
+set(handles.pos1_changeTo, 'Value', 0);
+set(handles.pos2_changeTo, 'Value', 0);
+set(handles.pos3_changeTo, 'Value', 0);
+set(handles.neg1_changeTo, 'Value', 0);
+set(handles.neg2_changeTo, 'Value', 0);
+set(handles.neg3_changeTo, 'Value', 0);
+
+
 set(0, 'userdata', []);
 
 
