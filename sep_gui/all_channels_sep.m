@@ -115,7 +115,12 @@ function subplot_refresh_Callback(hObject, eventdata, handles)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
 
-original_path = getappdata(0, 'save_path');
+if ~isempty(getappdata(0, 'save_path'))  
+    original_path = getappdata(0, 'save_path');
+else
+    original_path = getappdata(0, 'select_path');
+end
+
 % original_changed_index = getappdata(0, 'changed_channel_index');
 % changed_index = unique(original_changed_index);
 % if ~isempty(changed_index)

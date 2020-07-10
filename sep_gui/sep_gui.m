@@ -56,16 +56,19 @@ load(file_path, 'sep_analysis_results', 'filename_meta', 'label_log');
 handles.file_path = file_path;
 handles.filename_meta = filename_meta;
 handles.label_log = label_log;
+
 %% Set up save path
-path_parts = strsplit(original_path, {'/', '\'});
-% end - 1 because uigetfile returns path with backslash at end of string
-dir_name = path_parts{end - 1};
-parent_path = [original_path, '..\..'];
-[output_path, ~] = create_dir(parent_path, 'sep_gui_data');
-[dir_path, ~] = create_dir(output_path, dir_name);
-save_file_path = [dir_path, '/', file_name];
-setappdata(0,'save_path', save_file_path);
-handles.save_file_path = save_file_path;
+% path_parts = strsplit(original_path, {'/', '\'});
+% % end - 1 because uigetfile returns path with backslash at end of string
+% dir_name = path_parts{end - 1};
+% parent_path = [original_path, '..\..'];
+% [output_path, ~] = create_dir(parent_path, 'sep_gui_data');
+% [dir_path, ~] = create_dir(output_path, dir_name);
+% save_file_path = [dir_path, '/', file_name];
+% setappdata(0,'save_path', save_file_path);
+% handles.save_file_path = save_file_path;
+
+
 handles.sep_data = sep_analysis_results;
 %initial set
 handles.index = 1;
@@ -753,6 +756,20 @@ end
 
 % --- Executes on button press in save_button.
 function save_button_Callback(hObject, eventdata, handles)
+%save path
+path_parts = strsplit(handles.file_path, {'/', '\'});
+dir_name = path_parts{end - 1};
+file_name = path_parts{end};
+
+path_parts = strcat(path_parts, '\');
+parent_path = cell2mat(path_parts(1:end-3));
+[output_path, ~] = create_dir(parent_path, 'sep_gui_data');
+[dir_path, ~] = create_dir(output_path, dir_name); 
+save_file_path = [dir_path, '/', file_name];
+setappdata(0, 'save_path', save_file_path); 
+handles.save_file_path = save_file_path;
+
+
 %save notes
 analysis_notes = get(handles.notes_text, 'String');
 if isempty(analysis_notes)
@@ -935,11 +952,6 @@ if isempty(analysis_notes)
     analysis_notes = 'n/a';
 end
 handles.sep_data(handles.index).analysis_notes = analysis_notes;
-%save files
-% sep_analysis_results = handles.sep_data;
-% filename_meta = handles.filename_meta;
-% label_log = handles.label_log;
-% save(handles.save_file_path, 'sep_analysis_results', 'filename_meta', 'label_log');
 %load new files
 [file_name, original_path] = uigetfile('*.mat', 'MultiSelect', 'off');
 path_parts = strsplit(original_path, {'/', '\'});
@@ -949,10 +961,16 @@ file_path = [original_path '\' file_name];
 setappdata(0,'select_path',file_path);
 handles.file_path = file_path;
 %% set save path to modified folder
-parent_path = [original_path, '../..'];
-[output_path, ~] = create_dir(parent_path, 'sep_gui_data');
-[dir_path, ~] = create_dir(output_path, dir_name);
-handles.save_file_path = [dir_path, '/', file_name];
+% parent_path = [original_path, '..\..'];
+% [output_path, ~] = create_dir(parent_path, 'sep_gui_data');
+% [dir_path, ~] = create_dir(output_path, dir_name);
+% handles.save_file_path = [dir_path, '\', file_name];
+
+%%set save path to empty string
+save_file_path = []; 
+setappdata(0, 'save_path', save_file_path);
+handles.save_file_path = save_file_path;
+
 %%
 load(handles.file_path, 'sep_analysis_results', 'filename_meta', 'label_log');
 handles.sep_data = sep_analysis_results;
@@ -962,7 +980,7 @@ find_universal_peaks(handles);
 cla(handles.axes1);
 handles.index = 1;
 % sort_peaks(hObject, handles);
-handles = guidata(hObject);
+% handles = guidata(hObject);
 plot_sep_gui(handles, sep_analysis_results, handles.index);
 %checkbox status
 set(handles.pos1_check, 'Value', 0);
