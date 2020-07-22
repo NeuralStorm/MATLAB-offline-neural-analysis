@@ -57,7 +57,7 @@ function [mnts_struct, label_log] = reshape_to_mnts(label_table, GTH, ...
     unique_bands = fieldnames(GTH);
     unique_bands = unique_bands(~ismember(unique_bands, ...
         {'anat', 'beh', 'zpowspctrm'}));
-    unique_regions = unique(label_table.label);
+    unique_regions = unique(GTH.anat.ROIs);
     label_log = struct;
 
     mnts_struct = struct;
@@ -85,7 +85,7 @@ function [mnts_struct, label_log] = reshape_to_mnts(label_table, GTH, ...
             [powspctrm, zpowspctrm] = get_powspctrm(bandname, GTH, label_table);
             for region_i = 1:numel(unique_regions)
                 region = unique_regions{region_i};
-                region_channel_i = ismember(label_table.label, region);
+                region_channel_i = ismember(GTH.anat.ROIs, region);
                 %% Grab region power spectrums
                 region_powspctrm = powspctrm(:, region_channel_i, 1, :);
                 region_zpowspctrm = zpowspctrm(:, region_channel_i, 1, :);
@@ -113,6 +113,7 @@ function [mnts_struct, label_log] = reshape_to_mnts(label_table, GTH, ...
                 mnts_struct.(feature).z_mnts = z_mnts;
                 mnts_struct.(feature).tfr.(bandname) = tfr_struct;
                 region_chans = label_table(ismember(label_table.label, region), :);
+                mnts_struct.(feature).elec_order = region_chans.sig_channels;
                 label_log.(feature) = region_chans;
             end
         end
@@ -129,6 +130,7 @@ function [mnts_struct, label_log] = reshape_to_mnts(label_table, GTH, ...
             label_log.(feature) = [];
             mnts_struct.(feature).mnts = [];
             mnts_struct.(feature).z_mnts = [];
+            mnts_struct.(feature).elec_order = [];
             for sub_feature_i = 1:numel(sub_feature)
                 %% Split into powers and regions
                 pow_regs = sub_feature{sub_feature_i};
@@ -145,7 +147,7 @@ function [mnts_struct, label_log] = reshape_to_mnts(label_table, GTH, ...
                     for region_i = 1:numel(split_regions)
                         %% Iterate through regions
                         region = split_regions{region_i};
-                        region_channel_i = ismember(label_table.label, region);
+                        region_channel_i = ismember(GTH.anat.ROIs, region);
                         %% Grab power spectrums
                         region_powspctrm = powspctrm(:, region_channel_i, 1, :);
                         region_zpowspctrm = zpowspctrm(:, region_channel_i, 1, :);
@@ -167,6 +169,7 @@ function [mnts_struct, label_log] = reshape_to_mnts(label_table, GTH, ...
 
                         %% label log
                         region_chans = label_table(ismember(label_table.label, region), :);
+                        mnts_struct.(feature).elec_order = [mnts_struct.(feature).elec_order; region_chans.sig_channels];
                         label_log.(feature) = [label_log.(feature); region_chans];
                         [~, ind] = unique(label_log.(feature), 'rows');
                         label_log.(feature) = label_log.(feature)(ind, :);
