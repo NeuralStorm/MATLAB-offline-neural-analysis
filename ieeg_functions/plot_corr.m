@@ -15,11 +15,10 @@ function [] = plot_corr(save_path, component_results, label_log)
     for feature_i = 2:numel(unique_features)
         feature = unique_features{feature_i};
         combined_feature_space = [combined_feature_space, '_', feature];
-        %TODO add label and sig_channels to color_log
         color_log.label = [color_log.label; label_log.(feature).label];
         color_log.sig_channels = [color_log.sig_channels; label_log.(feature).sig_channels];
     end
-    [color_struct, region_list] = create_color_struct(color_map, combined_feature_space, color_log);
+    [color_struct, ~] = create_color_struct(color_map, combined_feature_space, color_log);
 
     figure
     %! Change from hard coded
@@ -37,9 +36,21 @@ function [] = plot_corr(save_path, component_results, label_log)
                 continue
             end
             %TODO build color list
-            % intersect(elec_intersect
+            [~, label_i, ~] = intersect(color_log.sig_channels, elec_intersect);
+            region_order = color_log.label(label_i);
+            unique_regions = unique(region_order);
+            % 36 is default size
+            size_list = ones(numel(region_order), 1) * 36;
+            color_list = zeros(numel(region_order), 3);
+            for reg_i = 1:numel(unique_regions)
+                region = unique_regions{reg_i};
+                reg_color = color_struct.(region).color;
+                reg_locs = ismember(region_order, region);
+                color_list(reg_locs, :) = repmat(reg_color, [sum(reg_locs(:) == 1), 1]);
+            end
             scrollsubplot(plot_rows, plot_cols, i);
-            scatter(component_results.(feature).coeff(first_i, 1), component_results.(second_feature).coeff(second_i, 1))
+            scatter(component_results.(feature).coeff(first_i, 1), component_results.(second_feature).coeff(second_i, 1), ...
+            size_list, color_list, 'filled')
             xlabel(strrep(feature, '_', ' '))
             xtickformat('%.2f');
             ylabel(strrep(second_feature, '_', ' '))
@@ -47,5 +58,5 @@ function [] = plot_corr(save_path, component_results, label_log)
             i = i + 1;
         end
     end
-    % hold off
+    %TODO add color legend subplot
 end
