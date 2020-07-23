@@ -5,8 +5,7 @@ function [] = plot_recfield(psth, first_bin_latency, last_bin_latency, threshold
     hold on
     if ~isnan(first_bin_latency)
         %red labelling
-        first_bin_latency = first_bin_latency - (bin_size / 2);
-        last_bin_latency = last_bin_latency - (bin_size / 2);
+        last_bin_latency = last_bin_latency - bin_size;
         sig_start_index = round((first_bin_latency + abs(window_start)) / bin_size);
         sig_end_index = round((last_bin_latency + abs(window_start)) / bin_size);
         psth_bar = bar(event_window(sig_start_index:sig_end_index), ...
@@ -15,8 +14,8 @@ function [] = plot_recfield(psth, first_bin_latency, last_bin_latency, threshold
 
         %% Plot receptive field measures
         plot(xlim,[threshold threshold], 'r', 'LineWidth', 0.75);
-        line([first_bin_latency first_bin_latency], ylim, 'Color', 'red', 'LineWidth', 0.75);
-        line([last_bin_latency last_bin_latency], ylim, 'Color', 'red', 'LineWidth', 0.75);
+        line([(first_bin_latency - (bin_size / 2)) (first_bin_latency - (bin_size / 2))], ylim, 'Color', 'red', 'LineWidth', 0.75);
+        line([(last_bin_latency + (bin_size / 2)) (last_bin_latency + (bin_size / 2))], ylim, 'Color', 'red', 'LineWidth', 0.75);
     else
         plot(xlim,[threshold threshold], 'r', 'LineWidth', 0.75);
     end
