@@ -4,7 +4,8 @@ function batch_continuous_extract_format_spikes(save_path, failed_path, data_pat
     extract_spikes_start = tic;
     fprintf('Extracting spikes for %s \n', dir_name);
     config_log = dir_config;
-    file_list = get_file_list(data_path, '.mat');
+    curr_dir = [data_path, '/'];
+    file_list = get_file_list(curr_dir, '.mat');
     file_list = update_file_list(file_list, failed_path, ...
         dir_config.include_sessions);
     
@@ -14,13 +15,13 @@ function batch_continuous_extract_format_spikes(save_path, failed_path, data_pat
        
         try
             %% Load file contents
-            file = [data_path, '/', file_list(file_index).name];
+            file = [curr_dir, '/', file_list(file_index).name];
             load(file, 'event_samples', 'filename_meta', 'filtered_map', 'label_log', 'sample_rate');
             %% Check variables to make sure they are not empty
-            empty_vars = check_variables(file, sliced_signal);
-            if empty_vars
-                continue
-            end
+%             empty_vars = check_variables(file, sliced_signal);
+%             if empty_vars
+%                 continue
+%             end
                       
             %% Format events for spike extraction and psth formatting
             unique_events = fieldnames(orderfields(event_samples));
@@ -48,7 +49,7 @@ function batch_continuous_extract_format_spikes(save_path, failed_path, data_pat
                
                 channel_map{chan, 1} = filtered_map(chan).sig_channels;
                 spikes = continuous_extract_spikes(filtered_map(chan).data, dir_config.spike_thresh,...
-                    sample_ts, sample_rate);
+                    sample_ts, sample_rate, dir_config.baseline_start, dir_config.baseline_end);
                 channel_map{chan, 2} = spikes';
                 
             end

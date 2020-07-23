@@ -21,7 +21,7 @@ function [] = continuous_main()
         dir_config = convert_table_cells(dir_config);
         label_table = load_labels(project_path, [curr_dir, '_labels.csv']);
         if dir_config.filter_data
-            [filter_data_path, filter_failed_path] = create_dir(continuous_path, 'filtered_data');
+            [filter_data_path, filter_failed_path] = create_dir(continuous_path, 'filtered_data_sep');
             export_params(filter_data_path, 'filter', config);
             try
                 %% Check to make sure paths exist for analysis and create save path
@@ -32,7 +32,7 @@ function [] = continuous_main()
                 [dir_save_path, dir_failed_path] = create_dir(filter_data_path, curr_dir);
 
                 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-                %%        Filter data         %%
+                %%    Filter data for SEPs    %%
                 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
                 batch_filter(dir_save_path, dir_failed_path, parsed_dir_path, curr_dir, dir_config, label_table);
             catch ME
@@ -52,7 +52,7 @@ function [] = continuous_main()
                     sep_input_path = enforce_dir_layout(parsed_path, curr_dir, ...
                         continuous_failed_path, e_msg_1, e_msg_2);
                 else
-                    filter_path = [continuous_path, '/filtered_data'];
+                    filter_path = [continuous_path, '/filtered_data_sep'];
                     sep_input_path = enforce_dir_layout(filter_path, curr_dir, ...
                         continuous_failed_path, e_msg_1, e_msg_2);
                 end
@@ -113,6 +113,64 @@ function [] = continuous_main()
                 handle_ME(ME, graph_failed_path, [curr_dir, '_failed.mat']);
             end
         end
+        
+        if dir_config.spike_filter_data
+            [filter_data_path, filter_failed_path] = create_dir(continuous_path, 'filtered_data_psth');
+            export_params(filter_data_path, 'filter', config);
+            try
+                %% Check to make sure paths exist for analysis and create save path
+                e_msg_1 = 'No parsed directory to filter';
+                e_msg_2 = ['No ', curr_dir, ' directory to filter'];
+                parsed_dir_path = enforce_dir_layout(parsed_path, curr_dir, ...
+                    continuous_failed_path, e_msg_1, e_msg_2);
+                [dir_save_path, dir_failed_path] = create_dir(filter_data_path, curr_dir);
+
+                %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+                %%   Filter data for spikes   %%
+                %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+                batch_filter(dir_save_path, dir_failed_path, parsed_dir_path, curr_dir, dir_config, label_table);
+            catch ME
+                handle_ME(ME, filter_failed_path, [curr_dir, '_failed.mat']);
+            end
+        end
+        
+        if dir_config.spike_extract_spikes
+           [spikes_data_path, spikes_failed_path] = create_dir(project_path, 'parsed_spike');
+            export_params(spikes_data_path, 'parsed_spike', config);
+                       
+                %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+                %%        Extract Spikes      %%
+                %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+            try                             
+                if dir_config.spike_use_raw
+                    parsed_path = [project_path, '/parsed_continuous'];
+                    e_msg_1 = 'No parsed directory to extract spikes from';
+                    e_msg_2 = ['No parsed directory for ', curr_dir, ' to extract spikes'];
+                    parsed_dir_path = enforce_dir_layout(parsed_path, curr_dir, ...
+                        continuous_failed_path, e_msg_1, e_msg_2); 
+                    
+                    [dir_save_path, dir_failed_path] = create_dir(spikes_data_path, curr_dir);                    
+                    batch_continuous_extract_format_spikes(dir_save_path, dir_failed_path, ...
+                        parsed_dir_path, curr_dir, dir_config, label_table); 
+                else
+                    
+                    filter_path = [continuous_path, '/filtered_data_psth'];
+                    e_msg_1 = 'No filter directory to extract spikes from';
+                    e_msg_2 = ['No filter directory for ', curr_dir, ' to extract spikes'];
+                    filter_dir_path = enforce_dir_layout(filter_path, curr_dir, ...
+                        continuous_failed_path, e_msg_1, e_msg_2);
+                    
+                    [dir_save_path, dir_failed_path] = create_dir(spikes_data_path, curr_dir);
+                    batch_continuous_extract_format_spikes(dir_save_path, dir_failed_path, ...
+                        filter_dir_path, curr_dir, dir_config, label_table); 
+
+                end
+            
+            catch ME
+                 handle_ME(ME, spikes_failed_path, [curr_dir, '_failed.mat']);
+            end
+        end
+        
     end
     toc(start_time);
 end
