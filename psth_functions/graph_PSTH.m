@@ -21,6 +21,7 @@ function [] = graph_PSTH(save_path, psth_struct, label_log, sig_response, ...
     event_window(1) = [];
 
     region_names = fieldnames(label_log);
+
     parfor region = 1:length(region_names)
         current_region = region_names{region};
         region_neurons = label_log.(current_region).sig_channels;
@@ -54,7 +55,8 @@ function [] = graph_PSTH(save_path, psth_struct, label_log, sig_response, ...
             end
 
             %% Creating the PSTH graphs
-            for neuron = 1:total_region_neurons
+            for neuron_iter = 1:total_region_neurons
+                neuron = find(label_log.(current_region).user_channels == neuron_iter);
                 psth_name = region_neurons{neuron};
                 psth = psth_struct.(current_region).(current_event).(psth_name).psth;
                 if rf_analysis && ~unsmoothed_recfield_metrics
@@ -106,7 +108,7 @@ function [] = graph_PSTH(save_path, psth_struct, label_log, sig_response, ...
                     end
                     if make_region_subplot
                         figure(region_figure);
-                        scrollsubplot(sub_rows, sub_cols, neuron);
+                        scrollsubplot(sub_rows, sub_cols, neuron_iter);
                         hold on
                         region_handle = bar(event_window, psth,'BarWidth', 1);
                         set(region_handle, 'EdgeAlpha', 0);
@@ -124,7 +126,7 @@ function [] = graph_PSTH(save_path, psth_struct, label_log, sig_response, ...
                 end
                 if make_region_subplot && ~rf_analysis
                     figure(region_figure);
-                    scrollsubplot(sub_rows, sub_cols, neuron);
+                    scrollsubplot(sub_rows, sub_cols, neuron_iter);
                     hold on
                     region_handle = bar(event_window, psth,'BarWidth', 1);
                     set(region_handle, 'EdgeAlpha', 0);
