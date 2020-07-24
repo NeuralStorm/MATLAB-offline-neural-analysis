@@ -1,4 +1,5 @@
-function [] = plot_corr(save_path, component_results, label_log)
+function [] = plot_corr(save_path, component_results, label_log, ...
+        feature_filter, feature_value, min_components)
     color_map = [0 0 0 % black
                 1 0 0 % red
                 0 0 1 % blue
@@ -24,23 +25,42 @@ function [] = plot_corr(save_path, component_results, label_log)
     %! Change from hard coded
     plot_rows = 3; plot_cols = 3; i = 1;
     %TODO add loop for multiple components
-    for feature_i = 1:(numel(unique_features) - 1)
-        feature = unique_features{feature_i};
-        first_elec_set = component_results.(feature).elec_order;
-        combined_feature_space = unique_features(feature_i + 1:end);
-        for combined_feature_i = 1:numel(combined_feature_space)
-            second_feature = combined_feature_space{combined_feature_i};
-            second_elec_set = component_results.(second_feature).elec_order;
-            [elec_intersect, first_i, second_i] = intersect(first_elec_set, second_elec_set);
-            if isempty(elec_intersect)
+    for space_one_i = 1:(numel(unique_features) - 1)
+        space_one = unique_features{space_one_i};
+        first_elec_set = component_results.(space_one).elec_order;
+        first_weights = component_results.(space_one).coeff;
+        [~, first_components] = size(first_weights);
+        if first_components < min_components
+            continue
+        end
+        if strcmpi(feature_filter, 'pcs') && feature_value < first_components
+            %% Grabs desired number of principal components weights
+            first_weights = first_weights(:, 1:feature_value);
+        end
+        remaining_spaces = unique_features(space_one_i + 1:end);
+        for space_two_i = 1:numel(remaining_spaces)
+            space_two = remaining_spaces{space_two_i};
+            second_elec_set = component_results.(space_two).elec_order;
+            second_weights = component_results.(space_two).coeff;
+            [~, second_components] = size(second_weights);
+            if second_components < min_components
                 continue
             end
-            %TODO build color list
+            if strcmpi(feature_filter, 'pcs') && feature_value < second_components
+                %% Grabs desired number of principal components weights
+                second_weights = second_weights(:, 1:feature_value);
+            end
+            [elec_intersect, first_i, second_i] = intersect(first_elec_set, second_elec_set);
+            if isempty(elec_intersect) || numel(elec_intersect) < min_components
+                continue
+            end
+            %TODO generalize for multiple components
+            x_values = first_weights(first_i, 1);
+            y_values = second_weights(second_i, 1);
             [~, label_i, ~] = intersect(color_log.sig_channels, elec_intersect);
             region_order = color_log.label(label_i);
             unique_regions = unique(region_order);
-            % 36 is default size
-            size_list = ones(numel(region_order), 1) * 36;
+            size_list = ones(numel(region_order), 1) * 36; % 36 is default size
             color_list = zeros(numel(region_order), 3);
             for reg_i = 1:numel(unique_regions)
                 region = unique_regions{reg_i};
@@ -49,14 +69,14 @@ function [] = plot_corr(save_path, component_results, label_log)
                 color_list(reg_locs, :) = repmat(reg_color, [sum(reg_locs(:) == 1), 1]);
             end
             scrollsubplot(plot_rows, plot_cols, i);
-            scatter(component_results.(feature).coeff(first_i, 1), component_results.(second_feature).coeff(second_i, 1), ...
-            size_list, color_list, 'filled')
-            xlabel(strrep(feature, '_', ' '))
+            scatter(x_values, y_values, size_list, color_list, 'filled')
+            xlabel(strrep(space_one, '_', ' '))
             xtickformat('%.2f');
-            ylabel(strrep(second_feature, '_', ' '))
+            ylabel(strrep(space_two, '_', ' '))
             ytickformat('%.2f');
             i = i + 1;
         end
     end
     %TODO add color legend subplot
+    %TODO save plots
 end

@@ -19,7 +19,9 @@ function [] = batch_plot_corr(dir_name, save_path, failed_path, ...
                 continue
             end
 
-            plot_corr(save_path, component_results, label_log);
+            plot_corr(save_path, component_results, label_log, ...
+                dir_config.feature_filter, dir_config.feature_value, ...
+                dir_config.min_components);
         catch ME
             handle_ME(ME, failed_path, filename_meta.filename);
         end
