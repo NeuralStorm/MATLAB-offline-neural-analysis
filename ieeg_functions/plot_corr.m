@@ -6,9 +6,11 @@ function [] = plot_corr(save_path, component_results, label_log, ...
                 0 1 0 % green
                 1 0 1 % magenta
                 1 1 0]; % yellow
+    %! Change from hard coded
+    plot_rows = 3; plot_cols = 3; i = 1;
+    %TODO add loop for multiple components
 
     unique_features = fieldnames(label_log);
-
     %% Create color_struct
     combined_feature_space = unique_features{1};
     color_log.label = label_log.(combined_feature_space).label;
@@ -22,9 +24,6 @@ function [] = plot_corr(save_path, component_results, label_log, ...
     [color_struct, ~] = create_color_struct(color_map, combined_feature_space, color_log);
 
     figure
-    %! Change from hard coded
-    plot_rows = 3; plot_cols = 3; i = 1;
-    %TODO add loop for multiple components
     for space_one_i = 1:(numel(unique_features) - 1)
         space_one = unique_features{space_one_i};
         first_elec_set = component_results.(space_one).elec_order;
@@ -69,11 +68,17 @@ function [] = plot_corr(save_path, component_results, label_log, ...
                 color_list(reg_locs, :) = repmat(reg_color, [sum(reg_locs(:) == 1), 1]);
             end
             scrollsubplot(plot_rows, plot_cols, i);
-            scatter(x_values, y_values, size_list, color_list, 'filled')
+            hold on
+            scatter(x_values, y_values, size_list, color_list, 'filled');
+            lsline
+            R = corrcoef(x_values,y_values);
+            Rsq = R(1,2).^2;
+            title(['R^2: ', num2str(Rsq)])
             xlabel(strrep(space_one, '_', ' '))
             xtickformat('%.2f');
             ylabel(strrep(space_two, '_', ' '))
             ytickformat('%.2f');
+            hold off
             i = i + 1;
         end
     end
