@@ -1,6 +1,18 @@
 function [] = batch_plot_tfr_pca_psth(save_path, failed_path, tfr_path, ...
         pca_data_path, pca_psth_path, dir_config)
 
+    %% Purpose: Go through file list and plot electrode weights onto 3D brain mesh
+    %% Input:
+    % dir_name: Name of dir that data came from (usually subject #)
+    % save_path: path to save files at
+    % failed_path: path to save errors at
+    % tfr_path: path where tfr figs are for dir_name
+    % pca_data_path: path to load pca results from
+    % pca_psth_path: path to load files with psth struct
+    % dir_config: config settings for that subject
+    %% Output:
+    %  No output, plots are saved at specified save location
+
     %% PCA file list
     pca_file_list = get_file_list(pca_data_path, '.mat');
     pca_file_list = update_file_list(pca_file_list, failed_path, dir_config.include_sessions);

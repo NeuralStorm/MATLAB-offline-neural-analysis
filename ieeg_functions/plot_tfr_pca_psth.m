@@ -134,10 +134,7 @@ function [] = plot_tfr_pca_psth(save_path, tfr_path, tfr_file_list, label_log, .
                 for sub_pow_i = 1:tot_tfrs
                     curr_freq = freq_list{sub_pow_i};
                     %% load figure
-                    tfr_i = contains({tfr_file_list.name}, curr_freq) ...
-                        & contains({tfr_file_list.name}, sub_reg) ...
-                        & contains({tfr_file_list.name}, event);
-                    tfr_filename = tfr_file_list(tfr_i).name;
+                    tfr_filename = get_tfr_filename(tfr_file_list, curr_freq, sub_reg, event);
                     tfr_file = fullfile(tfr_path, tfr_filename);
                     tfr_fig = openfig(tfr_file);
                     tfr_ax = get(gca,'Children');
@@ -270,4 +267,11 @@ function [] = plot_tfr_pca_psth(save_path, tfr_path, tfr_file_list, label_log, .
             close all
         end
     end
+end
+
+function [tfr_filename] = get_tfr_filename(tfr_file_list, curr_freq, sub_reg, event)
+    tfr_i = contains({tfr_file_list.name}, curr_freq) ...
+        & contains({tfr_file_list.name}, sub_reg) ...
+        & contains({tfr_file_list.name}, event);
+    tfr_filename = tfr_file_list(tfr_i).name;
 end
