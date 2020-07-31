@@ -1,5 +1,5 @@
 function [] = plot_corr(save_path, component_results, label_log, ...
-        feature_filter, feature_value, min_components)
+        feature_filter, feature_value, min_components, subplot_spacing)
     color_map = [0 0 0 % black
                 1 0 0 % red
                 0 0 1 % blue
@@ -59,18 +59,23 @@ function [] = plot_corr(save_path, component_results, label_log, ...
             [~, label_i, ~] = intersect(color_log.sig_channels, elec_intersect);
             region_order = color_log.label(label_i);
             unique_regions = unique(region_order);
-            size_list = ones(numel(region_order), 1) * 36; % 36 is default size
+            scrollsubplot(plot_rows, plot_cols, i);
+            hold on
             color_list = zeros(numel(region_order), 3);
+            legend_info = [];
             for reg_i = 1:numel(unique_regions)
                 region = unique_regions{reg_i};
                 reg_color = color_struct.(region).color;
                 reg_locs = ismember(region_order, region);
-                color_list(reg_locs, :) = repmat(reg_color, [sum(reg_locs(:) == 1), 1]);
+                s = scatter(x_values(reg_locs), y_values(reg_locs), 'MarkerFaceColor', reg_color, 'MarkerEdgeColor', 'none');
+                legend_info = [legend_info, s];
             end
-            scrollsubplot(plot_rows, plot_cols, i);
-            hold on
-            scatter(x_values, y_values, size_list, color_list, 'filled');
-            lsline
+            lg = legend(legend_info, unique_regions);
+            % legend('boxoff');
+            lg.Location = 'Best';
+            lg.Orientation = 'Horizontal';
+            [~, r] = get_linear_fit(x_values, y_values); 
+            plot(x_values, r, '-');
             R = corrcoef(x_values,y_values);
             Rsq = R(1,2).^2;
             title(['R^2: ', num2str(Rsq)])
@@ -78,6 +83,9 @@ function [] = plot_corr(save_path, component_results, label_log, ...
             xtickformat('%.2f');
             ylabel(strrep(space_two, '_', ' '))
             ytickformat('%.2f');
+            %% shrink height of graphs slightly to stop overlap of text in fullscreen
+            ax_vals = gca;
+            ax_vals.Position(4) = ax_vals.Position(4) - subplot_spacing;
             hold off
             i = i + 1;
         end
