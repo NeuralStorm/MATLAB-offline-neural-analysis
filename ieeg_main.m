@@ -285,7 +285,8 @@ function [] = ieeg_main()
         end
 
         if dir_config.make_corr_plots
-            [graph_path, graph_failed_path] = create_dir(project_path, 'corr_plots');
+            mnts_path = [project_path, '/mnts'];
+            [graph_path, graph_failed_path] = create_dir(mnts_path, 'corr_plots');
             % export_params(graph_path, 'brain_pca', config);
             pca_path = [project_path, '/mnts/pca'];
             try
