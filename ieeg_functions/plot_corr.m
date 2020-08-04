@@ -1,5 +1,6 @@
 function [] = plot_corr(save_path, component_results, label_log, ...
-        feature_filter, feature_value, min_components, subplot_spacing)
+        feature_filter, feature_value, min_components, ...
+        subplot_shrinking, legend_loc)
     color_map = [0 0 0 % black
                 1 0 0 % red
                 0 0 1 % blue
@@ -24,6 +25,7 @@ function [] = plot_corr(save_path, component_results, label_log, ...
     [color_struct, ~] = create_color_struct(color_map, combined_feature_space, color_log);
 
     figure
+    legend_struct = struct;
     for space_one_i = 1:(numel(unique_features) - 1)
         space_one = unique_features{space_one_i};
         first_elec_set = component_results.(space_one).elec_order;
@@ -67,29 +69,37 @@ function [] = plot_corr(save_path, component_results, label_log, ...
                 region = unique_regions{reg_i};
                 reg_color = color_struct.(region).color;
                 reg_locs = ismember(region_order, region);
-                s = scatter(x_values(reg_locs), y_values(reg_locs), 'MarkerFaceColor', reg_color, 'MarkerEdgeColor', 'none');
+                s = scatter(x_values(reg_locs), y_values(reg_locs), ...
+                    'MarkerFaceColor', reg_color, 'MarkerEdgeColor', 'none');
                 legend_info = [legend_info, s];
+                if ~isfield(legend_struct, region)
+                    legend_struct.(region) = s;
+                end
             end
-            lg = legend(legend_info, unique_regions);
-            % legend('boxoff');
-            lg.Location = 'Best';
-            lg.Orientation = 'Horizontal';
-            [~, r] = get_linear_fit(x_values, y_values); 
-            plot(x_values, r, '-');
+            [~, y_fit] = get_linear_fit(x_values, y_values); 
+            plot(x_values, y_fit, '-');
+            %% R2 calculation
             R = corrcoef(x_values,y_values);
             Rsq = R(1,2).^2;
+            %% Axis and title set up
             title(['R^2: ', num2str(Rsq)])
             xlabel(strrep(space_one, '_', ' '))
             xtickformat('%.2f');
             ylabel(strrep(space_two, '_', ' '))
             ytickformat('%.2f');
+            %% legend set up
+            lg = legend(legend_info, unique_regions);
+            lg.Orientation = 'Horizontal';
+            lg.Location = legend_loc;
             %% shrink height of graphs slightly to stop overlap of text in fullscreen
             ax_vals = gca;
-            ax_vals.Position(4) = ax_vals.Position(4) - subplot_spacing;
+            ax_vals.Position(4) = ax_vals.Position(4) - subplot_shrinking;
             hold off
             i = i + 1;
         end
     end
-    %TODO add color legend subplot
-    %TODO save plots
+    %TODO generalize for multiple components
+    filename = ['component_corr_', num2str(1), '.fig'];
+    set(gcf, 'CreateFcn', 'set(gcbo,''Visible'',''on'')'); 
+    savefig(gcf, fullfile(save_path, filename));
 end
