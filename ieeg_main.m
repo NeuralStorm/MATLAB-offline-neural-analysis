@@ -244,9 +244,9 @@ function [] = ieeg_main()
                 [dir_save_path, dir_failed_path] = create_dir(graph_path, curr_dir);
 
                 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-                %%         Graph PSTH         %%
+                %%     Graph TFR/PCA/PSTH     %%
                 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-                batch_plot_tfr_pca_psth(dir_save_path, dir_failed_path, ...
+                batch_plot_tfr_pca_psth(curr_dir, dir_save_path, dir_failed_path, ...
                     dir_tfr_path, dir_pca_path, dir_psth_path, dir_config);
             catch ME
                 handle_ME(ME, graph_failed_path, [curr_dir, '_missing_dir.mat']);
@@ -254,10 +254,11 @@ function [] = ieeg_main()
         end
 
         if dir_config.make_brain_plots
-            [graph_path, graph_failed_path] = create_dir(project_path, 'brain_pca');
+            mnts_path = [project_path, '/mnts'];
+            [graph_path, graph_failed_path] = create_dir(mnts_path, 'pca_mesh_plots');
             export_params(graph_path, 'brain_pca', config);
-            pca_path = [project_path, '/mnts/pca'];
-            pial_path = [project_path, '/recons'];
+            pca_path = [mnts_path, '/pca'];
+            mesh_path = [project_path, '/meshes'];
             try
                 %% PCA weight path
                 e_msg_1 = 'No data directory to find PCAs';
@@ -268,17 +269,17 @@ function [] = ieeg_main()
                 %% tfr path
                 e_msg_1 = 'No recon plot directory to find recons';
                 e_msg_2 = ['No ', curr_dir, ' TFR plots'];
-                dir_elec_path = enforce_dir_layout(pial_path, curr_dir, ...
+                dir_elec_path = enforce_dir_layout(mesh_path, curr_dir, ...
                     graph_failed_path, e_msg_1, e_msg_2);
 
                 [dir_save_path, dir_failed_path] = create_dir(graph_path, curr_dir);
 
                 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-                %%         Graph PSTH         %%
+                %%      Graph brain mesh      %%
                 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
                 %! Figure out how to store .pial files
                 batch_brain_weights(curr_dir, dir_save_path, dir_failed_path, ...
-                    dir_elec_path, pial_path, dir_pca_path, dir_config);
+                    dir_elec_path, mesh_path, dir_pca_path, dir_config);
             catch ME
                 handle_ME(ME, graph_failed_path, [curr_dir, '_missing_dir.mat']);
             end

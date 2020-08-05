@@ -13,6 +13,9 @@ function [] = batch_brain_weights(dir_name, save_path, failed_path, elec_path, .
     %% Output:
     %  No output, plots are saved at specified save location
 
+    fprintf('Graphing PCA meshes for %s \n', dir_name);
+    mesh_start = tic;
+
     %% Load mesh files into mesh struct
     %! move to main potentially?
     if dir_config.is_pial
@@ -62,4 +65,6 @@ function [] = batch_brain_weights(dir_name, save_path, failed_path, elec_path, .
             handle_ME(ME, failed_path, filename_meta.filename);
         end
     end
+    fprintf('Finished PCA mesh plots for %s. It took %s \n', ...
+        dir_name, num2str(toc(mesh_start)));
 end
