@@ -48,9 +48,10 @@ function batch_continuous_extract_format_spikes(save_path, failed_path, data_pat
             for chan = 1:length(filtered_map)
                
                 channel_map{chan, 1} = filtered_map(chan).sig_channels;
-                spikes = continuous_extract_spikes(filtered_map(chan).data, dir_config.spike_thresh,...
+                [spikes, threshold] = continuous_extract_spikes(filtered_map(chan).data, dir_config.spike_thresh,...
                     sample_ts, sample_rate, dir_config.baseline_start, dir_config.baseline_end);
                 channel_map{chan, 2} = spikes';
+%                 channel_map{chan, 3} = threshold; 
                 
             end
             
