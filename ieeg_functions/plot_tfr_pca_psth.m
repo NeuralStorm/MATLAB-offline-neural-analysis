@@ -29,7 +29,6 @@ function [] = plot_tfr_pca_psth(save_path, tfr_path, tfr_file_list, label_log, .
     %                                  coeff: NxN (N = tot features) matrix with coeff weights used to scale mnts into PC space
     %                                             Columns: Component Row: Feature
     %                                  estimated_mean: Vector with estimated means for each feature
-    %                                  original_weighted_mnts: mnts mapped into pc space without any filtering
     %                                  weighted_mnts: mnts mapped into pc space with feature filter applied
     %                                  tfr: struct with fields for each power
     %                                       (Note: This was added in the batch_power_pca function and not in the calc_pca call)
@@ -86,6 +85,12 @@ function [] = plot_tfr_pca_psth(save_path, tfr_path, tfr_file_list, label_log, .
 
     event_window = window_start:bin_size:window_end;
     event_window(1) = [];
+
+    if use_z
+        z_type = 'z_';
+    else
+        z_type = '';
+    end
 
     freq_list = {'highfreq', 'lowfreq'};
     tot_tfrs = length(freq_list);
@@ -181,8 +186,8 @@ function [] = plot_tfr_pca_psth(save_path, tfr_path, tfr_file_list, label_log, .
             end
 
             %% Creating the PSTH graphs
-            for neuron = 1:total_region_neurons
-                psth_name = region_neurons{neuron};
+            for comp_i = 1:total_region_neurons
+                psth_name = region_neurons{comp_i};
                 psth = psth_struct.(feature).(event).(psth_name).psth;
                 relative_response = psth_struct.(feature).(event).(psth_name).relative_response;
                 if strcmpi(st_type, 'std')
@@ -213,13 +218,8 @@ function [] = plot_tfr_pca_psth(save_path, tfr_path, tfr_file_list, label_log, .
                     color_i = 1;
                     for tfr_i = 1:numel(unique_tfrs)
                         curr_tfr = unique_tfrs{tfr_i};
-                        if use_z
-                            avg_tfr = tfr_struct.(curr_tfr).(event).avg_z_tfr;
-                            st_tfr = tfr_struct.(curr_tfr).(event).([st_type, '_tfr']);
-                        else
-                            avg_tfr = tfr_struct.(curr_tfr).(event).avg_tfr;
-                            st_tfr = tfr_struct.(curr_tfr).(event).([st_type, '_z_tfr']);
-                        end
+                        avg_tfr = tfr_struct.(curr_tfr).(event).(['avg_', z_type, 'tfr']);
+                        st_tfr = tfr_struct.(curr_tfr).(event).([st_type, '_', z_type, 'tfr']);
                         [l, ~] = boundedline(event_window, avg_tfr, st_tfr, 'cmap', color_map(color_i, :), ...
                             'transparency', transparency);
                         legend_lines = [legend_lines, l];

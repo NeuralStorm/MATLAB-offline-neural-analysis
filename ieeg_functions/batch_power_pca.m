@@ -44,9 +44,9 @@ function [] = batch_power_pca(save_path, failed_path, data_path, dir_name, dir_c
             matfile = fullfile(save_path, ['pc_analysis_', ...
                 filename_meta.filename, '.mat']);
             check_variables(matfile, component_results);
-            save(matfile, 'component_results', ...
+            save(matfile, '-v7.3', 'component_results', ...
                 'filename_meta', 'config_log', 'label_log', 'pc_log');
-            clear('label_log', 'component_results', 'filename_meta');
+            clear('label_log', 'component_results', 'filename_meta', 'pc_log', 'config_log');
         catch ME
             handle_ME(ME, failed_path, filename_meta.filename);
         end

@@ -14,7 +14,6 @@ function [] = plot_pca_weights(save_path, component_results, label_log, feature_
     %                                  coeff: NxN (N = tot features) matrix with coeff weights used to scale mnts into PC space
     %                                         Columns: Component Row: Feature
     %                                  estimated_mean: Vector with estimated means for each feature
-    %                                  original_weighted_mnts: mnts mapped into pc space without any filtering
     %                                  weighted_mnts: mnts mapped into pc space with feature filter applied
     %                                  tfr: struct with fields for each power
     %                                       (Note: This was added in the batch_power_pca function and not in the calc_pca call)

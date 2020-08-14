@@ -76,6 +76,8 @@ function [] = ieeg_main()
     config = import_config(project_path, 'ieeg');
     config(config.include_dir == 0, :) = [];
 
+    parpool(config.num_pools(1));
+
     [pre_processed_path, pre_processed_failed_path] = create_dir(project_path, 'pre_processed');
     dir_list = config.dir_name;
     for dir_i = 1:length(dir_list)
@@ -177,6 +179,7 @@ function [] = ieeg_main()
             [pca_psth_path, pca_psth_failed_path] = create_dir(project_path, 'pca_psth');
             export_params(pca_psth_path, 'pca_psth', config);
             try
+                mnts_path = [project_path, '/mnts'];
                 %% Check to make sure paths exist for analysis and create save path
                 e_msg_2 = ['No ', curr_dir, ' pca mnts data to convert to mnts'];
                 pca_path = [mnts_path, '/pca'];

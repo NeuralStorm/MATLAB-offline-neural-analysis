@@ -44,7 +44,6 @@ function [pca_results, labeled_pcs, pc_log] = calc_pca(label_log, mnts_struct, .
     %                                        coeff: NxN (N = tot features) matrix with coeff weights used to scale mnts into PC space
     %                                                   Columns: Component Row: Feature
     %                                        estimated_mean: Vector with estimated means for each feature
-    %                                        original_weighted_mnts: mnts mapped into pc space without any filtering
     %                                        weighted_mnts: mnts mapped into pc space with feature filter applied
     % labeled_pcs: similar to label_log, but sig_channels is replaced with pc # since channels have been mapped
     % labeled_pcs: Same as labeled_pcs, but with feature filter applied (ex: 3 pcs would only contain 3 pc names)
@@ -80,10 +79,8 @@ function [pca_results, labeled_pcs, pc_log] = calc_pca(label_log, mnts_struct, .
         if strcmpi(feature_filter, 'pcs')
             %% Grabs desired number of principal components from the score
             if feature_value > tot_pcs
-                pca_results.(region).original_weighted_mnts = pca_score;
             else
                 tot_pcs = feature_value;
-                pca_results.(region).original_weighted_mnts = pca_score;
                 pca_score = pca_score(:, 1:tot_pcs);
                 labeled_pcs.(region) = labeled_pcs.(region)(1:tot_pcs, :);
             end
@@ -106,7 +103,6 @@ function [pca_results, labeled_pcs, pc_log] = calc_pca(label_log, mnts_struct, .
                     break
                 end
             end
-            pca_results.(region).original_weighted_mnts = pca_score;
             %% Recalculate the scores with the new set of coefficients
             pca_score = (mnts_struct.(region).(mnts_type) - estimated_mean) * coeff(:,1:tot_pcs);
             labeled_pcs.(region) = labeled_pcs.(region)(1:tot_pcs, :);

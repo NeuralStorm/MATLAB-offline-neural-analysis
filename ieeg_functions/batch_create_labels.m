@@ -29,9 +29,9 @@ function [] = batch_create_labels(data_path, failed_path, labels_path, ...
         try
             %% Load file contents
             file = [data_path, '/', file_list(file_index).name];
-            load(file, 'GTH');
+            load(file, 'POWERtest2');
 
-            label_table = create_ieeg_labels(label_table, GTH.anat, ...
+            label_table = create_ieeg_labels(label_table, POWERtest2.anat, ...
                 filename_meta.session_num);
             save(file, 'filename_meta', '-append');
         catch ME

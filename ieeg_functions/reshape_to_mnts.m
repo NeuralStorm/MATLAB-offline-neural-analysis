@@ -1,5 +1,5 @@
 function [mnts_struct, label_log] = reshape_to_mnts(label_table, GTH, ...
-        select_features)
+        select_features, use_z_score)
     %% Purpose: Reshape output from filtering process
     %% Input
     % label_table: table with information of current recording
@@ -54,9 +54,15 @@ function [mnts_struct, label_log] = reshape_to_mnts(label_table, GTH, ...
     %                   'recording_session': Int: File recording session number that above applies to
     %                   'recording_notes': String with user defined notes for channel
 
+    if use_z_score
+        z_type = 'z_';
+    else
+        '';
+    end
+
     unique_bands = fieldnames(GTH);
     unique_bands = unique_bands(~ismember(unique_bands, ...
-        {'anat', 'beh', 'zpowspctrm'}));
+        {'anat', 'beh', 'fsample'}));
     unique_regions = unique(GTH.anat.ROIs);
     label_log = struct;
 
@@ -82,35 +88,27 @@ function [mnts_struct, label_log] = reshape_to_mnts(label_table, GTH, ...
         for band_i = 1:numel(unique_bands)
             bandname = unique_bands{band_i};
             tfr_struct = make_tfr_struct(all_events);
-            [powspctrm, zpowspctrm] = get_powspctrm(bandname, GTH, label_table);
+            powspctrm = get_powspctrm(GTH.(bandname), use_z_score);
             for region_i = 1:numel(unique_regions)
                 region = unique_regions{region_i};
                 region_channel_i = ismember(GTH.anat.ROIs, region);
                 %% Grab region power spectrums
-                region_powspctrm = powspctrm(:, region_channel_i, 1, :);
-                region_zpowspctrm = zpowspctrm(:, region_channel_i, 1, :);
-                [mnts, z_mnts] = create_mnts(region_powspctrm, region_zpowspctrm);
+                region_powspctrm = powspctrm(:, region_channel_i, :);
+                mnts = create_mnts(region_powspctrm);
                 %% Create tfr mean, std, and ste
                 for event_i = 1:size(all_events, 1)
                     event = all_events{event_i, 1};
                     %% Grab power spectrums
-                    event_powspctrm = powspctrm(all_events{event_i, 2}, region_channel_i, 1, :);
-                    event_zpowspctrm = zpowspctrm(all_events{event_i, 2}, region_channel_i, 1, :);
-                    [event_tfr, event_z_tfr] = create_tfr(event_powspctrm, event_zpowspctrm);
+                    event_powspctrm = powspctrm(all_events{event_i, 2}, region_channel_i, :);
+                    event_tfr = create_tfr(event_powspctrm);
                     %% TFR
-                    [tfr_struct.(event).avg_tfr, ...
-                        tfr_struct.(event).std_tfr, ...
-                        tfr_struct.(event).ste_tfr] = ...
+                    [tfr_struct.(event).(['avg_', z_type, 'tfr']), ...
+                        tfr_struct.(event).(['std_', z_type, 'tfr']), ...
+                        tfr_struct.(event).(['ste_', z_type, 'tfr'])] = ...
                         get_tfr_stats(event_tfr);
-                    %% Z tfr
-                    [tfr_struct.(event).avg_z_tfr, ...
-                        tfr_struct.(event).std_z_tfr, ...
-                        tfr_struct.(event).ste_z_tfr] = ...
-                        get_tfr_stats(event_z_tfr);
                 end
                 feature = [bandname, '_', region];
-                mnts_struct.(feature).mnts = mnts;
-                mnts_struct.(feature).z_mnts = z_mnts;
+                mnts_struct.(feature).([z_type, 'mnts']) = mnts;
                 mnts_struct.(feature).tfr.(bandname) = tfr_struct;
                 region_chans = label_table(ismember(label_table.label, region), :);
                 mnts_struct.(feature).elec_order = region_chans.sig_channels;
@@ -128,8 +126,7 @@ function [mnts_struct, label_log] = reshape_to_mnts(label_table, GTH, ...
             %% set feature variables
             feature = replace(feature, {':', '+', ','}, '_');
             label_log.(feature) = [];
-            mnts_struct.(feature).mnts = [];
-            mnts_struct.(feature).z_mnts = [];
+            mnts_struct.(feature).([z_type, 'mnts']) = [];
             mnts_struct.(feature).elec_order = [];
             for sub_feature_i = 1:numel(sub_feature)
                 %% Split into powers and regions
@@ -142,29 +139,25 @@ function [mnts_struct, label_log] = reshape_to_mnts(label_table, GTH, ...
                 for band_i = 1:numel(split_powers)
                     %% iterate through powers
                     bandname = split_powers{band_i};
-                    [powspctrm, zpowspctrm] = get_powspctrm(bandname, GTH, label_table);
+                    powspctrm = get_powspctrm(GTH.(bandname));
                     tfr_struct = make_tfr_struct(all_events);
                     for region_i = 1:numel(split_regions)
                         %% Iterate through regions
                         region = split_regions{region_i};
                         region_channel_i = ismember(GTH.anat.ROIs, region);
                         %% Grab power spectrums
-                        region_powspctrm = powspctrm(:, region_channel_i, 1, :);
-                        region_zpowspctrm = zpowspctrm(:, region_channel_i, 1, :);
+                        region_powspctrm = powspctrm(:, region_channel_i, :);
 
                         %% Reshape into MNTS and store in mnts_struct for feature
-                        [region_mnts, region_z_mnts] = create_mnts(region_powspctrm, region_zpowspctrm);
-                        mnts_struct.(feature).mnts = [mnts_struct.(feature).mnts, region_mnts];
-                        mnts_struct.(feature).z_mnts = [mnts_struct.(feature).z_mnts, region_z_mnts];
+                        region_mnts = create_mnts(region_powspctrm);
+                        mnts_struct.(feature).([z_type, 'mnts']) = [mnts_struct.(feature).([z_type, 'mnts']), region_mnts];
 
                         for event_i = 1:size(all_events, 1)
                             event = all_events{event_i, 1};
                             %% Grab power spectrums
-                            event_powspctrm = powspctrm(all_events{event_i, 2}, region_channel_i, 1, :);
-                            event_zpowspctrm = zpowspctrm(all_events{event_i, 2}, region_channel_i, 1, :);
-                            [event_tfr, event_z_tfr] = create_tfr(event_powspctrm, event_zpowspctrm);
-                            tfr_struct.(event).avg_tfr = [tfr_struct.(event).avg_tfr; event_tfr];
-                            tfr_struct.(event).avg_z_tfr = [tfr_struct.(event).avg_z_tfr; event_z_tfr];
+                            event_powspctrm = powspctrm(all_events{event_i, 2}, region_channel_i, :);
+                            event_tfr = create_tfr(event_powspctrm);
+                            tfr_struct.(event).(['avg_', z_type, 'tfr']) = [tfr_struct.(event).(['avg_', z_type, 'tfr']); event_tfr];
                         end
 
                         %% label log
@@ -176,16 +169,11 @@ function [mnts_struct, label_log] = reshape_to_mnts(label_table, GTH, ...
                     end
                     for event_i = 1:size(all_events, 1)
                         event = all_events{event_i, 1};
-                        %% Find mean, std, and ste of tfr and z tfr
-                        [tfr_struct.(event).avg_tfr, ...
-                            tfr_struct.(event).std_tfr, ...
-                            tfr_struct.(event).ste_tfr] = ...
+                        %% Find mean, std, and ste of tfr
+                        [tfr_struct.(event).(['avg_', z_type, 'tfr']), ...
+                            tfr_struct.(event).(['std_', z_type, 'tfr']), ...
+                            tfr_struct.(event).(['ste_', z_type, 'tfr'])] = ...
                             get_tfr_stats(tfr_struct.(event).avg_tfr);
-                        %% Z tfr
-                        [tfr_struct.(event).avg_z_tfr, ...
-                            tfr_struct.(event).std_z_tfr, ...
-                            tfr_struct.(event).ste_z_tfr] = ...
-                            get_tfr_stats(tfr_struct.(event).avg_z_tfr);
                     end
                     mnts_struct.(feature).tfr.(bandname) = tfr_struct;
                 end
@@ -194,37 +182,34 @@ function [mnts_struct, label_log] = reshape_to_mnts(label_table, GTH, ...
     end
 end
 
-function [powspctrm, zpowspctrm] = get_powspctrm(bandname, GTH, label_table)
-    spectrum_channels = GTH.(bandname).label;
-    %% Grab logical indices of selected channels
-    channel_i = ismember(spectrum_channels, label_table.sig_channels);
-    powspctrm = GTH.(bandname).powspctrm(:, channel_i, :, :);
-    if ~isfield(GTH, 'zpowspctrm')
-        zpowspctrm = zscore(GTH.(bandname).powspctrm,0,4);
-    else
-        zpowspctrm = GTH.zpowspctrm.(bandname)(:, channel_i, :, :);
+function [powspctrm] = get_powspctrm(tfr_struct, use_z_score)
+    powspctrm = tfr_struct.powspctrm;
+    if use_z_score
+        powspctrm = zscore(powspctrm,0,3);
     end
+    % spectrum_channels = GTH.(bandname).label;
+    % %%TODO Grab logical indices of selected channels
+    % channel_i = ismember(spectrum_channels, label_table.sig_channels);
+    % powspctrm = GTH.(bandname).powspctrm(:, channel_i, :, :);
+    % if ~isfield(GTH, 'zpowspctrm')
+    %     zpowspctrm = zscore(GTH.(bandname).powspctrm,0,4);
+    % else
+    %     zpowspctrm = GTH.zpowspctrm.(bandname)(:, channel_i, :, :);
+    % end
 end
 
-function [mnts, z_mnts] = create_mnts(powspctrm, zpowspctrm)
-    [tot_trials, tot_elecs, ~, tot_bins] = size(powspctrm);
+function [mnts] = create_mnts(powspctrm)
+    [tot_trials, tot_elecs, tot_bins] = size(powspctrm);
     mnts = [];
-    z_mnts = [];
     for unit_i = 1:tot_elecs
         unit_response = [];
-        z_response = [];
         for trial_i = 1:tot_trials
             %% Power spectrum
-            trial_response = powspctrm(trial_i, unit_i, 1, :);
+            trial_response = powspctrm(trial_i, unit_i, :);
             trial_response = reshape(trial_response, tot_bins, 1);
             unit_response = [unit_response; trial_response];
-            %% Z scored power spectrum
-            trial_response = zpowspctrm(trial_i, unit_i, 1, :);
-            trial_response = reshape(trial_response, tot_bins, 1);
-            z_response = [z_response; trial_response];
         end
         mnts = [mnts, unit_response];
-        z_mnts = [z_mnts, z_response];
     end
 end
 
@@ -236,26 +221,20 @@ function [tfr_struct] = make_tfr_struct(all_events)
     end
 end
 
-function [tfr, z_tfr] = create_tfr(powspctrm, zpowspctrm)
+function [tfr] = create_tfr(powspctrm)
     %TODO add events
-    [tot_trials, tot_elecs, ~, tot_bins] = size(powspctrm);
+    [tot_trials, tot_elecs, tot_bins] = size(powspctrm);
     tfr = [];
-    z_tfr = [];
     for unit_i = 1:tot_elecs
         unit_response = [];
         z_response = [];
         for trial_i = 1:tot_trials
             %% Power spectrum
-            trial_response = powspctrm(trial_i, unit_i, 1, :);
+            trial_response = powspctrm(trial_i, unit_i, :);
             trial_response = reshape(trial_response, 1, tot_bins);
             unit_response = [unit_response; trial_response];
-            %% Z scored power spectrum
-            trial_response = zpowspctrm(trial_i, unit_i, 1, :);
-            trial_response = reshape(trial_response, 1, tot_bins);
-            z_response = [z_response; trial_response];
         end
         tfr = [tfr; unit_response];
-        z_tfr = [z_tfr; z_response];
     end
 end
 

@@ -40,6 +40,17 @@ function [] = batch_plot_tfr_pca_psth(dir_name, save_path, failed_path, tfr_path
                     contains({psth_file_list.name}, filename_meta.filename)).name;
                 psth_file = fullfile(pca_psth_path, psth_filename);
                 load(psth_file, 'psth_struct', 'pc_log');
+                unique_fields = fieldnames(psth_struct);
+                unique_fields = unique_fields(~ismember(unique_fields, 'all_events'));
+                for space_i = 1:numel(unique_fields)
+                    curr_space = unique_fields{space_i};
+                    psth_struct.(curr_space) = rmfield(psth_struct.(curr_space), 'relative_response');
+                    unique_events = fieldnames(psth_struct.(curr_space));
+                    for event_i = 1:numel(unique_events)
+                        event = unique_events{event_i};
+                        psth_struct.(curr_space).(event) = rmfield(psth_struct.(curr_space).(event), 'relative_response');
+                    end
+                end
             else
                 error('Missing %s to plot PSTH time course', filename_meta.filename);
             end
@@ -53,6 +64,8 @@ function [] = batch_plot_tfr_pca_psth(dir_name, save_path, failed_path, tfr_path
                 dir_config.sub_tfr_columns, dir_config.use_z_mnts, dir_config.st_type, ...
                 dir_config.ymax_scale, dir_config.transparency, ...
                 dir_config.min_components, dir_config.plot_avg_pow);
+
+                clear('component_results', 'filename_meta', 'label_log', 'psth_struct', 'pc_log');
 
         catch ME
             handle_ME(ME, failed_path, filename_meta.filename);

@@ -25,6 +25,8 @@ function [] = batch_plot_pca_weights(save_path, failed_path, data_path, dir_name
                 dir_config.feature_filter, dir_config.feature_value, ...
                 dir_config.ymax_scale, dir_config.sub_rows, dir_config.sub_columns, ...
                 filename_meta.session_num);
+
+            clear(file, 'filename_meta', 'label_log');
         catch ME
             handle_ME(ME, failed_path, filename_meta.filename);
         end

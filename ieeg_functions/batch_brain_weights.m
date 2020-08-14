@@ -61,6 +61,8 @@ function [] = batch_brain_weights(dir_name, save_path, failed_path, elec_path, .
                 label_log, dir_config.min_components, dir_config.feature_filter, ...
                 dir_config.feature_value, dir_config.save_png);
 
+            clear('component_results', 'filename_meta', 'label_log');
+
         catch ME
             handle_ME(ME, failed_path, filename_meta.filename);
         end
