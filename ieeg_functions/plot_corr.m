@@ -59,6 +59,7 @@ function [] = plot_corr(save_path, component_results, label_log, ...
         figure
         sgtitle(['Component ', num2str(comp_i)]);
         subplot_i = 1;
+        r_struct = struct;
         for space_one_i = 1:(numel(unique_features) - 1)
             %% Take electrodes from first feature space
             space_one = unique_features{space_one_i};
@@ -129,11 +130,49 @@ function [] = plot_corr(save_path, component_results, label_log, ...
                 ax_vals.Position(4) = ax_vals.Position(4) - subplot_shrinking;
                 hold off
                 subplot_i = subplot_i + 1;
+                %% r2 storage
+                if ~isfield(r_struct, space_one)
+                    r_vals = nan(1, numel(unique_features));
+                    r_table = array2table(r_vals, 'VariableNames', unique_features);
+                    r_struct.(space_one) = r_table;
+                    r_struct.(space_one).(space_one) = 1;
+                    r_struct.(space_one).(space_two) = Rsq;
+                else
+                    r_struct.(space_one).(space_two) = Rsq;
+                end
+                if ~ isfield(r_struct, space_two)
+                    r_vals = nan(1, numel(unique_features));
+                    r_table = array2table(r_vals, 'VariableNames', unique_features);
+                    r_struct.(space_two) = r_table;
+                    r_struct.(space_two).(space_two) = 1;
+                    r_struct.(space_two).(space_one) = Rsq;
+                else
+                    r_struct.(space_two).(space_one) = Rsq;
+                end
             end
         end
         if subplot_i > 1
             % Only saved if at least one subplot was made
             filename = ['component_corr_', num2str(comp_i), '.fig'];
+            set(gcf, 'CreateFcn', 'set(gcbo,''Visible'',''on'')'); 
+            savefig(gcf, fullfile(save_path, filename));
+
+            figure
+            r_fields = fieldnames(r_struct);
+            first_feat = r_struct.(r_fields{1});
+            r_table = first_feat;
+            for feature_i = 2:numel(r_fields)
+                feature = r_fields{feature_i};
+                feature_table = r_struct.(feature);
+                feature_array = table2array(feature_table);
+                feature_array = feature_array(~isnan(feature_array));
+                r_table = [r_table; feature_table];
+            end
+            r_matrix = table2array(r_table);
+            feature_names = r_table.Properties.VariableNames;
+            r_matrix = r_matrix(:, ~all(isnan(r_matrix)));
+            heatmap(r_fields, r_fields, r_matrix);
+            filename = ['heatmap_component_corr_', num2str(comp_i), '.fig'];
             set(gcf, 'CreateFcn', 'set(gcbo,''Visible'',''on'')'); 
             savefig(gcf, fullfile(save_path, filename));
         end
