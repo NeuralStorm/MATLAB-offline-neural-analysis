@@ -140,7 +140,7 @@ function [] = plot_corr(save_path, component_results, label_log, ...
                 else
                     r_struct.(space_one).(space_two) = Rsq;
                 end
-                if ~ isfield(r_struct, space_two)
+                if ~isfield(r_struct, space_two)
                     r_vals = nan(1, numel(unique_features));
                     r_table = array2table(r_vals, 'VariableNames', unique_features);
                     r_struct.(space_two) = r_table;
@@ -169,9 +169,10 @@ function [] = plot_corr(save_path, component_results, label_log, ...
                 r_table = [r_table; feature_table];
             end
             r_matrix = table2array(r_table);
-            feature_names = r_table.Properties.VariableNames;
+            valid_cols = find(~all(isnan(r_matrix)));
+            feature_names = r_table.Properties.VariableNames(valid_cols);
             r_matrix = r_matrix(:, ~all(isnan(r_matrix)));
-            heatmap(r_fields, r_fields, r_matrix);
+            heatmap(feature_names, r_fields, r_matrix);
             filename = ['heatmap_component_corr_', num2str(comp_i), '.fig'];
             set(gcf, 'CreateFcn', 'set(gcbo,''Visible'',''on'')'); 
             savefig(gcf, fullfile(save_path, filename));
