@@ -229,7 +229,7 @@ function [] = plot_tfr_pca_psth(save_path, tfr_path, tfr_file_list, label_log, .
                             color_i = 1;
                         end
                     end
-                    lg = legend(legend_lines, [{'pc'}; unique_tfrs])
+                    lg = legend(legend_lines, [{'pc'}; unique_tfrs]);
                     legend('boxoff');
                     lg.Location = 'Best';
                     lg.Orientation = 'Horizontal';

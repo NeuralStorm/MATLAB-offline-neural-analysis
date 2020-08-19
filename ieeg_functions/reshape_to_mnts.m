@@ -139,7 +139,7 @@ function [mnts_struct, label_log] = reshape_to_mnts(label_table, GTH, ...
                 for band_i = 1:numel(split_powers)
                     %% iterate through powers
                     bandname = split_powers{band_i};
-                    powspctrm = get_powspctrm(GTH.(bandname));
+                    powspctrm = get_powspctrm(GTH.(bandname), use_z_score);
                     tfr_struct = make_tfr_struct(all_events);
                     for region_i = 1:numel(split_regions)
                         %% Iterate through regions
@@ -173,7 +173,7 @@ function [mnts_struct, label_log] = reshape_to_mnts(label_table, GTH, ...
                         [tfr_struct.(event).(['avg_', z_type, 'tfr']), ...
                             tfr_struct.(event).(['std_', z_type, 'tfr']), ...
                             tfr_struct.(event).(['ste_', z_type, 'tfr'])] = ...
-                            get_tfr_stats(tfr_struct.(event).avg_tfr);
+                            get_tfr_stats(tfr_struct.(event).(['avg_', z_type, 'tfr']));
                     end
                     mnts_struct.(feature).tfr.(bandname) = tfr_struct;
                 end
@@ -227,7 +227,6 @@ function [tfr] = create_tfr(powspctrm)
     tfr = [];
     for unit_i = 1:tot_elecs
         unit_response = [];
-        z_response = [];
         for trial_i = 1:tot_trials
             %% Power spectrum
             trial_response = powspctrm(trial_i, unit_i, :);
@@ -241,5 +240,5 @@ end
 function [avg_tfr, std_tfr, ste_tfr] = get_tfr_stats(tfr)
     avg_tfr = mean(tfr);
     std_tfr = std(tfr);
-    ste_tfr = std_tfr ./ size(tfr, 1);
+    ste_tfr = std_tfr ./ sqrt(size(tfr, 1));
 end
