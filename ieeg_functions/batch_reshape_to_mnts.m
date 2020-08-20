@@ -39,7 +39,7 @@ function [] = batch_reshape_to_mnts(save_path, failed_path, data_path, ...
         try
             %% Load file contents
             file = [data_path, '/', file_list(file_index).name];
-            load(file, 'POWERtest2', 'filename_meta');
+            load(file, 'power_struct', 'filename_meta');
 
             %% Grab channels for current session num
             session_labels = label_table(label_table.recording_session ...
@@ -47,14 +47,14 @@ function [] = batch_reshape_to_mnts(save_path, failed_path, data_path, ...
 
             %% Format mnts
             %TODO parameters: trial selection, bin size, time window
-            [mnts_struct, label_log] = reshape_to_mnts(session_labels, POWERtest2, ...
+            [mnts_struct, label_log] = reshape_to_mnts(session_labels, power_struct, ...
                 dir_config.select_features, dir_config.use_z_mnts);
 
             %% Saving outputs
             matfile = fullfile(save_path, ['mnts_format_', ...
                 filename_meta.filename, '.mat']);
             save(matfile, '-v7.3', 'mnts_struct', 'label_log', 'filename_meta');
-            clear('mnts_struct', 'label_log', 'filename_meta', 'POWERtest2');
+            clear('mnts_struct', 'label_log', 'filename_meta', 'power_struct');
         catch ME
             handle_ME(ME, failed_path, filename_meta.filename);
         end

@@ -62,7 +62,7 @@ function [mnts_struct, label_log] = reshape_to_mnts(label_table, GTH, ...
 
     unique_bands = fieldnames(GTH);
     unique_bands = unique_bands(~ismember(unique_bands, ...
-        {'anat', 'beh', 'fsample'}));
+        {'anat', 'beh', 'fsample', 'time'}));
     unique_regions = unique(GTH.anat.ROIs);
     label_log = struct;
 
@@ -187,15 +187,6 @@ function [powspctrm] = get_powspctrm(tfr_struct, use_z_score)
     if use_z_score
         powspctrm = zscore(powspctrm,0,3);
     end
-    % spectrum_channels = GTH.(bandname).label;
-    % %%TODO Grab logical indices of selected channels
-    % channel_i = ismember(spectrum_channels, label_table.sig_channels);
-    % powspctrm = GTH.(bandname).powspctrm(:, channel_i, :, :);
-    % if ~isfield(GTH, 'zpowspctrm')
-    %     zpowspctrm = zscore(GTH.(bandname).powspctrm,0,4);
-    % else
-    %     zpowspctrm = GTH.zpowspctrm.(bandname)(:, channel_i, :, :);
-    % end
 end
 
 function [mnts] = create_mnts(powspctrm)
