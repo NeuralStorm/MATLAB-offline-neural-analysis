@@ -105,12 +105,11 @@ function [mnts_struct, label_log] = reshape_to_mnts(label_table, GTH, ...
                     end
                     %% Grab power spectrums
                     event_powspctrm = region_powspctrm(all_events{event_i, 2}, :, :);
-                    event_tfr = create_tfr(event_powspctrm);
                     %% TFR
                     [tfr_struct.(event).(['avg_', z_type, 'tfr']), ...
                         tfr_struct.(event).(['std_', z_type, 'tfr']), ...
                         tfr_struct.(event).(['ste_', z_type, 'tfr'])] = ...
-                        get_tfr_stats(event_tfr);
+                        get_tfr_stats(event_powspctrm);
                 end
                 feature = [bandname, '_', region];
                 mnts_struct.(feature).([z_type, 'mnts']) = mnts;
@@ -160,8 +159,7 @@ function [mnts_struct, label_log] = reshape_to_mnts(label_table, GTH, ...
                             event = all_events{event_i, 1};
                             %% Grab power spectrums
                             event_powspctrm = region_powspctrm(all_events{event_i, 2}, :, :);
-                            event_tfr = create_tfr(event_powspctrm);
-                            tfr_struct.(event).(['avg_', z_type, 'tfr']) = [tfr_struct.(event).(['avg_', z_type, 'tfr']); event_tfr];
+                            tfr_struct.(event).(['avg_', z_type, 'tfr']) = [tfr_struct.(event).(['avg_', z_type, 'tfr']); event_powspctrm];
                         end
 
                         %% label log
@@ -216,22 +214,9 @@ function [tfr_struct] = make_tfr_struct(all_events, z_type)
     end
 end
 
-function [tfr] = create_tfr(powspctrm)
-    [tot_trials, tot_chans, ~] = size(powspctrm);
-    tfr = [];
-    for unit_i = 1:tot_chans
-        unit_response = [];
-        for trial_i = 1:tot_trials
-            %% Power spectrum
-            trial_response = squeeze(powspctrm(trial_i, unit_i, :))';
-            unit_response = [unit_response; trial_response];
-        end
-        tfr = [tfr; unit_response];
-    end
-end
-
-function [avg_tfr, std_tfr, ste_tfr] = get_tfr_stats(tfr)
-    avg_tfr = mean(tfr);
-    std_tfr = std(tfr);
-    ste_tfr = std_tfr ./ sqrt(size(tfr, 1));
+function [avg_tfr, std_tfr, ste_tfr] = get_tfr_stats(powspctrm)
+    [tot_trials, ~, ~] = size(powspctrm);
+    avg_tfr = squeeze(mean(powspctrm, [1,2]));
+    std_tfr = squeeze(std(powspctrm, 0, [1,2]));
+    ste_tfr = std_tfr ./ sqrt(tot_trials);
 end
