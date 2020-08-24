@@ -67,6 +67,11 @@ function [] = ieeg_main()
     %          make_brain_plots: boolean: 1: create 3D brain mesh, 0: skip plotting
     %          is_pial: boolean: 1: use .pial files to get mesh, 0: use .mat from fieldtrip to create mesh
     %          save_png: boolean: 1: save png of brain mesh subplot (very slow) 0: only save subplot as fig
+    %          make_corr_plots: Boolean: 1: create pca correlation plots and heatmap of r^2 from line of best fit
+    %          subplot_shrinking: FLoat: controls how much the subplots are shrunk to prevent overlap of labels (rec.: 0.02)
+    %          corr_components: Int: controls how many components to make the correlation plots for
+    %          legend_loc: String: Matlab location specification for legend. See Matlab's documentation for possible legend locations
+    %          num_pools: Int: Ideal number of pools to run parallel process
 
     %% Get data directory
     project_path = uigetdir(pwd);
@@ -133,6 +138,9 @@ function [] = ieeg_main()
             catch ME
                 handle_ME(ME, mnts_failed_path, [curr_dir, '_missing_dir.mat']);
             end
+        else
+            [mnts_path, mnts_failed_path] = create_dir(project_path, 'mnts');
+            [data_path, ~] = create_dir(mnts_path, 'mnts_data');
         end
 
         if dir_config.do_pca %TODO change to pc_analysis
