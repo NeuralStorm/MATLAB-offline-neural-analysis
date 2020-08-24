@@ -74,7 +74,7 @@ function [mnts_struct, label_log] = reshape_to_mnts(label_table, GTH, ...
         if event_i == 1
             all_events = [
                 all_events;
-                'all', {ones(size(GTH.beh.(event)))}
+                'all', {[1:1:numel(GTH.beh.(event))]'};
             ];
         end
         all_events = [all_events; {event, find(GTH.beh.(event))}];
@@ -87,19 +87,24 @@ function [mnts_struct, label_log] = reshape_to_mnts(label_table, GTH, ...
         %% Default: Combine all powers and regions together
         for band_i = 1:numel(unique_bands)
             bandname = unique_bands{band_i};
-            tfr_struct = make_tfr_struct(all_events);
-            powspctrm = get_powspctrm(GTH.(bandname), use_z_score);
+            tfr_struct = make_tfr_struct(all_events, z_type);
             for region_i = 1:numel(unique_regions)
                 region = unique_regions{region_i};
                 region_channel_i = ismember(GTH.anat.ROIs, region);
                 %% Grab region power spectrums
-                region_powspctrm = powspctrm(:, region_channel_i, :);
+                region_powspctrm = get_powspctrm(GTH.(bandname), region_channel_i, use_z_score);
                 mnts = create_mnts(region_powspctrm);
                 %% Create tfr mean, std, and ste
                 for event_i = 1:size(all_events, 1)
                     event = all_events{event_i, 1};
+                    if contains(event, 'all')
+                        %% Check to make sure all events has same length as beh all events
+                        [tot_trials, ~, ~] = size(region_powspctrm);
+                        event_trials = numel(all_events{event_i, 2});
+                        assert(tot_trials == event_trials);
+                    end
                     %% Grab power spectrums
-                    event_powspctrm = powspctrm(all_events{event_i, 2}, region_channel_i, :);
+                    event_powspctrm = region_powspctrm(all_events{event_i, 2}, :, :);
                     event_tfr = create_tfr(event_powspctrm);
                     %% TFR
                     [tfr_struct.(event).(['avg_', z_type, 'tfr']), ...
@@ -139,14 +144,13 @@ function [mnts_struct, label_log] = reshape_to_mnts(label_table, GTH, ...
                 for band_i = 1:numel(split_powers)
                     %% iterate through powers
                     bandname = split_powers{band_i};
-                    powspctrm = get_powspctrm(GTH.(bandname), use_z_score);
-                    tfr_struct = make_tfr_struct(all_events);
+                    tfr_struct = make_tfr_struct(all_events, z_type);
                     for region_i = 1:numel(split_regions)
                         %% Iterate through regions
                         region = split_regions{region_i};
                         region_channel_i = ismember(GTH.anat.ROIs, region);
                         %% Grab power spectrums
-                        region_powspctrm = powspctrm(:, region_channel_i, :);
+                        region_powspctrm = get_powspctrm(GTH.(bandname), region_channel_i, use_z_score);
 
                         %% Reshape into MNTS and store in mnts_struct for feature
                         region_mnts = create_mnts(region_powspctrm);
@@ -155,7 +159,7 @@ function [mnts_struct, label_log] = reshape_to_mnts(label_table, GTH, ...
                         for event_i = 1:size(all_events, 1)
                             event = all_events{event_i, 1};
                             %% Grab power spectrums
-                            event_powspctrm = powspctrm(all_events{event_i, 2}, region_channel_i, :);
+                            event_powspctrm = region_powspctrm(all_events{event_i, 2}, :, :);
                             event_tfr = create_tfr(event_powspctrm);
                             tfr_struct.(event).(['avg_', z_type, 'tfr']) = [tfr_struct.(event).(['avg_', z_type, 'tfr']); event_tfr];
                         end
@@ -182,46 +186,44 @@ function [mnts_struct, label_log] = reshape_to_mnts(label_table, GTH, ...
     end
 end
 
-function [powspctrm] = get_powspctrm(tfr_struct, use_z_score)
-    powspctrm = tfr_struct.powspctrm;
+function [region_powspctrm] = get_powspctrm(pow_struct, region_channel_i, use_z_score)
+    powspctrm = pow_struct.powspctrm;
+    region_powspctrm = powspctrm(:, region_channel_i, :);
     if use_z_score
-        powspctrm = zscore(powspctrm,0,3);
+        region_powspctrm = zscore(region_powspctrm,0,3);
     end
 end
 
 function [mnts] = create_mnts(powspctrm)
-    [tot_trials, tot_elecs, tot_bins] = size(powspctrm);
+    [tot_trials, tot_chans, ~] = size(powspctrm);
     mnts = [];
-    for unit_i = 1:tot_elecs
+    for unit_i = 1:tot_chans
         unit_response = [];
         for trial_i = 1:tot_trials
             %% Power spectrum
-            trial_response = powspctrm(trial_i, unit_i, :);
-            trial_response = reshape(trial_response, tot_bins, 1);
+            trial_response = squeeze(powspctrm(trial_i, unit_i, :));
             unit_response = [unit_response; trial_response];
         end
         mnts = [mnts, unit_response];
     end
 end
 
-function [tfr_struct] = make_tfr_struct(all_events)
+function [tfr_struct] = make_tfr_struct(all_events, z_type)
+    tfr_struct = struct;
     for event_i = 1:size(all_events, 1)
         event = all_events{event_i, 1};
-        tfr_struct.(event).avg_tfr = [];
-        tfr_struct.(event).avg_z_tfr = [];
+        tfr_struct.(event).(['avg_', z_type, 'tfr']) = [];
     end
 end
 
 function [tfr] = create_tfr(powspctrm)
-    %TODO add events
-    [tot_trials, tot_elecs, tot_bins] = size(powspctrm);
+    [tot_trials, tot_chans, ~] = size(powspctrm);
     tfr = [];
-    for unit_i = 1:tot_elecs
+    for unit_i = 1:tot_chans
         unit_response = [];
         for trial_i = 1:tot_trials
             %% Power spectrum
-            trial_response = powspctrm(trial_i, unit_i, :);
-            trial_response = reshape(trial_response, 1, tot_bins);
+            trial_response = squeeze(powspctrm(trial_i, unit_i, :))';
             unit_response = [unit_response; trial_response];
         end
         tfr = [tfr; unit_response];
