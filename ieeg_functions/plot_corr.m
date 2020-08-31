@@ -35,17 +35,17 @@ function [] = plot_corr(save_path, component_results, label_log, ...
     %% Output: There is no return. The graphs are saved directly to the path indicated by save_path
 
     color_map = [0 0 0 % black
-                1 0 0 % red
-                0 0 1 % blue
-                0 1 0 % green
-                1 0 1 % magenta
-                1 1 0]; % yellow
+                256 0 0 % red
+                0 0 256 % blue
+                0 255 0 % green
+                102 0 204 % magenta
+                255 128 0] ./ 256; % yellow
 
     %% Create color_struct
     unique_features = fieldnames(label_log);
     combined_feature_space = unique_features{1};
     color_log.label = label_log.(combined_feature_space).label;
-    color_log.sig_channels = label_log.(combined_feature_space).sig_channels;
+    color_log.sig_channels = component_results.(combined_feature_space).elec_order;
     for feature_i = 2:numel(unique_features)
         feature = unique_features{feature_i};
         combined_feature_space = [combined_feature_space, '_', feature];
@@ -157,35 +157,30 @@ function [] = plot_corr(save_path, component_results, label_log, ...
             set(gcf, 'CreateFcn', 'set(gcbo,''Visible'',''on'')'); 
             savefig(gcf, fullfile(save_path, filename));
 
+            %% Create heatmap of correlation values
             figure
             r_fields = fieldnames(r_struct);
-            % col_names = r_table.Properties.VariableNames;
-            % valid_fields = ismember(col_names, r_fields);
-            % r_fields = col_names(valid_fields)
             first_feat = r_struct.(r_fields{1});
             r_table = first_feat;
             for feature_i = 2:numel(r_fields)
+                %% Compile separate feature tables into one to create heatmap
                 feature = r_fields{feature_i};
                 if ~isfield(r_struct, feature)
                     continue
                 end
                 feature_table = r_struct.(feature);
-                feature_array = table2array(feature_table);
-                feature_array = feature_array(~isnan(feature_array));
                 r_table = [r_table; feature_table];
             end
             r_table = movevars(r_table, r_fields, 'Before', 1);
-            % error
-            % r_table.Properties.RowNames = r_fields;
+            %% Turn r^2 table to array and create heatmap
             r_matrix = table2array(r_table);
-            % valid_cols = find(~all(isnan(r_matrix)));
-            % feature_names = r_table.Properties.VariableNames(valid_cols);
-            % r_table.Properties.RowNames
             r_matrix = r_matrix(:, ~all(isnan(r_matrix)));
-            % heatmap(feature_names, r_fields, r_matrix);
             heatmap(r_fields, r_fields, r_matrix);
             colormap hot
-            filename = ['heatmap_component_corr_', num2str(comp_i), '.fig'];
+            %% Save heatmap
+            filename = ['heatmap_component_corr_', num2str(comp_i), '.png'];
+            saveas(gcf, fullfile(save_path, filename));
+            filename = ['heatmap_component_corr_', num2str(comp_i), '.mat'];
             set(gcf, 'CreateFcn', 'set(gcbo,''Visible'',''on'')'); 
             savefig(gcf, fullfile(save_path, filename));
         end

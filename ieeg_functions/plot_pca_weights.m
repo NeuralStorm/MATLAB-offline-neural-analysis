@@ -44,11 +44,11 @@ function [] = plot_pca_weights(save_path, component_results, label_log, feature_
     %% Output: There is no return. The graphs are saved directly to the path indicated by save_path
 
     color_map = [0 0 0 % black
-                1 0 0 % red
-                0 0 1 % blue
-                0 1 0 % green
-                1 0 1 % magenta
-                1 1 0]; % yellow
+                256 0 0 % red
+                0 0 256 % blue
+                0 255 0 % green
+                102 0 204 % magenta
+                255 128 0] ./ 256; % yellow
     plot_start = 2;
     plot_increment = 1;
 

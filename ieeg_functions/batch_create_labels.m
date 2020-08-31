@@ -33,6 +33,7 @@ function [] = batch_create_labels(data_path, failed_path, labels_path, ...
 
             label_table = create_ieeg_labels(label_table, power_struct.anat, ...
                 filename_meta.session_num);
+            clear('power_struct');
             save(file, 'filename_meta', '-append');
         catch ME
             handle_ME(ME, failed_path, filename);

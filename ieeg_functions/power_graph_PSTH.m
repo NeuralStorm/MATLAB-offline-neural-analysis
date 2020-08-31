@@ -1,5 +1,5 @@
 function [] = power_graph_PSTH(save_path, psth_struct, label_log, config)
-    %TODO add subplot title
+    %TODO Fix electrode order
 
     %% Purpose: Create PSTH time course plots
     %% Input

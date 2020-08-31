@@ -1,4 +1,4 @@
-function [mnts_struct, label_log] = reshape_to_mnts(label_table, GTH, ...
+function [mnts_struct, label_log] = reshape_to_mnts(label_table, power_struct, ...
         select_features, use_z_score)
     %% Purpose: Reshape output from filtering process
     %% Input
@@ -11,22 +11,15 @@ function [mnts_struct, label_log] = reshape_to_mnts(label_table, GTH, ...
     %                     'label_id': Int: unique id used for labels
     %                     'recording_session': Int: File recording session number that above applies to
     %                     'recording_notes': String with user defined notes for channel
-    % GTH: Struct with following fields:
+    % power_struct: Struct with required fields (not exlusive list, but list of fields needed for pipeline):
     %      anat: struct with fields
     %                channels: cell vector with names of channels
     %                ROIs: cell vector with regions channels belong to
     %      beh: struct with fields for event types
     %           event_type: logical array with length of tot_trials where 1 means the event_type occured
     %      bandname: struct with fields:
-    %                    region: struct with fields
-    %                            label: cell vector with electrode names
-    %                            dimord: description of 4d dimensions
-    %                            freq: frequency of band
-    %                            time: time vector stepped by bin size
-    %                            powspctrm: 4D matrix with dimension trials x channels x band x time
-    %                            cfg: struct log of how data was processed to create powspctrm
-    %      zpowspctrm: struct with fields
-    %                      bandname: 4D matrix with dimension trials x channels x band x time
+    %                        dimord: description of 4d dimensions
+    %                        powspctrm: 3D matrix with dimension trials x channels x time
     % select_features: string that determines how to combine powers and regions to make features
     %                  format layout: power:region, power+power:region+region;power:region, etc
     %% Output:
@@ -60,24 +53,24 @@ function [mnts_struct, label_log] = reshape_to_mnts(label_table, GTH, ...
         '';
     end
 
-    unique_bands = fieldnames(GTH);
+    unique_bands = fieldnames(power_struct);
     unique_bands = unique_bands(~ismember(unique_bands, ...
         {'anat', 'beh', 'fsample', 'time'}));
-    unique_regions = unique(GTH.anat.ROIs);
+    unique_regions = unique(power_struct.anat.ROIs);
     label_log = struct;
 
     mnts_struct = struct;
     all_events = [];
-    unique_events = fieldnames(GTH.beh);
+    unique_events = fieldnames(power_struct.beh);
     for event_i = 1:numel(unique_events)
         event = unique_events{event_i};
         if event_i == 1
             all_events = [
                 all_events;
-                'all', {[1:1:numel(GTH.beh.(event))]'};
+                'all', {[1:1:numel(power_struct.beh.(event))]'};
             ];
         end
-        all_events = [all_events; {event, find(GTH.beh.(event))}];
+        all_events = [all_events; {event, find(power_struct.beh.(event))}];
     end
 
     mnts_struct.all_events = all_events;
@@ -90,9 +83,9 @@ function [mnts_struct, label_log] = reshape_to_mnts(label_table, GTH, ...
             tfr_struct = make_tfr_struct(all_events, z_type);
             for region_i = 1:numel(unique_regions)
                 region = unique_regions{region_i};
-                region_channel_i = ismember(GTH.anat.ROIs, region);
+                region_channel_i = ismember(power_struct.anat.ROIs, region);
                 %% Grab region power spectrums
-                region_powspctrm = get_powspctrm(GTH.(bandname), region_channel_i, use_z_score);
+                region_powspctrm = get_powspctrm(power_struct.(bandname), region_channel_i, use_z_score);
                 mnts = create_mnts(region_powspctrm);
                 %% Create tfr mean, std, and ste
                 for event_i = 1:size(all_events, 1)
@@ -115,7 +108,7 @@ function [mnts_struct, label_log] = reshape_to_mnts(label_table, GTH, ...
                 mnts_struct.(feature).([z_type, 'mnts']) = mnts;
                 mnts_struct.(feature).tfr.(bandname) = tfr_struct;
                 region_chans = label_table(ismember(label_table.label, region), :);
-                mnts_struct.(feature).elec_order = region_chans.sig_channels;
+                mnts_struct.(feature).elec_order = power_struct.anat.channels(region_channel_i);
                 label_log.(feature) = region_chans;
             end
         end
@@ -147,9 +140,9 @@ function [mnts_struct, label_log] = reshape_to_mnts(label_table, GTH, ...
                     for region_i = 1:numel(split_regions)
                         %% Iterate through regions
                         region = split_regions{region_i};
-                        region_channel_i = ismember(GTH.anat.ROIs, region);
+                        region_channel_i = ismember(power_struct.anat.ROIs, region);
                         %% Grab power spectrums
-                        region_powspctrm = get_powspctrm(GTH.(bandname), region_channel_i, use_z_score);
+                        region_powspctrm = get_powspctrm(power_struct.(bandname), region_channel_i, use_z_score);
 
                         %% Reshape into MNTS and store in mnts_struct for feature
                         region_mnts = create_mnts(region_powspctrm);
@@ -159,12 +152,12 @@ function [mnts_struct, label_log] = reshape_to_mnts(label_table, GTH, ...
                             event = all_events{event_i, 1};
                             %% Grab power spectrums
                             event_powspctrm = region_powspctrm(all_events{event_i, 2}, :, :);
-                            tfr_struct.(event).(['avg_', z_type, 'tfr']) = [tfr_struct.(event).(['avg_', z_type, 'tfr']); event_powspctrm];
+                            tfr_struct.(event).(['avg_', z_type, 'tfr']) = cat(2, tfr_struct.(event).(['avg_', z_type, 'tfr']), event_powspctrm);
                         end
 
                         %% label log
                         region_chans = label_table(ismember(label_table.label, region), :);
-                        mnts_struct.(feature).elec_order = [mnts_struct.(feature).elec_order; region_chans.sig_channels];
+                        mnts_struct.(feature).elec_order = [mnts_struct.(feature).elec_order; power_struct.anat.channels(region_channel_i)];
                         label_log.(feature) = [label_log.(feature); region_chans];
                         [~, ind] = unique(label_log.(feature), 'rows');
                         label_log.(feature) = label_log.(feature)(ind, :);
