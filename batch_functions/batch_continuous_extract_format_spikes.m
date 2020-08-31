@@ -27,7 +27,7 @@ function batch_continuous_extract_format_spikes(save_path, failed_path, data_pat
             unique_events = fieldnames(orderfields(event_samples));
             
             event_ts = [];
-            sample_ts = [];
+            sample_ts = event_samples.event_1(1,:);
             for event_i = 1:length(unique_events)
                
                 event = unique_events{event_i};
@@ -37,11 +37,9 @@ function batch_continuous_extract_format_spikes(save_path, failed_path, data_pat
                 temp_ts(:,2) = event_samples.(event)(1,:) / sample_rate; 
                 temp_ts(:,1) = event_i;
                 
-                event_ts = [event_ts; temp_ts]; 
-                sample_ts = [sample_ts; temp_sample_ts];
+                event_ts = [event_ts; temp_ts];                 
             end
-            event_ts = sortrows(event_ts, 2);
-            sample_ts = sortrows(sample_ts, 1); 
+            event_ts = sortrows(event_ts, 2); 
             
             %% Extract spikes from filtered data
             channel_map = {};
