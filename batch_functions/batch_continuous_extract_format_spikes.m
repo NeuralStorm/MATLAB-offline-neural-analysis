@@ -28,8 +28,8 @@ function batch_continuous_extract_format_spikes(save_path, failed_path, data_pat
             
             event_ts = [];
             sample_ts = event_samples.event_1(1,:);
-            for event_i = 1:length(unique_events)
-               
+            for event_i = 1:length(unique_events)             
+                temp_ts = []; 
                 event = unique_events{event_i};
                 
                 temp_sample_ts = event_samples.(event)(1,:);
