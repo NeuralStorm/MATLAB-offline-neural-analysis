@@ -1,5 +1,5 @@
 function [mnts_struct, label_log] = reshape_to_mnts(label_table, power_struct, ...
-        select_features, use_z_score)
+        select_features, use_z_score, smooth_power, span)
     %% Purpose: Reshape output from filtering process
     %% Input
     % label_table: table with information of current recording
@@ -86,7 +86,7 @@ function [mnts_struct, label_log] = reshape_to_mnts(label_table, power_struct, .
                 region_channel_i = ismember(power_struct.anat.ROIs, region);
                 %% Grab region power spectrums
                 region_powspctrm = get_powspctrm(power_struct.(bandname), region_channel_i, use_z_score);
-                mnts = create_mnts(region_powspctrm);
+                mnts = create_mnts(region_powspctrm, smooth_power, span);
                 %% Create tfr mean, std, and ste
                 for event_i = 1:size(all_events, 1)
                     event = all_events{event_i, 1};
@@ -109,6 +109,7 @@ function [mnts_struct, label_log] = reshape_to_mnts(label_table, power_struct, .
                 mnts_struct.(feature).tfr.(bandname) = tfr_struct;
                 region_chans = label_table(ismember(label_table.label, region), :);
                 mnts_struct.(feature).elec_order = power_struct.anat.channels(region_channel_i);
+                mnts_struct.(feature).band_shift = [];
                 label_log.(feature) = region_chans;
             end
         end
@@ -125,6 +126,7 @@ function [mnts_struct, label_log] = reshape_to_mnts(label_table, power_struct, .
             label_log.(feature) = [];
             mnts_struct.(feature).([z_type, 'mnts']) = [];
             mnts_struct.(feature).elec_order = [];
+            mnts_struct.(feature).band_shift = [];
             for sub_feature_i = 1:numel(sub_feature)
                 %% Split into powers and regions
                 pow_regs = sub_feature{sub_feature_i};
@@ -145,7 +147,7 @@ function [mnts_struct, label_log] = reshape_to_mnts(label_table, power_struct, .
                         region_powspctrm = get_powspctrm(power_struct.(bandname), region_channel_i, use_z_score);
 
                         %% Reshape into MNTS and store in mnts_struct for feature
-                        region_mnts = create_mnts(region_powspctrm);
+                        region_mnts = create_mnts(region_powspctrm, smooth_power, span);
                         mnts_struct.(feature).([z_type, 'mnts']) = [mnts_struct.(feature).([z_type, 'mnts']), region_mnts];
 
                         for event_i = 1:size(all_events, 1)
@@ -159,8 +161,8 @@ function [mnts_struct, label_log] = reshape_to_mnts(label_table, power_struct, .
                         region_chans = label_table(ismember(label_table.label, region), :);
                         mnts_struct.(feature).elec_order = [mnts_struct.(feature).elec_order; power_struct.anat.channels(region_channel_i)];
                         label_log.(feature) = [label_log.(feature); region_chans];
-                        [~, ind] = unique(label_log.(feature), 'rows');
-                        label_log.(feature) = label_log.(feature)(ind, :);
+                        % [~, ind] = unique(label_log.(feature), 'rows');
+                        % label_log.(feature) = label_log.(feature)(ind, :);
                     end
                     for event_i = 1:size(all_events, 1)
                         event = all_events{event_i, 1};
@@ -170,8 +172,16 @@ function [mnts_struct, label_log] = reshape_to_mnts(label_table, power_struct, .
                             tfr_struct.(event).(['ste_', z_type, 'tfr'])] = ...
                             get_tfr_stats(tfr_struct.(event).(['avg_', z_type, 'tfr']));
                     end
+                    mnts_struct.(feature).band_shift = [mnts_struct.(feature).band_shift; {numel(mnts_struct.(feature).elec_order)}];
                     mnts_struct.(feature).tfr.(bandname) = tfr_struct;
                 end
+            end
+            if numel(mnts_struct.(feature).band_shift) <= 1
+                %% Only 1 or 0 powers in feature
+                mnts_struct.(feature).band_shift = [];
+            else
+                %% Combine power shifts with locations
+                mnts_struct.(feature).band_shift = [split_powers', mnts_struct.(feature).band_shift];
             end
         end
     end
@@ -185,7 +195,7 @@ function [region_powspctrm] = get_powspctrm(pow_struct, region_channel_i, use_z_
     end
 end
 
-function [mnts] = create_mnts(powspctrm)
+function [mnts] = create_mnts(powspctrm, smooth_power, span)
     [tot_trials, tot_chans, ~] = size(powspctrm);
     mnts = [];
     for unit_i = 1:tot_chans
@@ -193,7 +203,11 @@ function [mnts] = create_mnts(powspctrm)
         for trial_i = 1:tot_trials
             %% Power spectrum
             trial_response = squeeze(powspctrm(trial_i, unit_i, :));
-            unit_response = [unit_response; trial_response];
+            if smooth_power
+                unit_response = [unit_response; smooth(trial_response, span)];
+            else
+                unit_response = [unit_response; trial_response];
+            end
         end
         mnts = [mnts, unit_response];
     end

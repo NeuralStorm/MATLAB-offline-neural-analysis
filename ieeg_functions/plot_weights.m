@@ -1,5 +1,5 @@
 function [tot_plots] = plot_weights(pca_weights, ymax_scale, color_struct, ...
-        sub_rows, sub_cols, plot_counter, plot_increment)
+        sub_rows, sub_cols, plot_counter, plot_increment, font_size)
     %TODO rename to plot_feature_weights()
     %TODO add figure to parameters
 
@@ -24,14 +24,16 @@ function [tot_plots] = plot_weights(pca_weights, ymax_scale, color_struct, ...
                 'FaceColor', color_struct.(region).color, ...
                 'EdgeColor', 'none');
         end
-        lg = legend(unique_regions);
-        legend('boxoff');
-        lg.Location = 'Best';
-        lg.Orientation = 'Horizontal';
+        if numel(unique_regions) > 1
+            lg = legend(unique_regions);
+            legend('boxoff');
+            lg.Location = 'Best';
+            lg.Orientation = 'Horizontal';
+        end
 
         ylim([y_min y_max]);
-        xlabel('Electrode #');
-        ylabel('Coefficient Weight');
+        xlabel('Electrode #', 'FontSize', font_size);
+        ylabel('Coefficient Weight', 'FontSize', font_size);
         sub_title = strrep(['PC ' num2str(comp_i)], '_', ' ');
         title(sub_title)
         hold off

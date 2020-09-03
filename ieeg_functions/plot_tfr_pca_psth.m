@@ -2,7 +2,7 @@ function [] = plot_tfr_pca_psth(save_path, tfr_path, tfr_file_list, label_log, .
     pc_log, component_results, psth_struct, bin_size, window_start, ...
     window_end, baseline_start, baseline_end, response_start, response_end, ...
     feature_filter, feature_value, sub_rows, sub_cols, use_z, st_type, ymax_scale, ...
-    transparency, min_components, plot_avg_pow)
+    transparency, font_size, min_components, plot_avg_pow, plot_shift_labels)
 
     %% Purpose: Create subplot with tfrs, percent variance, pc time courses, and electrode
     %           weighting to look at the entire data set for given session
@@ -77,11 +77,11 @@ function [] = plot_tfr_pca_psth(save_path, tfr_path, tfr_file_list, label_log, .
     %% Output: There is no return. The graphs are saved directly to the path indicated by save_path
 
     color_map = [0 0 0 % black
-                1 0 0 % red
-                0 0 1 % blue
-                0 1 0 % green
-                1 0 1 % magenta
-                1 1 0]; % yellow
+                256 0 0 % red
+                0 0 256 % blue
+                0 255 0 % green
+                102 0 204 % magenta
+                255 128 0] ./ 256; % yellow
 
     event_window = window_start:bin_size:window_end;
     event_window(1) = [];
@@ -112,6 +112,7 @@ function [] = plot_tfr_pca_psth(save_path, tfr_path, tfr_file_list, label_log, .
                 continue
             end
             main_plot = figure;
+            set(gca,'DefaultTextFontSize', 1)
             %TODO add more info to title plot
             component_var = component_results.(feature).component_variance;
             tot_components = length(component_var);
@@ -144,20 +145,18 @@ function [] = plot_tfr_pca_psth(save_path, tfr_path, tfr_file_list, label_log, .
                     tfr_fig = openfig(tfr_file);
                     tfr_ax = get(gca,'Children');
                     xdata = get(tfr_ax, 'XData');
-                    xlabel('Time (s)');
+                    xlabel('Time (s)', 'FontSize', font_size);
                     ydata = get(tfr_ax, 'YData');
-                    ylabel('Frequency')
+                    ylabel('Frequency', 'FontSize', font_size)
                     zdata = get(tfr_ax, 'CData');
                     figure(main_plot);
                     hold on
                     scrollsubplot(sub_rows, sub_cols, tfr_counter);
                     contourf(xdata, ydata, zdata, 40, 'linecolor','none')
-                    title([curr_freq, ' ', sub_reg, ' ', event])
-                    ylabel('Frequency (Hz)');
-                    xlabel('Time(s)');
+                    title([curr_freq, ' ', sub_reg, ' ', event], 'FontSize', font_size)
+                    ylabel('Frequency (Hz)', 'FontSize', font_size);
+                    xlabel('Time(s)', 'FontSize', font_size);
                     % Put color bar on text plot
-                    scrollsubplot(sub_rows, sub_cols, sub_cols);
-                    colorbar('westoutside')
                     hold off
                     tfr_counter = tfr_counter + sub_cols;
                     close(tfr_fig);
@@ -169,9 +168,9 @@ function [] = plot_tfr_pca_psth(save_path, tfr_path, tfr_file_list, label_log, .
             % Position: 2nd row, last column
             scrollsubplot(sub_rows, sub_cols, (tfr_counter - 1));
             bar(component_var, 'EdgeColor', 'none');
-            xlabel('PC #');
-            ylabel('% Variance');
-            title('Percent Variance Explained')
+            xlabel('PC #', 'FontSize', font_size);
+            ylabel('% Variance', 'FontSize', font_size);
+            title('Percent Variance Explained', 'FontSize', font_size)
             %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
             %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -199,7 +198,6 @@ function [] = plot_tfr_pca_psth(save_path, tfr_path, tfr_file_list, label_log, .
                 figure(main_plot);
                 scrollsubplot(sub_rows, sub_cols, tfr_counter);
                 hold on
-                yyaxis left
                 [l, ~] = boundedline(event_window, psth, st_vec, ...
                     'transparency', transparency);
                 legend_lines = l;
@@ -209,7 +207,7 @@ function [] = plot_tfr_pca_psth(save_path, tfr_path, tfr_file_list, label_log, .
                 line([baseline_end baseline_end], ylim, 'Color', 'black', 'LineWidth', 0.75, 'LineStyle', '--');
                 line([response_start response_start], ylim, 'Color', 'black', 'LineWidth', 0.75, 'LineStyle', '--');
                 line([response_end response_end], ylim, 'Color', 'black', 'LineWidth', 0.75, 'LineStyle', '--');
-                ylabel('PC Space');
+                ylabel('PC Space', 'FontSize', font_size);
 
                 if plot_avg_pow
                     yyaxis right
@@ -233,10 +231,10 @@ function [] = plot_tfr_pca_psth(save_path, tfr_path, tfr_file_list, label_log, .
                     legend('boxoff');
                     lg.Location = 'Best';
                     lg.Orientation = 'Horizontal';
-                    ylabel('Avg. Pow');
+                    ylabel('Avg. Pow', 'FontSize', font_size);
                 end
-                title(psth_name);
-                xlabel('Time (s)');
+                title(psth_name, 'FontSize', font_size);
+                xlabel('Time (s)', 'FontSize', font_size);
                 xlim([round(window_start) round(window_end)]);
                 hold off
                 tfr_counter = tfr_counter + sub_cols;
@@ -251,16 +249,16 @@ function [] = plot_tfr_pca_psth(save_path, tfr_path, tfr_file_list, label_log, .
                 pca_weights = pca_weights(:, 1:feature_value);
             end
             tot_plots = plot_weights(pca_weights, ymax_scale, color_struct, ...
-                sub_rows, sub_cols, weight_counter, plot_incrememnt);
+                sub_rows, sub_cols, weight_counter, plot_incrememnt, font_size);
 
-            sub_features = strsplit(feature, '_');
-            band_locs = ~ismember(sub_features, label_log.(feature).label);
-            band_list = sub_features(band_locs);
-            plot_power_shifts(label_log.(feature), sub_features, band_list, ...
-                band_locs, tot_plots, weight_counter, plot_incrememnt, ...
-                sub_rows, sub_cols);
+            plot_power_shifts(component_results.(feature).band_shift, plot_shift_labels, ...
+                weight_counter, plot_incrememnt, tot_plots, sub_rows, sub_cols, font_size);
             %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
             figure(main_plot);
+            try
+                filename = [feature, '_', event, '.png'];
+                saveas(gcf, fullfile(save_path, filename));
+            end
             filename = [feature, '_', event, '.fig'];
             set(gcf, 'CreateFcn', 'set(gcbo,''Visible'',''on'')'); 
             savefig(gcf, fullfile(save_path, filename));
