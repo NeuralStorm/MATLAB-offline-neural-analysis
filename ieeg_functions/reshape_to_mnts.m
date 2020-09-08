@@ -161,8 +161,6 @@ function [mnts_struct, label_log] = reshape_to_mnts(label_table, power_struct, .
                         region_chans = label_table(ismember(label_table.label, region), :);
                         mnts_struct.(feature).elec_order = [mnts_struct.(feature).elec_order; power_struct.anat.channels(region_channel_i)];
                         label_log.(feature) = [label_log.(feature); region_chans];
-                        % [~, ind] = unique(label_log.(feature), 'rows');
-                        % label_log.(feature) = label_log.(feature)(ind, :);
                     end
                     for event_i = 1:size(all_events, 1)
                         event = all_events{event_i, 1};

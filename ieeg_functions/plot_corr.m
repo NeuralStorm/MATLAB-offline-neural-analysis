@@ -180,7 +180,7 @@ function [] = plot_corr(save_path, component_results, label_log, ...
             %% Save heatmap
             filename = ['heatmap_component_corr_', num2str(comp_i), '.png'];
             saveas(gcf, fullfile(save_path, filename));
-            filename = ['heatmap_component_corr_', num2str(comp_i), '.mat'];
+            filename = ['heatmap_component_corr_', num2str(comp_i), '.fig'];
             set(gcf, 'CreateFcn', 'set(gcbo,''Visible'',''on'')'); 
             savefig(gcf, fullfile(save_path, filename));
         end

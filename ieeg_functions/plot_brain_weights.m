@@ -71,9 +71,9 @@ function [] = plot_brain_weights(save_path, dir_name, mesh_struct, elec_struct, 
 
         for comp_i = 1:tot_components
             comp_coeff = coeff(:, comp_i);
-            %! Does not work if region is repeated in component
-            [~, ia, ~] = intersect(elec_struct.label, component_results.(curr_space).elec_order);
-            elec_pos = elec_struct.chanpos(ia,:);
+            % Find electrode coordinates present in feature space
+            [~, elec_cord_i] = ismember(component_results.(curr_space).elec_order, elec_struct.label);
+            elec_pos = elec_struct.chanpos(elec_cord_i,:);
 
             %% Assign colors to color map
             color_map = zeros(size(coeff, 1), 3);
@@ -110,12 +110,13 @@ function [] = plot_brain_weights(save_path, dir_name, mesh_struct, elec_struct, 
 
             %% Save subplot for feature space
             sgtitle([dir_name, ' PC ', num2str(comp_i), ' ', strrep(curr_space, '_', ' ')]);
-            filename = [num2str(comp_i), '_', curr_space, '.fig'];
-            set(gcf, 'CreateFcn', 'set(gcbo,''Visible'',''on'')');
-            savefig(gcf, fullfile(save_path, filename));
             if save_png
                 filename = [num2str(comp_i), '_', curr_space, '.png'];
                 saveas(gcf, fullfile(save_path, filename));
+            else
+                filename = [num2str(comp_i), '_', curr_space, '.fig'];
+                set(gcf, 'CreateFcn', 'set(gcbo,''Visible'',''on'')');
+                savefig(gcf, fullfile(save_path, filename));
             end
         end
     end
