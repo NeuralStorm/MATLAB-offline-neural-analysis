@@ -1,5 +1,5 @@
 function [mnts_struct, label_log] = reshape_to_mnts(label_table, power_struct, ...
-        select_features, use_z_score, smooth_power, span)
+        select_features, use_z_score, smooth_power, span, downsample_pow, downsample_rate)
     %% Purpose: Reshape output from filtering process
     %% Input
     % label_table: table with information of current recording
@@ -85,8 +85,10 @@ function [mnts_struct, label_log] = reshape_to_mnts(label_table, power_struct, .
                 region = unique_regions{region_i};
                 region_channel_i = ismember(power_struct.anat.ROIs, region);
                 %% Grab region power spectrums
-                region_powspctrm = get_powspctrm(power_struct.(bandname), region_channel_i, use_z_score);
-                mnts = create_mnts(region_powspctrm, smooth_power, span);
+                region_powspctrm = get_powspctrm(power_struct.(bandname), ...
+                    region_channel_i, use_z_score, smooth_power, span, ...
+                    downsample_pow, downsample_rate);
+                mnts = create_mnts(region_powspctrm);
                 %% Create tfr mean, std, and ste
                 for event_i = 1:size(all_events, 1)
                     event = all_events{event_i, 1};
@@ -144,10 +146,12 @@ function [mnts_struct, label_log] = reshape_to_mnts(label_table, power_struct, .
                         region = split_regions{region_i};
                         region_channel_i = ismember(power_struct.anat.ROIs, region);
                         %% Grab power spectrums
-                        region_powspctrm = get_powspctrm(power_struct.(bandname), region_channel_i, use_z_score);
+                        region_powspctrm = get_powspctrm(power_struct.(bandname), ...
+                            region_channel_i, use_z_score, smooth_power, span, ...
+                            downsample_pow, downsample_rate);
 
                         %% Reshape into MNTS and store in mnts_struct for feature
-                        region_mnts = create_mnts(region_powspctrm, smooth_power, span);
+                        region_mnts = create_mnts(region_powspctrm);
                         mnts_struct.(feature).([z_type, 'mnts']) = [mnts_struct.(feature).([z_type, 'mnts']), region_mnts];
 
                         for event_i = 1:size(all_events, 1)
@@ -185,15 +189,53 @@ function [mnts_struct, label_log] = reshape_to_mnts(label_table, power_struct, .
     end
 end
 
-function [region_powspctrm] = get_powspctrm(pow_struct, region_channel_i, use_z_score)
+function [results] = get_powspctrm(pow_struct, region_channel_i, use_z_score, ...
+        smooth_power, span, downsample_pow, downsample_rate)
     powspctrm = pow_struct.powspctrm;
     region_powspctrm = powspctrm(:, region_channel_i, :);
     if use_z_score
         region_powspctrm = zscore(region_powspctrm,0,3);
     end
+    %% Iterate through trials and smooth each trials
+    %TODO replace powspctrm with region_powspctrm
+    if downsample_pow || smooth_power
+        [tot_trials, tot_chans, tot_samples] = size(region_powspctrm);
+        if downsample_pow
+            down_i = 1:downsample_rate:tot_samples;
+            results = nan(tot_trials, tot_chans, (numel(down_i) - 1));
+        else
+            results = nan(tot_trials, tot_chans, tot_samples);
+        end
+        parfor unit_i = 1:tot_chans
+            for trial_i = 1:tot_trials
+                %% smooth
+                if smooth_power
+                    trial_response = smooth(region_powspctrm(trial_i, unit_i, :), span);
+                else
+                    trial_response = region_powspctrm(trial_i, unit_i, :);
+                end
+                %% downsample
+                if downsample_pow
+                    downsample_trial = [];
+                    for i = 1:numel(down_i) - 1
+                        start_i = down_i(i);
+                        end_i = down_i(i + 1);
+                        sample_avg = mean(trial_response(start_i:end_i));
+                        downsample_trial = [downsample_trial, sample_avg];
+                    end
+                    results(trial_i, unit_i, :) = downsample_trial;
+                else
+                    % Case: smoothing only
+                    results(trial_i, unit_i, :) = trial_response;
+                end
+            end
+        end
+    else
+        results = region_powspctrm;
+    end
 end
 
-function [mnts] = create_mnts(powspctrm, smooth_power, span)
+function [mnts] = create_mnts(powspctrm)
     [tot_trials, tot_chans, ~] = size(powspctrm);
     mnts = [];
     for unit_i = 1:tot_chans
@@ -201,11 +243,7 @@ function [mnts] = create_mnts(powspctrm, smooth_power, span)
         for trial_i = 1:tot_trials
             %% Power spectrum
             trial_response = squeeze(powspctrm(trial_i, unit_i, :));
-            if smooth_power
-                unit_response = [unit_response; smooth(trial_response, span)];
-            else
-                unit_response = [unit_response; trial_response];
-            end
+            unit_response = [unit_response; trial_response];
         end
         mnts = [mnts, unit_response];
     end
