@@ -1,5 +1,12 @@
 function [mnts_struct, label_log] = reshape_to_mnts(label_table, power_struct, ...
-        select_features, use_z_score, smooth_power, span, downsample_pow, downsample_rate)
+        select_features, use_z_score, smooth_power, span, downsample_pow, ...
+        downsample_rate, slice_time, bin_size, window_start, window_end, slice_start, slice_end)
+
+    if slice_time
+        time_window = window_start:bin_size:window_end;
+        time_window(end) = [];
+        slice_i = find(time_window >= slice_start & time_window < slice_end);
+    end
     %% Purpose: Reshape output from filtering process
     %% Input
     % label_table: table with information of current recording
@@ -88,6 +95,9 @@ function [mnts_struct, label_log] = reshape_to_mnts(label_table, power_struct, .
                 region_powspctrm = get_powspctrm(power_struct.(bandname), ...
                     region_channel_i, use_z_score, smooth_power, span, ...
                     downsample_pow, downsample_rate);
+                if slice_time
+                    region_powspctrm = region_powspctrm(:, :, slice_i);
+                end
                 mnts = create_mnts(region_powspctrm);
                 %% Create tfr mean, std, and ste
                 for event_i = 1:size(all_events, 1)
@@ -150,6 +160,9 @@ function [mnts_struct, label_log] = reshape_to_mnts(label_table, power_struct, .
                             region_channel_i, use_z_score, smooth_power, span, ...
                             downsample_pow, downsample_rate);
 
+                        if slice_time
+                            region_powspctrm = region_powspctrm(:, :, slice_i);
+                        end
                         %% Reshape into MNTS and store in mnts_struct for feature
                         region_mnts = create_mnts(region_powspctrm);
                         mnts_struct.(feature).([z_type, 'mnts']) = [mnts_struct.(feature).([z_type, 'mnts']), region_mnts];
@@ -197,7 +210,6 @@ function [results] = get_powspctrm(pow_struct, region_channel_i, use_z_score, ..
         region_powspctrm = zscore(region_powspctrm,0,3);
     end
     %% Iterate through trials and smooth each trials
-    %TODO replace powspctrm with region_powspctrm
     if downsample_pow || smooth_power
         [tot_trials, tot_chans, tot_samples] = size(region_powspctrm);
         if downsample_pow

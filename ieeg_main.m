@@ -135,12 +135,32 @@ function [] = ieeg_main()
                 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
                 batch_reshape_to_mnts(dir_save_path, dir_failed_path, ...
                     pre_processed_dir_path, curr_dir, dir_config, label_table);
+
+                %TODO fix baseline and response windows
+                if dir_config.downsample_pow
+                    dir_config.bin_size = dir_config.downsample_bin;
+                    dir_config.window_start = dir_config.down_start;
+                    dir_config.window_end = dir_config.down_end;
+                end
+                if dir_config.slice_time
+                    dir_config.window_start = dir_config.slice_start;
+                    dir_config.window_end = dir_config.slice_end;
+                    dir_config.window_shift_time = dir_config.down_shift;
+                end
             catch ME
                 handle_ME(ME, mnts_failed_path, [curr_dir, '_missing_dir.mat']);
             end
         else
             [mnts_path, mnts_failed_path] = create_dir(project_path, 'mnts');
             [data_path, ~] = create_dir(mnts_path, 'mnts_data');
+            if dir_config.downsample_pow
+                dir_config.bin_size = dir_config.downsample_bin;
+            end
+            if dir_config.slice_time
+                dir_config.window_start = dir_config.slice_start;
+                dir_config.window_end = dir_config.slice_end;
+                dir_config.window_shift_time = 0;
+            end
         end
 
         if dir_config.do_pca %TODO change to pc_analysis
@@ -161,27 +181,6 @@ function [] = ieeg_main()
                 handle_ME(ME, mnts_failed_path, [curr_dir, '_missing_dir.mat']);
             end
         end
-
-        % if config.make_pca_plots
-        %     %TODO add mnts path
-        %     [graph_path, graph_failed_path] = create_dir(mnts_path, 'pca_graphs');
-        %     export_params(graph_path, 'pca_graph', config);
-        %     try
-        %         %% Check to make sure paths exist for analysis and create save path
-        %         e_msg_1 = 'No data directory to find PCAs';
-        %         e_msg_2 = ['No ', curr_dir, ' pca data for graphing'];
-        %         pca_path = [mnts_path, '/pca'];
-        %         dir_pca_path = enforce_dir_layout(pca_path, curr_dir, graph_failed_path, e_msg_1, e_msg_2);
-        %         [dir_save_path, dir_failed_path] = create_dir(graph_path, curr_dir);
-
-        %         %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-        %         %%      Graph PCA Weights     %%
-        %         %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-        %         batch_plot_pca_weights(dir_save_path, dir_failed_path, dir_pca_path, curr_dir, dir_config)
-        %     catch ME
-        %         handle_ME(ME, graph_failed_path, [curr_dir, '_missing_dir.mat']);
-        %     end
-        % end
 
         e_msg_1 = 'No data directory to find PCA MNTSs';
         if dir_config.convert_mnts_psth
@@ -205,28 +204,6 @@ function [] = ieeg_main()
                 handle_ME(ME, pca_psth_failed_path, [curr_dir, '_missing_dir.mat']);
             end
         end
-
-        % if config.make_psth_graphs
-        %     [graph_path, graph_failed_path] = create_dir(pca_psth_path, 'psth_graphs');
-        %     export_params(graph_path, 'psth_graph', config);
-        %     data_path = [pca_psth_path, '/data'];
-        %     try
-        %         %% Check to make sure paths exist for analysis and create save path
-        %         e_msg_1 = 'No data directory to find PCA PSTH';
-        %         e_msg_2 = ['No ', curr_dir, ' psth data for graphing'];
-        %         dir_psth_path = enforce_dir_layout(data_path, curr_dir, ...
-        %             graph_failed_path, e_msg_1, e_msg_2);
-        %         [dir_save_path, dir_failed_path] = create_dir(graph_path, curr_dir);
-
-        %         %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-        %         %%         Graph PSTH         %%
-        %         %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-        %         batch_power_graph_psth(dir_save_path, dir_failed_path, ...
-        %             dir_psth_path, curr_dir, dir_config)
-        %     catch ME
-        %         handle_ME(ME, graph_failed_path, [curr_dir, '_missing_dir.mat']);
-        %     end
-        % end
 
         if dir_config.make_tfr_pca_psth
             [graph_path, graph_failed_path] = create_dir(project_path, 'tfr_pca_psth');
