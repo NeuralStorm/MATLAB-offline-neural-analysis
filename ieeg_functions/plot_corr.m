@@ -1,4 +1,4 @@
-function [] = plot_corr(save_path, component_results, label_log, ...
+function [results] = plot_corr(save_path, component_results, label_log, ...
         feature_filter, feature_value, min_components, corr_components, ...
         sub_rows, sub_columns, subplot_shrinking, legend_loc)
 
@@ -54,12 +54,14 @@ function [] = plot_corr(save_path, component_results, label_log, ...
     end
     [color_struct, ~] = create_color_struct(color_map, combined_feature_space, color_log);
 
+    rsq_out = cell(corr_components, 1);
     parfor comp_i = 1:corr_components
         %% Parallel process to go through component correlation plotting
         figure
         sgtitle(['Component ', num2str(comp_i)]);
         subplot_i = 1;
         r_struct = struct;
+        comp_rsq_out = [];
         for space_one_i = 1:(numel(unique_features) - 1)
             %% Take electrodes from first feature space
             space_one = unique_features{space_one_i};
@@ -115,6 +117,9 @@ function [] = plot_corr(save_path, component_results, label_log, ...
                 %% R2 calculation
                 R = corrcoef(x_values,y_values);
                 Rsq = R(1,2).^2;
+                %% Store info in table
+                comp_rsq_out = [comp_rsq_out; {comp_i}, {numel(elec_intersect)}, ...
+                    {space_one}, {space_two}, {Rsq}];
                 %% Axis and title set up
                 title(['R^2: ', num2str(Rsq)])
                 xlabel(strrep(space_one, '_', ' '))
@@ -154,7 +159,7 @@ function [] = plot_corr(save_path, component_results, label_log, ...
         if subplot_i > 1
             % Only saved if at least one subplot was made
             filename = ['component_corr_', num2str(comp_i), '.fig'];
-            set(gcf, 'CreateFcn', 'set(gcbo,''Visible'',''on'')'); 
+            set(gcf, 'CreateFcn', 'set(gcbo,''Visible'',''on'')');
             savefig(gcf, fullfile(save_path, filename));
 
             %% Create heatmap of correlation values
@@ -185,5 +190,16 @@ function [] = plot_corr(save_path, component_results, label_log, ...
             savefig(gcf, fullfile(save_path, filename));
         end
         close all
+        rsq_out{comp_i} = comp_rsq_out;
+    end
+
+    %% Unroll components stored in rsq_out
+    results = [];
+    for comp_i = 1:(corr_components)
+        comp_info = rsq_out{comp_i};
+        if isempty(comp_info)
+            continue
+        end
+        results = [results; comp_info];
     end
 end

@@ -291,7 +291,7 @@ function [] = ieeg_main()
                 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
                 %%         Graph Corr         %%
                 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-                batch_plot_corr(curr_dir, dir_save_path, dir_failed_path, ...
+                batch_plot_corr(project_path, curr_dir, dir_save_path, dir_failed_path, ...
                     dir_pca_path, dir_config);
             catch ME
                 handle_ME(ME, graph_failed_path, [curr_dir, '_missing_dir.mat']);
