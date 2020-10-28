@@ -2,11 +2,6 @@ function [mnts_struct, label_log] = reshape_to_mnts(label_table, power_struct, .
         select_features, use_z_score, smooth_power, span, downsample_pow, ...
         downsample_rate, slice_time, bin_size, window_start, window_end, slice_start, slice_end)
 
-    if slice_time
-        time_window = window_start:bin_size:window_end;
-        time_window(end) = [];
-        slice_i = find(time_window >= slice_start & time_window < slice_end);
-    end
     %% Purpose: Reshape output from filtering process
     %% Input
     % label_table: table with information of current recording
@@ -58,6 +53,12 @@ function [mnts_struct, label_log] = reshape_to_mnts(label_table, power_struct, .
         z_type = 'z_';
     else
         '';
+    end
+
+    if slice_time
+        time_window = window_start:bin_size:window_end;
+        time_window(end) = [];
+        slice_i = find(time_window >= slice_start & time_window < slice_end);
     end
 
     unique_bands = fieldnames(power_struct);
@@ -206,9 +207,6 @@ function [results] = get_powspctrm(pow_struct, region_channel_i, use_z_score, ..
         smooth_power, span, downsample_pow, downsample_rate)
     powspctrm = pow_struct.powspctrm;
     region_powspctrm = powspctrm(:, region_channel_i, :);
-    if use_z_score
-        region_powspctrm = zscore(region_powspctrm,0,3);
-    end
     %% Iterate through trials and smooth each trials
     if downsample_pow || smooth_power
         [tot_trials, tot_chans, tot_samples] = size(region_powspctrm);
@@ -222,28 +220,18 @@ function [results] = get_powspctrm(pow_struct, region_channel_i, use_z_score, ..
             for trial_i = 1:tot_trials
                 %% smooth
                 if smooth_power
-                    trial_response = smooth(region_powspctrm(trial_i, unit_i, :), span);
+                    trial_response = smooth_down(region_powspctrm(trial_i, unit_i, :), span, downsample_rate, 'lagging')
                 else
                     trial_response = region_powspctrm(trial_i, unit_i, :);
                 end
-                %% downsample
-                if downsample_pow
-                    downsample_trial = [];
-                    for i = 1:numel(down_i) - 1
-                        start_i = down_i(i);
-                        end_i = down_i(i + 1);
-                        sample_avg = mean(trial_response(start_i:end_i));
-                        downsample_trial = [downsample_trial, sample_avg];
-                    end
-                    results(trial_i, unit_i, :) = downsample_trial;
-                else
-                    % Case: smoothing only
-                    results(trial_i, unit_i, :) = trial_response;
-                end
+                results(trial_i, unit_i, :) = trial_response;
             end
         end
     else
         results = region_powspctrm;
+    end
+    if use_z_score
+        results = zscore(results,0,3);
     end
 end
 
