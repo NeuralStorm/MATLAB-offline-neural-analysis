@@ -19,7 +19,21 @@ function [smoothed_data] = smooth_down(data, span, step_size, avg_type)
             smoothed_data(smooth_i) = mean(data(start_i:end_i));
             smooth_i = smooth_i + 1;
         end
-    elseif strcmpi(avg_type, 'leading') || strcmpi(avg_type, 'center')
+    elseif strcmpi(avg_type, 'leading')
+        smooth_i = 1;
+        stop_index = downsampled_size * step_size;
+        for i = 1:step_size:stop_index
+            if i > (numel(data) - span)
+                start_i = i;
+                end_i = stop_index;
+            else
+                start_i = i;
+                end_i = i + span - 1;
+            end
+            smoothed_data(smooth_i) = mean(data(start_i:end_i));
+            smooth_i = smooth_i + 1;
+        end
+    elseif strcmpi(avg_type, 'center')
         error([avg_type, ' algorithm not implemented yet']);
     else
         error([avg_type, ' not valid flag. Try lagging, leading, or center instead']);
