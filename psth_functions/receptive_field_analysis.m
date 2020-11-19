@@ -1,7 +1,7 @@
 function [sig_neurons, non_sig_neurons, cluster_struct] = receptive_field_analysis(...
         label_log, psth_struct, bin_size, window_start, baseline_start, baseline_end, ...
         response_start, response_end, span, threshold_scale, sig_check, sig_alpha, ...
-        consec_bins, unsmoothed_recfield_metrics, cluster_analysis, bin_gap, ...
+        consec_bins, mixed_smoothing, cluster_analysis, bin_gap, ...
         column_names)
     %% Abbreviations: fl = first latency, ll = last latency, pl = peak latency
     %% rm = response magnitude, bfr = background firing rate
@@ -47,8 +47,12 @@ function [sig_neurons, non_sig_neurons, cluster_struct] = receptive_field_analys
                     response_psth, threshold, consec_bins, sig_check, sig_alpha);
 
                 if is_sig
+                    supra_i = find(response_psth > threshold);
+                    overall_psth_response = response_psth(supra_i(1):supra_i(end));
+                    [fl, ll, duration, ~, ~, ~, ~, ~] = get_response_metrics(avg_bfr, ...
+                        overall_psth_response, supra_i, bin_size, response_start);
                     %% Finds results of the receptive field analysis
-                    if unsmoothed_recfield_metrics
+                    if mixed_smoothing
                         psth = psth_struct.(region).(event).(neuron).psth;
                         pre_psth = psth(1:pre_event_bins);
                         post_psth = psth((pre_event_bins + 1):end);
@@ -56,7 +60,6 @@ function [sig_neurons, non_sig_neurons, cluster_struct] = receptive_field_analys
                         response_psth = post_psth(response_start_i:response_end_i);
                         %! smoothed threshold < unsmoothed threshold
                         %! May not be significant response with unsmoothed version
-                        [~, avg_bfr, bfr_std] = get_threshold(baseline_psth, threshold_scale);
 
                         %% Verify that enough consec bins exist
                         supra_i = find(response_psth > threshold);
@@ -69,10 +72,10 @@ function [sig_neurons, non_sig_neurons, cluster_struct] = receptive_field_analys
                                 {NaN}, {strings}, {NaN}, {notes}, cluster_data];
                             continue
                         end
+                        supra_i = find(response_psth > threshold);
+                        overall_psth_response = response_psth(supra_i(1):supra_i(end));
                     end
-                    supra_i = find(response_psth > threshold);
-                    overall_psth_response = response_psth(supra_i(1):supra_i(end));
-                    [fl, ll, duration, pl, peak, corrected_peak, rm, ...
+                    [~, ~, ~, pl, peak, corrected_peak, rm, ...
                         corrected_rm] = get_response_metrics(avg_bfr, ...
                         overall_psth_response, supra_i, bin_size, response_start);
 

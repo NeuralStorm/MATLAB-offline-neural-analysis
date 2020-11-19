@@ -8,10 +8,10 @@ function [] = graph_PSTH(save_path, psth_struct, label_log, sig_response, ...
     make_region_subplot = config.make_region_subplot; sub_rows = config.sub_rows;
     make_unit_plot = config.make_unit_plot; sub_cols = config.sub_columns;
     if rf_analysis
-        span = config.span; unsmoothed_recfield_metrics = config.unsmoothed_recfield_metrics;
+        span = config.span; mixed_smoothing = config.mixed_smoothing;
         cluster_flag = config.cluster_flag; cluster_analysis = config.cluster_analysis;
     else
-        span = NaN; unsmoothed_recfield_metrics = NaN;
+        span = NaN; mixed_smoothing = NaN;
         cluster_flag = 0; cluster_analysis = 0;
     end
     check_time(window_start, baseline_start, baseline_end, window_end, response_start, response_end, bin_size)
@@ -59,7 +59,7 @@ function [] = graph_PSTH(save_path, psth_struct, label_log, sig_response, ...
                 neuron = find(label_log.(current_region).user_channels == neuron_iter);
                 psth_name = region_neurons{neuron};
                 psth = psth_struct.(current_region).(current_event).(psth_name).psth;
-                if rf_analysis && ~unsmoothed_recfield_metrics
+                if rf_analysis && ~mixed_smoothing
                     %! Not the same smoothing as in receptive field since it is on entire psth
                     %! rec field is split between baseline and response so they have different edges near 0
                     psth = smooth(psth, span);
