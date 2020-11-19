@@ -7,6 +7,8 @@ function [] = graph_PSTH(save_path, psth_struct, label_log, sig_response, ...
     response_end = config.response_end; rf_analysis = config.rf_analysis;
     make_region_subplot = config.make_region_subplot; sub_rows = config.sub_rows;
     make_unit_plot = config.make_unit_plot; sub_cols = config.sub_columns;
+    user_chan_plot_order = config.user_chan_plot_order; 
+    
     if rf_analysis
         span = config.span; mixed_smoothing = config.mixed_smoothing;
         cluster_flag = config.cluster_flag; cluster_analysis = config.cluster_analysis;
@@ -54,9 +56,13 @@ function [] = graph_PSTH(save_path, psth_struct, label_log, sig_response, ...
                 region_figure = NaN;
             end
 
-            %% Creating the PSTH graphs
+            %% Creating the PSTH graphs                       
             for neuron_iter = 1:total_region_neurons
-                neuron = find(label_log.(current_region).user_channels == neuron_iter);
+                if user_chan_plot_order
+                    neuron = find(label_log.(current_region).user_channels == neuron_iter);
+                else
+                    neuron = neuron_iter;
+                end
                 psth_name = region_neurons{neuron};
                 psth = psth_struct.(current_region).(current_event).(psth_name).psth;
                 if rf_analysis && ~mixed_smoothing
