@@ -1,0 +1,39 @@
+function [unit_struct] = get_response_units(response_matrix, unit_labels, event_indices, ...
+        tot_window_bins, tot_preresponse_bins, tot_response_bins)
+
+    %% Purpose: Return struct with units sliced by response bins
+    %% Input:
+    % response_matrix: response matrix with dims trials x (units * total bins)
+    % unit_labels: labels with order of units in response matrix
+    % event_indices: boolean or index array indicating trials (rows) desired
+    % tot_window_bins: total bins for a given unit
+    % tot_preresponse_bins: total bins from window start to response start - 1
+    % tot_response_bins: total bins in response
+    %% Output:
+    % unit_struct: struct with the following fields
+    %              unit: unit is defined by the contents of unit_labels and has the fields
+    %                    relative_response: unit response matrix
+    %                    psth: avg response
+
+    %% Grab only event related columns in response matrix
+    response_matrix = response_matrix(event_indices, :);
+    [tot_trials, tot_cols] = size(event_matrix);
+    
+    %% assert unit labels and tot window bins are valid
+    assert(tot_cols / (numel(unit_labels) * tot_window_bins) == 1,
+        ['Total unit labels and bins provided do not cleanly go', ...
+        'into response matrix. Verify dimensions']);
+
+    unit_struct = struct;
+    for unit_start_i = 1:tot_window_bins:tot_cols
+        %% determine unit label
+        unit_index = unit_start_i / tot_window_bins;
+        unit = unit_labels{unit_i};
+        %% slice time from response matrix and store in unit_struct
+        start_i = unit_i + tot_preresponse_bins;
+        end_i = unit_i + tot_preresponse_bins + tot_response_bins;
+        unit_response = response_matrix(:, start_i:end_i);
+        unit_struct.(unit).relative_response = unit_response;
+        unit_struct.(unit).psth = sum(unit_response, 1) / tot_trials;
+    end
+end
