@@ -22,9 +22,9 @@ function [] = export_csv(csv_path, new_results, ignore_columns)
         curr_type = class(new_results.(curr_col));
         if ismember(curr_type, 'double')
             new_results.(curr_col) = cellstr(num2str(new_results.(curr_col)));
-            if strcmpi(class(results_table.(curr_col)), 'double') && ~isempty(results_table.(curr_col))
-                results_table.(curr_col) = cellstr(num2str(results_table.(curr_col)));
-            end
+        end
+        if strcmpi(class(results_table.(curr_col)), 'double') && ~isempty(results_table.(curr_col))
+            results_table.(curr_col) = cellstr(num2str(results_table.(curr_col)));
         end
     end
 
