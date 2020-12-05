@@ -37,7 +37,6 @@ function [pca_results, labeled_pcs, pc_log] = calc_pca(label_log, mnts_struct, .
     %% Output
     % pca_results: struct w/ fields for each feature set ran through PCA
     %              fields:
-    %                      'all_events': copied from mnts_struct
     %                      feature_name: struct with fields
     %                                        componenent_variance: Vector with % variance explained by each component
     %                                        eigenvalues: Vector with eigen values
@@ -51,7 +50,6 @@ function [pca_results, labeled_pcs, pc_log] = calc_pca(label_log, mnts_struct, .
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
     pca_results = struct;
-    pca_results.all_events = mnts_struct.all_events;
     labeled_pcs = label_log;
 
     if use_z_mnts
@@ -83,6 +81,11 @@ function [pca_results, labeled_pcs, pc_log] = calc_pca(label_log, mnts_struct, .
                 tot_pcs = feature_value;
                 pca_score = pca_score(:, 1:tot_pcs);
                 labeled_pcs.(region) = labeled_pcs.(region)(1:tot_pcs, :);
+                % if size(labeled_pcs.(region), 1) > tot_pcs
+                %     labeled_pcs.(region) = labeled_pcs.(region)(1:tot_pcs, :);
+                % else
+                %     labeled_pcs.(region) = repmat(labeled_pcs.(region)(1, :), [tot_pcs, 1]);
+                % end
             end
         elseif strcmpi(feature_filter, 'eigen')
             %TODO check eigenvalues and recreate pca scores with new weights
@@ -107,6 +110,7 @@ function [pca_results, labeled_pcs, pc_log] = calc_pca(label_log, mnts_struct, .
             pca_score = (mnts_struct.(region).(mnts_type) - estimated_mean) * coeff(:,1:tot_pcs);
             labeled_pcs.(region) = labeled_pcs.(region)(1:tot_pcs, :);
         end
+        pca_results.(region).chan_order = mnts_struct.(region).chan_order;
         pca_results.(region).weighted_mnts = pca_score;
         [~, tot_components] = size(pca_score);
         pc_names = cell(tot_components, 1);
@@ -117,6 +121,7 @@ function [pca_results, labeled_pcs, pc_log] = calc_pca(label_log, mnts_struct, .
         labeled_pcs.(region).sig_channels = pc_names;
         labeled_pcs.(region).user_channels = pc_names;
         labeled_pcs.(region).channel_data = num2cell(pca_score, 1)';
+        pca_results.(region).label_order = pc_names;
 
         pc_log.(region) = removevars(labeled_pcs.(region), 'channel_data');
     end

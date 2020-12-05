@@ -125,7 +125,8 @@ function [label_log, mnts_struct, event_info] = reshape_to_mnts(label_table, pow
                 mnts_struct.(feature).([z_type, 'mnts']) = mnts;
                 mnts_struct.(feature).tfr.(bandname) = tfr_struct;
                 region_chans = label_table(ismember(label_table.label, region), :);
-                mnts_struct.(feature).elec_order = power_struct.anat.channels(region_channel_i);
+                mnts_struct.(feature).label_order = power_struct.anat.channels(region_channel_i);
+                mnts_struct.(feature).chan_order = power_struct.anat.channels(region_channel_i);
                 mnts_struct.(feature).band_shift = [];
                 label_log.(feature) = region_chans;
             end
@@ -142,7 +143,8 @@ function [label_log, mnts_struct, event_info] = reshape_to_mnts(label_table, pow
             feature = replace(feature, {':', '+', ','}, '_');
             label_log.(feature) = [];
             mnts_struct.(feature).([z_type, 'mnts']) = [];
-            mnts_struct.(feature).elec_order = [];
+            mnts_struct.(feature).chan_order = [];
+            mnts_struct.(feature).label_order = [];
             mnts_struct.(feature).band_shift = [];
             for sub_feature_i = 1:numel(sub_feature)
                 %% Split into powers and regions
@@ -182,7 +184,8 @@ function [label_log, mnts_struct, event_info] = reshape_to_mnts(label_table, pow
 
                         %% label log
                         region_chans = label_table(ismember(label_table.label, region), :);
-                        mnts_struct.(feature).elec_order = [mnts_struct.(feature).elec_order; power_struct.anat.channels(region_channel_i)];
+                        mnts_struct.(feature).label_order = [mnts_struct.(feature).label_order; power_struct.anat.channels(region_channel_i)];
+                        mnts_struct.(feature).chan_order = [mnts_struct.(feature).chan_order; power_struct.anat.channels(region_channel_i)];
                         label_log.(feature) = [label_log.(feature); region_chans];
                     end
                     for event_i = 1:numel(unique_events)
@@ -193,7 +196,7 @@ function [label_log, mnts_struct, event_info] = reshape_to_mnts(label_table, pow
                             tfr_struct.(event).(['ste_', z_type, 'tfr'])] = ...
                             get_tfr_stats(tfr_struct.(event).(['avg_', z_type, 'tfr']));
                     end
-                    mnts_struct.(feature).band_shift = [mnts_struct.(feature).band_shift; {numel(mnts_struct.(feature).elec_order)}];
+                    mnts_struct.(feature).band_shift = [mnts_struct.(feature).band_shift; {numel(mnts_struct.(feature).chan_order)}];
                     mnts_struct.(feature).tfr.(bandname) = tfr_struct;
                 end
             end

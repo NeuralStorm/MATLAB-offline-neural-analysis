@@ -12,7 +12,7 @@ function [results] = plot_corr(save_path, component_results, label_log, ...
     %                    feature_name: struct with fields
     %                                  coeff: NxN (N = tot features) matrix with coeff weights used to scale mnts into PC space
     %                                             Columns: Component Row: Feature
-    %                                  elec_order: C x 1 cell array, C = tot channels. Order of electrodes fed into PCA
+    %                                  chan_order: C x 1 cell array, C = tot channels. Order of electrodes fed into PCA
     % label_log: struct w/ fields for each feature set
     %            field: table with columns (relevant columns shown only)
     %                   fieldnames should match feature spaces in component_results
@@ -45,7 +45,7 @@ function [results] = plot_corr(save_path, component_results, label_log, ...
     unique_features = fieldnames(label_log);
     combined_feature_space = unique_features{1};
     color_log.label = label_log.(combined_feature_space).label;
-    color_log.sig_channels = component_results.(combined_feature_space).elec_order;
+    color_log.sig_channels = component_results.(combined_feature_space).chan_order;
     for feature_i = 2:numel(unique_features)
         feature = unique_features{feature_i};
         combined_feature_space = [combined_feature_space, '_', feature];
@@ -65,7 +65,7 @@ function [results] = plot_corr(save_path, component_results, label_log, ...
         for space_one_i = 1:(numel(unique_features) - 1)
             %% Take electrodes from first feature space
             space_one = unique_features{space_one_i};
-            first_elec_set = component_results.(space_one).elec_order;
+            first_elec_set = component_results.(space_one).chan_order;
             first_weights = component_results.(space_one).coeff;
             [~, first_components] = size(first_weights);
             if first_components < min_components || first_components < comp_i
@@ -80,7 +80,7 @@ function [results] = plot_corr(save_path, component_results, label_log, ...
             for space_two_i = 1:numel(remaining_spaces)
                 %% Compare first feature space to remaining feature spaces via intersection of electrodes
                 space_two = remaining_spaces{space_two_i};
-                second_elec_set = component_results.(space_two).elec_order;
+                second_elec_set = component_results.(space_two).chan_order;
                 second_weights = component_results.(space_two).coeff;
                 [~, second_components] = size(second_weights);
                 if second_components < min_components || second_components < comp_i

@@ -38,7 +38,6 @@ function [] = batch_power_pca(save_path, failed_path, data_path, dir_name, dir_c
             for feature_i = 1:numel(unique_features)
                 feature = unique_features{feature_i};
                 component_results.(feature).tfr = mnts_struct.(feature).tfr;
-                component_results.(feature).elec_order = mnts_struct.(feature).elec_order;
                 component_results.(feature).band_shift = mnts_struct.(feature).band_shift;
             end
             %% Saving the file
