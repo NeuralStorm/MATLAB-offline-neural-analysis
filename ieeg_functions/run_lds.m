@@ -1,17 +1,15 @@
-function [net] = run_lds(pca_struct, pc_log, latent_variables, cyc, tol)
-    %TODO unhard code
-    tot_bins = 101;
+function [net] = run_lds(pca_struct, tot_bins, latent_variables, cyc, tol)
     lds_input = [];
-    unique_regions = fieldnames(pc_log);
-    for region_i = 1:numel(unique_regions)
-        region = unique_regions{region_i};
-        weighted_mnts = pca_struct.(region).weighted_mnts;
+    unique_features = fieldnames(pca_struct);
+    for feature_i = 1:numel(unique_features)
+        feature = unique_features{feature_i};
+        weighted_mnts = pca_struct.(feature).weighted_mnts;
         lds_input = [lds_input, weighted_mnts];
     end
 
-    net = lds(lds_input(102:end, :), latent_variables, tot_bins, cyc, tol);
+    net = lds(lds_input, latent_variables, tot_bins, cyc, tol);
     net.lds_input = lds_input;
-    lds_trial = lds_input(1:101,:);
+    lds_trial = lds_input(1:tot_bins,:);
     p = length(lds_trial(1,:)); % tot observable
     N=length(lds_trial(:,1));
     N=N/tot_bins; % tot trials

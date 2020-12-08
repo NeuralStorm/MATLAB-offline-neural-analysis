@@ -6,6 +6,10 @@ function [] = batch_run_lds(save_path, failed_path, data_path, dir_name, ...
     file_list = get_file_list(data_path, '.mat');
     file_list = update_file_list(file_list, failed_path, dir_config.include_sessions);
     fprintf('LDS for %s \n', dir_name);
+
+    tot_bins = get_tot_bins(dir_config.window_start, dir_config.window_end, ...
+        dir_config.bin_size);
+
     for file_i = 1:length(file_list)
         [~, filename, ~] = fileparts(file_list(file_i).name);
         filename_meta.filename = filename;
@@ -14,13 +18,12 @@ function [] = batch_run_lds(save_path, failed_path, data_path, dir_name, ...
             file = fullfile(data_path, file_list(file_i).name);
             load(file, 'component_results', 'filename_meta', 'pc_log');
             %% Check variables to make sure they are not empty
-            empty_vars = check_variables(file, pc_log, component_results);
+            empty_vars = check_variables(file, component_results);
             if empty_vars
                 continue
             end
 
-            %TODO call lds function
-            net = run_lds(component_results, pc_log, dir_config.latent_variables, ...
+            net = run_lds(component_results, tot_bins, dir_config.latent_variables, ...
                 dir_config.em_cycles, dir_config.tolerance);
 
             %% Saving the file
