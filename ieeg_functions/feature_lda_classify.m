@@ -1,27 +1,23 @@
-function [results] = lda_classify(psth_struct, label_log)
+function [results] = feature_lda_classify(psth_struct, event_info)
     tic
     %TODO time window?
     % -1 -> 0 | -2 -> 0 | -0.5 -> 0
     %TODO try a few dims
 
     %% Create labels used to train LDA model
-    all_i = find(ismember(psth_struct.all_events(:, 1), 'all'));
-    safe_i = find(ismember(psth_struct.all_events(:, 1), 'safebet'));
-    gamble_i = find(ismember(psth_struct.all_events(:, 1), 'gambles'));
-    labels = cell(numel(psth_struct.all_events{all_i, 2}), 1);
-    % labels(psth_struct.all_events{safe_i, 2}) = {'safebet'};
-    % labels(psth_struct.all_events{gamble_i, 2}) = {'gambles'};
-    labels(psth_struct.all_events{safe_i, 2}) = 0;
-    labels(psth_struct.all_events{gamble_i, 2}) = 1;
+    labels = event_info(ismember(event_info.event_labels, {'gambles', 'safebet'}), :);
+    labels = sortrows(labels, 'event_indices');
+    labels = labels.event_labels;
 
     results = struct;
 
-    unique_features = fieldnames(label_log);
+    unique_features = fieldnames(psth_struct);
     for feature_i = 1:numel(unique_features)
         %% Go through each feature space to do classification
-        feature = unique_features{feature_i}
+        feature = unique_features{feature_i};
         %TODO generalize events
-        relative_response = psth_struct.(feature).all.relative_response(:, 1:300);
+        %TODO give option for how many pcs desired
+        relative_response = psth_struct.(feature).relative_response;
 
         [tot_trials, ~] = size(relative_response);
         predicted_events = cell(tot_trials, 1);
