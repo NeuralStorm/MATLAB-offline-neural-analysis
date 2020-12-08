@@ -1,8 +1,9 @@
 function [] = plot_tfr_pca_psth(save_path, tfr_path, tfr_file_list, label_log, ...
-    pc_log, component_results, psth_struct, bin_size, window_start, ...
+    component_results, psth_struct, event_info, bin_size, window_start, ...
     window_end, baseline_start, baseline_end, response_start, response_end, ...
     feature_filter, feature_value, sub_rows, sub_cols, use_z, st_type, ymax_scale, ...
     transparency, font_size, min_components, plot_avg_pow, plot_shift_labels)
+    %TODO figure(title, 'title string') something like that
 
     %% Purpose: Create subplot with tfrs, percent variance, pc time courses, and electrode
     %           weighting to look at the entire data set for given session
@@ -21,8 +22,6 @@ function [] = plot_tfr_pca_psth(save_path, tfr_path, tfr_file_list, label_log, .
     %                   'recording_session': Int: File recording session number that above applies to
     %                   'recording_notes': String with user defined notes for channel
     % component_results: struct w/ fields for each feature set ran through PCA
-    %                    'all_events': Nx2 cell array where N is the number of events
-    %                                  Column 1: event label (ex: event_1)
     %                    feature_name: struct with fields
     %                                  componenent_variance: Vector with % variance explained by each component
     %                                  eigenvalues: Vector with eigen values
@@ -36,8 +35,6 @@ function [] = plot_tfr_pca_psth(save_path, tfr_path, tfr_file_list, label_log, .
     %                                                 event: struct with fields with tfr & z tfr avg, std, ste
     %                                                        fieldnames: avg_tfr, avg_z_tfr, std_tfr, std_z_tfr, ste_tfr, & ste_z_tfr
     % psth_struct: struct w/ fields for each feature
-    %              'all_events': Nx2 cell array where N is the number of events
-    %                            Column 1: event label (ex: event_1)
     %              feature_name: struct typically based on regions and powers
     %                            relative_response: Numerical matrix with dimensions Trials x ((tot pcs or channels) * tot bins)
     %                            event: struct with fields:
@@ -76,6 +73,8 @@ function [] = plot_tfr_pca_psth(save_path, tfr_path, tfr_file_list, label_log, .
     %               1: Plot avg power time course
     %% Output: There is no return. The graphs are saved directly to the path indicated by save_path
 
+    tot_window_bins = get_tot_bins(window_start, window_end, bin_size);
+
     color_map = [0 0 0 % black
                 256 0 0 % red
                 0 0 256 % blue
@@ -94,19 +93,19 @@ function [] = plot_tfr_pca_psth(save_path, tfr_path, tfr_file_list, label_log, .
 
     freq_list = {'highfreq', 'lowfreq'};
     tot_tfrs = length(freq_list);
+    unique_events = unique(event_info.event_labels);
+    unique_features = fieldnames(psth_struct);
 
-    unique_regions = fieldnames(pc_log);
-    parfor feature_i = 1:length(unique_regions)
-        feature = unique_regions{feature_i};
+    parfor feature_i = 1:length(unique_features)
+        feature = unique_features{feature_i};
         st_vec = [];
 
         [color_struct, region_list] = create_color_struct(color_map, ...
             feature, label_log.(feature));
-        event_strings = psth_struct.all_events(:,1)';
-        region_neurons = pc_log.(feature).sig_channels;
-        total_region_neurons = length(region_neurons);
-        for event_i = 1:length(event_strings)
-            event = event_strings{event_i};
+        feature_units = psth_struct.(feature).label_order;
+        tot_feature_units = numel(feature_units);
+        for event_i = 1:numel(unique_events)
+            event = unique_events{event_i};
             %% Skip events without TFRs
             if isempty(tfr_file_list(contains({tfr_file_list.name}, event)))
                 continue
@@ -175,8 +174,13 @@ function [] = plot_tfr_pca_psth(save_path, tfr_path, tfr_file_list, label_log, .
 
             %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
             weight_counter = tfr_counter + 1;
-            event_psth = psth_struct.(feature).(event).psth;
+            %% Get event response and separate into units
+            event_indices = event_info.event_indices(strcmpi(event_info.event_labels, event));
+            event_matrix = get_event_response(psth_struct.(feature).relative_response, event_indices)
+            event_psth = calc_psth(event_matrix, numel(event_indices));
+            unit_struct = slice_unit_response(event_matrix, psth_struct.(feature).label_order, tot_window_bins);
 
+            %% Set event min and max for plotting
             event_max = 1.1 * max(event_psth) + eps;
             if min(event_psth) >= 0
                 event_min = 0;
@@ -185,10 +189,10 @@ function [] = plot_tfr_pca_psth(save_path, tfr_path, tfr_file_list, label_log, .
             end
 
             %% Creating the PSTH graphs
-            for comp_i = 1:total_region_neurons
-                psth_name = region_neurons{comp_i};
-                psth = psth_struct.(feature).(event).(psth_name).psth;
-                relative_response = psth_struct.(feature).(event).(psth_name).relative_response;
+            for comp_i = 1:tot_feature_units
+                psth_name = feature_units{comp_i};
+                psth = unit_struct.(psth_name).psth;
+                relative_response = unit_struct.(psth_name).relative_response;
                 if strcmpi(st_type, 'std')
                     st_vec = std(relative_response);
                 elseif strcmpi(st_type, 'ste')

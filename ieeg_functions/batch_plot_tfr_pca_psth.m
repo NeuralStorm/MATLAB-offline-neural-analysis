@@ -33,30 +33,19 @@ function [] = batch_plot_tfr_pca_psth(dir_name, save_path, failed_path, tfr_path
         filename_meta.filename = filename;
         try
             pca_file = fullfile(pca_data_path, pca_file_list(file_index).name);
-            load(pca_file, 'component_results', 'filename_meta', 'label_log');
+            load(pca_file, 'component_results', 'filename_meta', 'label_log', 'event_info');
 
             if any(contains({psth_file_list.name}, filename_meta.filename))
                 psth_filename = psth_file_list(...
                     contains({psth_file_list.name}, filename_meta.filename)).name;
                 psth_file = fullfile(pca_psth_path, psth_filename);
-                load(psth_file, 'psth_struct', 'pc_log');
-                unique_fields = fieldnames(psth_struct);
-                unique_fields = unique_fields(~ismember(unique_fields, 'all_events'));
-                for space_i = 1:numel(unique_fields)
-                    curr_space = unique_fields{space_i};
-                    psth_struct.(curr_space) = rmfield(psth_struct.(curr_space), 'relative_response');
-                    unique_events = fieldnames(psth_struct.(curr_space));
-                    for event_i = 1:numel(unique_events)
-                        event = unique_events{event_i};
-                        psth_struct.(curr_space).(event) = rmfield(psth_struct.(curr_space).(event), 'relative_response');
-                    end
-                end
+                load(psth_file, 'psth_struct');
             else
                 error('Missing %s to plot PSTH time course', filename_meta.filename);
             end
 
-            plot_tfr_pca_psth(save_path, tfr_path, tfr_file_list, label_log, pc_log, ...
-                component_results, psth_struct, dir_config.bin_size, ...
+            plot_tfr_pca_psth(save_path, tfr_path, tfr_file_list, label_log, ...
+                component_results, psth_struct, event_info, dir_config.bin_size, ...
                 dir_config.window_start, dir_config.window_end, dir_config.baseline_start, ...
                 dir_config.baseline_end, dir_config.response_start, ...
                 dir_config.response_end, dir_config.feature_filter, ...
@@ -65,7 +54,7 @@ function [] = batch_plot_tfr_pca_psth(dir_name, save_path, failed_path, tfr_path
                 dir_config.ymax_scale, dir_config.transparency, dir_config.font_size, ...
                 dir_config.min_components, dir_config.plot_avg_pow, dir_config.plot_shift_labels);
 
-                clear('component_results', 'filename_meta', 'label_log', 'psth_struct', 'pc_log');
+                clear('component_results', 'filename_meta', 'label_log', 'psth_struct');
 
         catch ME
             handle_ME(ME, failed_path, filename_meta.filename);

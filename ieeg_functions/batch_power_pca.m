@@ -22,7 +22,7 @@ function [] = batch_power_pca(save_path, failed_path, data_path, dir_name, dir_c
         try
             %% pull info from filename and set up file path for analysis
             file = fullfile(data_path, file_list(file_index).name);
-            load(file, 'mnts_struct', 'filename_meta', 'label_log');
+            load(file, 'mnts_struct', 'filename_meta', 'label_log', 'event_info');
             %% Check variables to make sure they are not empty
             empty_vars = check_variables(file, label_log, mnts_struct);
             if empty_vars
@@ -45,7 +45,7 @@ function [] = batch_power_pca(save_path, failed_path, data_path, dir_name, dir_c
                 filename_meta.filename, '.mat']);
             check_variables(matfile, component_results);
             save(matfile, '-v7.3', 'component_results', ...
-                'filename_meta', 'config_log', 'label_log', 'pc_log');
+                'filename_meta', 'config_log', 'label_log', 'pc_log', 'event_info');
             clear('label_log', 'component_results', 'filename_meta', 'pc_log', 'config_log');
         catch ME
             handle_ME(ME, failed_path, filename_meta.filename);
