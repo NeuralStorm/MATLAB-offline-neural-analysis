@@ -1,4 +1,4 @@
-function [confusion_matrix, mutual_info, predicted_events, true_events, correct_trials, performance] = psth_classifier(psth_struct, event_strings)
+function [confusion_matrix, mutual_info, correct_trials, performance] = psth_classifier(psth_struct, event_strings)
     predicted_events = [];
     true_events = [];
     for event = 1:length(event_strings)
@@ -10,11 +10,11 @@ function [confusion_matrix, mutual_info, predicted_events, true_events, correct_
             trial_template = current_response(trial, :);
             psth_template = current_response;
             psth_template(trial, :) = [];
-            psth_template = sum(psth_template) / (tot_event_trials - 1);
+            psth_template = calc_psth(psth_template, (tot_event_trials - 1));
             psth_struct.(current_event).psth = psth_template;
 
             %% Euclidian distance and fnding closest match
-            euclidian_results = [event_strings', cell(length(event_strings), 1)];
+            euclidian_results = [event_strings, cell(length(event_strings), 1)]; %! removed transpose of event_strings since event_strings is now found differently
             for template_event = 1:length(event_strings)
                 template_name = event_strings{template_event};
                 psth_template = psth_struct.(template_name).psth;
@@ -28,7 +28,7 @@ function [confusion_matrix, mutual_info, predicted_events, true_events, correct_
             predicted_events = [predicted_events; {classified_event}];
             true_events = [true_events; {current_event}];
         end
-        psth_struct.(current_event).psth = sum(current_response) / tot_event_trials;
+        psth_struct.(current_event).psth = calc_psth(current_response, tot_event_trials);
     end
     %% Find the information and performance for current region
     confusion_matrix = confusionmat(true_events, predicted_events);
