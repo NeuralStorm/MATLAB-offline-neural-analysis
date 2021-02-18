@@ -1,22 +1,23 @@
-function [psth_struct, event_ts, label_log] = format_PSTH(...
-        event_ts, selected_data, bin_size, window_start, window_end, wanted_events, trial_range, trial_lower_bound)
+function [psth_struct, event_info, label_log] = format_PSTH(event_info, ...
+        selected_data, bin_size, window_start, window_end, wanted_events, ...
+        trial_range)
+    %TODO add documentation on inputs and outputs
 
     psth_struct = struct;
 
-    %% Organize and group timestamps
-    [~, all_events, event_ts] = organize_events(event_ts, ...
-        trial_lower_bound, trial_range, wanted_events);
-    psth_struct.all_events = all_events;
+    %% Filter events
+    event_info = filter_events(event_info, wanted_events, trial_range);
 
     %% Creates the PSTH
     unique_regions = fieldnames(selected_data);
     label_log = struct;
+    [bin_edges, ~] = get_bins(window_start, window_end, bin_size);
     for region_i = 1:length(unique_regions)
         region = unique_regions{region_i};
         region_neurons = [selected_data.(region).sig_channels, selected_data.(region).channel_data];
-        region_response = create_relative_response(region_neurons, psth_struct.all_events, ...
-            bin_size, window_start, window_end);
-        psth_struct.(region) = region_response;
+        rr = create_relative_response(region_neurons, event_info.event_ts, bin_edges);
+        psth_struct.(region).relative_response = rr;
+        %TODO add other fields needed for psth_struct
 
         %% Create label log
         region_table = selected_data.(region);
