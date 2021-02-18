@@ -52,7 +52,6 @@ function [] = plx_spike_parser(parsed_path, failed_path, raw_file, config, label
                 end
             end
         end
-        total_neurons = length(channel_map(:,1));
 
         [total_event_chan, event_channels] = plx_event_chanmap(raw_file);
         event_ts = [];
@@ -61,15 +60,13 @@ function [] = plx_spike_parser(parsed_path, failed_path, raw_file, config, label
             %% strobbed channel is always 257
             current_channel = event_channels(channel);
             if current_channel == 257 && evcounts(channel) > 0
-                is_strobbed = true;
-                [total_timestamps, event_timestamps, strobed_values] = plx_event_ts(raw_file, current_channel);
+                [~, event_timestamps, strobed_values] = plx_event_ts(raw_file, current_channel);
                 event_ts = [strobed_values, event_timestamps];
             elseif evcounts(channel) > trial_lower_bound
                 [total_timestamps, event_timestamps, ~] = plx_event_ts(raw_file, current_channel);
-                total_timestamps = length(event_timestamps);
                 if is_non_strobed_and_strobed
-                    currenet_event = event_map(event_map_counter);
-                    event_ts = [event_ts; repmat(currenet_event, [total_timestamps, 1]), event_timestamps];
+                    current_event = event_map(event_map_counter);
+                    event_ts = [event_ts; repmat(current_event, [total_timestamps, 1]), event_timestamps];
                     event_map_counter = event_map_counter + 1;
                 else
                     event_ts = [event_ts; repmat(current_channel, [total_timestamps, 1]), event_timestamps];
@@ -99,6 +96,10 @@ function [] = plx_spike_parser(parsed_path, failed_path, raw_file, config, label
         end
 
         event_ts = sortrows(event_ts, 2);
+        [tot_trials, ~] = size(event_ts);
+        event_i = 1:1:tot_trials;
+        event_info = array2table([event_ts, event_i'], ...
+            'VariableNames', {'event_labels', 'event_ts', 'event_indices'});
         channel_map = sortrows(channel_map, 1);
 
         %% label channel map
@@ -111,8 +112,8 @@ function [] = plx_spike_parser(parsed_path, failed_path, raw_file, config, label
 
         %% Saves parsed files
         matfile = fullfile(parsed_path, [filename_meta.filename, '.mat']);
-        save(matfile, 'event_ts', 'channel_map', 'filename_meta', 'labeled_data');
-        clear('event_ts', 'channel_map', 'filename_meta', 'labeled_data');
+        save(matfile, 'event_info', 'channel_map', 'filename_meta', 'labeled_data');
+        clear('event_ts', 'event_info', 'channel_map', 'filename_meta', 'labeled_data');
     catch ME
         handle_ME(ME, failed_path, filename_meta.filename);
     end
