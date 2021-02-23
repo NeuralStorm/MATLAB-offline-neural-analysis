@@ -1,19 +1,14 @@
-function [mnts_struct, event_ts, selected_data, label_log] = format_mnts(...
-    event_ts, selected_data, bin_size, window_start, window_end, wanted_events, ...
-    trial_range, trial_lower_bound)
+function [mnts_struct, event_info, selected_data, label_log] = format_mnts(...
+    event_info, selected_data, bin_size, window_start, window_end, wanted_events, ...
+    trial_range)
 
     mnts_struct = struct;
-    event_window = -(abs(window_start)):bin_size:(abs(window_end));
-    tot_bins = length(event_window) - 1;
+    [bin_edges, tot_bins] = get_bins(window_start, window_end, bin_size);
 
-    %% Organize and group timestamps
-    [~, all_events, event_ts] = organize_events(event_ts, ...
-        trial_lower_bound, trial_range, wanted_events);
-    mnts_struct.all_events = all_events;
+    %% Filter events
+    event_info = filter_events(event_info, wanted_events, trial_range);
 
-    %% Organize event_ts to be in chronological order by event label
-    event_ts = sortrows(event_ts);
-    tot_trials = length(event_ts(:, 1));
+    tot_trials = height(event_info);
 
     unique_regions = fieldnames(selected_data);
     label_log = struct;
@@ -21,22 +16,23 @@ function [mnts_struct, event_ts, selected_data, label_log] = format_mnts(...
         region = unique_regions{region_index};
         region_neurons = [selected_data.(region).sig_channels, ...
             selected_data.(region).channel_data];
-        [tot_region_neurons, ~] = size(region_neurons);
-        mnts = nan((tot_bins * tot_trials), tot_region_neurons);
-        for neuron_index = 1:tot_region_neurons
-            neuron_ts = region_neurons{neuron_index, 2};
-            neuron_response = nan((tot_bins * tot_trials), 1);
-            trial_start = 1;
-            trial_end = tot_bins;
-            for trial_index = 1:tot_trials
-                trial_ts = event_ts(trial_index, 2);
-                offset_ts = neuron_ts - trial_ts * ones(size(neuron_ts));
-                [offset_response, ~] = histcounts(offset_ts, event_window);
-                neuron_response(trial_start:trial_end) = offset_response;
-                trial_start = trial_start + tot_bins;
-                trial_end = trial_end + tot_bins;
+        [tot_neurons, ~] = size(region_neurons);
+        mnts = nan((tot_bins * tot_trials), tot_neurons);
+
+        for neuron_i = 1:tot_neurons
+            spike_ts = region_neurons{neuron_i, 2};
+            trial_s = 1;
+            trial_e = tot_bins;
+            for trial_i = 1:tot_trials
+                trial_ts = event_info.event_ts(trial_i);
+                %% Offsets spike times and then bin spikes within window
+                offset_ts = spike_ts -trial_ts;
+                [binned_response, ~] = histcounts(offset_ts, bin_edges);
+                mnts(trial_s:trial_e, neuron_i) = binned_response';
+                %% Update index counters
+                trial_s = trial_s + tot_bins;
+                trial_e = trial_e + tot_bins;
             end
-            mnts(:, neuron_index) = neuron_response;
         end
 
         %% Find responses with no spikes and removes them to prevent NAN when z scored
