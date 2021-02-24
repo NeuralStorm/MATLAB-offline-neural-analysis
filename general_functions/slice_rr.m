@@ -11,11 +11,6 @@ function [res] = slice_rr(rr, tot_features, step_size, curr_start, ...
     slice_ind = bin_start:bin_end;
     [~, tot_steps] = get_bins(curr_start, curr_end, step_size);
 
-    % [step_edges, tot_steps] = get_bins(curr_start, curr_end, step_size);
-    % % edges are inclusive on left and exlusive on right, hence - step size
-    % [new_edges, ~] = get_bins(new_start, (new_end - step_size), step_size);
-    % slice_ind = find(ismembertol(step_edges, new_edges));
-
     res = [];
     [~, tot_obs] = size(rr);
     a = slice_ind;
