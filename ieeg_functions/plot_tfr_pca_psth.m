@@ -177,7 +177,7 @@ function [] = plot_tfr_pca_psth(save_path, tfr_path, tfr_file_list, label_log, .
             %% Get event response and separate into units
             event_indices = event_info.event_indices(strcmpi(event_info.event_labels, event));
             event_matrix = get_event_response(psth_struct.(feature).relative_response, event_indices)
-            event_psth = calc_psth(event_matrix, numel(event_indices));
+            event_psth = calc_psth(event_matrix);
             unit_struct = slice_unit_response(event_matrix, psth_struct.(feature).label_order, tot_window_bins);
 
             %% Set event min and max for plotting

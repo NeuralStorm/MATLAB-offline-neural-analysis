@@ -12,7 +12,7 @@ function [event_struct] = create_event_response(psth_struct, event_info)
             event_response = psth_struct.(feature).relative_response(event_indices, :);
             event_struct.(feature).(event).label_order = psth_struct.(feature).label_order;
             event_struct.(feature).(event).relative_response = event_response;
-            event_struct.(feature).(event).psth = calc_psth(event_response, numel(event_indices));
+            event_struct.(feature).(event).psth = calc_psth(event_response);
         end
     end
 end

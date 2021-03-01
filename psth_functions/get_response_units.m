@@ -15,7 +15,7 @@ function [unit_struct] = get_response_units(response_matrix, unit_labels, ...
     %                    psth: avg response
 
     %% assert unit labels and tot window bins are valid
-    [tot_trials, tot_cols] = size(response_matrix);
+    [~, tot_cols] = size(response_matrix);
     assert(tot_cols / (numel(unit_labels) * tot_window_bins) == 1, ...
         ['Total unit labels and bins provided do not cleanly go', ...
         'into response matrix. Verify dimensions']);
@@ -31,6 +31,6 @@ function [unit_struct] = get_response_units(response_matrix, unit_labels, ...
         end_i = unit_start_i + tot_preresponse_bins + tot_response_bins - 1;
         unit_response = response_matrix(:, start_i:end_i);
         unit_struct.(unit).relative_response = unit_response;
-        unit_struct.(unit).psth = calc_psth(unit_response, tot_trials);
+        unit_struct.(unit).psth = calc_psth(unit_response);
     end
 end

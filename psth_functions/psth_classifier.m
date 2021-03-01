@@ -10,7 +10,7 @@ function [confusion_matrix, mutual_info, correct_trials, performance] = psth_cla
             trial_template = current_response(trial, :);
             psth_template = current_response;
             psth_template(trial, :) = [];
-            psth_template = calc_psth(psth_template, (tot_event_trials - 1));
+            psth_template = calc_psth(psth_template);
             psth_struct.(current_event).psth = psth_template;
 
             %% Euclidian distance and fnding closest match
@@ -28,7 +28,7 @@ function [confusion_matrix, mutual_info, correct_trials, performance] = psth_cla
             predicted_events = [predicted_events; {classified_event}];
             true_events = [true_events; {current_event}];
         end
-        psth_struct.(current_event).psth = calc_psth(current_response, tot_event_trials);
+        psth_struct.(current_event).psth = calc_psth(current_response);
     end
     %% Find the information and performance for current region
     confusion_matrix = confusionmat(true_events, predicted_events);

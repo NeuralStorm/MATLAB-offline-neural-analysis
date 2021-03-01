@@ -15,6 +15,6 @@ function [event_struct] = create_event_struct(psth_struct, event_info, ...
             window_end, new_start, new_end);
         event_struct.(event).label_order = label_order;
         event_struct.(event).relative_response = event_response;
-        event_struct.(event).psth = calc_psth(event_response, numel(event_indices));
+        event_struct.(event).psth = calc_psth(event_response);
     end
 end
