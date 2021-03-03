@@ -57,9 +57,9 @@ function [label_log, mnts_struct, event_info] = reshape_to_mnts(label_table, pow
     end
 
     if slice_time
-        time_window = window_start:bin_size:window_end;
-        time_window(end) = [];
-        slice_i = find(time_window >= slice_start & time_window < slice_end);
+        bin_start = round((slice_start - window_start) / bin_size) + 1;
+        bin_end = round((slice_end - slice_start) / bin_size) + bin_start - 1;
+        slice_i = bin_start:bin_end;
     end
 
     unique_bands = fieldnames(power_struct);
@@ -228,7 +228,7 @@ function [results] = get_powspctrm(pow_struct, region_channel_i, use_z_score, ..
             for trial_i = 1:tot_trials
                 %% smooth
                 if smooth_power
-                    trial_response = smooth_down(region_powspctrm(trial_i, unit_i, :), span, downsample_rate, 'lagging')
+                    trial_response = smooth_down(region_powspctrm(trial_i, unit_i, :), span, downsample_rate, 'leading')
                 else
                     trial_response = region_powspctrm(trial_i, unit_i, :);
                 end
@@ -244,16 +244,18 @@ function [results] = get_powspctrm(pow_struct, region_channel_i, use_z_score, ..
 end
 
 function [mnts] = create_mnts(powspctrm)
-    [tot_trials, tot_chans, ~] = size(powspctrm);
-    mnts = [];
-    for unit_i = 1:tot_chans
-        unit_response = [];
+    [tot_trials, tot_chans, tot_t] = size(powspctrm);
+    mnts = nan((tot_t * tot_trials), tot_chans);
+    for chan_i = 1:tot_chans
+        trial_s = 1;
+        trial_e = tot_t;
         for trial_i = 1:tot_trials
             %% Power spectrum
-            trial_response = squeeze(powspctrm(trial_i, unit_i, :));
-            unit_response = [unit_response; trial_response];
+            mnts(trial_s:trial_e, chan_i) = squeeze(powspctrm(trial_i, chan_i, :));
+            %% Update index counters
+            trial_s = trial_s + tot_t;
+            trial_e = trial_e + tot_t;
         end
-        mnts = [mnts, unit_response];
     end
 end
 
