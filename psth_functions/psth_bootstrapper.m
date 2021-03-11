@@ -1,4 +1,4 @@
-function [chan_perf_info, chan_boot_info] = psth_bootstrapper(...
+function [reg_perf, reg_info, chan_perf, chan_info] = psth_bootstrapper(...
         psth_struct, event_info, bin_size, window_start, window_end, ...
         response_start, response_end, boot_iterations)
 
@@ -11,9 +11,12 @@ function [chan_perf_info, chan_boot_info] = psth_bootstrapper(...
         region = unique_regions{reg_i};
         chan_order = psth_struct.(region).label_order;
         tot_chans = numel(chan_order);
-        %% Preallocate arrays before bootstrapping
-        chan_perf_info = prealloc_boot_array(boot_iterations, chan_order);
-        chan_boot_info = prealloc_boot_array(boot_iterations, chan_order);
+        %% Preallocate region boot arrays
+        reg_perf = prealloc_boot_array(boot_iterations, 1);
+        reg_info = prealloc_boot_array(boot_iterations, 1);
+        %% Preallocate channel boot arrays
+        chan_perf = prealloc_boot_array(boot_iterations, tot_chans);
+        chan_info = prealloc_boot_array(boot_iterations, tot_chans);
 
         parfor i = 1:boot_iterations
             %% Shuffle labels
@@ -26,7 +29,6 @@ function [chan_perf_info, chan_boot_info] = psth_bootstrapper(...
             chan_e = tot_bins;
             for chan_i = 1:tot_chans
                 %TODO add check to skip channels with all the same values
-                %TODO add assert to verify chan_i matches location in preallocated cell arrays
                 chan_struct = struct;
                 chan = chan_order{chan_i};
                 chan_struct.label_order = {chan};
@@ -34,29 +36,26 @@ function [chan_perf_info, chan_boot_info] = psth_bootstrapper(...
                 %% Unit classification
                 event_struct = create_event_struct(chan_struct, shuffled_events, ...
                     bin_size, window_start, window_end, response_start, response_end);
-                res = classify(event_struct, unique_events);
-                chan_perf_info{chan_i, i + 1} = res.performance;
-                chan_boot_info{chan_i, i + 1} = res.mutual_info;
+                [~, shuffled_info, ~, shuffled_perf] = psth_classifier(event_struct, unique_events);
+                chan_perf(chan_i, i) = shuffled_perf;
+                chan_info(chan_i, i) = shuffled_info;
                 %% Update feature counter
                 chan_s = chan_s + tot_bins;
                 chan_e = chan_e + tot_bins;
             end
 
             % %% Population classification
-            % [~, shuffled_info, ~, shuffled_perf] = psth_classifier(shuffled_struct.(region), unique_events);
+            [~, shuffled_info, ~, shuffled_perf] = psth_classifier(shuffled_struct.(region), unique_events);
+            reg_perf(1, i) = shuffled_perf;
+            reg_info(1, i) = shuffled_info;
         end
-        avg_chan_info = get_avg_boot(chan_boot_info);
-        avg_chan_perf = get_avg_boot(chan_perf_info);
+        %% Region avg
+        avg_reg_perf = get_avg_boot(reg_perf);
+        avg_reg_info = get_avg_boot(reg_info);
+        %% Channel avg
+        avg_chan_perf = get_avg_boot(chan_perf);
+        avg_chan_info = get_avg_boot(chan_info);
     end
-end
-
-function [res] = classify(event_struct, unique_events)
-    [confusion_matrix, mutual_info, correct_trials, performance] = ...
-        psth_classifier(event_struct, unique_events);
-    res.confusion_matrix = confusion_matrix;
-    res.mutual_info = mutual_info;
-    res.correct_trials = correct_trials;
-    res.performance = performance;
 end
 
 function [res] = create_table()
@@ -76,12 +75,10 @@ function [res] = create_table()
                 'VariableTypes', anlysis_columns(:,2));
 end
 
-function [res] = prealloc_boot_array(boot_iterations, chan_order)
-    tot_chans = numel(chan_order);
-    res = cell(tot_chans, boot_iterations + 1);
-    res(:, 1) = chan_order';
+function [res] = prealloc_boot_array(boot_iterations, tot_chans)
+    res = nan(tot_chans, boot_iterations);
 end
 
 function [res] = get_avg_boot(boot_array)
-    res = mean(cell2mat(boot_array(:, 2:end)), 2);
+    res = mean(boot_array, 2);
 end
