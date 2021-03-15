@@ -48,9 +48,13 @@ function [] = batch_classify(project_path, save_path, failed_path, data_path, di
                 %% Join classification and boot results
                 pop_table = join(pop_table, boot_pop, 'Keys', 'region');
                 chan_table = join(chan_table, boot_chan, 'Keys', 'channel');
-                %TODO add column for corrected_info
+                %% Add corrected_info col (mutual info - bootstrapped mutual info)
+                pop_table.corrected_info = pop_table.mutual_info - pop_table.boot_mutual_info;
+                chan_table.corrected_info = chan_table.mutual_info - chan_table.boot_mutual_info;
             else
-                %TODO fill empty columns with NaN
+                %% If not bootstrapping, fill columns with NaN to prevent dim mismatch on csv output
+                pop_table = add_nan_cols(pop_table);
+                chan_table = add_nan_cols(chan_table);
             end
 
             %% PSTH synergy redundancy
@@ -73,17 +77,17 @@ function [] = batch_classify(project_path, save_path, failed_path, data_path, di
             check_variables(matfile, classify_res, pop_table, chan_table);
             save(matfile, 'classify_res', 'pop_table', 'chan_table', ...
                 'config_log', 'label_log');
-            % clear('classify_res', 'pop_table', 'chan_table', 'label_log');
 
             %% Add meta data to table before export to csv
             tot_rows = height(pop_table);
-            pop_table = horzcat_cell(pop_table, repmat(meta_data, [tot_rows, 1]), meta_headers, 'after');
+            pop_table = horzcat_cell(pop_table, repmat(meta_data, [tot_rows, 1]), meta_headers, 'before');
             tot_rows = height(chan_table);
             chan_table = horzcat_cell(chan_table, repmat(meta_data, [tot_rows, 1]), meta_headers, 'before');
             %% Append to CSV
             pop_csv_path = fullfile(project_path, [filename_substring_one, '_pop_classification_info.csv']);
             export_csv(pop_csv_path, pop_table, ignore_headers)
             chan_csv_path = fullfile(project_path, [filename_substring_one,'_chan_classification_info.csv']);
+            clear('classify_res', 'pop_table', 'chan_table', 'label_log');
             export_csv(chan_csv_path, chan_table, ignore_headers);
         catch ME
             handle_ME(ME, failed_path, filename_meta.filename);
@@ -91,4 +95,11 @@ function [] = batch_classify(project_path, save_path, failed_path, data_path, di
     end
     fprintf('Finished PSTH classifier for %s. It took %s \n', ...
         dir_name, num2str(toc(classifier_start)));
+end
+
+function [in_table] = add_nan_cols(in_table)
+    tot_rows = height(in_table);
+    in_table.boot_perf = nan(tot_rows, 1);
+    in_table.boot_mutual_info = nan(tot_rows, 1);
+    in_table.corrected_info = nan(tot_rows, 1);
 end
