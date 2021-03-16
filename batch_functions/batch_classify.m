@@ -58,11 +58,14 @@ function [] = batch_classify(project_path, save_path, failed_path, data_path, di
             end
 
             %% PSTH synergy redundancy
-            %TODO reimplement
-            % [pop_table] = synergy_redundancy(pop_table, chan_table, ...
-            %     boot_iterations);
+            pop_table = synergy_redundancy(pop_table, chan_table, boot_iterations);
 
-            %% Add info to results table
+            matfile = fullfile(save_path, ['psth_classifier_', filename_meta.filename, '.mat']);
+            check_variables(matfile, classify_res, pop_table, chan_table);
+            save(matfile, 'classify_res', 'pop_table', 'chan_table', ...
+                'config_log', 'label_log');
+
+            %% Add meta data to table before export to csv
             meta_data = [
                 {filename_meta.filename}, {filename_meta.animal_id}, ...
                 {filename_meta.experimental_group}, ...
@@ -72,13 +75,6 @@ function [] = batch_classify(project_path, save_path, failed_path, data_path, di
                 response_start, response_end, window_end...
                 boot_iterations, wanted_events
             ];
-
-            matfile = fullfile(save_path, ['psth_classifier_', filename_meta.filename, '.mat']);
-            check_variables(matfile, classify_res, pop_table, chan_table);
-            save(matfile, 'classify_res', 'pop_table', 'chan_table', ...
-                'config_log', 'label_log');
-
-            %% Add meta data to table before export to csv
             tot_rows = height(pop_table);
             pop_table = horzcat_cell(pop_table, repmat(meta_data, [tot_rows, 1]), meta_headers, 'before');
             tot_rows = height(chan_table);
@@ -87,8 +83,8 @@ function [] = batch_classify(project_path, save_path, failed_path, data_path, di
             pop_csv_path = fullfile(project_path, [filename_substring_one, '_pop_classification_info.csv']);
             export_csv(pop_csv_path, pop_table, ignore_headers)
             chan_csv_path = fullfile(project_path, [filename_substring_one,'_chan_classification_info.csv']);
-            clear('classify_res', 'pop_table', 'chan_table', 'label_log');
             export_csv(chan_csv_path, chan_table, ignore_headers);
+            clear('classify_res', 'pop_table', 'chan_table', 'label_log');
         catch ME
             handle_ME(ME, failed_path, filename_meta.filename);
         end
