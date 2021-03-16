@@ -13,15 +13,13 @@ function [pop_table] = synergy_redundancy(pop_table, chan_table, boot_iterations
             region_info = pop_table.corrected_info(strcmpi(pop_table.region, region));
 
             %% Sum unit info above 0 for current region
-            chan_info = sum(chan_table.corrected_info( ...
-                strcmpi(chan_table.region, region) & chan_table.corrected_info > 0));
+            chan_info = sum(chan_table.corrected_info(strcmpi(chan_table.region, region)));
         else
             %% Grab region info
             region_info = pop_table.mutual_info(strcmpi(pop_table.region, region));
 
             %% Sum unit info above 0 for current region
-            chan_info = sum(chan_table.mutual_info(strcmpi(chan_table.region, region) & ...
-                chan_table.mutual_info > 0));
+            chan_info = sum(chan_table.mutual_info(strcmpi(chan_table.region, region)));
         end
         %% Calculate synergy redundancy
         synergy_redundancy = region_info - chan_info;
