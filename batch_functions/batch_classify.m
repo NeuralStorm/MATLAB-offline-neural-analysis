@@ -28,7 +28,6 @@ function [] = batch_classify(project_path, save_path, failed_path, data_path, di
         try
             file = fullfile(data_path, file_list(file_index).name);
             load(file, 'psth_struct', 'event_info', 'filename_meta', 'label_log');
-            %! use label_log to pull the label metadata out (user_chans, recording_notes)
             %% Check psth variables to make sure they are not empty
             empty_vars = check_variables(file, psth_struct, event_info, label_log);
             if empty_vars
@@ -46,8 +45,20 @@ function [] = batch_classify(project_path, save_path, failed_path, data_path, di
                     event_info, bin_size, window_start, window_end, ...
                     response_start, response_end, boot_iterations);
                 %% Join classification and boot results
+                assert(height(pop_table) == height(boot_pop), ...
+                    'Join assumes a 1-1 mapping but found %d rows in pop and %d rows in boot pop', ...
+                    height(pop_table), height(boot_pop));
+                assert(height(chan_table) == height(boot_chan), ...
+                    'Join assumes a 1-1 mapping but found %d rows in chan_table and %d rows in boot_chan', ...
+                    height(chan_table), height(boot_chan));
                 pop_table = join(pop_table, boot_pop, 'Keys', 'region');
                 chan_table = join(chan_table, boot_chan, 'Keys', 'channel');
+                assert(height(pop_table) == height(boot_pop), ...
+                    'Join assumes a 1-1 mapping but found %d rows in pop and %d rows in boot pop after join', ...
+                    height(pop_table), height(boot_pop));
+                assert(height(chan_table) == height(boot_chan), ...
+                    'Join assumes a 1-1 mapping but found %d rows in chan_table and %d rows in boot_chan after join', ...
+                    height(chan_table), height(boot_chan));
                 %% Add corrected_info col (mutual info - bootstrapped mutual info)
                 pop_table.corrected_info = pop_table.mutual_info - pop_table.boot_mutual_info;
                 chan_table.corrected_info = chan_table.mutual_info - chan_table.boot_mutual_info;
@@ -79,6 +90,7 @@ function [] = batch_classify(project_path, save_path, failed_path, data_path, di
             pop_table = horzcat_cell(pop_table, repmat(meta_data, [tot_rows, 1]), meta_headers, 'before');
             tot_rows = height(chan_table);
             chan_table = horzcat_cell(chan_table, repmat(meta_data, [tot_rows, 1]), meta_headers, 'before');
+            chan_table = join_label_meta(label_log, chan_table);
             %% Append to CSV
             pop_csv_path = fullfile(project_path, [filename_substring_one, '_pop_classification_info.csv']);
             export_csv(pop_csv_path, pop_table, ignore_headers)
