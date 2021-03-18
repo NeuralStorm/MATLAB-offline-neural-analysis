@@ -5,6 +5,10 @@ function [] = batch_classify(project_path, save_path, failed_path, data_path, di
     file_list = get_file_list(data_path, '.mat');
     file_list = update_file_list(file_list, failed_path, config.include_sessions);
 
+    %% Create csv paths
+    pop_csv_path = fullfile(project_path, [filename_substring_one, '_pop_classification_info.csv']);
+    chan_csv_path = fullfile(project_path, [filename_substring_one,'_chan_classification_info.csv']);
+
     %% Pull variable names into workspace scope for log
     bin_size = config.bin_size; window_start = config.window_start;
     window_end = config.window_end; response_start = config.response_start;
@@ -33,6 +37,16 @@ function [] = batch_classify(project_path, save_path, failed_path, data_path, di
             if empty_vars
                 continue
             end
+
+            % %% Check uniqueness
+            %TODO check labels --> Change label log to table and not nested struct
+            % pop_is_unique = check_csv(pop_csv_path, filename_meta, config);
+            % chan_is_unique = check_csv(chan_csv_path, filename_meta, config);
+            % if ~pop_is_unique && ~chan_is_unique
+            %     warning('Skipping %s since this analysis was already ran with parameters.', ...
+            %         filename_meta.filename);
+            %     continue
+            % end
 
             %% Classify
             [pop_table, chan_table, classify_res] = do_psth_classifier(...
@@ -92,9 +106,7 @@ function [] = batch_classify(project_path, save_path, failed_path, data_path, di
             chan_table = horzcat_cell(chan_table, repmat(meta_data, [tot_rows, 1]), meta_headers, 'before');
             chan_table = join_label_meta(label_log, chan_table);
             %% Append to CSV
-            pop_csv_path = fullfile(project_path, [filename_substring_one, '_pop_classification_info.csv']);
             export_csv(pop_csv_path, pop_table, ignore_headers)
-            chan_csv_path = fullfile(project_path, [filename_substring_one,'_chan_classification_info.csv']);
             export_csv(chan_csv_path, chan_table, ignore_headers);
             clear('classify_res', 'pop_table', 'chan_table', 'label_log');
         catch ME

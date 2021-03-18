@@ -8,19 +8,19 @@ function [event_info] = filter_events(event_info, include_events, trial_range)
     % event_info filtered according to selected events and trial range
 
     %% Verify include_events is valid
-    if iscell(include_events) && ~isempty(include_events)
-        if isnumeric(include_events{1})
-            include_events = include_events{:};
-        end
+    if iscell(include_events)
+        include_events = include_events{:};
     end
-
-    %% Select desired events
-    if ~isempty(include_events) || ~all(isnan(include_events))
+    if ischar(include_events)
+        include_events = strrep(include_events, ';', ',');
+        include_events = strsplit(include_events, ',');
+        event_info = event_info(ismember(event_info.event_labels, include_events), :);
+    elseif isnumeric(include_events) && (~isempty(include_events) && ~all(isnan(include_events)))
+        assert(strcmpi(class(event_info.event_labels), class(include_events)), ...
+            'include_events must be %s, not %s', ...
+            class(event_info.event_labels), class(include_events));
         event_info = event_info(ismember(event_info.event_labels, include_events), :);
     end
-    assert(strcmpi(class(event_info.event_labels), class(include_events)), ...
-        'include_events must be %s, not %s', ...
-        class(event_info.event_labels), class(include_events));
 
     %% Verify trial_range is valid
     if iscell(trial_range) && ~isempty(trial_range)
@@ -35,4 +35,10 @@ function [event_info] = filter_events(event_info, include_events, trial_range)
     if ~isempty(trial_range) && ~all(isnan(trial_range))
         event_info = event_info(ismember(event_info.event_indices, trial_range), :);
     end
+
+    %% Update event indices
+    %! Remove event_indices
+    tot_trials = height(event_info);
+    event_i = 1:1:tot_trials;
+    event_info.event_indices = event_i';
 end

@@ -100,20 +100,24 @@ function [] = plx_spike_parser(parsed_path, failed_path, raw_file, config, label
         event_i = 1:1:tot_trials;
         event_info = array2table([event_ts, event_i'], ...
             'VariableNames', {'event_labels', 'event_ts', 'event_indices'});
+        event_strs = {};
+        for event_i = 1:height(event_info)
+            event = event_info.event_labels(event_i);
+            event_label = ['event_', num2str(event)];
+            event_strs = [event_strs; event_label];
+        end
+        event_info.event_labels = event_strs;
         channel_map = sortrows(channel_map, 1);
+        channel_map = cell2table(channel_map, 'VariableNames', ["sig_channels", "channel_data"]);
 
-        %% label channel map
-        labeled_data = label_data(channel_map, label_table, ...
-            filename_meta.session_num);
-
-        channel_list = channel_map(:, 1);
-        label_list = label_table.sig_channels(filename_meta.session_num == label_table.recording_session);
-        enforce_labels(channel_list, label_list, filename_meta.session_num);
+        %% enforce labels is all inclusive
+        session_table = label_table(label_table.recording_session == filename_meta.session_num, :);
+        enforce_labels(channel_map.sig_channels, session_table.sig_channels, filename_meta.session_num)
 
         %% Saves parsed files
         matfile = fullfile(parsed_path, [filename_meta.filename, '.mat']);
-        save(matfile, 'event_info', 'channel_map', 'filename_meta', 'labeled_data');
-        clear('event_ts', 'event_info', 'channel_map', 'filename_meta', 'labeled_data');
+        save(matfile, 'event_info', 'channel_map', 'filename_meta');
+        clear('event_ts', 'event_info', 'channel_map', 'filename_meta');
     catch ME
         handle_ME(ME, failed_path, filename_meta.filename);
     end

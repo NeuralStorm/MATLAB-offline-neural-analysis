@@ -18,9 +18,9 @@ function [rr] = create_relative_response(neuron_ts, event_ts, bin_edges)
         trial_ts = event_ts(trial_i);
         for neuron_i = 1:tot_neurons
             %% Iterate through neurons
-            spike_ts = neuron_ts{neuron_i, 2};
+            spike_ts = neuron_ts{neuron_i};
             %% Offsets spike times and then bin spikes within window
-            offset_ts = spike_ts -trial_ts;
+            offset_ts = spike_ts - trial_ts;
             [binned_response, ~] = histcounts(offset_ts, bin_edges);
             % Transpose taken to make binned_response row major instead of column major
             rr(trial_i, neuron_start:neuron_end) = binned_response';
