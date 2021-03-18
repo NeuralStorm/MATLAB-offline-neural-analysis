@@ -1,5 +1,5 @@
 function [label_log, mnts_struct, event_info] = reshape_to_mnts(label_table, power_struct, ...
-        select_features, selected_events, use_z_score, smooth_power, span, downsample_pow, ...
+        select_features, included_events, use_z_score, smooth_power, span, downsample_pow, ...
         downsample_rate, slice_time, bin_size, window_start, window_end, slice_start, slice_end)
 
     %% Purpose: Reshape output from filtering process
@@ -78,7 +78,7 @@ function [label_log, mnts_struct, event_info] = reshape_to_mnts(label_table, pow
     for event_i = 1:numel(unique_events)
         % Add remaining events to event table
         event = unique_events{event_i};
-        if ~contains(selected_events, event)
+        if ~contains(included_events, event)
             continue
         end
         tot_trials = numel(find(power_struct.beh.(event)));

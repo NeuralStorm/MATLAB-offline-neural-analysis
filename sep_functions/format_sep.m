@@ -1,5 +1,5 @@
 function sliced_signals = format_sep(data_map, event_samples, ...
-        sample_rate, sep_window, square_pulse, wanted_events)
+        sample_rate, sep_window, square_pulse, include_events)
 
     unique_events = fieldnames(event_samples);
     sliced_signals = struct([]);
@@ -7,8 +7,8 @@ function sliced_signals = format_sep(data_map, event_samples, ...
         event = unique_events{event_i};
 
         %% Skip unwanted events
-        if ~iscell(wanted_events) && ~isempty(wanted_events) && ~isnan(wanted_events)
-            if ~ismember(event_i, wanted_events)
+        if ~iscell(include_events) && ~isempty(include_events) && ~isnan(include_events)
+            if ~ismember(event_i, include_events)
                 continue
             end
         end

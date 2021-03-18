@@ -1,12 +1,12 @@
 function [mnts_struct, event_info, selected_data, label_log] = format_mnts(...
-    event_info, selected_data, bin_size, window_start, window_end, wanted_events, ...
+    event_info, selected_data, bin_size, window_start, window_end, include_events, ...
     trial_range)
 
     mnts_struct = struct;
     [bin_edges, tot_bins] = get_bins(window_start, window_end, bin_size);
 
     %% Filter events
-    event_info = filter_events(event_info, wanted_events, trial_range);
+    event_info = filter_events(event_info, include_events, trial_range);
 
     tot_trials = height(event_info);
 

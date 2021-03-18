@@ -1,5 +1,5 @@
 function [psth_struct, event_info] = format_PSTH(event_info, ...
-        selected_channels, bin_size, window_start, window_end, wanted_events, ...
+        selected_channels, bin_size, window_start, window_end, include_events, ...
         trial_range)
     %%Inputs
     % event_info: table with columns event_labels, event_indices, and event_ts
@@ -16,12 +16,12 @@ function [psth_struct, event_info] = format_PSTH(event_info, ...
     %              region fields: relative_response, label_order
     %              relative_response dimension: Trials (rows) x Neurons * Bins (columns)
     %              label_order: list of channels in relative response
-    % event_info: event_info table above, but filtered according to wanted_events and trial_range
+    % event_info: event_info table above, but filtered according to include_events and trial_range
 
     psth_struct = struct;
 
     %% Filter events
-    event_info = filter_events(event_info, wanted_events, trial_range);
+    event_info = filter_events(event_info, include_events, trial_range);
 
     %% Creates the PSTH
     unique_regions = unique(selected_channels.label);

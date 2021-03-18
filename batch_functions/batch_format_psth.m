@@ -24,7 +24,7 @@ function [] = batch_format_psth(save_path, failed_path, data_path, dir_name, con
             %% Format PSTH
             [psth_struct, event_info] = format_PSTH(event_info, ...
                 selected_channels, config.bin_size, config.window_start, config.window_end, ...
-                config.wanted_events, config.trial_range);
+                config.include_events, config.trial_range);
 
             label_log = selected_channels;
             label_log = removevars(label_log, 'channel_data');

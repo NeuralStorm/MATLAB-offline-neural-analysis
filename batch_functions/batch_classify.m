@@ -13,15 +13,15 @@ function [] = batch_classify(project_path, save_path, failed_path, data_path, di
     bin_size = config.bin_size; window_start = config.window_start;
     window_end = config.window_end; response_start = config.response_start;
     response_end = config.response_end;
-    boot_iterations = config.boot_iterations; wanted_events = config.wanted_events;
+    boot_iterations = config.boot_iterations; include_events = config.include_events;
 
     meta_headers = {'filename', 'animal_id', 'exp_group', 'exp_condition', ...
         'optional_info', 'date', 'record_session', 'bin_size', 'window_start', ...
         'response_start', 'response_end', 'window_end', ...
-        'boot_iterations', 'selected_events'};
-    %TODO fix bug that prevents selected_events from being used in checking for uniqueness
+        'boot_iterations', 'include_events'};
+    %TODO fix bug that prevents include_events from being used in checking for uniqueness
     ignore_headers = {'performance', 'mutual_info', 'boot_info', 'corrected_info', ...
-        'synergy_redundancy', 'synergistic', 'selected_events'};
+        'synergy_redundancy', 'synergistic', 'include_events'};
 
     sprintf('PSTH classification for %s \n', dir_name);
 
@@ -98,7 +98,7 @@ function [] = batch_classify(project_path, save_path, failed_path, data_path, di
                 {filename_meta.optional_info}, filename_meta.session_date, ...
                 filename_meta.session_num, bin_size, window_start, ...
                 response_start, response_end, window_end...
-                boot_iterations, wanted_events
+                boot_iterations, include_events
             ];
             tot_rows = height(pop_table);
             pop_table = horzcat_cell(pop_table, repmat(meta_data, [tot_rows, 1]), meta_headers, 'before');
