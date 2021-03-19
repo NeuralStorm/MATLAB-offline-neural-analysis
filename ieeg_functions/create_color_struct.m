@@ -11,7 +11,7 @@ function [color_struct, region_list] = create_color_struct(color_map, feature, l
         %% Set indices in coefficients
         tot_region_chans = numel(unique(label_log.sig_channels(strcmpi(label_log.label, region))));
         color_struct.(region).tot_region_chans = tot_region_chans;
-        color_struct.(region).indices = find(ismember(label_log.label, region));;
+        color_struct.(region).indices = find(ismember(label_log.label, region));
         %% set region color
         color_struct.(region).color = color_map(color_i, :);
         if color_i == tot_colors

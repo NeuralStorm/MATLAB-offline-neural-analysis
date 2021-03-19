@@ -35,7 +35,7 @@ function [psth_struct] = power_reformat_mnts(label_log, component_results, tot_b
     %                            relative_response: Numerical matrix with dimensions Trials x ((tot pcs or channels) * tot bins)
 
     psth_struct = struct;
-    unique_regions = fieldnames(label_log);
+    unique_regions = unique(label_log.label);
     %% Convert weighted mnts into relative response
     for region_index = 1:length(unique_regions)
         region = unique_regions{region_index};

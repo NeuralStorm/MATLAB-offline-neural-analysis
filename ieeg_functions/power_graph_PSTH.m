@@ -44,7 +44,6 @@ function [] = power_graph_PSTH(save_path, psth_struct, label_log, config)
     response_end = config.response_end;
     sub_rows = config.sub_rows; sub_cols = config.sub_columns;
     make_unit_plot = config.make_unit_plot;
-    check_time(window_start, baseline_start, baseline_end, window_end, response_start, response_end, bin_size)
 
     event_strings = psth_struct.all_events(:,1)';
     event_window = window_start:bin_size:window_end;

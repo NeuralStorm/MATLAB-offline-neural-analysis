@@ -13,11 +13,9 @@ function [results] = plot_corr(save_path, component_results, label_log, ...
     %                                  coeff: NxN (N = tot features) matrix with coeff weights used to scale mnts into PC space
     %                                             Columns: Component Row: Feature
     %                                  chan_order: C x 1 cell array, C = tot channels. Order of electrodes fed into PCA
-    % label_log: struct w/ fields for each feature set
-    %            field: table with columns (relevant columns shown only)
-    %                   fieldnames should match feature spaces in component_results
-    %                   'sig_channels': String with name of channel
-    %                   'label': String: associated region or grouping of electrodes
+    % label_log: table with columns (relevant columns shown only)
+    %            'sig_channels': String with name of channel
+    %            'label': String: associated region or grouping of electrodes
     % feature_filter: String with description for pcs
     %                 'all': keep all pcs after PCA
     %                 'pcs': Keep # of pcs set in feature_value
@@ -42,7 +40,7 @@ function [results] = plot_corr(save_path, component_results, label_log, ...
                 255 128 0] ./ 256; % yellow
 
     %% Create color_struct
-    unique_features = fieldnames(label_log);
+    unique_features = label_log.label;
     combined_feature_space = unique_features{1};
     color_log.label = label_log.(combined_feature_space).label;
     color_log.sig_channels = component_results.(combined_feature_space).chan_order;

@@ -94,6 +94,7 @@ function [label_log, mnts_struct, event_info] = reshape_to_mnts(label_table, pow
     if isempty(select_features) ...
             || (~iscell(select_features) && any(isnan(select_features))) ...
             || iscell(select_features) && isempty(select_features{:})
+        label_log = table();
         %% Default: Combine all powers and regions together
         for band_i = 1:numel(unique_bands)
             bandname = unique_bands{band_i};
@@ -124,14 +125,16 @@ function [label_log, mnts_struct, event_info] = reshape_to_mnts(label_table, pow
                 feature = [bandname, '_', region];
                 mnts_struct.(feature).([z_type, 'mnts']) = mnts;
                 mnts_struct.(feature).tfr.(bandname) = tfr_struct;
-                region_chans = label_table(ismember(label_table.label, region), :);
+                % region_chans = label_table(ismember(label_table.label, region), :);
                 mnts_struct.(feature).label_order = power_struct.anat.channels(region_channel_i);
                 mnts_struct.(feature).chan_order = power_struct.anat.channels(region_channel_i);
                 mnts_struct.(feature).band_shift = [];
-                label_log.(feature) = region_chans;
+                % label_log.(feature) = region_chans;
+                label_log = append_labels(feature, region, label_table, label_log);
             end
         end
     else
+        label_log = table();
         %% Case: Specified feature space with combos of powers + regions
         select_features = strrep(select_features, ' ', '');
         split_features = strsplit(select_features, ';');
@@ -141,7 +144,7 @@ function [label_log, mnts_struct, event_info] = reshape_to_mnts(label_table, pow
             sub_feature = strsplit(feature, ',');
             %% set feature variables
             feature = replace(feature, {':', '+', ','}, '_');
-            label_log.(feature) = [];
+            % label_log.(feature) = [];
             mnts_struct.(feature).([z_type, 'mnts']) = [];
             mnts_struct.(feature).chan_order = [];
             mnts_struct.(feature).label_order = [];
@@ -183,10 +186,11 @@ function [label_log, mnts_struct, event_info] = reshape_to_mnts(label_table, pow
                         end
 
                         %% label log
-                        region_chans = label_table(ismember(label_table.label, region), :);
+                        % region_chans = label_table(ismember(label_table.label, region), :);
                         mnts_struct.(feature).label_order = [mnts_struct.(feature).label_order; power_struct.anat.channels(region_channel_i)];
                         mnts_struct.(feature).chan_order = [mnts_struct.(feature).chan_order; power_struct.anat.channels(region_channel_i)];
-                        label_log.(feature) = [label_log.(feature); region_chans];
+                        % label_log.(feature) = [label_log.(feature); region_chans];
+                        label_log = append_labels(feature, region, label_table, label_log);
                     end
                     for event_i = 1:numel(unique_events)
                         event = unique_events{event_i};
@@ -272,4 +276,10 @@ function [avg_tfr, std_tfr, ste_tfr] = get_tfr_stats(powspctrm)
     avg_tfr = squeeze(mean(powspctrm, [1,2]));
     std_tfr = squeeze(std(powspctrm, 0, [1,2]));
     ste_tfr = std_tfr ./ sqrt(tot_trials);
+end
+
+function [label_log] = append_labels(feature, region, label_table, label_log)
+    region_table = label_table(ismember(label_table.label, region), :);
+    region_table.label = repmat({feature}, [height(region_table), 1]);
+    label_log = [label_log; region_table];
 end

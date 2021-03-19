@@ -50,7 +50,6 @@ function [pca_results, labeled_pcs, pc_log] = calc_pca(label_log, mnts_struct, .
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
     pca_results = struct;
-    labeled_pcs = label_log;
 
     if use_z_mnts
         mnts_type = 'z_mnts';
@@ -58,13 +57,15 @@ function [pca_results, labeled_pcs, pc_log] = calc_pca(label_log, mnts_struct, .
         mnts_type = 'mnts';
     end
 
-    unique_regions = fieldnames(label_log);
-    pc_log = struct;
+    unique_regions = unique(label_log.label);
+    pc_log = table;
     for region_index = 1:length(unique_regions)
         region = unique_regions{region_index};
         %% Grab z scored mnts format for current region and does PCA
         pca_input = mnts_struct.(region).(mnts_type);
         [coeff, pca_score, eigenvalues, ~, pc_variance, estimated_mean] = pca(pca_input);
+
+        labeled_pcs = label_log(strcmpi(label_log.label, region), :);
 
         %% Store PCA results
         pca_results.(region).component_variance = pc_variance;
@@ -73,6 +74,7 @@ function [pca_results, labeled_pcs, pc_log] = calc_pca(label_log, mnts_struct, .
         pca_results.(region).estimated_mean = estimated_mean;
 
         %% Determine what pcs to use
+        %TODO break if 0 pcs found
         [~, tot_pcs] = size(pca_score);
         if strcmpi(feature_filter, 'pcs')
             %% Grabs desired number of principal components from the score
@@ -80,7 +82,7 @@ function [pca_results, labeled_pcs, pc_log] = calc_pca(label_log, mnts_struct, .
             else
                 tot_pcs = feature_value;
                 pca_score = pca_score(:, 1:tot_pcs);
-                labeled_pcs.(region) = labeled_pcs.(region)(1:tot_pcs, :);
+                labeled_pcs = labeled_pcs(1:tot_pcs, :);
                 % if size(labeled_pcs.(region), 1) > tot_pcs
                 %     labeled_pcs.(region) = labeled_pcs.(region)(1:tot_pcs, :);
                 % else
@@ -108,21 +110,21 @@ function [pca_results, labeled_pcs, pc_log] = calc_pca(label_log, mnts_struct, .
             end
             %% Recalculate the scores with the new set of coefficients
             pca_score = (mnts_struct.(region).(mnts_type) - estimated_mean) * coeff(:,1:tot_pcs);
-            labeled_pcs.(region) = labeled_pcs.(region)(1:tot_pcs, :);
+            labeled_pcs = labeled_pcs(1:tot_pcs, :);
         end
         pca_results.(region).chan_order = mnts_struct.(region).chan_order;
         pca_results.(region).weighted_mnts = pca_score;
         [~, tot_components] = size(pca_score);
         pc_names = cell(tot_components, 1);
         for component_i = 1:tot_components
-            pc_names{component_i} = ['pc_', num2str(component_i)];
+            pc_names{component_i} = [region, '_pc_', num2str(component_i)];
         end
         %% Reset labeled data
-        labeled_pcs.(region).sig_channels = pc_names;
-        labeled_pcs.(region).user_channels = pc_names;
-        labeled_pcs.(region).channel_data = num2cell(pca_score, 1)';
+        labeled_pcs.sig_channels = pc_names;
+        labeled_pcs.user_channels = pc_names;
+        % labeled_pcs.(region).channel_data = num2cell(pca_score, 1)';
         pca_results.(region).label_order = pc_names;
-
-        pc_log.(region) = removevars(labeled_pcs.(region), 'channel_data');
+        pc_log = [pc_log; labeled_pcs];
+        % pc_log.(region) = removevars(labeled_pcs.(region), 'channel_data');
     end
 end

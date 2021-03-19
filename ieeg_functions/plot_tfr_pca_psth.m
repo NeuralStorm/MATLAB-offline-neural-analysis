@@ -100,8 +100,9 @@ function [] = plot_tfr_pca_psth(save_path, tfr_path, tfr_file_list, label_log, .
         feature = unique_features{feature_i};
         st_vec = [];
 
+        feature_log = label_log(strcmpi(label_log.label, feature), :);
         [color_struct, region_list] = create_color_struct(color_map, ...
-            feature, label_log.(feature));
+            feature, feature_log);
         feature_units = psth_struct.(feature).label_order;
         tot_feature_units = numel(feature_units);
         for event_i = 1:numel(unique_events)
@@ -136,6 +137,10 @@ function [] = plot_tfr_pca_psth(save_path, tfr_path, tfr_file_list, label_log, .
             tfr_counter = 1;
             for sub_reg_i = 1:numel(region_list)
                 sub_reg = region_list{sub_reg_i};
+                if contains(sub_reg, '_')
+                    split_reg = strsplit(sub_reg, '_');
+                    sub_reg = split_reg{end};
+                end
                 for sub_pow_i = 1:tot_tfrs
                     curr_freq = freq_list{sub_pow_i};
                     %% load figure

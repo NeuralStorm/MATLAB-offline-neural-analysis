@@ -23,7 +23,7 @@ function [] = plot_brain_weights(save_path, dir_name, mesh_struct, elec_struct, 
     %                                  coeff: NxN (N = tot features) matrix with coeff weights used to scale mnts into PC space
     %                                             Columns: Component Row: Feature
     %                                  chan_order: order of electrodes in feature space
-    % label_log: struct with fieldnames for each feature space --> only used to get unique feature spaces for loop
+    % label_log: table with channel and region info --> only used to get unique feature spaces for loop
     % min_components: Int: min componenets needed to make subplot
     % feature_filter: String with description for pcs
     %                 'all': keep all pcs after PCA
@@ -55,7 +55,7 @@ function [] = plot_brain_weights(save_path, dir_name, mesh_struct, elec_struct, 
         end
     end
 
-    unique_spaces = fieldnames(label_log);
+    unique_spaces = label_log.label;
     parfor space_i = 1:numel(unique_spaces)
         curr_space = unique_spaces{space_i};
 
@@ -110,14 +110,14 @@ function [] = plot_brain_weights(save_path, dir_name, mesh_struct, elec_struct, 
 
             %% Save subplot for feature space
             sgtitle([dir_name, ' PC ', num2str(comp_i), ' ', strrep(curr_space, '_', ' ')]);
-            if save_png
-                filename = [num2str(comp_i), '_', curr_space, '.png'];
-                saveas(gcf, fullfile(save_path, filename));
-            else
-                filename = [num2str(comp_i), '_', curr_space, '.fig'];
-                set(gcf, 'CreateFcn', 'set(gcbo,''Visible'',''on'')');
-                savefig(gcf, fullfile(save_path, filename));
-            end
+            % if save_png
+            %     filename = [num2str(comp_i), '_', curr_space, '.png'];
+            %     saveas(gcf, fullfile(save_path, filename));
+            % else
+            %     filename = [num2str(comp_i), '_', curr_space, '.fig'];
+            %     set(gcf, 'CreateFcn', 'set(gcbo,''Visible'',''on'')');
+            %     savefig(gcf, fullfile(save_path, filename));
+            % end
         end
     end
 end

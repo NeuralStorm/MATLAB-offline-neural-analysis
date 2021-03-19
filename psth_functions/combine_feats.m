@@ -1,6 +1,6 @@
 function [out_struct] = combine_feats(psth_struct)
     unique_features = fieldnames(psth_struct);
-    overall_feature = 'all_pow_OFC_LPFC';
+    overall_feature = 'all_regions';
     out_struct = struct;
     out_struct.(overall_feature).relative_response = [];
     out_struct.(overall_feature).label_order = [];

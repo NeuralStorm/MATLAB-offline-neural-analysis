@@ -34,7 +34,7 @@ function [] = batch_power_pca(save_path, failed_path, data_path, dir_name, dir_c
                 dir_config.feature_value, dir_config.use_z_mnts);
 
             %% Add tfr to component_results
-            unique_features = fieldnames(label_log);
+            unique_features = unique(label_log.label);
             for feature_i = 1:numel(unique_features)
                 feature = unique_features{feature_i};
                 component_results.(feature).tfr = mnts_struct.(feature).tfr;
