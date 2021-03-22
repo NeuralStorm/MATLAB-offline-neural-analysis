@@ -1,5 +1,5 @@
 function [label_log, mnts_struct, event_info] = reshape_to_mnts(label_table, power_struct, ...
-        select_features, included_events, use_z_score, smooth_power, span, downsample_pow, ...
+        select_features, include_events, use_z_score, smooth_power, span, downsample_pow, ...
         downsample_rate, slice_time, bin_size, window_start, slice_start, slice_end)
 
     %% Purpose: Reshape output from filtering process
@@ -73,7 +73,7 @@ function [label_log, mnts_struct, event_info] = reshape_to_mnts(label_table, pow
     for event_i = 1:numel(unique_events)
         % Add events to event table
         event = unique_events{event_i};
-        if ~contains(included_events, event)
+        if ~contains(include_events, event)
             continue
         end
         tot_trials = numel(find(power_struct.beh.(event)));
@@ -83,7 +83,7 @@ function [label_log, mnts_struct, event_info] = reshape_to_mnts(label_table, pow
         event_table = table(event_labels, event_indices, event_ts);
         event_info = [event_info; event_table];
     end
-    % Update event labels to include the all label
+    % Update event labels to only include selected events
     unique_events = unique(event_info.event_labels);
 
     if isempty(select_features) ...
@@ -107,7 +107,7 @@ function [label_log, mnts_struct, event_info] = reshape_to_mnts(label_table, pow
                 %% Create tfr mean, std, and ste
                 for event_i = 1:numel(unique_events)
                     event = unique_events{event_i};
-                    event_indices = event_info.event_indices(strcmpi(event_info.event_labels, event));
+                    event_indices = power_struct.beh.(event);
                     %% Grab power spectrums
                     event_powspctrm = region_powspctrm(event_indices, :, :);
                     %% TFR
@@ -173,7 +173,7 @@ function [label_log, mnts_struct, event_info] = reshape_to_mnts(label_table, pow
                         for event_i = 1:numel(unique_events)
                             event = unique_events{event_i};
                             %% Grab power spectrums
-                            event_indices = event_info.event_indices(strcmpi(event_info.event_labels, event));
+                            event_indices = power_struct.beh.(event);
                             event_powspctrm = region_powspctrm(event_indices, :, :);
                             tfr_struct.(event).(['avg_', z_type, 'tfr']) = cat(2, tfr_struct.(event).(['avg_', z_type, 'tfr']), event_powspctrm);
                         end
