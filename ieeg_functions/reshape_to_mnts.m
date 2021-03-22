@@ -1,6 +1,6 @@
 function [label_log, mnts_struct, event_info] = reshape_to_mnts(label_table, power_struct, ...
         select_features, included_events, use_z_score, smooth_power, span, downsample_pow, ...
-        downsample_rate, slice_time, bin_size, window_start, window_end, slice_start, slice_end)
+        downsample_rate, slice_time, bin_size, window_start, slice_start, slice_end)
 
     %% Purpose: Reshape output from filtering process
     %% Input
@@ -25,22 +25,20 @@ function [label_log, mnts_struct, event_info] = reshape_to_mnts(label_table, pow
     % select_features: string that determines how to combine powers and regions to make features
     %                  format layout: power:region, power+power:region+region;power:region, etc
     %% Output:
-    % label_log: struct w/ fields for each feature set
-    %            field: table with columns
-    %                   'sig_channels': String with name of channel
-    %                   'selected_channels': Boolean if channel is used
-    %                   'user_channels': String with user defined mapping
-    %                   'label': String: associated region or grouping of electrodes
-    %                   'label_id': Int: unique id used for labels
-    %                   'recording_session': Int: File recording session number that above applies to
-    %                   'recording_notes': String with user defined notes for channel
+    % label_log: table with columns
+    %                'sig_channels': String with name of channel
+    %                'selected_channels': Boolean if channel is used
+    %                'user_channels': String with user defined mapping
+    %                'label': String: associated region or grouping of electrodes
+    %                'label_id': Int: unique id used for labels
+    %                'recording_session': Int: File recording session number that above applies to
+    %                'recording_notes': String with user defined notes for channel
     % mnts_struct: struct w/ fields for each feature set matching the feature set in label_log
     %                 feature_name: struct with fields:
     %                               Note: Order of observations are assumed to be group by event types for later separation
-    %                               mnts: Numeric input array for PCA
+    %                               mnts/z_mnts: Numeric input array for PCA (may be z-scored depending on use_z_score)
     %                                     Columns: Features (typically electrodes)
     %                                     Rows: Observations (typically trials * time value)
-    %                               z_mnts: Numeric input z scored array for PCA
     %                               tfr: struct with fields for each power
     %                                    bandname: struct with fields for each event type
     %                                              event: struct with fields with tfr & z tfr avg, std, ste
@@ -66,17 +64,14 @@ function [label_log, mnts_struct, event_info] = reshape_to_mnts(label_table, pow
     unique_bands = unique_bands(~ismember(unique_bands, ...
         {'anat', 'beh', 'fsample', 'time'}));
     unique_regions = unique(power_struct.anat.ROIs);
-    label_log = struct;
+    label_log = table();
     mnts_struct = struct;
 
     %% Create event table with the first event being all trials
     unique_events = fieldnames(power_struct.beh);
-    event_indices = [1:1:numel(power_struct.beh.(unique_events{1}))]';
-    event_labels = cellstr(repmat('all', [numel(event_indices), 1]));
-    event_ts = NaN(numel(event_indices), 1);
-    event_info = table(event_labels, event_indices, event_ts);
+    event_info = table();
     for event_i = 1:numel(unique_events)
-        % Add remaining events to event table
+        % Add events to event table
         event = unique_events{event_i};
         if ~contains(included_events, event)
             continue
@@ -94,7 +89,6 @@ function [label_log, mnts_struct, event_info] = reshape_to_mnts(label_table, pow
     if isempty(select_features) ...
             || (~iscell(select_features) && any(isnan(select_features))) ...
             || iscell(select_features) && isempty(select_features{:})
-        label_log = table();
         %% Default: Combine all powers and regions together
         for band_i = 1:numel(unique_bands)
             bandname = unique_bands{band_i};
@@ -134,7 +128,6 @@ function [label_log, mnts_struct, event_info] = reshape_to_mnts(label_table, pow
             end
         end
     else
-        label_log = table();
         %% Case: Specified feature space with combos of powers + regions
         select_features = strrep(select_features, ' ', '');
         split_features = strsplit(select_features, ';');
