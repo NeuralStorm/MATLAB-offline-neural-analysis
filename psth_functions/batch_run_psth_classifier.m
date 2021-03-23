@@ -30,7 +30,7 @@ function [] = batch_run_psth_classifier(project_path, save_path, failed_path, da
             event_info = event_info(~ismember(event_info.event_labels, 'all'), :);
 
             if dir_config.combine_pcs
-                psth_struct = combine_feats(psth_struct);
+                psth_struct = combine_regions(psth_struct);
             end
 
             [pop_table, res_struct] = run_psth_classifier(psth_struct, event_info, ...

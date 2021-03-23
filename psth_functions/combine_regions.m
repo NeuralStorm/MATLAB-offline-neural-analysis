@@ -1,4 +1,4 @@
-function [out_struct] = combine_feats(psth_struct)
+function [out_struct] = combine_regions(psth_struct)
     unique_features = fieldnames(psth_struct);
     overall_feature = 'all_regions';
     out_struct = struct;
