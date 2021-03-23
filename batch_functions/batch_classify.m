@@ -21,9 +21,9 @@ function [] = batch_classify(project_path, save_path, failed_path, data_path, di
         'boot_iterations', 'include_events'};
     %TODO fix bug that prevents include_events from being used in checking for uniqueness
     ignore_headers = {'performance', 'mutual_info', 'boot_info', 'corrected_info', ...
-        'synergy_redundancy', 'synergistic', 'include_events'};
+        'synergy_redundancy', 'synergistic', 'include_events', 'user_channels'};
 
-    sprintf('PSTH classification for %s \n', dir_name);
+    fprintf('PSTH classification for %s \n', dir_name);
 
     for file_index = 1:length(file_list)
         [~, filename, ~] = fileparts(file_list(file_index).name);
@@ -36,6 +36,10 @@ function [] = batch_classify(project_path, save_path, failed_path, data_path, di
             empty_vars = check_variables(file, psth_struct, event_info, label_log);
             if empty_vars
                 continue
+            end
+
+            if config.combine_regions
+                psth_struct = combine_regions(psth_struct);
             end
 
             % %% Check uniqueness
