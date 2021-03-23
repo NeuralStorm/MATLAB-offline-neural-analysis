@@ -1,13 +1,9 @@
 function [psth_struct, event_info] = format_PSTH(event_info, ...
-        selected_channels, bin_size, window_start, window_end, include_events, ...
-        trial_range)
+        selected_channels, bin_size, window_start, window_end)
     %%Inputs
     % event_info: table with columns event_labels, event_indices, and event_ts
     % selected_data: struct with fields regions
     %                region fields: table with information of channels selected for psth
-    % include_events: list of events desired to be analyzed.
-    %                 Must be of same type as event_labels
-    % trial range: numeric range of which trials to be analyzed
     % window_start: start time of window
     % window_end: end time of window
     % bin_size: size of bin
@@ -19,9 +15,6 @@ function [psth_struct, event_info] = format_PSTH(event_info, ...
     % event_info: event_info table above, but filtered according to include_events and trial_range
 
     psth_struct = struct;
-
-    %% Filter events
-    event_info = filter_events(event_info, include_events, trial_range);
 
     %% Creates the PSTH
     unique_regions = unique(selected_channels.label);

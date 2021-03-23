@@ -16,6 +16,10 @@ function [] = batch_format_psth(save_path, failed_path, data_path, dir_name, con
             %% Select channels and label data
             selected_channels = label_data(channel_map, label_table, filename_meta.session_num);
             %% Check parsed variables to make sure they are not empty
+
+            %% Filter events
+            event_info = filter_events(event_info, config.include_events, config.trial_range);
+
             empty_vars = check_variables(file, event_info, selected_channels);
             if empty_vars
                 continue
@@ -23,8 +27,7 @@ function [] = batch_format_psth(save_path, failed_path, data_path, dir_name, con
 
             %% Format PSTH
             [psth_struct, event_info] = format_PSTH(event_info, ...
-                selected_channels, config.bin_size, config.window_start, config.window_end, ...
-                config.include_events, config.trial_range);
+                selected_channels, config.bin_size, config.window_start, config.window_end);
 
             label_log = selected_channels;
             label_log = removevars(label_log, 'channel_data');
