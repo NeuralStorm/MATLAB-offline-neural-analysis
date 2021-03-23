@@ -1,5 +1,5 @@
 function [pca_results, labeled_pcs, pc_log] = calc_pca(label_log, mnts_struct, ...
-        feature_filter, feature_value, use_z_mnts)
+        feature_filter, feature_value, apply_z_score)
 
     %% Purpose: Run Principal Component Analysis (pca) on feature sets stored in mnts_struct
     %% Input
@@ -51,18 +51,15 @@ function [pca_results, labeled_pcs, pc_log] = calc_pca(label_log, mnts_struct, .
 
     pca_results = struct;
 
-    if use_z_mnts
-        mnts_type = 'z_mnts';
-    else
-        mnts_type = 'mnts';
-    end
-
     unique_regions = unique(label_log.label);
     pc_log = table;
     for region_index = 1:length(unique_regions)
         region = unique_regions{region_index};
-        %% Grab z scored mnts format for current region and does PCA
-        pca_input = mnts_struct.(region).(mnts_type);
+        %% Grab mnts and apply z score accordingly
+        pca_input = mnts_struct.(region).mnts;
+        if apply_z_score
+            pca_input = zscore(pca_input);
+        end
         [coeff, pca_score, eigenvalues, ~, pc_variance, estimated_mean] = pca(pca_input);
 
         labeled_pcs = label_log(strcmpi(label_log.label, region), :);
@@ -122,9 +119,7 @@ function [pca_results, labeled_pcs, pc_log] = calc_pca(label_log, mnts_struct, .
         %% Reset labeled data
         labeled_pcs.sig_channels = pc_names;
         labeled_pcs.user_channels = pc_names;
-        % labeled_pcs.(region).channel_data = num2cell(pca_score, 1)';
         pca_results.(region).label_order = pc_names;
         pc_log = [pc_log; labeled_pcs];
-        % pc_log.(region) = removevars(labeled_pcs.(region), 'channel_data');
     end
 end
