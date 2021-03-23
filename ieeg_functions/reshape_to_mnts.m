@@ -83,7 +83,9 @@ function [label_log, mnts_struct, event_info] = reshape_to_mnts(label_table, pow
         event_table = table(event_labels, event_indices, event_ts);
         event_info = [event_info; event_table];
     end
-    % Update event labels to only include selected events
+    %% sort event_info chronologically since above method does not
+    event_info = sortrows(event_info, 'event_indices');
+    %% Update event labels to only include selected events
     unique_events = unique(event_info.event_labels);
 
     if isempty(select_features) ...

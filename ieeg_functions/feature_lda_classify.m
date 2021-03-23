@@ -1,13 +1,7 @@
 function [results] = feature_lda_classify(psth_struct, event_info)
     tic
-    %TODO time window?
-    % -1 -> 0 | -2 -> 0 | -0.5 -> 0
-    %TODO try a few dims
-
-    %% Create labels used to train LDA model
-    labels = event_info(ismember(event_info.event_labels, {'gambles', 'safebet'}), :);
-    labels = sortrows(labels, 'event_indices');
-    labels = labels.event_labels;
+    %% grab label for all the trials
+    labels = event_info.event_labels;
 
     results = struct;
 
@@ -15,8 +9,6 @@ function [results] = feature_lda_classify(psth_struct, event_info)
     for feature_i = 1:numel(unique_features)
         %% Go through each feature space to do classification
         feature = unique_features{feature_i};
-        %TODO generalize events
-        %TODO give option for how many pcs desired
         relative_response = psth_struct.(feature).relative_response;
 
         [tot_trials, ~] = size(relative_response);
