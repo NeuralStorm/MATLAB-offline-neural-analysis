@@ -1,45 +1,45 @@
-function [sig_neurons, non_sig_neurons, cluster_struct] = receptive_field_analysis(...
-        label_log, psth_struct, bin_size, window_start, baseline_start, baseline_end, ...
-        response_start, response_end, span, threshold_scale, sig_check, sig_alpha, ...
-        consec_bins, mixed_smoothing, cluster_analysis, bin_gap, ...
-        column_names)
+function [rec_table] = receptive_field_analysis(...
+        psth_struct, event_info, bin_size, window_start, window_end, baseline_start, baseline_end, ...
+        response_start, response_end, span, threshold_scale, sig_check, sig_alpha, consec_bins, ...
+        mixed_smoothing, cluster_analysis, bin_gap)
     %% Abbreviations: fl = first latency, ll = last latency, pl = peak latency
     %% rm = response magnitude, bfr = background firing rate
-    %% Establish baseline and response indices
-    pre_event_bins = (length(-abs(window_start):bin_size:0)) - 1;
-    baseline_start_i = round(((abs(window_start) - abs(baseline_start)) / bin_size)) + 1;
-    baseline_end_i = round(((abs(window_start) - abs(baseline_end)) / bin_size));
-    response_start_i = round((response_start / bin_size)) + 1;
-    response_end_i = round(response_end / bin_size);
 
-    event_strings = psth_struct.all_events(:,1)';
+    %% Create population table
+    rec_headers = [["region", "string"]; ["channel", "string"]; ...
+                   ["event", "string"]; ["significant", "double"]; ...
+                   ["background_rate", "double"]; ["background_std", "double"]; ...
+                   ["avg_response", "double"]; ["response_window_rm", "double"];
+                   ["threshold", "double"]; ["p_val", "double"]; ...
+                   ["first_latency", "double"]; ["last_latency", "double"]; ...
+                   ["duration", "double"]; ["peak_latency", "double"]; ...
+                   ["peak_response", "double"]; ["corrected_peak", "double"]; ...
+                   ["response_magnitude", "double"]; ["corrected_response_magnitude", "double"]];
+    rec_table = prealloc_table(rec_headers, [0, size(rec_headers, 1)]);
+
     cluster_struct = struct;
-    sig_neurons = [];
-    non_sig_neurons = [];
-    unique_regions = fieldnames(label_log);
+    unique_regions = fieldnames(psth_struct);
+    unique_events = unique(event_info.event_labels);
+    [~, tot_bins] = get_bins(window_start, window_end, bin_size);
     for region_i = 1:length(unique_regions)
         region = unique_regions{region_i};
-        region_table = label_log.(region);
-        for event_i = 1:length(event_strings(1,:))
-            event = event_strings{event_i};
-            for neuron_i = 1:height(region_table)
-                neuron = region_table.sig_channels{neuron_i};
-                user_channels = region_table.user_channels(strcmpi(region_table.sig_channels, neuron));
-                notes = region_table.recording_notes(strcmpi(region_table.sig_channels, neuron));
-                if strcmpi(class(notes), 'double') && isnan(notes)
-                    notes = 'n/a';
-                end
+        tot_chans = numel(psth_struct.(region).label_order);
+        for event_i = 1:numel(unique_events)
+            event = unique_events{event_i};
+            event_indices = event_info.event_indices(strcmpi(event_info.event_labels, event), :);
+            chan_s = 1;
+            chan_e = tot_bins;
+            for chan_i = 1:tot_chans
+                chan = psth_struct.(region).label_order{chan_i};
+                chan_rr = psth_struct.(region).relative_response(event_indices, chan_s:chan_e);
+
                 %% Get current PSTH and smooth it based on span
-                psth = psth_struct.(region).(event).(neuron).psth;
-                psth = smooth(psth, span);
-                pre_psth = psth(1:pre_event_bins);
-                post_psth = psth((pre_event_bins + 1):end);
-                baseline_psth = pre_psth(baseline_start_i:baseline_end_i);
-                response_psth = post_psth(response_start_i:response_end_i);
-                
-                %%Average response within the response window
-                avg_response = mean(response_psth);
-                response_window_rm = sum(response_psth); 
+                psth = calc_psth(chan_rr);
+                psth = smooth(psth, span)'; %WTF IS GOING ON HERE
+                baseline_psth = slice_rr(psth, bin_size, window_start, ...
+                    window_end, baseline_start, baseline_end);
+                response_psth = slice_rr(psth, bin_size, window_start, ...
+                    window_end, response_start, response_end);
 
                 %% Determine if psth is signficant
                 [threshold, avg_bfr, bfr_std] = get_threshold(baseline_psth, threshold_scale);
@@ -53,24 +53,18 @@ function [sig_neurons, non_sig_neurons, cluster_struct] = receptive_field_analys
                         overall_psth_response, supra_i, bin_size, response_start);
                     %% Finds results of the receptive field analysis
                     if mixed_smoothing
-                        psth = psth_struct.(region).(event).(neuron).psth;
-                        pre_psth = psth(1:pre_event_bins);
-                        post_psth = psth((pre_event_bins + 1):end);
-                        baseline_psth = pre_psth(baseline_start_i:baseline_end_i);
-                        response_psth = post_psth(response_start_i:response_end_i);
+                        psth = calc_psth(chan_rr);
+                        baseline_psth = slice_rr(psth, bin_size, window_start, ...
+                            window_end, baseline_start, baseline_end);
+                        response_psth = slice_rr(psth, bin_size, window_start, ...
+                            window_end, response_start, response_end);
                         %! smoothed threshold < unsmoothed threshold
                         %! May not be significant response with unsmoothed version
 
                         %% Verify that enough consec bins exist
                         supra_i = find(response_psth > threshold);
                         if ~check_consec_bins(supra_i, consec_bins)
-                            cluster_data = num2cell(nan(1, 28));
-                            non_sig_neurons = [non_sig_neurons; {region}, ...
-                                {neuron}, {user_channels}, {event}, {0}, ...
-                                {avg_bfr}, {bfr_std}, {avg_response}, {response_window_rm}, {threshold}, {p_val}, {NaN}, ...
-                                {NaN}, {NaN}, {NaN}, {NaN}, {NaN}, {NaN}, {NaN}, ...
-                                {NaN}, {strings}, {NaN}, {notes}, cluster_data];
-                            continue
+                            is_sig = false;
                         end
                         supra_i = find(response_psth > threshold);
                         overall_psth_response = response_psth(supra_i(1):supra_i(end));
@@ -78,101 +72,98 @@ function [sig_neurons, non_sig_neurons, cluster_struct] = receptive_field_analys
                     [~, ~, ~, pl, peak, corrected_peak, rm, ...
                         corrected_rm] = get_response_metrics(avg_bfr, ...
                         overall_psth_response, supra_i, bin_size, response_start);
-
-                    % Organizes data results into cell array
-                    rec_data = [{region}, {neuron}, ...
-                        {user_channels}, {event}, {1}, {avg_bfr}, ...
-                        {bfr_std}, {avg_response}, {response_window_rm}, {threshold}, {p_val}, {fl}, {ll}, ...
-                        {duration}, {pl}, {peak}, {corrected_peak}, ...
-                        {rm}, {corrected_rm}, {NaN}, {strings}, {NaN}, ...
-                        {notes}];
-                    if cluster_analysis
-                        [neuron_cluster, tot_clusters] = find_clusters(...
-                            response_psth, bin_gap, consec_bins, threshold);
-                        %% Go through clusters and calc receptive field measures
-                        cluster_names = fieldnames(neuron_cluster);
-                        for cluster_i = 1:length(cluster_names)
-                            curr_cluster = cluster_names{cluster_i};
-                            supra_i = neuron_cluster.(curr_cluster).cluster_indices;
-                            cluster_response = response_psth(supra_i(1):supra_i(end));
-                            [fl, ll, duration, pl, peak, corrected_peak, rm, corrected_rm] = get_response_metrics(...
-                                avg_bfr, cluster_response, supra_i, bin_size, response_start);
-                            neuron_cluster.(curr_cluster).fl = fl;
-                            neuron_cluster.(curr_cluster).ll = ll;
-                            neuron_cluster.(curr_cluster).duration = duration;
-                            neuron_cluster.(curr_cluster).pl = pl;
-                            neuron_cluster.(curr_cluster).peak = peak;
-                            neuron_cluster.(curr_cluster).corrected_peak = corrected_peak;
-                            neuron_cluster.(curr_cluster).rm = rm;
-                            neuron_cluster.(curr_cluster).corrected_rm = corrected_rm;
-                            if contains(curr_cluster, 'first')
-                                first_rm = rm;
-                                first_data = [{tot_clusters}, {fl}, {ll}, ...
-                                    {duration}, {pl}, {peak}, {corrected_peak}, ...
-                                    {rm}, {corrected_rm}, {NaN}];
-                            elseif contains(curr_cluster, 'primary')
-                                primary_rm = rm;
-                                primary_data = [{fl}, {ll}, ...
-                                    {duration}, {pl}, {peak}, {corrected_peak}, ...
-                                    {rm}, {corrected_rm}, {NaN}];
-                            elseif contains(curr_cluster, 'last')
-                                last_rm = rm;
-                                last_data = [{fl}, {ll}, ...
-                                    {duration}, {pl}, {peak}, {corrected_peak}, ...
-                                    {rm}, {corrected_rm}, {NaN}];
-                            end
-                            neuron_cluster.response_psth = response_psth;
-                            neuron_cluster.threshold = threshold;
-                            cluster_struct.(region).(event).(neuron) = neuron_cluster;
-                        end
-                        first_data(end) = {first_rm / primary_rm};
-                        primary_data(end) = {1};
-                        last_data(end) = {last_rm / primary_rm};
-                        cluster_data = [first_data, primary_data, last_data];
-                    else
-                        cluster_data = num2cell(nan(1, 28));
-                    end
-                    sig_neurons = [sig_neurons; rec_data, cluster_data];
                 else
                     % Puts NaN for non significant neurons
                     cluster_data = num2cell(nan(1, 28));
-                    non_sig_neurons = [non_sig_neurons; {region}, ...
-                        {neuron}, {user_channels}, {event}, {0}, ...
-                        {avg_bfr}, {bfr_std}, {avg_response}, {response_window_rm}, {threshold}, {p_val}, {NaN}, ...
-                        {NaN}, {NaN}, {NaN}, {NaN}, {NaN}, {NaN}, {NaN}, ...
-                        {NaN}, {strings}, {NaN}, {notes}, cluster_data];
+                    fl = NaN; ll = NaN; duration = NaN; pl = NaN; peak = NaN;
+                    corrected_peak = NaN; rm = NaN; corrected_rm = NaN;
                 end
+                %%Average response within the response window
+                avg_response = mean(response_psth);
+                response_window_rm = sum(response_psth); 
+                % Add rec results
+                rec_data = [{region}, {chan}, {event}, is_sig, avg_bfr, ...
+                    bfr_std, avg_response, response_window_rm, threshold, p_val, fl, ll, ...
+                    duration, pl, peak, corrected_peak, rm, corrected_rm];
+                rec_table = concat_cell(rec_table, rec_data, rec_headers(:, 1));
+
+                if is_sig && cluster_analysis
+                    [neuron_cluster, tot_clusters] = find_clusters(...
+                        response_psth, bin_gap, consec_bins, threshold);
+                    %% Go through clusters and calc receptive field measures
+                    cluster_names = fieldnames(neuron_cluster);
+                    for cluster_i = 1:length(cluster_names)
+                        curr_cluster = cluster_names{cluster_i};
+                        supra_i = neuron_cluster.(curr_cluster).cluster_indices;
+                        cluster_response = response_psth(supra_i(1):supra_i(end));
+                        [fl, ll, duration, pl, peak, corrected_peak, rm, corrected_rm] = get_response_metrics(...
+                            avg_bfr, cluster_response, supra_i, bin_size, response_start);
+                        neuron_cluster.(curr_cluster).fl = fl;
+                        neuron_cluster.(curr_cluster).ll = ll;
+                        neuron_cluster.(curr_cluster).duration = duration;
+                        neuron_cluster.(curr_cluster).pl = pl;
+                        neuron_cluster.(curr_cluster).peak = peak;
+                        neuron_cluster.(curr_cluster).corrected_peak = corrected_peak;
+                        neuron_cluster.(curr_cluster).rm = rm;
+                        neuron_cluster.(curr_cluster).corrected_rm = corrected_rm;
+                        if contains(curr_cluster, 'first')
+                            first_rm = rm;
+                            first_data = [{tot_clusters}, {fl}, {ll}, ...
+                                {duration}, {pl}, {peak}, {corrected_peak}, ...
+                                {rm}, {corrected_rm}, {NaN}];
+                        elseif contains(curr_cluster, 'primary')
+                            primary_rm = rm;
+                            primary_data = [{fl}, {ll}, ...
+                                {duration}, {pl}, {peak}, {corrected_peak}, ...
+                                {rm}, {corrected_rm}, {NaN}];
+                        elseif contains(curr_cluster, 'last')
+                            last_rm = rm;
+                            last_data = [{fl}, {ll}, ...
+                                {duration}, {pl}, {peak}, {corrected_peak}, ...
+                                {rm}, {corrected_rm}, {NaN}];
+                        end
+                        neuron_cluster.response_psth = response_psth;
+                        neuron_cluster.threshold = threshold;
+                        cluster_struct.(region).(event).(neuron) = neuron_cluster;
+                    end
+                    first_data(end) = {first_rm / primary_rm};
+                    primary_data(end) = {1};
+                    last_data(end) = {last_rm / primary_rm};
+                    cluster_data = [first_data, primary_data, last_data];
+                else
+                    cluster_data = num2cell(nan(1, 28));
+                end
+
+                %% Update channel counter
+                chan_s = chan_s + tot_bins;
+                chan_e = chan_e + tot_bins;
             end
         end
     end
 
     %% Convert cell arrays to tables for future data handeling
-    if ~isempty(sig_neurons)
-        sig_neurons = cell2table(sig_neurons, 'VariableNames', column_names);
-        %% Normalize response magnitude and find primary event for each neuron
-        % Normalizes response magnitude on response magnitude, not response magnitude - background rate
-        for neuron_i = 1:length(sig_neurons.sig_channels)
-            neuron = sig_neurons.sig_channels{neuron_i};
-            if ~isempty(sig_neurons.sig_channels(strcmpi(sig_neurons.sig_channels, neuron)))
-                    sig_events = sig_neurons.event(strcmpi(sig_neurons.sig_channels, neuron));
-                    sig_magnitudes = sig_neurons.response_magnitude(strcmpi(sig_neurons.sig_channels, neuron));
-                    [max_magnitude, max_index] = max(sig_magnitudes);
-                    norm_magnitude = sig_magnitudes ./ max_magnitude;
-                    principal_event = sig_events(max_index);
-                    total_sig_events = length(sig_magnitudes);
-                    sig_neurons.total_sig_events(strcmpi(sig_neurons.sig_channels, neuron)) = ...
-                        total_sig_events;
-                    sig_neurons.principal_event(strcmpi(sig_neurons.sig_channels, neuron)) = ...
-                        {principal_event};
-                    sig_neurons.norm_response_magnitude(strcmpi(sig_neurons.sig_channels, neuron)) = ...
-                        norm_magnitude;
-            end
-        end
-    end
-
-    if ~isempty(non_sig_neurons)
-        non_sig_neurons = cell2table(non_sig_neurons, 'VariableNames', column_names);
-    end
+    % if ~isempty(sig_neurons)
+    %     sig_neurons = cell2table(sig_neurons, 'VariableNames', column_names);
+    %     %% Normalize response magnitude and find primary event for each neuron
+    %     % Normalizes response magnitude on response magnitude, not response magnitude - background rate
+    %     for neuron_i = 1:length(sig_neurons.sig_channels)
+    %         neuron = sig_neurons.sig_channels{neuron_i};
+    %         if ~isempty(sig_neurons.sig_channels(strcmpi(sig_neurons.sig_channels, neuron)))
+    %                 sig_events = sig_neurons.event(strcmpi(sig_neurons.sig_channels, neuron));
+    %                 sig_magnitudes = sig_neurons.response_magnitude(strcmpi(sig_neurons.sig_channels, neuron));
+    %                 [max_magnitude, max_index] = max(sig_magnitudes);
+    %                 norm_magnitude = sig_magnitudes ./ max_magnitude;
+    %                 principal_event = sig_events(max_index);
+    %                 total_sig_events = length(sig_magnitudes);
+    %                 sig_neurons.total_sig_events(strcmpi(sig_neurons.sig_channels, neuron)) = ...
+    %                     total_sig_events;
+    %                 sig_neurons.principal_event(strcmpi(sig_neurons.sig_channels, neuron)) = ...
+    %                     {principal_event};
+    %                 sig_neurons.norm_response_magnitude(strcmpi(sig_neurons.sig_channels, neuron)) = ...
+    %                     norm_magnitude;
+    %         end
+    %     end
+    % end
 end
 
 function [is_sig, p_val] = check_significance(baseline_psth, response_psth, ...
