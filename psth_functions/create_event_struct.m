@@ -9,9 +9,8 @@ function [event_struct] = create_event_struct(psth_struct, event_info, ...
             strcmpi(event_info.event_labels, event));
 
         label_order = psth_struct.label_order;
-        tot_labels = numel(label_order);
         rr = psth_struct.relative_response(event_indices, :);
-        event_response = slice_rr(rr, tot_labels, bin_size, window_start, ...
+        event_response = slice_rr(rr, bin_size, window_start, ...
             window_end, new_start, new_end);
         event_struct.(event).label_order = label_order;
         event_struct.(event).relative_response = event_response;
