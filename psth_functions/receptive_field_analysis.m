@@ -30,13 +30,14 @@ function [rec_table, cluster_struct, cluster_res] = receptive_field_analysis(...
     for region_i = 1:length(unique_regions)
         region = unique_regions{region_i};
         tot_chans = numel(psth_struct.(region).label_order);
-        for event_i = 1:numel(unique_events)
-            event = unique_events{event_i};
-            event_indices = event_info.event_indices(strcmpi(event_info.event_labels, event), :);
-            chan_s = 1;
-            chan_e = tot_bins;
-            for chan_i = 1:tot_chans
-                chan = psth_struct.(region).label_order{chan_i};
+
+        chan_s = 1;
+        chan_e = tot_bins;
+        for chan_i = 1:tot_chans
+            chan = psth_struct.(region).label_order{chan_i};
+            for event_i = 1:numel(unique_events)
+                event = unique_events{event_i};
+                event_indices = event_info.event_indices(strcmpi(event_info.event_labels, event), :);
                 chan_rr = psth_struct.(region).relative_response(event_indices, chan_s:chan_e);
 
                 %% Get current PSTH and smooth it based on span
@@ -140,11 +141,11 @@ function [rec_table, cluster_struct, cluster_res] = receptive_field_analysis(...
                     cluster_data = num2cell(nan(1, 28));
                 end
                 cluster_res = [cluster_res; cluster_data];
-
-                %% Update channel counter
-                chan_s = chan_s + tot_bins;
-                chan_e = chan_e + tot_bins;
             end
+            %% Normalize rm and find primary event
+            %% Update channel counter
+            chan_s = chan_s + tot_bins;
+            chan_e = chan_e + tot_bins;
         end
     end
 
