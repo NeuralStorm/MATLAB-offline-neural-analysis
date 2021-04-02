@@ -35,6 +35,7 @@ function [rec_table, cluster_struct, cluster_res] = receptive_field_analysis(...
         chan_e = tot_bins;
         for chan_i = 1:tot_chans
             chan = psth_struct.(region).label_order{chan_i};
+            cluster_data = num2cell(nan(1, 28));
             for event_i = 1:numel(unique_events)
                 event = unique_events{event_i};
                 event_indices = event_info.event_indices(strcmpi(event_info.event_labels, event), :);
@@ -132,13 +133,7 @@ function [rec_table, cluster_struct, cluster_res] = receptive_field_analysis(...
                         primary_data(end) = {1};
                         last_data(end) = {last_rm / primary_rm};
                         cluster_data = [first_data, primary_data, last_data];
-                    else
-                        %% Case: Only 1 cluster --> already captured in main metrics
-                        cluster_data = num2cell(nan(1, 28));
                     end
-                else
-                    %% Case: Not a significant response
-                    cluster_data = num2cell(nan(1, 28));
                 end
                 cluster_res = [cluster_res; cluster_data];
             end
@@ -257,46 +252,43 @@ function [res, tot_clusters] = find_clusters(response, bin_gap, consec_bins, thr
     %TODO mixed smoothing causes issues with finding clusters
     res = struct;
     suprathreshold_i = find(response > threshold);
-    cluster_edges_i = find(diff(suprathreshold_i) >= bin_gap);
-    cluster_edges_i(end + 1) = 0;
-    cluster_edges_i = sort(cluster_edges_i);
+    cluster_edges_i = [0, find(diff(suprathreshold_i) >= bin_gap)];
     tot_clusters = 1;
     curr_cluster = 'cluster_1';
     if length(cluster_edges_i) <= 1
         return
-    else
-        max_rm = 0;
-        primary_cluster = curr_cluster;
-        res.(curr_cluster) = struct;
-        for cluster_i = 1:length(cluster_edges_i)
-            cluster_start = cluster_edges_i(cluster_i) + 1;
-            if cluster_i == length(cluster_edges_i)
-                cluster_end = length(suprathreshold_i);
-            else
-                cluster_end = cluster_edges_i(cluster_i + 1);
-            end
-            cluster_indices = suprathreshold_i(cluster_start:cluster_end);
-            if length(cluster_indices) < consec_bins || ~check_consec_bins(cluster_indices, consec_bins)
-                continue
-            end
-
-            %% Compare current cluster to max response
-            cluster_rm = sum(response(cluster_indices(1):cluster_indices(end)));
-            if cluster_rm > max_rm
-                max_rm = cluster_rm;
-                primary_cluster = curr_cluster;
-            end
-
-            %% Store and update cluster info
-            res.(curr_cluster).cluster_indices = cluster_indices;
-            if cluster_i ~= length(cluster_edges_i)
-                tot_clusters = tot_clusters + 1;
-                curr_cluster = ['cluster_', num2str(tot_clusters)];
-            end
-        end
-        all_clusters = fieldnames(res);
-        res.first_cluster = res.(all_clusters{1});
-        res.last_cluster = res.(all_clusters{end});
-        res.primary_cluster = res.(primary_cluster);
     end
+    max_rm = 0;
+    primary_cluster = curr_cluster;
+    res.(curr_cluster) = struct;
+    for cluster_i = 1:length(cluster_edges_i)
+        cluster_start = cluster_edges_i(cluster_i) + 1;
+        if cluster_i == length(cluster_edges_i)
+            cluster_end = length(suprathreshold_i);
+        else
+            cluster_end = cluster_edges_i(cluster_i + 1);
+        end
+        cluster_indices = suprathreshold_i(cluster_start:cluster_end);
+        if length(cluster_indices) < consec_bins || ~check_consec_bins(cluster_indices, consec_bins)
+            continue
+        end
+
+        %% Compare current cluster to max response
+        cluster_rm = sum(response(cluster_indices(1):cluster_indices(end)));
+        if cluster_rm > max_rm
+            max_rm = cluster_rm;
+            primary_cluster = curr_cluster;
+        end
+
+        %% Store and update cluster info
+        res.(curr_cluster).cluster_indices = cluster_indices;
+        if cluster_i ~= length(cluster_edges_i)
+            tot_clusters = tot_clusters + 1
+            curr_cluster = ['cluster_', num2str(tot_clusters)];
+        end
+    end
+    all_clusters = fieldnames(res);
+    res.first_cluster = res.(all_clusters{1});
+    res.last_cluster = res.(all_clusters{end});
+    res.primary_cluster = res.(primary_cluster);
 end
