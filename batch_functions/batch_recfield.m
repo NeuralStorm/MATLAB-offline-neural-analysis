@@ -1,4 +1,6 @@
 function [] = batch_recfield(project_path, save_path, failed_path, data_path, dir_name, filename_substring_one, config)
+    %TODO Add in cluster analysis as separate function
+    %TODO add in normalized variance
     rf_start = tic;
     config_log = config;
     file_list = get_file_list(data_path, '.mat');
@@ -13,11 +15,12 @@ function [] = batch_recfield(project_path, save_path, failed_path, data_path, di
     cluster_analysis = config.cluster_analysis; bin_gap = config.bin_gap;
     mixed_smoothing = config.mixed_smoothing;
 
+    csv_path = fullfile(project_path, [filename_substring_one, '_receptive_field_results.csv']);
     meta_headers = {'filename', 'animal_id', 'exp_group', 'exp_condition', ...
         'optional_info', 'date', 'record_session', 'window_start', ...
         'baseline_start', 'baseline_end', 'window_end', 'response_start', 'response_end', 'bin_size', ...
         'sig_alpha', 'mixed_smoothing', 'sig_check', 'consec_bins', ...
-        'span', 'threshold_scalar', 'cluster_analysis', 'bin_gap'};
+        'span', 'threshold_scalar'};
     ignore_headers = {
         'significant', 'background_rate', 'background_std', 'avg_response', 'response_window_rm', 'threshold', 'p_val', ...
         'first_latency', 'last_latency', 'duration', 'peak_latency', 'peak_response', ...
@@ -37,12 +40,7 @@ function [] = batch_recfield(project_path, save_path, failed_path, data_path, di
         'last_cluster_response_magnitude', 'last_cluster_corrected_response_magnitude', ...
         'last_cluster_norm_response_magnitude'
     };
-    analysis_headers = [{'region'}, {'sig_channels'}, {'user_channels'}, ...
-        {'event'}, ignore_headers];
-
     sprintf('Receptive field analysis for %s \n', dir_name);
-    all_neurons = [];
-    general_info = table;
     for file_index = 1:length(file_list)
         [~, filename, ~] = fileparts(file_list(file_index).name);
         filename_meta.filename = filename;
@@ -51,20 +49,14 @@ function [] = batch_recfield(project_path, save_path, failed_path, data_path, di
             file = fullfile(data_path, file_list(file_index).name);
 
             %% Load needed variables from psth and does the receptive field analysis
-            load(file, 'psth_struct', 'label_log', 'filename_meta');
-            %% Check psth variables to make sure they are not empty
-            %TODO add check to make sure there is baseline and response window
-
-            [sig_neurons, non_sig_neurons, cluster_struct] = receptive_field_analysis( ...
-                psth_struct, event_info, bin_size, window_start, baseline_start, ...
+            load(file, 'psth_struct', 'event_info', 'label_log', 'filename_meta');
+            rec_res = receptive_field_analysis(psth_struct, event_info, ...
+                bin_size, window_start, window_end, baseline_start, ...
                 baseline_end, response_start, response_end, span, threshold_scalar, ...
-                sig_check, sig_alpha, consec_bins, ...
-                mixed_smoothing, cluster_analysis, bin_gap, ...
-                analysis_headers);
+                sig_check, sig_alpha, consec_bins, mixed_smoothing);
 
             %% Capture data to save to csv from current day
-            session_neurons = [sig_neurons; non_sig_neurons];
-            current_general_info = [
+            meta_data = [
                 {filename_meta.filename}, {filename_meta.animal_id}, ...
                 {filename_meta.experimental_group}, ...
                 {filename_meta.experimental_condition}, ...
@@ -72,28 +64,23 @@ function [] = batch_recfield(project_path, save_path, failed_path, data_path, di
                 filename_meta.session_num, window_start, baseline_start, ...
                 baseline_end, window_end, response_start, response_end, bin_size, ...
                 sig_alpha, mixed_smoothing, ...
-                sig_check, consec_bins, span, threshold_scalar, ...
-                cluster_analysis, bin_gap];
-            [general_info, all_neurons] = ...
-                concat_tables(meta_headers, general_info, current_general_info, all_neurons, session_neurons);
+                sig_check, consec_bins, span, threshold_scalar];
+            tot_rows = height(rec_res);
+            rec_res = horzcat_cell(rec_res, repmat(meta_data, [tot_rows, 1]), meta_headers, 'before');
 
             %% Save receptive field matlab output
-            % Does not check if variables are empty since there may/may not be significant responses in a set
             matfile = fullfile(save_path, ['rec_field_', filename_meta.filename, '.mat']);
-            save(matfile, 'label_log', 'sig_neurons', 'non_sig_neurons', 'filename_meta', 'config_log', 'cluster_struct');
-            clear('label_log', 'sig_neurons', 'non_sig_neurons', 'filename_meta', 'cluster_struct');
+            save(matfile, 'label_log', 'rec_res', 'filename_meta', 'config_log');
+
+            %% Append to CSV
+            rec_res = removevars(rec_res, 'p_val');
+            export_csv(csv_path, rec_res, ignore_headers)
+
+            clear('psth_struct', 'label_log', 'rec_res', 'filename_meta');
         catch ME
             handle_ME(ME, failed_path, filename_meta.filename);
         end
     end
-
-    %% CSV export set up
-    rf_results = [general_info, all_neurons];
-    % remove p value from receptive field csv
-    rf_results = removevars(rf_results, 'p_val');
-    csv_path = fullfile(project_path, [filename_substring_one, '_receptive_field_results.csv']);
-    export_csv(csv_path, rf_results, ignore_headers);
-
     fprintf('Finished receptive field analysis for %s. It took %s \n', ...
         dir_name, num2str(toc(rf_start)));
 end
