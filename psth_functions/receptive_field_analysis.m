@@ -63,7 +63,7 @@ function [rec_res] = receptive_field_analysis(psth_struct, event_info, ...
                     %% Get first and last bin indices
                     supra_i = find(response_psth > threshold);
                     fl_i = supra_i(1); ll_i = supra_i(end);
-                    [fl, ll, duration] = get_edge_latencies(response_edges, fl_i, ll_i);
+                    [fl, ll, duration] = get_response_latencies(response_edges, fl_i, ll_i);
                     [sig_edges, ~] = get_bins(fl, ll, bin_size);
                     if mixed_smoothing
                         psth = calc_psth(chan_rr);
@@ -73,7 +73,7 @@ function [rec_res] = receptive_field_analysis(psth_struct, event_info, ...
                     else
                         sig_psth = response_psth(fl_i:ll_i);
                     end
-                    [pl, peak, corrected_peak, rm, corrected_rm] = get_response_metrics(...
+                    [pl, peak, corrected_peak, rm, corrected_rm] = calc_response_rf(...
                         avg_bfr, sig_psth, duration, sig_edges);
                     %% Update normalized event findings
                     if rm > max_rm
@@ -144,49 +144,8 @@ function [is_sig, p_val] = check_significance(baseline_psth, response_psth, ...
     end
 end
 
-function [is_consecutive] = check_consec_bins(suprathreshold_i, consec_bins)
-    %% Checks for consecutive bins
-    tot_consec = 1;
-    is_consecutive = false;
-    if length(suprathreshold_i) == 1 && consec_bins == 1
-        is_consecutive = true;
-        return
-    elseif length(suprathreshold_i) == 1 && consec_bins ~= 1
-        return
-    elseif length(suprathreshold_i) >= consec_bins
-        for i = 2:length(suprathreshold_i)
-            index_gap = suprathreshold_i(i) - suprathreshold_i(i - 1);
-            if index_gap == 1
-                tot_consec = tot_consec + 1;
-                if tot_consec >= consec_bins
-                    is_consecutive = true;
-                    return
-                end
-            else
-                tot_consec = 1;
-            end
-        end
-    end
-end
-
 function [threshold, avg_bfr, bfr_std] = get_threshold(baseline_psth, threshold_scale)
     avg_bfr = mean(baseline_psth);
     bfr_std = std(baseline_psth);
     threshold = avg_bfr + (threshold_scale * bfr_std);
-end
-
-function [pl, peak, corrected_peak, rm, corrected_rm] = get_response_metrics(...
-        bfr, sig_psth, duration, bin_edges)
-    %% Abbreviations: pl = peak latency rm = response magnitude
-    [peak, peak_i] = max(sig_psth);
-    pl = bin_edges(peak_i(1));
-    corrected_peak = peak - bfr;
-    rm = sum(sig_psth);
-    corrected_rm = rm - (bfr * duration);
-end
-
-function [fl, ll, duration] = get_edge_latencies(response_edges, fl_i, ll_i)
-    fl = response_edges(fl_i);
-    ll = response_edges(ll_i + 1); % +1 to ll_i to give "right" edge of bin
-    duration = abs(abs(ll) - abs(fl));
 end

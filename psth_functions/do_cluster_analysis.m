@@ -22,6 +22,7 @@ function [cluster_struct] = do_cluster_analysis(rec_results, psth_struct, event_
 
     %% Get info on regions, events, and bins
     [~, tot_bins] = get_bins(window_start, window_end, bin_size);
+    [response_edges, ~] = get_bins(response_start, response_end, bin_size);
     unique_regions = fieldnames(psth_struct);
     unique_events = unique(event_info.event_labels);
     for reg_i = 1:numel(unique_regions)
@@ -43,17 +44,21 @@ function [cluster_struct] = do_cluster_analysis(rec_results, psth_struct, event_
                 chan = chan_order{chan_i};
                 threshold = rec_results.threshold(strcmpi(rec_results.region, region) ...
                     & strcmpi(rec_results.event, event) & strcmpi(rec_results.channel, chan), :);
+                bfr = rec_results.background_rate(strcmpi(rec_results.region, region) ...
+                    & strcmpi(rec_results.event, event) & strcmpi(rec_results.channel, chan), :);
                 %% Get channel relative response
                 chan_e = chan_i * tot_bins; % 1: 80 2: 160 24: 1920 25: 2000 26: 2080
                 chan_s = chan_e - tot_bins + 1; % 1: 1 2: 81 24: 1841 25: 1921 26: 2001
                 chan_rr = psth_struct.(region).relative_response(event_indices, chan_s:chan_e);
                 psth = calc_psth(chan_rr);
-                psth = smooth(psth, span)'; % smooth returns column vector, but we need to maintain the row dimension
+                % psth = smooth(psth, span)'; % comment out to match master branch cluster analysis
                 response_psth = slice_rr(psth, bin_size, window_start, ...
                     window_end, response_start, response_end);
                 [chan_clusters, tot_clusters] = find_clusters(...
-                    response_psth, bin_gap, consec_bins, threshold);
-                cluster_struct.([region, '_', event, '_', chan]) = chan_clusters;
+                    response_psth, response_edges, bin_size, bin_gap, consec_bins, bfr, threshold);
+                if tot_clusters > 1
+                    cluster_struct.([region, '_', event, '_', chan]) = chan_clusters;
+                end
             end
         end
     end
@@ -109,7 +114,7 @@ function [cluster_struct] = do_cluster_analysis(rec_results, psth_struct, event_
     % cluster_res = [cluster_res; cluster_data];
 end
 
-function [res, tot_clusters] = find_clusters(response, bin_gap, consec_bins, threshold)
+function [res, tot_clusters] = find_clusters(response, response_edges, bin_size, bin_gap, consec_bins, bfr, threshold)
     %TODO mixed smoothing causes issues with finding clusters
     res = struct;
     suprathreshold_i = find(response > threshold);
@@ -135,20 +140,37 @@ function [res, tot_clusters] = find_clusters(response, bin_gap, consec_bins, thr
         end
 
         %% Compare current cluster to max response
-        cluster_rm = sum(response(cluster_indices(1):cluster_indices(end)));
-        if cluster_rm > max_rm
-            max_rm = cluster_rm;
+        fl_i = cluster_indices(1); ll_i = cluster_indices(end);
+        [fl, ll, duration] = get_response_latencies(response_edges, fl_i, ll_i);
+        [sig_edges, ~] = get_bins(fl, ll, bin_size);
+        sig_psth = response(fl_i:ll_i);
+        [pl, peak, corrected_peak, rm, corrected_rm] = calc_response_rf(...
+            bfr, sig_psth, duration, sig_edges);
+        % cluster_rm = sum(response(cluster_indices(1):cluster_indices(end)));
+        if rm > max_rm
+            max_rm = rm;
             primary_cluster = curr_cluster;
         end
 
         %% Store and update cluster info
         res.(curr_cluster).cluster_indices = cluster_indices;
+        res.(curr_cluster).fl = fl;
+        res.(curr_cluster).ll = ll;
+        res.(curr_cluster).duration = duration;
+        res.(curr_cluster).pl = pl;
+        res.(curr_cluster).peak = peak;
+        res.(curr_cluster).corrected_peak = corrected_peak;
+        res.(curr_cluster).rm = rm;
+        res.(curr_cluster).corrected_rm = corrected_rm;
         if cluster_i ~= length(cluster_edges_i)
-            tot_clusters = tot_clusters + 1
+            tot_clusters = tot_clusters + 1;
             curr_cluster = ['cluster_', num2str(tot_clusters)];
         end
     end
     all_clusters = fieldnames(res);
+    if length(all_clusters) == 1
+        return
+    end
     res.first_cluster = res.(all_clusters{1});
     res.last_cluster = res.(all_clusters{end});
     res.primary_cluster = res.(primary_cluster);
