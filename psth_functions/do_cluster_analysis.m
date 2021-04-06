@@ -1,4 +1,4 @@
-function [cluster_struct] = do_cluster_analysis(rec_results, psth_struct, event_info, ...
+function [cluster_struct, res] = do_cluster_analysis(rec_results, psth_struct, event_info, ...
         window_start, window_end, response_start, response_end, bin_size, span, consec_bins, bin_gap)
 
     %% Create cluster results table
@@ -54,87 +54,41 @@ function [cluster_struct] = do_cluster_analysis(rec_results, psth_struct, event_
                 % psth = smooth(psth, span)'; % comment out to match master branch cluster analysis
                 response_psth = slice_rr(psth, bin_size, window_start, ...
                     window_end, response_start, response_end);
-                [chan_clusters, tot_clusters] = find_clusters(...
+                [chan_clusters, tot_clusters, cluster_res] = find_clusters(...
                     response_psth, response_edges, bin_size, bin_gap, consec_bins, bfr, threshold);
-                if tot_clusters > 1
+                %% Append on other results to array
+                if ~isempty(cluster_res)
                     cluster_struct.([region, '_', event, '_', chan]) = chan_clusters;
+                    a = [{region}, {chan}, {event}, tot_clusters, num2cell(cluster_res)];
+                    res = concat_cell(res, a, headers(:, 1));
                 end
             end
         end
     end
-
-    % %TODO smooth response
-    % [neuron_cluster, tot_clusters] = find_clusters(...
-    %     response_psth, bin_gap, consec_bins, threshold);
-    % %% Go through clusters and calc receptive field measures
-    % if tot_clusters > 1
-    %     cluster_names = fieldnames(neuron_cluster);
-    %     for cluster_i = 1:length(cluster_names)
-    %         curr_cluster = cluster_names{cluster_i};
-    %         supra_i = neuron_cluster.(curr_cluster).cluster_indices;
-    %         fl_i = supra_i(1); ll_i = supra_i(end);
-    %         [fl, ll, duration] = get_edge_latencies(response_edges, fl_i, ll_i);
-    %         sig_psth = response_psth(fl_i:ll_i);
-    %         [sig_edges, ~] = get_bins(fl, ll, bin_size);
-    %         [pl, peak, corrected_peak, rm, corrected_rm] = get_response_metrics(...
-    %             avg_bfr, sig_psth, duration, sig_edges);
-    %         neuron_cluster.(curr_cluster).fl = fl;
-    %         neuron_cluster.(curr_cluster).ll = ll;
-    %         neuron_cluster.(curr_cluster).duration = duration;
-    %         neuron_cluster.(curr_cluster).pl = pl;
-    %         neuron_cluster.(curr_cluster).peak = peak;
-    %         neuron_cluster.(curr_cluster).corrected_peak = corrected_peak;
-    %         neuron_cluster.(curr_cluster).rm = rm;
-    %         neuron_cluster.(curr_cluster).corrected_rm = corrected_rm;
-    %         if contains(curr_cluster, 'first')
-    %             first_rm = rm;
-    %             first_data = [{tot_clusters}, {fl}, {ll}, ...
-    %                 {duration}, {pl}, {peak}, {corrected_peak}, ...
-    %                 {rm}, {corrected_rm}, {NaN}];
-    %         elseif contains(curr_cluster, 'primary')
-    %             primary_rm = rm;
-    %             primary_data = [{fl}, {ll}, ...
-    %                 {duration}, {pl}, {peak}, {corrected_peak}, ...
-    %                 {rm}, {corrected_rm}, {NaN}];
-    %         elseif contains(curr_cluster, 'last')
-    %             last_rm = rm;
-    %             last_data = [{fl}, {ll}, ...
-    %                 {duration}, {pl}, {peak}, {corrected_peak}, ...
-    %                 {rm}, {corrected_rm}, {NaN}];
-    %         end
-    %         neuron_cluster.response_psth = response_psth;
-    %         neuron_cluster.threshold = threshold;
-    %         cluster_struct.(region).(event).(chan) = neuron_cluster;
-    %     end
-    %     first_data(end) = {first_rm / primary_rm};
-    %     primary_data(end) = {1};
-    %     last_data(end) = {last_rm / primary_rm};
-    %     cluster_data = [first_data, primary_data, last_data];
-    % end
-    % cluster_res = [cluster_res; cluster_data];
 end
 
-function [res, tot_clusters] = find_clusters(response, response_edges, bin_size, bin_gap, consec_bins, bfr, threshold)
+function [res, tot_clusters, res_array] = find_clusters(response, response_edges, bin_size, bin_gap, consec_bins, bfr, threshold)
     %TODO mixed smoothing causes issues with finding clusters
     res = struct;
-    suprathreshold_i = find(response > threshold);
-    cluster_edges_i = [0, find(diff(suprathreshold_i) >= bin_gap)];
+    res_array = [];
     tot_clusters = 1;
-    curr_cluster = 'cluster_1';
+    supra_i = find(response > threshold);
+    cluster_edges_i = [0, find(diff(supra_i) >= bin_gap)];
     if length(cluster_edges_i) <= 1
         return
     end
+    curr_cluster = 'cluster_1';
     max_rm = 0;
     primary_cluster = curr_cluster;
     res.(curr_cluster) = struct;
     for cluster_i = 1:length(cluster_edges_i)
         cluster_start = cluster_edges_i(cluster_i) + 1;
         if cluster_i == length(cluster_edges_i)
-            cluster_end = length(suprathreshold_i);
+            cluster_end = length(supra_i);
         else
             cluster_end = cluster_edges_i(cluster_i + 1);
         end
-        cluster_indices = suprathreshold_i(cluster_start:cluster_end);
+        cluster_indices = supra_i(cluster_start:cluster_end);
         if length(cluster_indices) < consec_bins || ~check_consec_bins(cluster_indices, consec_bins)
             continue
         end
@@ -151,18 +105,12 @@ function [res, tot_clusters] = find_clusters(response, response_edges, bin_size,
             max_rm = rm;
             primary_cluster = curr_cluster;
         end
+        cluster_res = [fl, ll, duration, pl, peak, corrected_peak, rm, corrected_rm, rm];
 
         %% Store and update cluster info
         res.(curr_cluster).cluster_indices = cluster_indices;
-        res.(curr_cluster).fl = fl;
-        res.(curr_cluster).ll = ll;
-        res.(curr_cluster).duration = duration;
-        res.(curr_cluster).pl = pl;
-        res.(curr_cluster).peak = peak;
-        res.(curr_cluster).corrected_peak = corrected_peak;
-        res.(curr_cluster).rm = rm;
-        res.(curr_cluster).corrected_rm = corrected_rm;
-        if cluster_i ~= length(cluster_edges_i)
+        res.(curr_cluster).res = cluster_res;
+        if cluster_i < length(cluster_edges_i)
             tot_clusters = tot_clusters + 1;
             curr_cluster = ['cluster_', num2str(tot_clusters)];
         end
@@ -171,6 +119,16 @@ function [res, tot_clusters] = find_clusters(response, response_edges, bin_size,
     if length(all_clusters) == 1
         return
     end
+    %% Grab cluster results
+    first_res = res.(all_clusters{1}).res;
+    primary_res = res.(primary_cluster).res;
+    last_res = res.(all_clusters{end}).res;
+    %% Normalize rm across clusters
+    first_res(end) = first_res(end) / max_rm;
+    last_res(end) = last_res(end) / max_rm;
+    primary_res(end) = primary_res(end) / max_rm;
+    %% Put into array
+    res_array = [first_res, primary_res, last_res];
     res.first_cluster = res.(all_clusters{1});
     res.last_cluster = res.(all_clusters{end});
     res.primary_cluster = res.(primary_cluster);
