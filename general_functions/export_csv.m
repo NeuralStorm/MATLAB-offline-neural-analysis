@@ -1,4 +1,10 @@
 function [] = export_csv(csv_path, new_results, ignore_columns)
+
+    if isempty(new_results)
+        %% If table is empty, there is nothing to append
+        return
+    end
+
     new_results = check_notes(new_results);
     headers = new_results.Properties.VariableNames;
     var_types = get_table_types(new_results);
