@@ -1,9 +1,10 @@
-function [cluster_struct, res] = do_cluster_analysis(rec_results, psth_struct, event_info, ...
-        window_start, window_end, response_start, response_end, bin_size, span, consec_bins, bin_gap)
+function [cluster_struct, res] = do_cluster_analysis(rec_results, psth_struct, ...
+        event_info, window_start, window_end, response_start, response_end, ...
+        bin_size, mixed_smoothing, span, consec_bins, bin_gap)
 
     %% Create cluster results table
-    headers = [["region", "string"]; ["channel", "string"]; ...
-               ["event", "string"]; ["tot_clusters", "double"]; ["first_first_latency", "double"]; ...
+    headers = [["region", "string"]; ["channel", "string"]; ["event", "string"]; ...
+               ["tot_clusters", "double"]; ["first_first_latency", "double"]; ...
                ["first_last_latency", "double"]; ["first_duration", "double"]; ...
                ["first_peak_latency", "double"]; ["first_peak_response", "double"]; ...
                ["first_corrected_peak", "double"]; ["first_response_magnitude", "double"]; ...
@@ -22,7 +23,6 @@ function [cluster_struct, res] = do_cluster_analysis(rec_results, psth_struct, e
 
     %% Get info on regions, events, and bins
     [~, tot_bins] = get_bins(window_start, window_end, bin_size);
-    [response_edges, ~] = get_bins(response_start, response_end, bin_size);
     unique_regions = fieldnames(psth_struct);
     unique_events = unique(event_info.event_labels);
     for reg_i = 1:numel(unique_regions)
@@ -39,7 +39,6 @@ function [cluster_struct, res] = do_cluster_analysis(rec_results, psth_struct, e
             end
             event_indices = event_info.event_indices(strcmpi(event_info.event_labels, event), :);
             for sig_i = 1:numel(sig_chan_i)
-                %TODO come up with better variable names
                 chan_i = sig_chan_i(sig_i);
                 chan = chan_order{chan_i};
                 threshold = rec_results.threshold(strcmpi(rec_results.region, region) ...
@@ -47,18 +46,15 @@ function [cluster_struct, res] = do_cluster_analysis(rec_results, psth_struct, e
                 bfr = rec_results.background_rate(strcmpi(rec_results.region, region) ...
                     & strcmpi(rec_results.event, event) & strcmpi(rec_results.channel, chan), :);
                 %% Get channel relative response
-                chan_e = chan_i * tot_bins; % 1: 80 2: 160 24: 1920 25: 2000 26: 2080
-                chan_s = chan_e - tot_bins + 1; % 1: 1 2: 81 24: 1841 25: 1921 26: 2001
+                chan_e = chan_i * tot_bins;
+                chan_s = chan_e - tot_bins + 1;
                 chan_rr = psth_struct.(region).relative_response(event_indices, chan_s:chan_e);
-                psth = calc_psth(chan_rr);
-                % psth = smooth(psth, span)'; % comment out to match master branch cluster analysis
-                response_psth = slice_rr(psth, bin_size, window_start, ...
-                    window_end, response_start, response_end);
-                [chan_clusters, cluster_res] = find_clusters(...
-                    response_psth, response_edges, bin_size, bin_gap, consec_bins, bfr, threshold);
+                [chan_clusters, cluster_res] = find_clusters(chan_rr, ...
+                    window_start, window_end, response_start, response_end, ...
+                    bin_size, mixed_smoothing, span, bin_gap, consec_bins, bfr, threshold);
                 %% Append on other results to array
                 if ~isempty(cluster_res)
-                    cluster_struct.([region, '_', event, '_', chan]) = chan_clusters;
+                    cluster_struct.(region).(chan).(event) = chan_clusters;
                     a = [{region}, {chan}, {event}, num2cell(cluster_res)];
                     res = concat_cell(res, a, headers(:, 1));
                 end
@@ -67,10 +63,17 @@ function [cluster_struct, res] = do_cluster_analysis(rec_results, psth_struct, e
     end
 end
 
-function [res, res_array] = find_clusters(response_psth, response_edges, bin_size, bin_gap, consec_bins, bfr, threshold)
-    %TODO mixed smoothing causes issues with finding clusters
-    res = struct;
-    res_array = [];
+function [res, res_array] = find_clusters(chan_rr, window_start, window_end, ...
+    response_start, response_end, bin_size, mixed_smoothing, span, bin_gap, consec_bins, bfr, threshold)
+    res = struct; res_array = [];
+    [response_edges, ~] = get_bins(response_start, response_end, bin_size);
+
+    %% Create psth
+    psth = calc_psth(chan_rr);
+    psth = smooth(psth, span)';
+    response_psth = slice_rr(psth, bin_size, window_start, ...
+        window_end, response_start, response_end);
+
     supra_i = find(response_psth > threshold);
     %% Explanation of dark magic below
     % diff calculates diff of indices in supra_i (points where bins cross threshold)
@@ -97,6 +100,12 @@ function [res, res_array] = find_clusters(response_psth, response_edges, bin_siz
         fl_i = cluster_indices(1); ll_i = cluster_indices(end);
         [fl, ll, duration] = get_response_latencies(response_edges, fl_i, ll_i);
         [sig_edges, ~] = get_bins(fl, ll, bin_size);
+        if mixed_smoothing
+            %% Unsmooth if mixed_smoothing is true
+            psth = calc_psth(chan_rr);
+            response_psth = slice_rr(psth, bin_size, window_start, ...
+                window_end, response_start, response_end);
+        end
         sig_psth = response_psth(fl_i:ll_i);
         [pl, peak, corrected_peak, rm, corrected_rm] = calc_response_rf(...
             bfr, sig_psth, duration, sig_edges);

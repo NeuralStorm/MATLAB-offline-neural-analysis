@@ -69,10 +69,8 @@ function [rec_res] = receptive_field_analysis(psth_struct, event_info, ...
                         psth = calc_psth(chan_rr);
                         response_psth = slice_rr(psth, bin_size, window_start, ...
                             window_end, response_start, response_end);
-                        sig_psth = response_psth(fl_i:ll_i);
-                    else
-                        sig_psth = response_psth(fl_i:ll_i);
                     end
+                    sig_psth = response_psth(fl_i:ll_i);
                     [pl, peak, corrected_peak, rm, corrected_rm] = calc_response_rf(...
                         avg_bfr, sig_psth, duration, sig_edges);
                     %% Update normalized event findings
