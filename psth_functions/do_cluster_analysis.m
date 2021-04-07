@@ -54,12 +54,12 @@ function [cluster_struct, res] = do_cluster_analysis(rec_results, psth_struct, e
                 % psth = smooth(psth, span)'; % comment out to match master branch cluster analysis
                 response_psth = slice_rr(psth, bin_size, window_start, ...
                     window_end, response_start, response_end);
-                [chan_clusters, tot_clusters, cluster_res] = find_clusters(...
+                [chan_clusters, cluster_res] = find_clusters(...
                     response_psth, response_edges, bin_size, bin_gap, consec_bins, bfr, threshold);
                 %% Append on other results to array
                 if ~isempty(cluster_res)
                     cluster_struct.([region, '_', event, '_', chan]) = chan_clusters;
-                    a = [{region}, {chan}, {event}, tot_clusters, num2cell(cluster_res)];
+                    a = [{region}, {chan}, {event}, num2cell(cluster_res)];
                     res = concat_cell(res, a, headers(:, 1));
                 end
             end
@@ -67,29 +67,32 @@ function [cluster_struct, res] = do_cluster_analysis(rec_results, psth_struct, e
     end
 end
 
-function [res, tot_clusters, res_array] = find_clusters(response, response_edges, bin_size, bin_gap, consec_bins, bfr, threshold)
+function [res, res_array] = find_clusters(response, response_edges, bin_size, bin_gap, consec_bins, bfr, threshold)
     %TODO mixed smoothing causes issues with finding clusters
     res = struct;
     res_array = [];
-    tot_clusters = 1;
     supra_i = find(response > threshold);
-    cluster_edges_i = [0, find(diff(supra_i) >= bin_gap)];
-    if length(cluster_edges_i) <= 1
+    %% Explanation of dark magic below
+    % diff takes all the indices in supra_i (points where bins cross threshold) and calculates difference
+    % find then looks at the diff array and find the indices in supra_i that are larger than the bin gap
+    % 0 is appended so that the first cluster starts at the beginning of the response
+    % numel(supra_i) is appended to end the last cluster 
+    cluster_edges_i = [0, find(diff(supra_i) >= bin_gap), numel(supra_i)];
+
+    if length(cluster_edges_i) <= 2
+        %% No clusters and returns
         return
     end
-    curr_cluster = 'cluster_1';
-    max_rm = 0;
-    primary_cluster = curr_cluster;
+    curr_cluster = 'cluster_1'; tot_clusters = 1;
+    max_rm = 0; primary_cluster = curr_cluster;
     res.(curr_cluster) = struct;
-    for cluster_i = 1:length(cluster_edges_i)
-        cluster_start = cluster_edges_i(cluster_i) + 1;
-        if cluster_i == length(cluster_edges_i)
-            cluster_end = length(supra_i);
-        else
-            cluster_end = cluster_edges_i(cluster_i + 1);
-        end
-        cluster_indices = supra_i(cluster_start:cluster_end);
+    for cluster_i = 1:length(cluster_edges_i) - 1
+        cluster_start = cluster_edges_i(cluster_i) + 1; % +1 because matlab is 1 based
+        cluster_end = cluster_edges_i(cluster_i + 1); % +1 to grab the next index in the array
+        cluster_indices = supra_i(cluster_start:cluster_end); % use edges to grab all indices for cluster
+
         if length(cluster_indices) < consec_bins || ~check_consec_bins(cluster_indices, consec_bins)
+            %% if cluster does not meet definition of a significant response, skip to next cluster
             continue
         end
 
@@ -100,7 +103,6 @@ function [res, tot_clusters, res_array] = find_clusters(response, response_edges
         sig_psth = response(fl_i:ll_i);
         [pl, peak, corrected_peak, rm, corrected_rm] = calc_response_rf(...
             bfr, sig_psth, duration, sig_edges);
-        % cluster_rm = sum(response(cluster_indices(1):cluster_indices(end)));
         if rm > max_rm
             max_rm = rm;
             primary_cluster = curr_cluster;
@@ -128,8 +130,10 @@ function [res, tot_clusters, res_array] = find_clusters(response, response_edges
     last_res(end) = last_res(end) / max_rm;
     primary_res(end) = primary_res(end) / max_rm;
     %% Put into array
-    res_array = [first_res, primary_res, last_res];
+    res_array = [tot_clusters, first_res, primary_res, last_res];
     res.first_cluster = res.(all_clusters{1});
     res.last_cluster = res.(all_clusters{end});
     res.primary_cluster = res.(primary_cluster);
+    res.supra_i = supra_i;
+    res.cluster_edges_i = cluster_edges_i;
 end
