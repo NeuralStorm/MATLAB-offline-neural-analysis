@@ -1,5 +1,5 @@
 function [] = batch_recfield(project_path, save_path, failed_path, data_path, dir_name, filename_substring_one, config)
-    %TODO Add in cluster analysis as separate function
+    %TODO add recording notes to csv
     %TODO add in normalized variance
     rf_start = tic;
     config_log = config;
@@ -38,7 +38,7 @@ function [] = batch_recfield(project_path, save_path, failed_path, data_path, di
         'last_cluster_last_latency', 'last_cluster_duration', 'last_cluster_peak_latency', ...
         'last_cluster_peak_response', 'last_cluster_corrected_peak', ...
         'last_cluster_response_magnitude', 'last_cluster_corrected_response_magnitude', ...
-        'last_cluster_norm_response_magnitude'
+        'last_cluster_norm_response_magnitude', 'bfr_s', 'bfr_var', 'fano', 'norm_var'
     };
     sprintf('Receptive field analysis for %s \n', dir_name);
     for file_index = 1:length(file_list)
@@ -64,7 +64,13 @@ function [] = batch_recfield(project_path, save_path, failed_path, data_path, di
                     bin_size, mixed_smoothing, span, consec_bins, bin_gap);
             end
 
-            %TODO normalized variance call
+            %% Normalized variance analysis
+            nv_res = nv_calculation(psth_struct, event_info, window_start, window_end, ...
+                baseline_start, baseline_end, bin_size, config.epsilon, config.norm_var_scaling);
+            assert(height(rec_res) == height(nv_res), ...
+                'Join assumes a 1-1 mapping but found %d rows in rf and %d rows in nv', ...
+                height(rec_res), height(nv_res));
+            rec_res = join(rec_res, nv_res, 'Keys', {'region', 'event', 'channel'});
 
             %% Save receptive field matlab output
             matfile = fullfile(save_path, ['rec_field_', filename_meta.filename, '.mat']);
@@ -83,9 +89,8 @@ function [] = batch_recfield(project_path, save_path, failed_path, data_path, di
                 {filename_meta.optional_info}, filename_meta.session_date, ...
                 filename_meta.session_num, window_start, baseline_start, ...
                 baseline_end, window_end, response_start, response_end, bin_size, ...
-                sig_alpha, mixed_smoothing, ...
-                sig_check, consec_bins, span, threshold_scalar];
-                
+                sig_alpha, mixed_smoothing, sig_check, consec_bins, span, threshold_scalar];
+
             %% Append to receptive field CSV
             tot_rows = height(rec_res);
             rec_res = horzcat_cell(rec_res, repmat(meta_data, [tot_rows, 1]), meta_headers, 'before');
