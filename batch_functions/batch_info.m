@@ -7,7 +7,7 @@ function [] = batch_info(project_path, save_path, failed_path, data_path, dir_na
     meta_headers = {'filename', 'animal_id', 'exp_group', 'exp_condition', ...
         'optional_info', 'date', 'record_session', 'window_start', 'window_end', ...
         'response_start', 'response_end', 'bin_size'};
-    ignore_headers = {'entropy', 'mutual_info'};
+    ignore_headers = {'entropy_time', 'entropy_count', 'mutual_info_time', 'mutual_info_count'};
 
     file_list = get_file_list(data_path, '.mat');
     file_list = update_file_list(file_list, failed_path, config.include_sessions);

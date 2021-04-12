@@ -1,9 +1,13 @@
 function [res] = calc_shannon_info(psth_struct, event_info, bin_size, window_start, ...
                                 window_end, response_start, response_end)
+    %% Abbreviations
+    % *_t = timing, *_c = count
 
     %% Create info table
-    headers = [["region", "string"]; ["channel", "string"]; ["event", "string"]; ...
-               ["entropy", "double"]; ["mutual_info", "double"]];
+    headers = [["region", "string"]; ["channel", "string"]; ...
+               ["event", "string"]; ["entropy_time", "double"]; ...
+               ["entropy_count", "double"]; ["mutual_info_time", "double"]; ...
+               ["mutual_info_count", "double"];];
     res = prealloc_table(headers, [0, size(headers, 1)]);
 
     unique_regions = fieldnames(psth_struct);
@@ -24,8 +28,9 @@ function [res] = calc_shannon_info(psth_struct, event_info, bin_size, window_sta
             chan_rr = psth_struct.(region).relative_response(:, chan_s:chan_e);
             response_rr = slice_rr(chan_rr, bin_size, window_start, ...
                 window_end, response_start, response_end);
-            %% Find mutual information for response_rr
-            mi = calc_event_mi(response_rr, event_info);
+            %% Find timing mutual information for response_rr
+            mi_t = calc_event_mi(response_rr, event_info);
+            mi_c = calc_event_mi(sum(response_rr, 2), event_info);
             for event_i = 1:tot_events
                 %% Calculate event entropies
                 event = unique_events{event_i};
@@ -34,10 +39,15 @@ function [res] = calc_shannon_info(psth_struct, event_info, bin_size, window_sta
                 response_rr = slice_rr(chan_rr, bin_size, window_start, ...
                     window_end, response_start, response_end);
 
-                %% Get response probabilities and calculate entropy
-                [~, response_prob] = get_prob(response_rr);
-                response_entropy = calc_entropy(response_prob);
-                a = [{region}, {chan}, {event}, response_entropy, mi];
+                %% Get timing probabilities and calculate timing entropy
+                [~, prob_t] = get_prob(response_rr);
+                entropy_t = calc_entropy(prob_t);
+
+                %% Get count probabilities and calculate count entropy
+                [~, prob_c] = get_prob(sum(response_rr, 2));
+                entropy_c = calc_entropy(prob_c);
+
+                a = [{region}, {chan}, {event}, entropy_t, entropy_c, mi_t, mi_c];
                 %% Store results in table
                 res = concat_cell(res, a, headers(:, 1));
             end
