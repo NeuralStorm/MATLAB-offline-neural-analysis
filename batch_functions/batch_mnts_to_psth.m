@@ -16,21 +16,21 @@ function [] = batch_mnts_to_psth(save_path, failed_path, data_path, ...
             file = fullfile(data_path, file_list(file_index).name);
 
             %% Load needed variables from psth and does the receptive field analysis
-            load(file, 'component_results', 'event_info', 'pc_log', ...
-                'filename_meta', 'label_log');
+            load(file, 'component_results', 'event_info', 'label_log', ...
+                'filename_meta');
             %% Check psth variables to make sure they are not empty
             empty_vars = check_variables(file, component_results);
             if empty_vars
                 continue
             end
 
-            psth_struct = reformat_mnts(pc_log, component_results, tot_bins);
+            psth_struct = reformat_mnts(label_log, component_results, tot_bins);
 
             matfile = fullfile(save_path, [filename_substring_one, ...
                 '_format_' filename_meta.filename, '.mat']);
             save(matfile, 'psth_struct', 'event_info', 'filename_meta', 'config_log', ...
-                'label_log', 'pc_log');
-            clear('psth_struct', 'event_info', 'filename_meta', 'label_log', 'pc_log');
+                'label_log', 'label_log');
+            clear('psth_struct', 'event_info', 'filename_meta', 'label_log', 'label_log');
         catch ME
             handle_ME(ME, failed_path, filename_meta.filename);
         end
