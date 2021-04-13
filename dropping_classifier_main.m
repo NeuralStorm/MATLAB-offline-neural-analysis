@@ -60,8 +60,8 @@ function [] = dropping_classifier_main()
         end
 
 
-        [classifier_path, classifier_failed_path] = create_dir(psth_path, 'classifier');
-        export_params(classifier_path, 'classifier', config);
+        [classifier_path, classifier_failed_path] = create_dir(psth_path, 'dropping_classifier');
+        export_params(classifier_path, 'dropping_classifier', config);
         try
             %% Check to make sure paths exist for analysis and create save path
             e_msg_1 = 'No data directory to find PSTHs';

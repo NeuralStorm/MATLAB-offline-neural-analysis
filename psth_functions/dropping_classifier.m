@@ -4,7 +4,6 @@ function [res] = dropping_classifier(psth_struct, event_info, drop_method, ...
     headers = [["region", "string"]; ["tot_chans", "double"]; ["dropped_chan", "double"]; ...
                ["performance", "double"]; ["mutual_info", "double"]];
     res = prealloc_table(headers, [0, size(headers, 1)]);
-    classify_res = struct;
 
     unique_regions = fieldnames(psth_struct);
     unique_events = unique(event_info.event_labels);
@@ -23,16 +22,7 @@ function [res] = dropping_classifier(psth_struct, event_info, drop_method, ...
         a = [{region}, tot_chans, {"none"}, perf, mutual_info];
         res = concat_cell(res, a, headers(:, 1));
         %% Get drop order for region
-        %! clean up
-        if istable(channel_info)
-            reg_info = channel_info(strcmpi(channel_info.region, region), :);
-        elseif isstruct(channel_info)
-            reg_info = channel_info.(region);
-        elseif all(isnan(channel_info))
-            reg_info = channel_info;
-        else
-            error('Unrecognized channel info type');
-        end
+        reg_info = channel_info(strcmpi(channel_info.region, region), :);
         chan_order = get_chan_order(chan_list, drop_method, reg_info);
         while tot_chans > 1
             chan = chan_order{1};
@@ -48,32 +38,35 @@ function [res] = dropping_classifier(psth_struct, event_info, drop_method, ...
             event_struct = create_event_struct(psth_struct.(region), event_info, ...
                 bin_size, window_start, window_end, response_start, response_end);
             [~, mutual_info, ~, perf] = psth_classifier(event_struct, unique_events);
-            a = [{region}, tot_chans, {chan}, perf, mutual_info];
-            res = concat_cell(res, a, headers(:, 1));
 
             %% Update channel order
             chan_order(1) = [];
             psth_struct.(region).label_order = chan_order;
             tot_chans = numel(chan_order);
+
+            %% Store results
+            a = [{region}, tot_chans, {chan}, perf, mutual_info];
+            res = concat_cell(res, a, headers(:, 1));
         end
     end
 end
 
-function [chan_order] = get_chan_order(chan_list, drop_method, values)
-
+function [chan_order] = get_chan_order(chan_list, drop_method, chan_table)
     if strcmpi(drop_method, 'random')
         %% CASE: Random order
         chan_order = chan_list(randperm(numel(chan_list)));
-    elseif strcmpi(drop_method, 'percent_var')
-        %% CASE: Drop channels by max % variance
-        %! does not apply to ICA unless components are sorted by variance
-        chan_order = chan_list;
-    else
-        %% CASE: use previous classifier results to sort
-        assert(istable(values) && height(values) == numel(chan_list));
-        sorted_chans = sortrows(values, drop_method, 'descend');
-        chan_order = sorted_chans.channel;
-        %! assert that all channels in chan_list exist only once in table
+        return
     end
-
+    assert(istable(chan_table) && height(chan_table) == numel(chan_list));
+    if strcmpi(drop_method, 'percent_var')
+        %% CASE: Drop channels by max % variance
+        sorted_chans = sortrows(chan_table, "variance", 'descend');
+        chan_order = sorted_chans.channel;
+    elseif any(ismember(chan_table.Properties.VariableNames, drop_method))
+        %% CASE: use previous classifier results to sort
+        sorted_chans = sortrows(chan_table, drop_method, 'descend');
+        chan_order = sorted_chans.channel;
+    else
+        error('Unrecognized drop method %s', drop_method);
+    end
 end

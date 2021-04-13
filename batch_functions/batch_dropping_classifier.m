@@ -25,8 +25,7 @@ function [] = batch_dropping_classifier(project_path, save_path, failed_path, ..
 
     fprintf('PSTH classification for %s \n', dir_name);
 
-    %% Pull other info needed for determing drop order
-    %! come up with better variable name
+    %% Pull csv results from classifications to determine drop order
     is_csv = any(ismember(config.drop_method, {'performance', 'mutual_info', 'corrected_info'}));
     if is_csv
         chan_csv_path = fullfile(project_path, [chan_type,'_chan_classification_info.csv']);
@@ -62,24 +61,31 @@ function [] = batch_dropping_classifier(project_path, save_path, failed_path, ..
                     error('Must have classifier results for channels before dropping with %s', drop_method);
                 end
             elseif strcmpi(drop_method, 'percent_var')
-                var_path = [project_path, '/mnts/', chan_type];
+                var_path = [project_path, '/mnts/', chan_type, '/', dir_name];
                 if strcmpi(chan_type, 'pca')
-                    var_file = fullfile(var_path, ['pc_analysis_', filename_meta.filename]);
+                    var_file = fullfile(var_path, ['pc_analysis_', filename_meta.filename, '.mat']);
                 elseif strcmpi(chan_type, 'ica')
-                    var_file = fullfile(var_path, ['ic_analysis_', filename_meta.filename]);
+                    var_file = fullfile(var_path, ['ic_analysis_', filename_meta.filename, '.mat']);
                 else
                     %% Unrecoverable error for all files
                     is_unrecoverable = true;
                     error('Cannot do percent variance dropping with %s type. Try pca or ica', config.psth_type);
                 end
-                %TODO check if file exists
                 load(var_file, 'component_results');
-                chan_info = component_results;
+                chan_info = get_chan_vars(component_results);
             elseif strcmpi(drop_method, 'random')
-                chan_info = nan(1, height(label_log));
+                chan_info = label_log;
+                chan_info = renamevars(chan_info, "label", "region");
             else
                 is_unrecoverable = true;
                 error('Unknown drop method: %s')
+            end
+
+            if config.combine_regions
+                psth_struct = combine_regions(psth_struct);
+                %% Convert region label to match combined region label
+                tot_rows = height(chan_info);
+                chan_info.region = repmat("all_regions", [tot_rows, 1]);
             end
 
             %% Drop classify
@@ -109,4 +115,19 @@ function [] = batch_dropping_classifier(project_path, save_path, failed_path, ..
     end
     fprintf('Finished PSTH classifier for %s. It took %s \n', ...
         dir_name, num2str(toc(classifier_start)));
+end
+
+function [res] = get_chan_vars(component_results)
+    headers = [["region", "string"]; ["channel", "string"]; ["variance", "double"]];
+    res = prealloc_table(headers, [0, size(headers, 1)]);
+    unique_regions = fieldnames(component_results);
+    for reg_i = 1:numel(unique_regions)
+        region = unique_regions{reg_i};
+        reg_chans = component_results.(region).label_order;
+        tot_chans = numel(reg_chans);
+        reg_vars = component_results.(region).component_variance;
+        reg_vars = reg_vars(1:numel(reg_chans));
+        a = [repmat({region}, [tot_chans, 1]), reg_chans, num2cell(reg_vars)];
+        res = concat_cell(res, a, headers(:, 1));
+    end
 end
