@@ -15,11 +15,6 @@ function [] = plot_pca_weights(save_path, component_results, label_log, feature_
     %                                         Columns: Component Row: Feature
     %                                  estimated_mean: Vector with estimated means for each feature
     %                                  weighted_mnts: mnts mapped into pc space with feature filter applied
-    %                                  tfr: struct with fields for each power
-    %                                       (Note: This was added in the batch_power_pca function and not in the calc_pca call)
-    %                                       bandname: struct with fields for each event type
-    %                                                 event: struct with fields with tfr & z tfr avg, std, ste
-    %                                                        fieldnames: avg_tfr, avg_z_tfr, std_tfr, std_z_tfr, ste_tfr, & ste_z_tfr
     % label_log: struct w/ fields for each feature set
     %            field: table with columns
     %                   'sig_channels': String with name of channel

@@ -1,6 +1,17 @@
 function [] = batch_mnts_to_psth(save_path, failed_path, data_path, ...
         dir_name, filename_substring_one, dir_config)
 
+    %% Purpose: Go through file list and convert mnts to psth
+    %% Input:
+    % save_path: path to save files at
+    % failed_path: path to save errors at
+    % data_path: path to load files from before analysis is ran
+    % dir_name: Name of dir that data came from (usually subject #)
+    % filename_substring_one: String to append onto front of saved files (pca in this case)
+    % dir_config: config settings for that subject
+    %% Output:
+    %  No output, conversion saved in mat files at saved location
+
     config_log = dir_config;
     file_list = get_file_list(data_path, '.mat');
     file_list = update_file_list(file_list, failed_path, dir_config.include_sessions);
@@ -29,8 +40,8 @@ function [] = batch_mnts_to_psth(save_path, failed_path, data_path, ...
             matfile = fullfile(save_path, [filename_substring_one, ...
                 '_format_' filename_meta.filename, '.mat']);
             save(matfile, 'psth_struct', 'event_info', 'filename_meta', 'config_log', ...
-                'label_log', 'label_log');
-            clear('psth_struct', 'event_info', 'filename_meta', 'label_log', 'label_log');
+                'label_log');
+            clear('psth_struct', 'event_info', 'filename_meta', 'label_log');
         catch ME
             handle_ME(ME, failed_path, filename_meta.filename);
         end

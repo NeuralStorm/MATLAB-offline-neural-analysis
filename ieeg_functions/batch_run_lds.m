@@ -16,16 +16,12 @@ function [] = batch_run_lds(save_path, failed_path, data_path, dir_name, ...
         try
             %% pull info from filename and set up file path for analysis
             file = fullfile(data_path, file_list(file_i).name);
-            load(file, 'component_results', 'filename_meta', 'pc_log', 'event_info');
+            load(file, 'component_results', 'filename_meta', 'label_log', 'event_info');
             %% Check variables to make sure they are not empty
             empty_vars = check_variables(file, component_results);
             if empty_vars
                 continue
             end
-
-
-            %! removes all event for the time being until the all event is formally removed from code
-            event_info = event_info(ismember(event_info.event_labels, {'gambles', 'safebet'}), :);
 
             [net, lds_results] = run_lds(component_results, event_info, tot_bins, dir_config.latent_variables, ...
                 dir_config.em_cycles, dir_config.tolerance);
@@ -34,7 +30,7 @@ function [] = batch_run_lds(save_path, failed_path, data_path, dir_name, ...
             matfile = fullfile(save_path, ['lds_results_', ...
                 filename_meta.filename, '.mat']);
             %TODO save file
-            save(matfile, 'pc_log', 'lds_results', 'config_log', 'net');
+            save(matfile, 'label_log', 'lds_results', 'config_log', 'net');
         catch ME
             handle_ME(ME, failed_path, filename_meta.filename);
         end

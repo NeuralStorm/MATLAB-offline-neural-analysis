@@ -175,7 +175,7 @@ function [] = ieeg_main()
                 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
                 %             PCA            %%
                 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-                batch_power_pca(dir_save_path, dir_failed_path, dir_mnts_path, ...
+                batch_pca(dir_save_path, dir_failed_path, dir_mnts_path, ...
                     curr_dir, dir_config)
             catch ME
                 handle_ME(ME, mnts_failed_path, [curr_dir, '_missing_dir.mat']);
@@ -198,7 +198,7 @@ function [] = ieeg_main()
                 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
                 %          PCA PSTH          %%
                 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-                batch_power_mnts_to_psth(dir_save_path, dir_failed_path, dir_pca_path, ...
+                batch_mnts_to_psth(dir_save_path, dir_failed_path, dir_pca_path, ...
                     curr_dir, 'pca', dir_config)
             catch ME
                 handle_ME(ME, pca_psth_failed_path, [curr_dir, '_missing_dir.mat']);
