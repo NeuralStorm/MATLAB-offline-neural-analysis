@@ -59,13 +59,13 @@ function [pop_table, chan_table] = psth_bootstrapper(...
         avg_reg_info = get_avg_boot(reg_info);
         %% Add region boot information to pop table
         a = [{region}, avg_reg_perf, avg_reg_info];
-        pop_table = concat_cell(pop_table, a, pop_headers(:, 1));
+        pop_table = vertcat_cell(pop_table, a, pop_headers(:, 1), "after");
         %% Channel avg
         avg_chan_perf = get_avg_boot(chan_perf);
         avg_chan_info = get_avg_boot(chan_info);
         %% Add channel boot information to pop table
         a = [chan_order, num2cell(avg_chan_perf), num2cell(avg_chan_info)];
-        chan_table = concat_cell(chan_table, a, chan_headers(:, 1));
+        chan_table = vertcat_cell(chan_table, a, chan_headers(:, 1), "after");
     end
 end
 

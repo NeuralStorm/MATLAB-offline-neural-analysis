@@ -27,7 +27,7 @@ function [pop_table, chan_table, classify_res] = do_psth_classifier(psth_struct,
         [conf, mutual_info, trial_log, perf] = psth_classifier(event_struct, unique_events);
         %% Store classification results in table and struct
         a = [{region}, perf, mutual_info];
-        pop_table = concat_cell(pop_table, a, pop_headers(:, 1));
+        pop_table = vertcat_cell(pop_table, a, pop_headers(:, 1), "after");
         classify_res.(region) = struct('confusion_matrix', conf, ...
             'mutual_info', mutual_info, 'performance', perf, 'trial_log', trial_log);
 
@@ -41,7 +41,7 @@ function [pop_table, chan_table, classify_res] = do_psth_classifier(psth_struct,
             [conf, mutual_info, trial_log, perf] = psth_classifier(chan_struct, unique_events);
             %% Store classification results in table and struct
             a = [{region}, {chan}, perf, mutual_info];
-            chan_table = concat_cell(chan_table, a, chan_headers(:, 1));
+            chan_table = vertcat_cell(chan_table, a, chan_headers(:, 1), "after");
             classify_res.(region).(chan) = struct('confusion_matrix', conf, ...
                 'mutual_info', mutual_info, 'performance', perf, 'trial_log', trial_log);
             %% Update channel counter

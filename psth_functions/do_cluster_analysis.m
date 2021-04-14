@@ -56,7 +56,7 @@ function [cluster_struct, res] = do_cluster_analysis(rec_results, psth_struct, .
                 if ~isempty(cluster_res)
                     cluster_struct.(region).(chan).(event) = chan_clusters;
                     a = [{region}, {chan}, {event}, num2cell(cluster_res)];
-                    res = concat_cell(res, a, headers(:, 1));
+                    res = vertcat_cell(res, a, headers(:, 1), "after");
                 end
             end
         end

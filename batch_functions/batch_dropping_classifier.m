@@ -128,6 +128,6 @@ function [res] = get_chan_vars(component_results)
         reg_vars = component_results.(region).component_variance;
         reg_vars = reg_vars(1:numel(reg_chans));
         a = [repmat({region}, [tot_chans, 1]), reg_chans, num2cell(reg_vars)];
-        res = concat_cell(res, a, headers(:, 1));
+        res = vertcat_cell(res, a, headers(:, 1), "after");
     end
 end

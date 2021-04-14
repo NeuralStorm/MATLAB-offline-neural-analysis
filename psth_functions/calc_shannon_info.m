@@ -49,7 +49,7 @@ function [res] = calc_shannon_info(psth_struct, event_info, bin_size, window_sta
 
                 a = [{region}, {chan}, {event}, entropy_t, entropy_c, mi_t, mi_c];
                 %% Store results in table
-                res = concat_cell(res, a, headers(:, 1));
+                res = vertcat_cell(res, a, headers(:, 1), "after");
             end
             %% Update channel counter
             chan_s = chan_s + tot_bins;

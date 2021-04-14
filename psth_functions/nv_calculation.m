@@ -1,7 +1,7 @@
 function res = nv_calculation(psth_struct, event_info, window_start, window_end, ...
         baseline_start, baseline_end, bin_size, epsilon, norm_var_scaling)
 
-    %% Create population table
+    %% Create normalized variance table
     headers = [["region", "string"]; ["channel", "string"]; ...
             ["event", "string"]; ["bfr_s", "double"]; ...
             ["bfr_var", "double"]; ["fano", "double"]; ["norm_var", "double"]];
@@ -38,7 +38,7 @@ function res = nv_calculation(psth_struct, event_info, window_start, window_end,
 
                 a = [{region}, {chan}, {event}, avg_bfr, bfr_var, norm_var, fano];
                 %% Store results in table
-                res = concat_cell(res, a, headers(:, 1));
+                res = vertcat_cell(res, a, headers(:, 1), "after");
             end
             %% Update channel counter
             chan_s = chan_s + tot_bins;

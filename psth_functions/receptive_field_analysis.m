@@ -102,7 +102,7 @@ function [rec_res] = receptive_field_analysis(psth_struct, event_info, ...
             norm_rm = num2cell(norm_rm ./ max(norm_rm));
             chan_res = [chan_res, tot_sig_events, principal_event, norm_rm];
             %% Store results in table
-            rec_res = concat_cell(rec_res, chan_res, headers(:, 1));
+            rec_res = vertcat_cell(rec_res, chan_res, headers(:, 1), "after");
             %% Update channel counter
             chan_s = chan_s + tot_bins;
             chan_e = chan_e + tot_bins;

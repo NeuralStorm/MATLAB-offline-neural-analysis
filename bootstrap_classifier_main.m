@@ -72,7 +72,7 @@ function [] = bootstrap_classifier_main()
             %%        Classification      %%
             %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
             [dir_save_path, dir_failed_path] = create_dir(classifier_path, curr_dir);
-                batch_classify(project_path, dir_save_path, dir_failed_path, ...
+            batch_classify(project_path, dir_save_path, dir_failed_path, ...
                 dir_psth_path, curr_dir, csv_modifier, dir_config)
         catch ME
             handle_ME(ME, classifier_failed_path, [curr_dir, '_missing_dir.mat']);

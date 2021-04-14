@@ -31,7 +31,7 @@ function [] = batch_power_pca(save_path, failed_path, data_path, dir_name, dir_c
 
             [component_results, ~, pc_log] = calc_pca(label_log, ...
                 mnts_struct, dir_config.feature_filter, ...
-                dir_config.feature_value, dir_config.use_z_mnts);
+                dir_config.feature_value, dir_config.apply_z_score);
 
             %% Add tfr to component_results
             unique_features = unique(label_log.label);

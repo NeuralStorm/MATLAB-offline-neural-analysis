@@ -20,7 +20,7 @@ function [res] = dropping_classifier(psth_struct, event_info, drop_method, ...
         [~, mutual_info, ~, perf] = psth_classifier(event_struct, unique_events);
         %% Classification results with all channels
         a = [{region}, tot_chans, {"none"}, perf, mutual_info];
-        res = concat_cell(res, a, headers(:, 1));
+        res = vertcat_cell(res, a, headers(:, 1), "after");
         %% Get drop order for region
         reg_info = channel_info(strcmpi(channel_info.region, region), :);
         chan_order = get_chan_order(chan_list, drop_method, reg_info);
@@ -46,7 +46,7 @@ function [res] = dropping_classifier(psth_struct, event_info, drop_method, ...
 
             %% Store results
             a = [{region}, tot_chans, {chan}, perf, mutual_info];
-            res = concat_cell(res, a, headers(:, 1));
+            res = vertcat_cell(res, a, headers(:, 1), "after");
         end
     end
 end

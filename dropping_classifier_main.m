@@ -71,7 +71,6 @@ function [] = dropping_classifier_main()
             %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
             %%        Classification      %%
             %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-            % csv_modifier = [csv_modifier, '_component'];
             batch_dropping_classifier(project_path, dir_save_path, dir_failed_path, ...
                 dir_psth_path, curr_dir, csv_modifier, dir_config);
         catch ME
