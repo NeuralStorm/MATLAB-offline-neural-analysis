@@ -1,5 +1,5 @@
 function [label_log, mnts_struct, event_info, band_shifts] = reshape_to_mnts(label_table, power_struct, ...
-        select_features, include_events, use_z_score, smooth_power, span, downsample_pow, ...
+        select_features, include_events, use_z_score, smooth_power, smoothing_direction, span, downsample_pow, ...
         downsample_rate, slice_time, bin_size, window_start, slice_start, slice_end)
 
     %% Purpose: Reshape output from filtering process
@@ -87,8 +87,8 @@ function [label_log, mnts_struct, event_info, band_shifts] = reshape_to_mnts(lab
                 region_channel_i = ismember(power_struct.anat.ROIs, region);
                 %% Grab region power spectrums
                 region_powspctrm = get_powspctrm(power_struct.(bandname), ...
-                    region_channel_i, use_z_score, smooth_power, span, ...
-                    downsample_pow, downsample_rate);
+                    region_channel_i, use_z_score, smooth_power, smoothing_direction, ...
+                    span, downsample_pow, downsample_rate);
                 if slice_time
                     region_powspctrm = region_powspctrm(:, :, slice_i);
                 end
@@ -132,8 +132,8 @@ function [label_log, mnts_struct, event_info, band_shifts] = reshape_to_mnts(lab
                         region_channel_i = ismember(power_struct.anat.ROIs, region);
                         %% Grab power spectrums
                         region_powspctrm = get_powspctrm(power_struct.(bandname), ...
-                            region_channel_i, use_z_score, smooth_power, span, ...
-                            downsample_pow, downsample_rate);
+                            region_channel_i, use_z_score, smooth_power, smoothing_direction, ...
+                            span, downsample_pow, downsample_rate);
 
                         if slice_time
                             region_powspctrm = region_powspctrm(:, :, slice_i);
@@ -162,7 +162,7 @@ function [label_log, mnts_struct, event_info, band_shifts] = reshape_to_mnts(lab
 end
 
 function [results] = get_powspctrm(pow_struct, region_channel_i, use_z_score, ...
-        smooth_power, span, downsample_pow, downsample_rate)
+        smooth_power, smoothing_direction, span, downsample_pow, downsample_rate)
     powspctrm = pow_struct.powspctrm;
     region_powspctrm = powspctrm(:, region_channel_i, :);
     %% Iterate through trials and smooth each trials
@@ -178,7 +178,7 @@ function [results] = get_powspctrm(pow_struct, region_channel_i, use_z_score, ..
             for trial_i = 1:tot_trials
                 %% smooth
                 if smooth_power
-                    trial_response = smooth_down(region_powspctrm(trial_i, unit_i, :), span, downsample_rate, 'leading')
+                    trial_response = smooth_down(region_powspctrm(trial_i, unit_i, :), span, downsample_rate, smoothing_direction);
                 else
                     trial_response = region_powspctrm(trial_i, unit_i, :);
                 end
