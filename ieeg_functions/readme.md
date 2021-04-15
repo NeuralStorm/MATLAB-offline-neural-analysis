@@ -42,36 +42,47 @@ bootstrap_psth_main
 10. format PC score into PSTH format  
 ---End of IEEG PIPELINE---  
 The following is controlled by a psth_bootstrapper_main
-8. Slice out response window and classify
+8. Combine power-region PCs
+9. Slice out response window and classify
 
 ## Classifying
 Classifying is a bit more complicated when it comes to the parameter search. The pipeline is detailed below.
 ### Window Analysis
 1. Organize regions and powers according to config file
-2. downsample and smooth according to span and downsample rate in config
-3. take z-score accoring to use z score in config
-4. Slice out global window defined by window start and window end in config
-5. Format altered power data into MNTS format
-6. PCA on MNTS format
-7. format PC score into PSTH format  
+    * Downsampled to 50ms bin size typically
+3. downsample and smooth according to span and downsample rate in config
+4. take z-score accoring to use z score in config
+    * Z-score taken for each trial separately (ie: we only z-score the time dimension for each channel and trial)
+6. Slice out global window defined by window start and window end in config
+    * Typically either -2s-0s or -1s-0s out of the -3s-2s window given
+8. Format altered power data into MNTS format
+9. PCA on MNTS format
+    * Selection of # of pcs (typically 3)
+11. format PC score into PSTH format  
 ---End of IEEG PIPELINE---  
 The following is controlled by a window main (work in progress)
-8. Loop over different possible response windows
+8. Combine PCs from different pools
+9. Loop over different possible response windows
     * Slice out response window according to values set in loop and classify
 
 ### Bin Analysis (TBD)
 1. Organize regions and powers according to config file
 2. Loop over different possible downsample rates to alter bin size
     * downsample and smooth according to span and downsample rate in config
+    * span and downsample rate vary here to control bin size
 3. take z-score accoring to use z score in config
-4. Slice out global window defined by window start and window end in config
-5. Format altered power data into MNTS format
-6. PCA on MNTS format
-7. format PC score into PSTH format  
+    * Z-score taken for each trial separately (ie: we only z-score the time dimension for each channel and trial)
+5. Slice out global window defined by window start and window end in config
+    * Typically either -2s-0s or -1s-0s out of the -3s-2s window given
+7. Format altered power data into MNTS format
+    * Typically either -2s-0s or -1s-0s out of the -3s-2s window given
+8. PCA on MNTS format
+    * Selection of # of pcs (typically 3)
+10. format PC score into PSTH format  
 ---End of IEEG PIPELINE---  
 The following is controlled by a psth_bootstrapper_main
 8. Combine power-region PCs
-900. Slice out response window and classify
+9. Slice out response window and classify
 
 ### Component Dropping (TBD)
 1. Organize regions and powers according to config file
