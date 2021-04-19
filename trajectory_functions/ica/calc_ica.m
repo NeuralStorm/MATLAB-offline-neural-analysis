@@ -53,17 +53,17 @@ function [ica_results, labeled_ics, ic_log] = calc_ica(label_log, mnts_struct, .
                 'maxsteps', max_steps, 'stop', stop_train, 'rndreset', rnd_reset, 'verbose', verbose);
         end
         coeff = (ica_weights * ica_sphere)'; % Double transpose should properly line up data?
-        weighted_mnts = ica_input' * coeff;
+        mnts = ica_input' * coeff;
 
         %% Set up event struct so that analysis can go through rest of pipeline
-        [~, tot_components] = size(weighted_mnts);
+        [~, tot_components] = size(mnts);
         ic_names = cell(tot_components, 1);
         for component_i = 1:tot_components
             ic_names{component_i} = [region, '_ic_', num2str(component_i)];
         end
         region_table = label_log(1:tot_components, :);
         region_table.sig_channels = ic_names; region_table.user_channels = ic_names;
-        region_table.channel_data = num2cell(weighted_mnts, 1)';
+        region_table.channel_data = num2cell(mnts, 1)';
         labeled_ics.(region) = region_table;
 
         ic_log = [ic_log; region_table];
@@ -76,7 +76,7 @@ function [ica_results, labeled_ics, ic_log] = calc_ica(label_log, mnts_struct, .
         ica_results.(region).signs = signs;
         ica_results.(region).learning_rates = learning_rates;
         ica_results.(region).activations = activations;
-        ica_results.(region).weighted_mnts = weighted_mnts;
+        ica_results.(region).mnts = mnts;
         ica_results.(region).label_order = ic_names;
         ica_results.(region).chan_order = mnts_struct.(region).chan_order;
     end

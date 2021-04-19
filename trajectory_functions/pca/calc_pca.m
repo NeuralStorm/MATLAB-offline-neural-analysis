@@ -43,11 +43,16 @@ function [pca_results, labeled_pcs, pc_log] = calc_pca(label_log, mnts_struct, .
     %                                        coeff: NxN (N = tot features) matrix with coeff weights used to scale mnts into PC space
     %                                                   Columns: Component Row: Feature
     %                                        estimated_mean: Vector with estimated means for each feature
-    %                                        weighted_mnts: mnts mapped into pc space with feature filter applied
+    %                                        mnts: mnts mapped into pc space with feature filter applied
     % labeled_pcs: similar to label_log, but sig_channels is replaced with pc # since channels have been mapped
     % labeled_pcs: Same as labeled_pcs, but with feature filter applied (ex: 3 pcs would only contain 3 pc names)
 
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+    if strcmpi(feature_filter, "percent_var")
+        assert(feature_value <= 1, 'If filtering on percent_var, feature_value must be represented in decimal and not percentage');
+        feature_value = feature_value * 100;
+    end
 
     pca_results = struct;
 
@@ -70,47 +75,28 @@ function [pca_results, labeled_pcs, pc_log] = calc_pca(label_log, mnts_struct, .
         pca_results.(region).coeff = coeff;
         pca_results.(region).estimated_mean = estimated_mean;
 
-        %% Determine what pcs to use
-        %TODO break if 0 pcs found
+        %% Adjust score matrix according to feature filter
         [~, tot_pcs] = size(pca_score);
-        if strcmpi(feature_filter, 'pcs')
+        if strcmpi(feature_filter, 'pcs') && tot_pcs > feature_value
             %% Grabs desired number of principal components from the score
-            if feature_value > tot_pcs
-            else
-                tot_pcs = feature_value;
-                pca_score = pca_score(:, 1:tot_pcs);
-                labeled_pcs = labeled_pcs(1:tot_pcs, :);
-                % if size(labeled_pcs.(region), 1) > tot_pcs
-                %     labeled_pcs.(region) = labeled_pcs.(region)(1:tot_pcs, :);
-                % else
-                %     labeled_pcs.(region) = repmat(labeled_pcs.(region)(1, :), [tot_pcs, 1]);
-                % end
-            end
+            tot_pcs = feature_value;
+            pca_score = pca_score(:, 1:tot_pcs);
+            labeled_pcs = labeled_pcs(1:tot_pcs, :);
         elseif strcmpi(feature_filter, 'eigen')
             %TODO check eigenvalues and recreate pca scores with new weights
             error('Eigen option not implemented yet');
             % subthreshold_i = find(eigenvalues < feature_filter);
             % eigenvalues(subthreshold_i) = [];
-        elseif strcmpi(feature_filter, 'percent_var')
+        elseif strcmpi(feature_filter, 'percent_var') && feature_value < 100
             %% Finds componets needed to explain desired variance
-            if feature_filter < 1
-                %% Feature filtered is percentage because the variance is also a percentage
-                feature_filter = feature_filter * 100;
-            end
-            percent_var = 0;
-            for var_index = 1:length(pc_variance)
-                percent_var = percent_var + pc_variance(var_index);
-                if percent_var > feature_value
-                    tot_pcs = var_index;
-                    break
-                end
-            end
-            %% Recalculate the scores with the new set of coefficients
-            pca_score = (mnts_struct.(region).(mnts_type) - estimated_mean) * coeff(:,1:tot_pcs);
+            var_sum = cumsum(pc_variance);
+            tot_pcs = find(var_sum >= feature_value, 1);
+            %% Grabs components needed
+            pca_score = pca_score(:,1:tot_pcs);
             labeled_pcs = labeled_pcs(1:tot_pcs, :);
         end
         pca_results.(region).chan_order = mnts_struct.(region).chan_order;
-        pca_results.(region).weighted_mnts = pca_score;
+        pca_results.(region).mnts = pca_score;
         [~, tot_components] = size(pca_score);
         pc_names = cell(tot_components, 1);
         for component_i = 1:tot_components

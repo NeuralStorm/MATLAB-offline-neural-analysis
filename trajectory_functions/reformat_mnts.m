@@ -21,7 +21,7 @@ function [psth_struct] = reformat_mnts(label_log, component_results, tot_bins)
     %                                  coeff: NxN (N = tot features) matrix with coeff weights used to scale mnts into PC space
     %                                         Columns: Component Row: Feature
     %                                  estimated_mean: Vector with estimated means for each feature
-    %                                  weighted_mnts: mnts mapped into pc space with feature filter applied
+    %                                  mnts: mnts matrix
     % tot_bins: total bins that unit has within the mnts
     %% Output:
     % psth_struct: struct w/ fields for each feature
@@ -32,7 +32,7 @@ function [psth_struct] = reformat_mnts(label_log, component_results, tot_bins)
     %% Convert weighted mnts into relative response
     for region_index = 1:length(unique_regions)
         region = unique_regions{region_index};
-        region_mnts = component_results.(region).weighted_mnts;
+        region_mnts = component_results.(region).mnts;
         [tot_rows, tot_components] = size(region_mnts);
         tot_trials = tot_rows / tot_bins;
         relative_response = mnts_to_psth(region_mnts, tot_trials, tot_components, tot_bins);
