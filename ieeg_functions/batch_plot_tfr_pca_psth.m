@@ -1,5 +1,5 @@
 function [] = batch_plot_tfr_pca_psth(dir_name, save_path, failed_path, tfr_path, ...
-        pca_data_path, pca_psth_path, dir_config)
+        mnts_data_path, pca_data_path, pca_psth_path, dir_config)
 
     %% Purpose: Go through file list and plot electrode weights onto 3D brain mesh
     %% Input:
@@ -20,7 +20,11 @@ function [] = batch_plot_tfr_pca_psth(dir_name, save_path, failed_path, tfr_path
     pca_file_list = get_file_list(pca_data_path, '.mat');
     pca_file_list = update_file_list(pca_file_list, failed_path, dir_config.include_sessions);
 
-    %% PCA file list
+    %% MNTS file list
+    mnts_file_list = get_file_list(mnts_data_path, '.mat');
+    mnts_file_list = update_file_list(mnts_file_list, failed_path, dir_config.include_sessions);
+
+    %% PSTH file list
     psth_file_list = get_file_list(pca_psth_path, '.mat');
     psth_file_list = update_file_list(psth_file_list, failed_path, dir_config.include_sessions);
 
@@ -44,13 +48,22 @@ function [] = batch_plot_tfr_pca_psth(dir_name, save_path, failed_path, tfr_path
                 error('Missing %s to plot PSTH time course', filename_meta.filename);
             end
 
-            plot_tfr_pca_psth(save_path, tfr_path, tfr_file_list, label_log, ...
+            if any(contains({mnts_file_list.name}, filename_meta.filename))
+                mnts_filename = mnts_file_list(...
+                    contains({mnts_file_list.name}, filename_meta.filename)).name;
+                mnts_file = fullfile(mnts_data_path, mnts_filename);
+                load(mnts_file, 'mnts_struct', 'band_shifts');
+            else
+                error('Missing %s to plot average power', filename_meta.filename);
+            end
+
+            plot_tfr_pca_psth(save_path, tfr_path, tfr_file_list, label_log, mnts_struct, band_shifts, ...
                 component_results, psth_struct, event_info, dir_config.bin_size, ...
                 dir_config.window_start, dir_config.window_end, dir_config.baseline_start, ...
                 dir_config.baseline_end, dir_config.response_start, ...
                 dir_config.response_end, dir_config.feature_filter, ...
                 dir_config.feature_value, dir_config.sub_tfr_rows, ...
-                dir_config.sub_tfr_columns, dir_config.use_z_mnts, dir_config.st_type, ...
+                dir_config.sub_tfr_columns, dir_config.st_type, ...
                 dir_config.ymax_scale, dir_config.transparency, dir_config.font_size, ...
                 dir_config.min_components, dir_config.plot_avg_pow, dir_config.plot_shift_labels);
 

@@ -1,7 +1,7 @@
-function [] = plot_tfr_pca_psth(save_path, tfr_path, tfr_file_list, label_log, ...
+function [] = plot_tfr_pca_psth(save_path, tfr_path, tfr_file_list, label_log, mnts_struct, band_shifts,...
     component_results, psth_struct, event_info, bin_size, window_start, ...
     window_end, baseline_start, baseline_end, response_start, response_end, ...
-    feature_filter, feature_value, sub_rows, sub_cols, use_z, st_type, ymax_scale, ...
+    feature_filter, feature_value, sub_rows, sub_cols, st_type, ymax_scale, ...
     transparency, font_size, min_components, plot_avg_pow, plot_shift_labels)
     %TODO figure(title, 'title string') something like that
 
@@ -27,12 +27,7 @@ function [] = plot_tfr_pca_psth(save_path, tfr_path, tfr_file_list, label_log, .
     %                                  coeff: NxN (N = tot features) matrix with coeff weights used to scale mnts into PC space
     %                                             Columns: Component Row: Feature
     %                                  estimated_mean: Vector with estimated means for each feature
-    %                                  weighted_mnts: mnts mapped into pc space with feature filter applied
-    %                                  tfr: struct with fields for each power
-    %                                       (Note: This was added in the batch_power_pca function and not in the calc_pca call)
-    %                                       bandname: struct with fields for each event type
-    %                                                 event: struct with fields with tfr & z tfr avg, std, ste
-    %                                                        fieldnames: avg_tfr, avg_z_tfr, std_tfr, std_z_tfr, ste_tfr, & ste_z_tfr
+    %                                  mnts: mnts mapped into pc space with feature filter applied
     % psth_struct: struct w/ fields for each region
     %              region: structwith fields:
     %                          relative_response: Numerical matrix with dimensions Trials x ((tot pcs or channels) * tot bins)
@@ -78,13 +73,6 @@ function [] = plot_tfr_pca_psth(save_path, tfr_path, tfr_file_list, label_log, .
 
     event_window = window_start:bin_size:window_end;
     event_window(1) = [];
-
-    if use_z
-        z_type = 'z_';
-    else
-        z_type = '';
-    end
-
     if ~isempty(tfr_file_list(contains({tfr_file_list.name}, 'all')))
         %% Adds "all" event label if tfr exists for all events
         event_labels = repmat({'all'}, [height(event_info), 1]);
@@ -223,23 +211,10 @@ function [] = plot_tfr_pca_psth(save_path, tfr_path, tfr_file_list, label_log, .
 
                 if plot_avg_pow
                     yyaxis right
-                    tfr_struct = component_results.(feature).tfr;
-                    unique_tfrs = fieldnames(tfr_struct);
-                    color_i = 1;
-                    for tfr_i = 1:numel(unique_tfrs)
-                        curr_tfr = unique_tfrs{tfr_i};
-                        avg_tfr = tfr_struct.(curr_tfr).(event).(['avg_', z_type, 'tfr']);
-                        st_tfr = tfr_struct.(curr_tfr).(event).([st_type, '_', z_type, 'tfr']);
-                        [l, ~] = boundedline(event_window, avg_tfr, st_tfr, 'cmap', color_map(color_i, :), ...
-                            'transparency', transparency);
-                        legend_lines = [legend_lines, l];
-                        if color_i < size(color_map, 1)
-                            color_i = color_i + 1;
-                        else
-                            color_i = 1;
-                        end
-                    end
-                    lg = legend(legend_lines, [{'pc'}; unique_tfrs]);
+                    [tfr, st_tfr] = calc_tfr(mnts_struct.(feature).mnts, event_indices, st_type, tot_window_bins);
+                    [l, ~] = boundedline(event_window, tfr, st_tfr, 'transparency', transparency);
+                    legend_lines = [legend_lines, l];
+                    lg = legend(legend_lines, ["pc", "avg power"]);
                     legend('boxoff');
                     lg.Location = 'Best';
                     lg.Orientation = 'Horizontal';
@@ -263,7 +238,7 @@ function [] = plot_tfr_pca_psth(save_path, tfr_path, tfr_file_list, label_log, .
             tot_plots = plot_weights(pca_weights, ymax_scale, color_struct, ...
                 sub_rows, sub_cols, weight_counter, plot_incrememnt, font_size);
 
-            plot_power_shifts(component_results.(feature).band_shift, plot_shift_labels, ...
+            plot_power_shifts(band_shifts.(feature), plot_shift_labels, ...
                 weight_counter, plot_incrememnt, tot_plots, sub_rows, sub_cols, font_size);
             %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
             figure(main_plot);
@@ -284,4 +259,24 @@ function [tfr_filename] = get_tfr_filename(tfr_file_list, curr_freq, sub_reg, ev
         & contains({tfr_file_list.name}, sub_reg) ...
         & contains({tfr_file_list.name}, event);
     tfr_filename = tfr_file_list(tfr_i).name;
+end
+
+function [tfr, st_tfr] = calc_tfr(mnts, event_indices, st_type, tot_bins)
+    [tot_obs, tot_chans] = size(mnts);
+    tot_trials = tot_obs / tot_bins;
+    rr = mnts_to_psth(mnts, tot_trials, tot_chans, tot_bins);
+    rr = rr(event_indices, :);
+    stacked_rr = [];
+    s = 1;
+    e = tot_bins;
+    for i = 1:tot_chans
+        stacked_rr = [stacked_rr; rr(:, s:e)];
+        s = s + tot_bins;
+        e = e + tot_bins;
+    end
+    tfr = calc_psth(stacked_rr);
+    st_tfr = std(stacked_rr, 0, 1);
+    if strcmpi(st_type, 'ste')
+        st_tfr = st_tfr ./ sqrt(tot_trials);
+    end
 end

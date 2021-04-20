@@ -211,7 +211,14 @@ function [] = ieeg_main()
             pca_path = [project_path, '/mnts/pca'];
             psth_path = [project_path, '/pca_psth/data'];
             tfr_path = [project_path, '/tfr_plots'];
+            mnts_path = [project_path, '/mnts/mnts_data'];
             try
+                %% PCA weight path
+                e_msg_1 = 'No data directory to find pre processed mnts';
+                e_msg_2 = ['No ', curr_dir, ' pre processed mnts for graphing'];
+                dir_mnts_path = enforce_dir_layout(mnts_path, curr_dir, ...
+                    graph_failed_path, e_msg_1, e_msg_2);
+
                 %% PCA weight path
                 e_msg_1 = 'No data directory to find PCAs';
                 e_msg_2 = ['No ', curr_dir, ' pca data for graphing'];
@@ -236,7 +243,7 @@ function [] = ieeg_main()
                 %%     Graph TFR/PCA/PSTH     %%
                 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
                 batch_plot_tfr_pca_psth(curr_dir, dir_save_path, dir_failed_path, ...
-                    dir_tfr_path, dir_pca_path, dir_psth_path, dir_config);
+                    dir_tfr_path, dir_mnts_path, dir_pca_path, dir_psth_path, dir_config);
             catch ME
                 handle_ME(ME, graph_failed_path, [curr_dir, '_missing_dir.mat']);
             end
