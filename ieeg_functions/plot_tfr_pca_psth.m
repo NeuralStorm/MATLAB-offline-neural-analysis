@@ -148,6 +148,7 @@ function [] = plot_tfr_pca_psth(save_path, tfr_path, tfr_file_list, label_log, m
                     hold on
                     scrollsubplot(sub_rows, sub_cols, tfr_counter);
                     contourf(xdata, ydata, zdata, 40, 'linecolor','none')
+                    xlim([window_start, window_end])
                     title([curr_freq, ' ', sub_reg, ' ', event], 'FontSize', font_size)
                     ylabel('Frequency (Hz)', 'FontSize', font_size);
                     xlabel('Time(s)', 'FontSize', font_size);
