@@ -82,8 +82,6 @@ function [] = plot_tfr_pca_psth(save_path, tfr_path, tfr_file_list, label_log, m
         event_info = [all_table; event_info];
     end
 
-    freq_list = {'highfreq', 'lowfreq'};
-    tot_tfrs = length(freq_list);
     unique_events = unique(event_info.event_labels);
     unique_features = fieldnames(psth_struct);
 
@@ -116,7 +114,7 @@ function [] = plot_tfr_pca_psth(save_path, tfr_path, tfr_file_list, label_log, m
             description = [feature, ' ' event, 'tot components: ', num2str(tot_components)];
             description = strrep(description, '_', ' ');
             figure(main_plot);
-            ax = scrollsubplot(sub_rows, sub_cols, sub_cols);
+            ax = scrollsubplot(sub_rows, sub_cols, 1);
             pos=get(ax, 'Position');
             annotation('textbox', pos, 'String', description, ...
                 'FitBoxToText','off');
@@ -125,38 +123,46 @@ function [] = plot_tfr_pca_psth(save_path, tfr_path, tfr_file_list, label_log, m
 
             %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
             % Frequency is not an issue since we plot all the frequencies
-            tfr_counter = 1;
+            tfr_counter = 3;
             for sub_reg_i = 1:numel(region_list)
                 sub_reg = region_list{sub_reg_i};
                 if contains(sub_reg, '_')
                     split_reg = strsplit(sub_reg, '_');
                     sub_reg = split_reg{end};
                 end
-                for sub_pow_i = 1:tot_tfrs
-                    curr_freq = freq_list{sub_pow_i};
-                    %% load figure
-                    tfr_filename = get_tfr_filename(tfr_file_list, curr_freq, sub_reg, event);
-                    tfr_file = fullfile(tfr_path, tfr_filename);
-                    tfr_fig = openfig(tfr_file);
-                    tfr_ax = get(gca,'Children');
-                    xdata = get(tfr_ax, 'XData');
-                    xlabel('Time (s)', 'FontSize', font_size);
-                    ydata = get(tfr_ax, 'YData');
-                    ylabel('Frequency', 'FontSize', font_size)
-                    zdata = get(tfr_ax, 'CData');
-                    figure(main_plot);
-                    hold on
-                    scrollsubplot(sub_rows, sub_cols, tfr_counter);
-                    contourf(xdata, ydata, zdata, 40, 'linecolor','none')
-                    xlim([window_start, window_end])
-                    title([curr_freq, ' ', sub_reg, ' ', event], 'FontSize', font_size)
-                    ylabel('Frequency (Hz)', 'FontSize', font_size);
-                    xlabel('Time(s)', 'FontSize', font_size);
-                    % Put color bar on text plot
-                    hold off
-                    tfr_counter = tfr_counter + sub_cols;
-                    close(tfr_fig);
+                %% load figure
+                tfr_filename = get_tfr_filename(tfr_file_list, sub_reg, event);
+                if isempty(tfr_filename)
+                    close all
+                    continue
                 end
+                tfr_file = fullfile(tfr_path, tfr_filename);
+                tfr_fig = openfig(tfr_file);
+                tfr_ax = get(gca,'Children');
+                xdata = get(tfr_ax, 'XData');
+                xlabel('Time (s)', 'FontSize', font_size);
+                ydata = get(tfr_ax, 'YData');
+                ylabel('Frequency', 'FontSize', font_size)
+                zdata = get(tfr_ax, 'CData');
+                figure(main_plot);
+                hold on
+                scrollsubplot(sub_rows, sub_cols, tfr_counter);
+                contourf(xdata, ydata, zdata, 40, 'linecolor','none')
+                %% Fix labels for logspace
+                tot_ticks = numel(get(gca,'YTickLabel')) + 1; % +1 to make additional tick label
+                frex = logspace(log10(1),log10(200),tot_ticks); % 1 and 200 is range of frequency
+                set(gca,'YTickLabel',round(frex(2:end))); % 2:end because 1 is actually the bottom, not the first tick mark
+                xlim([window_start, window_end])
+                title([sub_reg, ' ', event], 'FontSize', font_size)
+                ylabel('Frequency (Hz)', 'FontSize', font_size);
+                xlabel('Time(s)', 'FontSize', font_size);
+                % Put color bar on text plot
+                scrollsubplot(sub_rows, sub_cols, 1);
+                hold on
+                colorbar('south')
+                hold off
+                tfr_counter = tfr_counter + sub_cols;
+                close(tfr_fig);
             end
 
             %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -173,7 +179,7 @@ function [] = plot_tfr_pca_psth(save_path, tfr_path, tfr_file_list, label_log, m
             weight_counter = tfr_counter + 1;
             %% Get event response and separate into units
             event_indices = event_info.event_indices(strcmpi(event_info.event_labels, event));
-            event_matrix = get_event_response(psth_struct.(feature).relative_response, event_indices)
+            event_matrix = get_event_response(psth_struct.(feature).relative_response, event_indices);
             event_psth = calc_psth(event_matrix);
             unit_struct = slice_unit_response(event_matrix, psth_struct.(feature).label_order, tot_window_bins);
 
@@ -255,9 +261,8 @@ function [] = plot_tfr_pca_psth(save_path, tfr_path, tfr_file_list, label_log, m
     end
 end
 
-function [tfr_filename] = get_tfr_filename(tfr_file_list, curr_freq, sub_reg, event)
-    tfr_i = contains({tfr_file_list.name}, curr_freq) ...
-        & contains({tfr_file_list.name}, sub_reg) ...
+function [tfr_filename] = get_tfr_filename(tfr_file_list, sub_reg, event)
+    tfr_i = contains({tfr_file_list.name}, sub_reg) ...
         & contains({tfr_file_list.name}, event);
     tfr_filename = tfr_file_list(tfr_i).name;
 end
