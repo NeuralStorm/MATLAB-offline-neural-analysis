@@ -40,15 +40,13 @@ function [results] = plot_corr(save_path, component_results, label_log, ...
                 255 128 0] ./ 256; % yellow
 
     %% Create color_struct
-    unique_features = label_log.label;
+    unique_features = unique(label_log.label);
     combined_feature_space = unique_features{1};
-    color_log.label = label_log.(combined_feature_space).label;
-    color_log.sig_channels = component_results.(combined_feature_space).chan_order;
+    color_log.label = label_log.label;
+    color_log.sig_channels = label_log.sig_channels;
     for feature_i = 2:numel(unique_features)
         feature = unique_features{feature_i};
         combined_feature_space = [combined_feature_space, '_', feature];
-        color_log.label = [color_log.label; label_log.(feature).label];
-        color_log.sig_channels = [color_log.sig_channels; label_log.(feature).sig_channels];
     end
     [color_struct, ~] = create_color_struct(color_map, combined_feature_space, color_log);
 
