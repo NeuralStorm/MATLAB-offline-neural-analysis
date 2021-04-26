@@ -15,15 +15,12 @@ function [] = batch_format_psth(save_path, failed_path, data_path, dir_name, con
             load(file, 'event_info', 'channel_map', 'filename_meta');
             %% Select channels and label data
             selected_channels = label_data(channel_map, label_table, filename_meta.session_num);
-            %% Check parsed variables to make sure they are not empty
 
             %% Filter events
             event_info = filter_events(event_info, config.include_events, config.trial_range);
 
-            empty_vars = check_variables(file, event_info, selected_channels);
-            if empty_vars
-                continue
-            end
+            assert(~isempty(event_info), "Selected filtered events is empty")
+            assert(~isempty(selected_channels), "No channels have been selected for analysis")
 
             %% Format PSTH
             [psth_struct, event_info] = format_PSTH(event_info, ...
