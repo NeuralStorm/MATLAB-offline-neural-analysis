@@ -1,8 +1,6 @@
-function [] = graph_PSTH(save_path, psth_struct, event_info, bin_size, ...
+function [] = graph_PSTH(save_path, filename, psth_struct, event_info, bin_size, ...
         window_start, window_end, baseline_start, baseline_end, response_start, ...
-        response_end, sub_rows, sub_cols, plot_rf, rf_res)
-
-    %TODO add back in smoothing of psth
+        response_end, sub_rows, sub_cols, plot_rf, rf_res, mixed_smoothing, span)
 
     unique_regions = fieldnames(psth_struct);
     unique_events = unique(event_info.event_labels);
@@ -16,11 +14,10 @@ function [] = graph_PSTH(save_path, psth_struct, event_info, bin_size, ...
     event_window(end) = [];
     tot_bins = numel(event_window);
 
-    for reg_i = 1:length(unique_regions)
+    parfor reg_i = 1:length(unique_regions)
         region = unique_regions{reg_i};
         chan_order = psth_struct.(region).label_order;
         for event_i = 1:tot_events
-            % main_plot = figure('visible', 'off');
             main_plot = figure;
             event = unique_events{event_i};
             event_indices = event_info.event_indices(strcmpi(event_info.event_labels, event), :);
@@ -28,6 +25,13 @@ function [] = graph_PSTH(save_path, psth_struct, event_info, bin_size, ...
             %% Determine y lim of event psth
             event_rr = psth_struct.(region).relative_response(event_indices, :);
             event_psth = calc_psth(event_rr);
+
+            if plot_rf && ~mixed_smoothing && span >= 3
+                % Smooth psth if ploting rf and there was not mixed smoothing
+                % No smoothing occurs if span is less than 3
+                event_psth = smooth(event_psth, span)';
+            end
+
             event_max = 1.1 * max(event_psth) + eps;
             event_min = 1.1 * min(event_psth);
             y_lim = [event_min, event_max];
@@ -39,11 +43,20 @@ function [] = graph_PSTH(save_path, psth_struct, event_info, bin_size, ...
                 chan = chan_order{chan_i};
                 chan_rr = psth_struct.(region).relative_response(event_indices, chan_s:chan_e);
                 psth = calc_psth(chan_rr);
+
+                if plot_rf && ~mixed_smoothing && span >= 3
+                    % Smooth psth if ploting rf and there was not mixed smoothing
+                    % No smoothing occurs if span is less than 3
+                    psth = smooth(psth, span)';
+                end
+
                 hold on
                 scrollsubplot(sub_rows, sub_cols, chan_i)
+                %% plot histogram
                 chan_handle = bar(event_window, psth,'BarWidth', 1);
                 set(chan_handle, 'EdgeAlpha', 0);
                 ylim(y_lim);
+                %% Plot lines to mark windows of interest
                 line([baseline_start baseline_start], ylim, 'Color', 'black', 'LineWidth', 0.75, 'LineStyle', '--');
                 line([baseline_end baseline_end], ylim, 'Color', 'black', 'LineWidth', 0.75, 'LineStyle', '--');
                 line([response_start response_start], ylim, 'Color', 'black', 'LineWidth', 0.75, 'LineStyle', '--');
@@ -60,6 +73,7 @@ function [] = graph_PSTH(save_path, psth_struct, event_info, bin_size, ...
                         & strcmpi(rf_res.event, event) & strcmpi(rf_res.channel, chan));
                     lbl = rf_res.last_latency(strcmpi(rf_res.region, region) ...
                         & strcmpi(rf_res.event, event) & strcmpi(rf_res.channel, chan));
+                    %% Plot measures over chan psth
                     plot_recfield(main_plot, event_window, psth, fbl, lbl, threshold, bin_size, window_start)
                 end
                 hold off
@@ -67,10 +81,11 @@ function [] = graph_PSTH(save_path, psth_struct, event_info, bin_size, ...
                 chan_s = chan_s + tot_bins;
                 chan_e = chan_e + tot_bins;
             end
-            %TODO add recording session to filename
-            filename = [region, '_', event, '.fig'];
+            %% Save figure
+            fig_filename = [filename, '_', region, '_', event, '.fig'];
             set(gcf, 'CreateFcn', 'set(gcbo,''Visible'',''on'')'); 
-            savefig(gcf, fullfile(save_path, filename));
+            savefig(gcf, fullfile(save_path, fig_filename));
+            close gcf
         end
     end
 end
