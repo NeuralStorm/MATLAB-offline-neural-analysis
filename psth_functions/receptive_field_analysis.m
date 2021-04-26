@@ -20,6 +20,7 @@ function [rec_res] = receptive_field_analysis(psth_struct, event_info, ...
                    ["norm_response_magnitude", "double"]];
     rec_res = prealloc_table(headers, [0, size(headers, 1)]);
 
+    assert(span > 0, "Cannot smooth if span is not set to 1 or greater")
     if mixed_smoothing
         assert(span >= 3, ...
             'span >= 3 if mixed smoothing is true. Span < 3 does not smooth.')

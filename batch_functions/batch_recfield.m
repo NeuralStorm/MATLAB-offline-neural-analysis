@@ -1,6 +1,5 @@
 function [] = batch_recfield(project_path, save_path, failed_path, data_path, dir_name, filename_substring_one, config)
     %TODO add recording notes to csv
-    %TODO add in normalized variance
     rf_start = tic;
     config_log = config;
     file_list = get_file_list(data_path, '.mat');
