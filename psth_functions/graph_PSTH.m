@@ -1,18 +1,27 @@
 function [] = graph_PSTH(save_path, psth_struct, event_info, bin_size, ...
         window_start, window_end, baseline_start, baseline_end, response_start, ...
-        response_end, sub_rows, sub_cols)
+        response_end, sub_rows, sub_cols, plot_rf, rf_res)
+
+    %TODO add back in smoothing of psth
 
     unique_regions = fieldnames(psth_struct);
     unique_events = unique(event_info.event_labels);
     tot_events = numel(unique_events);
-    [event_window, tot_bins] = get_bins(window_start, window_end, bin_size);
-    event_window(1) = [];
 
-    parfor reg_i = 1:length(unique_regions)
+    %% Offsetting start and end by half a bin so that edges on histogram are plotted accurately
+    edge_s = window_start - (bin_size/2);
+    edge_e = window_end + (bin_size/2);
+    [event_window, ~] = get_bins(edge_s, edge_e, bin_size);
+    event_window(1) = [];
+    event_window(end) = [];
+    tot_bins = numel(event_window);
+
+    for reg_i = 1:length(unique_regions)
         region = unique_regions{reg_i};
         chan_order = psth_struct.(region).label_order;
         for event_i = 1:tot_events
-            main_plot = figure('visible', 'off');
+            % main_plot = figure('visible', 'off');
+            main_plot = figure;
             event = unique_events{event_i};
             event_indices = event_info.event_indices(strcmpi(event_info.event_labels, event), :);
 
@@ -31,7 +40,6 @@ function [] = graph_PSTH(save_path, psth_struct, event_info, bin_size, ...
                 chan_rr = psth_struct.(region).relative_response(event_indices, chan_s:chan_e);
                 psth = calc_psth(chan_rr);
                 hold on
-                %TODO figure out
                 scrollsubplot(sub_rows, sub_cols, chan_i)
                 chan_handle = bar(event_window, psth,'BarWidth', 1);
                 set(chan_handle, 'EdgeAlpha', 0);
@@ -44,6 +52,16 @@ function [] = graph_PSTH(save_path, psth_struct, event_info, bin_size, ...
                 xlabel('Time');
                 ylabel('Magnitude');
                 title(chan);
+                if plot_rf
+                    %% Get rf measures for region, event, and channel
+                    threshold = rf_res.threshold(strcmpi(rf_res.region, region) ...
+                        & strcmpi(rf_res.event, event) & strcmpi(rf_res.channel, chan));
+                    fbl = rf_res.first_latency(strcmpi(rf_res.region, region) ...
+                        & strcmpi(rf_res.event, event) & strcmpi(rf_res.channel, chan));
+                    lbl = rf_res.last_latency(strcmpi(rf_res.region, region) ...
+                        & strcmpi(rf_res.event, event) & strcmpi(rf_res.channel, chan));
+                    plot_recfield(main_plot, event_window, psth, fbl, lbl, threshold, bin_size, window_start)
+                end
                 hold off
                 %% Update chan counter
                 chan_s = chan_s + tot_bins;
