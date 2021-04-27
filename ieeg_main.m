@@ -182,26 +182,34 @@ function [] = ieeg_main()
             end
         end
 
-        e_msg_1 = 'No data directory to find PCA MNTSs';
+        e_msg_1 = 'No data directory to find MNTSs';
         if dir_config.convert_mnts_psth
-            [pca_psth_path, pca_psth_failed_path] = create_dir(project_path, 'pca_psth');
-            export_params(pca_psth_path, 'pca_psth', config);
+            mnts_path = [project_path, '/mnts'];
+            if dir_config.use_mnts
+                [psth_path, psth_failed_path] = create_dir(project_path, 'psth');
+                export_params(psth_path, 'psth', config);
+                file_modifier = 'psth';
+                data_path = [mnts_path, '/mnts_data'];
+            else
+                [psth_path, psth_failed_path] = create_dir(project_path, 'pca_psth');
+                export_params(psth_path, 'pca_psth', config);
+                file_modifier = 'pca';
+                data_path = [mnts_path, '/pca'];
+            end
             try
-                mnts_path = [project_path, '/mnts'];
                 %% Check to make sure paths exist for analysis and create save path
-                e_msg_2 = ['No ', curr_dir, ' pca mnts data to convert to mnts'];
-                pca_path = [mnts_path, '/pca'];
-                dir_pca_path = enforce_dir_layout(pca_path, curr_dir, pca_psth_failed_path, e_msg_1, e_msg_2);
-                [pca_data_path, ~] = create_dir(pca_psth_path, 'data');
-                [dir_save_path, dir_failed_path] = create_dir(pca_data_path, curr_dir);
+                e_msg_2 = ['No ', curr_dir, ' mnts data to convert to mnts'];
+                dir_mnts_path = enforce_dir_layout(data_path, curr_dir, psth_failed_path, e_msg_1, e_msg_2);
+                [psth_data_path, ~] = create_dir(psth_path, 'data');
+                [dir_save_path, dir_failed_path] = create_dir(psth_data_path, curr_dir);
 
                 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
                 %          PCA PSTH          %%
                 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-                batch_mnts_to_psth(dir_save_path, dir_failed_path, dir_pca_path, ...
-                    curr_dir, 'pca', dir_config)
+                batch_mnts_to_psth(dir_save_path, dir_failed_path, dir_mnts_path, ...
+                    curr_dir, file_modifier, dir_config)
             catch ME
-                handle_ME(ME, pca_psth_failed_path, [curr_dir, '_missing_dir.mat']);
+                handle_ME(ME, psth_failed_path, [curr_dir, '_missing_dir.mat']);
             end
         end
 

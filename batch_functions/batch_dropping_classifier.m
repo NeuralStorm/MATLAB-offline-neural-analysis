@@ -20,8 +20,7 @@ function [] = batch_dropping_classifier(project_path, save_path, failed_path, ..
         'optional_info', 'date', 'record_session', 'bin_size', 'window_start', ...
         'response_start', 'response_end', 'window_end', ...
         'drop_method', 'include_events'};
-    ignore_headers = {'performance', 'mutual_info', 'tot_chans', ...
-        'include_events', 'user_channels'};
+    ignore_headers = {'include_events', 'user_channels'};
 
     fprintf('PSTH classification for %s \n', dir_name);
 

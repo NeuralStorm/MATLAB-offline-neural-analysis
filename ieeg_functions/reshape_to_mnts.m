@@ -95,8 +95,9 @@ function [label_log, mnts_struct, event_info, band_shifts] = reshape_to_mnts(lab
                 mnts = create_mnts(region_powspctrm);
                 feature = [bandname, '_', region];
                 mnts_struct.(feature).mnts = mnts;
-                mnts_struct.(feature).label_order = power_struct.anat.channels(region_channel_i);
-                mnts_struct.(feature).chan_order = power_struct.anat.channels(region_channel_i);
+                chan_list = append_feature(power_struct.anat.channels(region_channel_i), feature);
+                mnts_struct.(feature).label_order = chan_list;
+                mnts_struct.(feature).chan_order = chan_list;
                 band_shifts.(feature) = [];
                 label_log = append_labels(feature, region, label_table, label_log);
             end
@@ -143,8 +144,9 @@ function [label_log, mnts_struct, event_info, band_shifts] = reshape_to_mnts(lab
                         mnts_struct.(feature).mnts = [mnts_struct.(feature).mnts, region_mnts];
 
                         %% label log
-                        mnts_struct.(feature).label_order = [mnts_struct.(feature).label_order; power_struct.anat.channels(region_channel_i)];
-                        mnts_struct.(feature).chan_order = [mnts_struct.(feature).chan_order; power_struct.anat.channels(region_channel_i)];
+                        chan_list = append_feature(power_struct.anat.channels(region_channel_i), feature);
+                        mnts_struct.(feature).label_order = [mnts_struct.(feature).label_order; chan_list];
+                        mnts_struct.(feature).chan_order = [mnts_struct.(feature).chan_order; chan_list];
                         label_log = append_labels(feature, region, label_table, label_log);
                     end
                     band_shifts.(feature) = [band_shifts.(feature); {numel(mnts_struct.(feature).chan_order)}];
@@ -213,4 +215,12 @@ function [label_log] = append_labels(feature, region, label_table, label_log)
     region_table = label_table(ismember(label_table.label, region), :);
     region_table.label = repmat({feature}, [height(region_table), 1]);
     label_log = [label_log; region_table];
+end
+
+function [chan_order] = append_feature(chan_order, feature)
+    for chan_i = 1:numel(chan_order)
+        chan = chan_order{chan_i};
+        new_chan = [feature, '_', chan];
+        chan_order{chan_i} = new_chan;
+    end
 end
