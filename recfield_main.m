@@ -60,23 +60,21 @@ function [] = recfield_main()
         end
 
         e_msg_1 = 'No data directory to find PSTHs';
-        if config.rf_analysis
-            [recfield_path, recfield_failed_path] = create_dir(psth_path, 'recfield');
-            export_params(recfield_path, 'rec_field', config);
-            try
-                %% Check to make sure paths exist for analysis and create save path
-                e_msg_2 = ['No ', curr_dir, ' psth data for receptive field analysis'];
-                dir_psth_path = enforce_dir_layout(data_path, curr_dir, recfield_failed_path, e_msg_1, e_msg_2);
-                [dir_save_path, dir_failed_path] = create_dir(recfield_path, curr_dir);
+        [recfield_path, recfield_failed_path] = create_dir(psth_path, 'recfield');
+        export_params(recfield_path, 'rec_field', config);
+        try
+            %% Check to make sure paths exist for analysis and create save path
+            e_msg_2 = ['No ', curr_dir, ' psth data for receptive field analysis'];
+            dir_psth_path = enforce_dir_layout(data_path, curr_dir, recfield_failed_path, e_msg_1, e_msg_2);
+            [dir_save_path, dir_failed_path] = create_dir(recfield_path, curr_dir);
 
-                %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-                %%  Receptive Field Analysis  %%
-                %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-                batch_recfield(project_path, dir_save_path, dir_failed_path, ...
-                    dir_psth_path, curr_dir, csv_modifier, dir_config);
-            catch ME
-                handle_ME(ME, recfield_failed_path, [curr_dir, '_missing_dir.mat']);
-            end
+            %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+            %%  Receptive Field Analysis  %%
+            %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+            batch_recfield(project_path, dir_save_path, dir_failed_path, ...
+                dir_psth_path, curr_dir, csv_modifier, dir_config);
+        catch ME
+            handle_ME(ME, recfield_failed_path, [curr_dir, '_missing_dir.mat']);
         end
 
         if config.make_psth_graphs

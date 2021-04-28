@@ -2,7 +2,7 @@ function [] = plot_tfr_pca_psth(save_path, tfr_path, tfr_file_list, label_log, m
     component_results, psth_struct, event_info, bin_size, window_start, ...
     window_end, baseline_start, baseline_end, response_start, response_end, ...
     feature_filter, feature_value, sub_rows, sub_cols, st_type, ymax_scale, ...
-    transparency, font_size, min_components, plot_avg_pow, plot_shift_labels)
+    transparency, font_size, min_chans, plot_avg_pow, plot_shift_labels)
     %TODO figure(title, 'title string') something like that
 
     %% Purpose: Create subplot with tfrs, percent variance, pc time courses, and electrode
@@ -20,14 +20,14 @@ function [] = plot_tfr_pca_psth(save_path, tfr_path, tfr_file_list, label_log, m
     %                   'label_id': Int: unique id used for labels
     %                   'recording_session': Int: File recording session number that above applies to
     %                   'recording_notes': String with user defined notes for channel
-    % component_results: struct w/ fields for each feature set ran through PCA
+    % component_results: struct w/ fields for each region set ran through PCA
     %                    feature_name: struct with fields
     %                                  componenent_variance: Vector with % variance explained by each component
     %                                  eigenvalues: Vector with eigen values
     %                                  coeff: NxN (N = tot features) matrix with coeff weights used to scale mnts into PC space
     %                                             Columns: Component Row: Feature
-    %                                  estimated_mean: Vector with estimated means for each feature
-    %                                  mnts: mnts mapped into pc space with feature filter applied
+    %                                  estimated_mean: Vector with estimated means for each region
+    %                                  mnts: mnts mapped into pc space with region filter applied
     % psth_struct: struct w/ fields for each region
     %              region: structwith fields:
     %                          relative_response: Numerical matrix with dimensions Trials x ((tot pcs or channels) * tot bins)
@@ -56,7 +56,7 @@ function [] = plot_tfr_pca_psth(save_path, tfr_path, tfr_file_list, label_log, m
     % st_type: String: 'std' to use std or 'ste' to use ste for shading
     % ymax_scale: Float: how much to scale y max to give room for words
     % transparency: Float: how dark should the shading be for st_type
-    % min_components: Int: min componenets needed to make subplot
+    % min_chans: Int: min componenets needed to make subplot
     % plot_avg_pow: Boolean
     %               0: Does not plot avg power time course
     %               1: Plot avg power time course
@@ -83,17 +83,17 @@ function [] = plot_tfr_pca_psth(save_path, tfr_path, tfr_file_list, label_log, m
     end
 
     unique_events = unique(event_info.event_labels);
-    unique_features = fieldnames(psth_struct);
+    unique_regions = fieldnames(psth_struct);
 
-    parfor feature_i = 1:length(unique_features)
-        feature = unique_features{feature_i};
+    parfor reg_i = 1:length(unique_regions)
+        region = unique_regions{reg_i};
         st_vec = [];
 
-        feature_log = label_log(strcmpi(label_log.label, feature), :);
+        region_log = label_log(strcmpi(label_log.label, region), :);
         [color_struct, region_list] = create_color_struct(color_map, ...
-            feature, feature_log);
-        feature_units = psth_struct.(feature).label_order;
-        tot_feature_units = numel(feature_units);
+            region, region_log);
+        chan_order = psth_struct.(region).label_order;
+        tot_reg_chans = numel(chan_order);
         for event_i = 1:numel(unique_events)
             event = unique_events{event_i};
             %% Skip events without TFRs
@@ -103,15 +103,15 @@ function [] = plot_tfr_pca_psth(save_path, tfr_path, tfr_file_list, label_log, m
             main_plot = figure;
             set(gca,'DefaultTextFontSize', 1)
             %TODO add more info to title plot
-            component_var = component_results.(feature).component_variance;
-            tot_components = length(component_var);
-            if tot_components < min_components
+            component_var = component_results.(region).component_variance;
+            tot_chans = length(component_var);
+            if tot_chans < min_chans
                 continue
             end
             %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
             %% Text plot
             % Position: 1st row, last column
-            description = [feature, ' ' event, 'tot components: ', num2str(tot_components)];
+            description = [region, ' event: ' event, ' tot components: ', num2str(tot_chans)];
             description = strrep(description, '_', ' ');
             figure(main_plot);
             ax = scrollsubplot(sub_rows, sub_cols, 1);
@@ -153,7 +153,7 @@ function [] = plot_tfr_pca_psth(save_path, tfr_path, tfr_file_list, label_log, m
                 frex = logspace(log10(1),log10(200),tot_ticks); % 1 and 200 is range of frequency
                 set(gca,'YTickLabel',round(frex(2:end))); % 2:end because 1 is actually the bottom, not the first tick mark
                 xlim([window_start, window_end])
-                title([sub_reg, ' ', event], 'FontSize', font_size)
+                title([sub_reg, ' event: ', event], 'FontSize', font_size)
                 ylabel('Frequency (Hz)', 'FontSize', font_size);
                 xlabel('Time(s)', 'FontSize', font_size);
                 % Put color bar on text plot
@@ -170,18 +170,31 @@ function [] = plot_tfr_pca_psth(save_path, tfr_path, tfr_file_list, label_log, m
             % Position: 2nd row, last column
             scrollsubplot(sub_rows, sub_cols, (tfr_counter - 1));
             bar(component_var, 'EdgeColor', 'none');
-            xlabel('PC #', 'FontSize', font_size);
+            % xlabel('PC #', 'FontSize', font_size);
             ylabel('% Variance', 'FontSize', font_size);
             title('Percent Variance Explained', 'FontSize', font_size)
+            %% Plot cumulative sum over % variance barplot
+            % hold on
+            % yyaxis right
+            % plot(cumsum(component_var));
+            % hold off
+            %% Plot cumulative sum above variance plot
+            scrollsubplot(sub_rows, sub_cols, sub_cols);
+            ylabel('Cumsum % Var', 'FontSize', font_size)
+            yyaxis right
+            plot(cumsum(component_var));
+            % title('Cumulative Sum', 'FontSize', font_size)
+            set(gca,'XAxisLocation','top');
+            xlabel('PC #', 'FontSize', font_size);
             %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
             %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
             weight_counter = tfr_counter + 1;
             %% Get event response and separate into units
             event_indices = event_info.event_indices(strcmpi(event_info.event_labels, event));
-            event_matrix = get_event_response(psth_struct.(feature).relative_response, event_indices);
+            event_matrix = get_event_response(psth_struct.(region).relative_response, event_indices);
             event_psth = calc_psth(event_matrix);
-            unit_struct = slice_unit_response(event_matrix, psth_struct.(feature).label_order, tot_window_bins);
+            unit_struct = slice_unit_response(event_matrix, psth_struct.(region).label_order, tot_window_bins);
 
             %% Set event min and max for plotting
             event_max = 1.1 * max(event_psth) + eps;
@@ -192,8 +205,8 @@ function [] = plot_tfr_pca_psth(save_path, tfr_path, tfr_file_list, label_log, m
             end
 
             %% Creating the PSTH graphs
-            for comp_i = 1:tot_feature_units
-                psth_name = feature_units{comp_i};
+            for chan_i = 1:tot_reg_chans
+                psth_name = chan_order{chan_i};
                 psth = unit_struct.(psth_name).psth;
                 relative_response = unit_struct.(psth_name).relative_response;
                 if strcmpi(st_type, 'std')
@@ -218,7 +231,7 @@ function [] = plot_tfr_pca_psth(save_path, tfr_path, tfr_file_list, label_log, m
 
                 if plot_avg_pow
                     yyaxis right
-                    [tfr, st_tfr] = calc_tfr(mnts_struct.(feature).mnts, event_indices, st_type, tot_window_bins);
+                    [tfr, st_tfr] = calc_tfr(mnts_struct.(region).mnts, event_indices, st_type, tot_window_bins);
                     [l, ~] = boundedline(event_window, tfr, st_tfr, 'transparency', transparency);
                     legend_lines = [legend_lines, l];
                     lg = legend(legend_lines, ["pc", "avg power"]);
@@ -227,7 +240,7 @@ function [] = plot_tfr_pca_psth(save_path, tfr_path, tfr_file_list, label_log, m
                     lg.Orientation = 'Horizontal';
                     ylabel('Avg. Pow', 'FontSize', font_size);
                 end
-                title(psth_name, 'FontSize', font_size);
+                title(strrep(psth_name, '_', ' '), 'FontSize', font_size);
                 xlabel('Time (s)', 'FontSize', font_size);
                 xlim([round(window_start) round(window_end)]);
                 hold off
@@ -236,24 +249,24 @@ function [] = plot_tfr_pca_psth(save_path, tfr_path, tfr_file_list, label_log, m
             %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
             %% Plot PCA weights
             plot_incrememnt = sub_cols;
-            pca_weights = component_results.(feature).coeff;
-            [~, tot_components] = size(pca_weights);
-            if strcmpi(feature_filter, 'pcs') && feature_value < tot_components
+            pca_weights = component_results.(region).coeff;
+            [~, tot_chans] = size(pca_weights);
+            if strcmpi(feature_filter, 'pcs') && feature_value < tot_chans
                 %% Grabs desired number of principal components weights
                 pca_weights = pca_weights(:, 1:feature_value);
             end
             tot_plots = plot_weights(pca_weights, ymax_scale, color_struct, ...
                 sub_rows, sub_cols, weight_counter, plot_incrememnt, font_size);
 
-            plot_power_shifts(band_shifts.(feature), plot_shift_labels, ...
+            plot_power_shifts(band_shifts.(region), plot_shift_labels, ...
                 weight_counter, plot_incrememnt, tot_plots, sub_rows, sub_cols, font_size);
             %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
             figure(main_plot);
             try
-                filename = [feature, '_', event, '.png'];
+                filename = [region, '_', event, '.png'];
                 saveas(gcf, fullfile(save_path, filename));
             end
-            filename = [feature, '_', event, '.fig'];
+            filename = [region, '_', event, '.fig'];
             set(gcf, 'CreateFcn', 'set(gcbo,''Visible'',''on'')'); 
             savefig(gcf, fullfile(save_path, filename));
             close all

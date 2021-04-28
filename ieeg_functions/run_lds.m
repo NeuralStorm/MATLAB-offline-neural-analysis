@@ -4,8 +4,8 @@ function [net, results] = run_lds(pca_struct, event_info, tot_bins, latent_varia
     unique_features = fieldnames(pca_struct);
     for feature_i = 1:numel(unique_features)
         feature = unique_features{feature_i};
-        weighted_mnts = pca_struct.(feature).weighted_mnts;
-        lds_input = [lds_input, weighted_mnts];
+        mnts = pca_struct.(feature).mnts;
+        lds_input = [lds_input, mnts];
     end
 
     results = struct;
