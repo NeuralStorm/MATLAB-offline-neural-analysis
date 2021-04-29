@@ -1,7 +1,7 @@
-function [] = mnts_main()
+function [] = mnts_main(varargin)
 
     %% Get data directory
-    project_path = uigetdir(pwd);
+    project_path = get_project_path(varargin);
     start_time = tic;
 
     %% Import psth config and removes ignored animals

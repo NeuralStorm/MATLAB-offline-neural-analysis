@@ -1,4 +1,4 @@
-function [] = ieeg_main()
+function [] = ieeg_main(varargin)
 
     %% Purpose: Run through batch analysis for subjects
     % Current analysis flow:
@@ -74,7 +74,7 @@ function [] = ieeg_main()
     %          num_pools: Int: Ideal number of pools to run parallel process
 
     %% Get data directory
-    project_path = uigetdir(pwd);
+    project_path = get_project_path(varargin);
     start_time = tic;
 
     %% Import psth config and removes ignored animals

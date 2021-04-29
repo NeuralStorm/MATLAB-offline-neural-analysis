@@ -1,6 +1,6 @@
-function [] = parser_main()
+function [] = parser_main(varargin)
     %% Get project directory and check for raw directory
-    project_path = uigetdir(pwd);
+    project_path = get_project_path(varargin);
     start_time = tic;
     raw_path = [project_path, '/raw'];
     if ~exist(raw_path, 'dir')
