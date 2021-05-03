@@ -48,6 +48,6 @@ function [mnts_struct, event_info, selected_channels] = format_mnts(...
         end
         %% Store mnts
         mnts_struct.(region).mnts = mnts;
-        mnts_struct.(region).chan_order = region_channels.sig_channels;
+        mnts_struct.(region).orig_chan_order = region_channels.sig_channels;
     end
 end

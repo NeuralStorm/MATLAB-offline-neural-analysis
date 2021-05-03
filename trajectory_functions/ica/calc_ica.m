@@ -78,6 +78,6 @@ function [ica_results, labeled_ics, ic_log] = calc_ica(label_log, mnts_struct, .
         ica_results.(region).activations = activations;
         ica_results.(region).mnts = mnts;
         ica_results.(region).label_order = ic_names;
-        ica_results.(region).chan_order = mnts_struct.(region).chan_order;
+        ica_results.(region).orig_chan_order = mnts_struct.(region).orig_chan_order;
     end
 end

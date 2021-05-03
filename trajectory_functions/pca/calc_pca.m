@@ -95,7 +95,7 @@ function [pca_results, labeled_pcs, pc_log] = calc_pca(label_log, mnts_struct, .
             pca_score = pca_score(:,1:tot_pcs);
             labeled_pcs = labeled_pcs(1:tot_pcs, :);
         end
-        pca_results.(region).chan_order = mnts_struct.(region).chan_order;
+        pca_results.(region).orig_chan_order = mnts_struct.(region).orig_chan_order;
         pca_results.(region).mnts = pca_score;
         [~, tot_components] = size(pca_score);
         pc_names = cell(tot_components, 1);

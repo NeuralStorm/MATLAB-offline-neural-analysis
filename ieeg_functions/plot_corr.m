@@ -12,7 +12,7 @@ function [results] = plot_corr(save_path, component_results, label_log, ...
     %                    feature_name: struct with fields
     %                                  coeff: NxN (N = tot features) matrix with coeff weights used to scale mnts into PC space
     %                                             Columns: Component Row: Feature
-    %                                  chan_order: C x 1 cell array, C = tot channels. Order of electrodes fed into PCA
+    %                                  orig_chan_order: C x 1 cell array, C = tot channels. Order of electrodes fed into PCA
     % label_log: table with columns (relevant columns shown only)
     %            'sig_channels': String with name of channel
     %            'label': String: associated region or grouping of electrodes
@@ -61,7 +61,8 @@ function [results] = plot_corr(save_path, component_results, label_log, ...
         for space_one_i = 1:(numel(unique_features) - 1)
             %% Take electrodes from first feature space
             space_one = unique_features{space_one_i};
-            first_elec_set = component_results.(space_one).chan_order;
+            first_elec_set = component_results.(space_one).orig_chan_order;
+            first_elec_set = erase(first_elec_set, [space_one, '_']);
             first_weights = component_results.(space_one).coeff;
             [~, first_components] = size(first_weights);
             if first_components < min_components || first_components < comp_i
@@ -76,7 +77,8 @@ function [results] = plot_corr(save_path, component_results, label_log, ...
             for space_two_i = 1:numel(remaining_spaces)
                 %% Compare first feature space to remaining feature spaces via intersection of electrodes
                 space_two = remaining_spaces{space_two_i};
-                second_elec_set = component_results.(space_two).chan_order;
+                second_elec_set = component_results.(space_two).orig_chan_order;
+                second_elec_set = erase(second_elec_set, [space_two, '_']);
                 second_weights = component_results.(space_two).coeff;
                 [~, second_components] = size(second_weights);
                 if second_components < min_components || second_components < comp_i

@@ -22,7 +22,7 @@ function [] = plot_brain_weights(save_path, dir_name, mesh_struct, elec_struct, 
     %                    feature_name: struct with fields
     %                                  coeff: NxN (N = tot features) matrix with coeff weights used to scale mnts into PC space
     %                                             Columns: Component Row: Feature
-    %                                  chan_order: order of electrodes in feature space
+    %                                  orig_chan_order: order of electrodes in feature space
     % label_log: table with channel and region info --> only used to get unique feature spaces for loop
     % min_components: Int: min componenets needed to make subplot
     % feature_filter: String with description for pcs
@@ -58,6 +58,8 @@ function [] = plot_brain_weights(save_path, dir_name, mesh_struct, elec_struct, 
     unique_spaces = label_log.label;
     parfor space_i = 1:numel(unique_spaces)
         curr_space = unique_spaces{space_i};
+        chan_order = component_results.(curr_space).orig_chan_order;
+        chan_order = erase(chan_order, [curr_space, '_']);
 
         coeff = component_results.(curr_space).coeff;
         %% Skip components with not enough features
@@ -72,7 +74,7 @@ function [] = plot_brain_weights(save_path, dir_name, mesh_struct, elec_struct, 
         for comp_i = 1:tot_components
             comp_coeff = coeff(:, comp_i);
             % Find electrode coordinates present in feature space
-            [~, elec_cord_i] = ismember(component_results.(curr_space).chan_order, elec_struct.label);
+            [~, elec_cord_i] = ismember(chan_order, elec_struct.label);
             elec_pos = elec_struct.chanpos(elec_cord_i,:);
 
             %% Assign colors to color map

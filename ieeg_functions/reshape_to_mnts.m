@@ -97,7 +97,7 @@ function [label_log, mnts_struct, event_info, band_shifts] = reshape_to_mnts(lab
                 mnts_struct.(feature).mnts = mnts;
                 chan_list = append_feature(power_struct.anat.channels(region_channel_i), feature);
                 mnts_struct.(feature).label_order = chan_list;
-                mnts_struct.(feature).chan_order = chan_list;
+                mnts_struct.(feature).orig_chan_order = chan_list;
                 band_shifts.(feature) = [];
                 label_log = append_labels(feature, region, label_table, label_log);
             end
@@ -113,7 +113,7 @@ function [label_log, mnts_struct, event_info, band_shifts] = reshape_to_mnts(lab
             %% set feature variables
             feature = replace(feature, {':', '+', ','}, '_');
             mnts_struct.(feature).mnts = [];
-            mnts_struct.(feature).chan_order = [];
+            mnts_struct.(feature).orig_chan_order = [];
             mnts_struct.(feature).label_order = [];
             band_shifts.(feature) = [];
             for sub_feature_i = 1:numel(sub_feature)
@@ -146,10 +146,10 @@ function [label_log, mnts_struct, event_info, band_shifts] = reshape_to_mnts(lab
                         %% label log
                         chan_list = append_feature(power_struct.anat.channels(region_channel_i), feature);
                         mnts_struct.(feature).label_order = [mnts_struct.(feature).label_order; chan_list];
-                        mnts_struct.(feature).chan_order = [mnts_struct.(feature).chan_order; chan_list];
+                        mnts_struct.(feature).orig_chan_order = [mnts_struct.(feature).orig_chan_order; chan_list];
                         label_log = append_labels(feature, region, label_table, label_log);
                     end
-                    band_shifts.(feature) = [band_shifts.(feature); {numel(mnts_struct.(feature).chan_order)}];
+                    band_shifts.(feature) = [band_shifts.(feature); {numel(mnts_struct.(feature).orig_chan_order)}];
                 end
             end
             if numel(band_shifts.(feature)) <= 1
