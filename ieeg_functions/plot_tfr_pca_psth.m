@@ -89,9 +89,8 @@ function [] = plot_tfr_pca_psth(save_path, tfr_path, tfr_file_list, label_log, m
         region = unique_regions{reg_i};
         st_vec = [];
 
-        region_log = label_log(strcmpi(label_log.label, region), :);
-        [color_struct, region_list] = create_color_struct(color_map, ...
-            region, region_log);
+        region_log = label_log(strcmpi(label_log.chan_group, region), :);
+        [color_struct, region_list] = create_color_struct(color_map, region_log);
         chan_order = psth_struct.(region).chan_order;
         tot_reg_chans = numel(chan_order);
         for event_i = 1:numel(unique_events)

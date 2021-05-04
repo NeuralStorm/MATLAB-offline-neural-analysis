@@ -55,7 +55,7 @@ function [] = plot_brain_weights(save_path, dir_name, mesh_struct, elec_struct, 
         end
     end
 
-    unique_spaces = label_log.label;
+    unique_spaces = unique(label_log.chan_group);
     parfor space_i = 1:numel(unique_spaces)
         curr_space = unique_spaces{space_i};
         chan_order = component_results.(curr_space).orig_chan_order;

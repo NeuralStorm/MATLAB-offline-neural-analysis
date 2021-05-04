@@ -39,8 +39,8 @@ function [] = batch_create_labels(data_path, failed_path, labels_path, ...
             handle_ME(ME, failed_path, filename);
         end
     end
-    [~, ~, label_ids] = unique(label_table.label);
-    label_table.label_id = label_ids;
+    [~, ~, chan_group_ids] = unique(label_table.chan_group);
+    label_table.chan_group_id = chan_group_ids;
 
     %% Only write unique rows to prevent repetitive labels
     [~, ind] = unique(label_table, 'rows');

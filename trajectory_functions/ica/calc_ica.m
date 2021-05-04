@@ -7,7 +7,7 @@ function [ica_results, labeled_ics, ic_log] = calc_ica(label_log, mnts_struct, .
     ica_results = struct;
     labeled_ics = struct;
     ic_log = table();
-    unique_regions = unique(label_log.label);
+    unique_regions = unique(label_log.chan_group);
     for reg_i = 1:numel(unique_regions)
         region = unique_regions{reg_i};
         % Multineuron timeseries is transposed to match expected dimensionality of runica from EEGLabs

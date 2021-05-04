@@ -74,7 +74,7 @@ function [] = batch_dropping_classifier(project_path, save_path, failed_path, ..
                 chan_info = get_chan_vars(component_results);
             elseif strcmpi(drop_method, 'random')
                 chan_info = label_log;
-                chan_info = renamevars(chan_info, "label", "region");
+                chan_info = renamevars(chan_info, "chan_group", "region");
             else
                 is_unrecoverable = true;
                 error('Unknown drop method: %s')

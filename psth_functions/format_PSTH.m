@@ -17,15 +17,15 @@ function [psth_struct, event_info] = format_PSTH(event_info, ...
     psth_struct = struct;
 
     %% Creates the PSTH
-    unique_regions = unique(selected_channels.label);
+    unique_regions = unique(selected_channels.chan_group);
     [bin_edges, ~] = get_bins(window_start, window_end, bin_size);
     for region_i = 1:length(unique_regions)
         region = unique_regions{region_i};
-        region_neurons = selected_channels.channel_data(strcmpi(selected_channels.label, region));
+        region_neurons = selected_channels.channel_data(strcmpi(selected_channels.chan_group, region));
         %% create relative response for region neurons
         rr = create_relative_response(region_neurons, event_info.event_ts, bin_edges);
         %% store relative response and labels in region struct
         psth_struct.(region).relative_response = rr;
-        psth_struct.(region).chan_order = selected_channels.channel(strcmpi(selected_channels.label, region));
+        psth_struct.(region).chan_order = selected_channels.channel(strcmpi(selected_channels.chan_group, region));
     end
 end

@@ -6,10 +6,10 @@ function [mnts_struct, event_info, selected_channels] = format_mnts(...
 
     tot_trials = height(event_info);
 
-    unique_regions = unique(selected_channels.label);
+    unique_regions = unique(selected_channels.chan_group);
     for reg_i = 1:length(unique_regions)
         region = unique_regions{reg_i};
-        region_channels = selected_channels(strcmpi(selected_channels.label, region), :);
+        region_channels = selected_channels(strcmpi(selected_channels.chan_group, region), :);
         tot_chans = height(region_channels);
         mnts = nan((tot_bins * tot_trials), tot_chans);
 

@@ -56,7 +56,7 @@ function [pca_results, labeled_pcs, pc_log] = calc_pca(label_log, mnts_struct, .
 
     pca_results = struct;
 
-    unique_regions = unique(label_log.label);
+    unique_regions = unique(label_log.chan_group);
     pc_log = table;
     for region_index = 1:length(unique_regions)
         region = unique_regions{region_index};
@@ -67,7 +67,7 @@ function [pca_results, labeled_pcs, pc_log] = calc_pca(label_log, mnts_struct, .
         end
         [coeff, pca_score, eigenvalues, ~, pc_variance, estimated_mean] = pca(pca_input);
 
-        labeled_pcs = label_log(strcmpi(label_log.label, region), :);
+        labeled_pcs = label_log(strcmpi(label_log.chan_group, region), :);
 
         %% Store PCA results
         pca_results.(region).component_variance = pc_variance;

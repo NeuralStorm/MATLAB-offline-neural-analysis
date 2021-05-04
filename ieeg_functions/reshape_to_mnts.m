@@ -212,8 +212,8 @@ function [mnts] = create_mnts(powspctrm)
 end
 
 function [label_log] = append_labels(feature, region, label_table, label_log)
-    region_table = label_table(ismember(label_table.label, region), :);
-    region_table.label = repmat({feature}, [height(region_table), 1]);
+    region_table = label_table(ismember(label_table.chan_group, region), :);
+    region_table.chan_group = repmat({feature}, [height(region_table), 1]);
     label_log = [label_log; region_table];
 end
 

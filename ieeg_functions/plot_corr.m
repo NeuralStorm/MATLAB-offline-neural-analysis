@@ -40,15 +40,15 @@ function [results] = plot_corr(save_path, component_results, label_log, ...
                 255 128 0] ./ 256; % yellow
 
     %% Create color_struct
-    unique_features = unique(label_log.label);
+    unique_features = unique(label_log.chan_group);
     combined_feature_space = unique_features{1};
-    color_log.label = label_log.label;
+    color_log.chan_group = label_log.chan_group;
     color_log.channel = label_log.channel;
     for feature_i = 2:numel(unique_features)
         feature = unique_features{feature_i};
         combined_feature_space = [combined_feature_space, '_', feature];
     end
-    [color_struct, ~] = create_color_struct(color_map, combined_feature_space, color_log);
+    [color_struct, ~] = create_color_struct(color_map, color_log);
 
     rsq_out = cell(corr_components, 1);
     parfor comp_i = 1:corr_components
@@ -98,7 +98,7 @@ function [results] = plot_corr(save_path, component_results, label_log, ...
                 x_values = first_weights(first_i, comp_i);
                 y_values = second_weights(second_i, comp_i);
                 [~, label_i, ~] = intersect(color_log.channel, elec_intersect);
-                region_order = color_log.label(label_i);
+                region_order = color_log.chan_group(label_i);
                 unique_regions = unique(region_order);
                 scrollsubplot(sub_rows, sub_columns, subplot_i);
                 hold on

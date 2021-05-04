@@ -28,7 +28,7 @@ function [psth_struct] = reformat_mnts(label_log, component_results, tot_bins)
     %              feature_name: struct typically based on regions and powers
     %                            relative_response: Numerical matrix with dimensions Trials x ((tot pcs or channels) * tot bins)
     psth_struct = struct;
-    unique_regions = unique(label_log.label);
+    unique_regions = unique(label_log.chan_group);
     %% Convert weighted mnts into relative response
     for region_index = 1:length(unique_regions)
         region = unique_regions{region_index};
