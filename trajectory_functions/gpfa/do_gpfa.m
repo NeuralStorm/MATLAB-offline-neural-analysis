@@ -12,7 +12,7 @@ function [gpfa_results] = do_gpfa(animal_id, session_num, selected_data, ...
         if bin_size ~= 0.001
             %! Yu's code expects 1ms bin size --> Reshape neural data
             total_bins = (length(-abs(window_start):.001:abs(window_end)) - 1);
-            region_neurons = [selected_data.(region_name).sig_channels, selected_data.(region_name).channel_data];
+            region_neurons = [selected_data.(region_name).channel, selected_data.(region_name).channel_data];
             response_struct = create_relative_response(region_neurons, ...
                 region_events, .001, window_start, window_end);
         else

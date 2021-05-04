@@ -7,7 +7,7 @@ function [psth_struct] = reformat_mnts(label_log, component_results, tot_bins)
     %% Input
     % label_log: struct w/ fields for each feature set
     %            field: table with columns
-    %                   'sig_channels': String with name of channel
+    %                   'channel': String with name of channel
     %                   'selected_channels': Boolean if channel is used
     %                   'user_channels': String with user defined mapping
     %                   'label': String: associated region or grouping of electrodes

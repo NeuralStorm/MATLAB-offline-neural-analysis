@@ -108,11 +108,11 @@ function [] = plx_spike_parser(parsed_path, failed_path, raw_file, config, label
         end
         event_info.event_labels = event_strs;
         channel_map = sortrows(channel_map, 1);
-        channel_map = cell2table(channel_map, 'VariableNames', ["sig_channels", "channel_data"]);
+        channel_map = cell2table(channel_map, 'VariableNames', ["channel", "channel_data"]);
 
         %% enforce labels is all inclusive
         session_table = label_table(label_table.recording_session == filename_meta.session_num, :);
-        enforce_labels(channel_map.sig_channels, session_table.sig_channels, filename_meta.session_num)
+        enforce_labels(channel_map.channel, session_table.channel, filename_meta.session_num)
 
         %% Saves parsed files
         matfile = fullfile(parsed_path, [filename_meta.filename, '.mat']);

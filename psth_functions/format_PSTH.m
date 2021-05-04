@@ -26,6 +26,6 @@ function [psth_struct, event_info] = format_PSTH(event_info, ...
         rr = create_relative_response(region_neurons, event_info.event_ts, bin_edges);
         %% store relative response and labels in region struct
         psth_struct.(region).relative_response = rr;
-        psth_struct.(region).chan_order = selected_channels.sig_channels(strcmpi(selected_channels.label, region));
+        psth_struct.(region).chan_order = selected_channels.channel(strcmpi(selected_channels.label, region));
     end
 end

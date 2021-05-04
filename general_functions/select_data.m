@@ -4,7 +4,7 @@ function [selected_channels] = select_data(labeled_data, channel_table, session_
     unique_regions = fieldnames(labeled_data);
     for region_i = 1:length(unique_regions)
         region = unique_regions{region_i};
-        channel_map = [channel_map; labeled_data.(region).sig_channels, ...
+        channel_map = [channel_map; labeled_data.(region).channel, ...
             labeled_data.(region).channel_data];
     end
 

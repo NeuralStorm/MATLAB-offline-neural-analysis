@@ -4,7 +4,7 @@ function [label_table] = create_ieeg_labels(label_table, ieeg_anat, session_num)
     %% Input:
     % label_table: table with information of current recordingv
     %              field: table with columns (can be empty, but must have the columns set up)
-    %                     'sig_channels': String with name of channel
+    %                     'channel': String with name of channel
     %                     'selected_channels': Boolean if channel is used
     %                     'user_channels': String with user defined mapping
     %                     'label': String: associated region or grouping of electrodes
@@ -19,27 +19,27 @@ function [label_table] = create_ieeg_labels(label_table, ieeg_anat, session_num)
     % label_table: Concated label table from current recording session
 
     %% set up of channels for labels file
-    sig_channels = ieeg_anat.channels;
-    selected_channels = ones(size(sig_channels));
-    user_channels = sig_channels;
+    channel = ieeg_anat.channels;
+    selected_channels = ones(size(channel));
+    user_channels = channel;
 
     %% Set up of labels
     labels = ieeg_anat.ROIs;
-    assert(length(sig_channels) == length(labels), ...
+    assert(length(channel) == length(labels), ...
         'Must have number of labels as channels in file');
 
-    [sig_rows, ~] = size(sig_channels);
+    [sig_rows, ~] = size(channel);
     [~, label_cols] = size(labels);
     if sig_rows == label_cols
         labels = labels';
     end
 
     label_id = zeros(size(labels));
-    recording_session = repmat(session_num, size(sig_channels));
-    recording_notes = repmat({'n/a'}, size(sig_channels));
-    curr_labels = table(sig_channels, selected_channels, user_channels, ...
+    recording_session = repmat(session_num, size(channel));
+    recording_notes = repmat({'n/a'}, size(channel));
+    curr_labels = table(channel, selected_channels, user_channels, ...
         labels, label_id, recording_session, recording_notes, ...
-        'VariableNames', {'sig_channels', 'selected_channels', ...
+        'VariableNames', {'channel', 'selected_channels', ...
         'user_channels', 'label', 'label_id', 'recording_session', ...
         'recording_notes'});
     label_table = [label_table; curr_labels];

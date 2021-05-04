@@ -8,7 +8,7 @@ function [] = batch_create_labels(data_path, failed_path, labels_path, ...
     % labels_path: path to save/load labels csv
     % label_table: table with information of current recordingv
     %              field: table with columns (can be empty, but must have the columns set up)
-    %                     'sig_channels': String with name of channel
+    %                     'channel': String with name of channel
     %                     'selected_channels': Boolean if channel is used
     %                     'user_channels': String with user defined mapping
     %                     'label': String: associated region or grouping of electrodes

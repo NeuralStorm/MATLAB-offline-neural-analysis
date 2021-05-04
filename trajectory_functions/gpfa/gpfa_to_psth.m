@@ -47,7 +47,7 @@ function [trajectory_struct, trajectory_labels] = gpfa_to_psth(gpfa_results, pst
                 factor_strings = factor_strings(1:tot_factors, :);
             end
             trajectory_labels.(region) = trajectory_labels.(region)(1:tot_factors, :);
-            trajectory_labels.(region).sig_channels = factor_strings;
+            trajectory_labels.(region).channel = factor_strings;
             trajectory_labels.(region).user_channels = factor_strings;
             trajectory_labels.(region).channel_data = cell(tot_factors, 1);
         end

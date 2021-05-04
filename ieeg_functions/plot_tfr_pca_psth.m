@@ -13,7 +13,7 @@ function [] = plot_tfr_pca_psth(save_path, tfr_path, tfr_file_list, label_log, m
     % tfr_file_list: list of .fig files at tfr_path
     %                (can be created by calling get_file_list(tfr_path, '.fig')
     % label_log: table with columns
-    %                   'sig_channels': String with name of channel
+    %                   'channel': String with name of channel
     %                   'selected_channels': Boolean if channel is used
     %                   'user_channels': String with user defined mapping
     %                   'label': String: associated region or grouping of electrodes

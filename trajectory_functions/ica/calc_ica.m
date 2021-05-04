@@ -62,7 +62,7 @@ function [ica_results, labeled_ics, ic_log] = calc_ica(label_log, mnts_struct, .
             ic_names{component_i} = [region, '_ic_', num2str(component_i)];
         end
         region_table = label_log(1:tot_components, :);
-        region_table.sig_channels = ic_names; region_table.user_channels = ic_names;
+        region_table.channel = ic_names; region_table.user_channels = ic_names;
         region_table.channel_data = num2cell(mnts, 1)';
         labeled_ics.(region) = region_table;
 

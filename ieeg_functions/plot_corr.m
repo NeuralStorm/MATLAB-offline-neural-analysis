@@ -14,7 +14,7 @@ function [results] = plot_corr(save_path, component_results, label_log, ...
     %                                             Columns: Component Row: Feature
     %                                  orig_chan_order: C x 1 cell array, C = tot channels. Order of electrodes fed into PCA
     % label_log: table with columns (relevant columns shown only)
-    %            'sig_channels': String with name of channel
+    %            'channel': String with name of channel
     %            'label': String: associated region or grouping of electrodes
     % feature_filter: String with description for pcs
     %                 'all': keep all pcs after PCA
@@ -43,7 +43,7 @@ function [results] = plot_corr(save_path, component_results, label_log, ...
     unique_features = unique(label_log.label);
     combined_feature_space = unique_features{1};
     color_log.label = label_log.label;
-    color_log.sig_channels = label_log.sig_channels;
+    color_log.channel = label_log.channel;
     for feature_i = 2:numel(unique_features)
         feature = unique_features{feature_i};
         combined_feature_space = [combined_feature_space, '_', feature];
@@ -97,7 +97,7 @@ function [results] = plot_corr(save_path, component_results, label_log, ...
                 %% Grab coeff weights from first (x) and second (y) feature space
                 x_values = first_weights(first_i, comp_i);
                 y_values = second_weights(second_i, comp_i);
-                [~, label_i, ~] = intersect(color_log.sig_channels, elec_intersect);
+                [~, label_i, ~] = intersect(color_log.channel, elec_intersect);
                 region_order = color_log.label(label_i);
                 unique_regions = unique(region_order);
                 scrollsubplot(sub_rows, sub_columns, subplot_i);

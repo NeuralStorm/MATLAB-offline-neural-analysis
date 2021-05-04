@@ -6,7 +6,7 @@ function [label_log, mnts_struct, event_info, band_shifts] = reshape_to_mnts(lab
     %% Input
     % label_table: table with information of current recording
     %              field: table with columns
-    %                     'sig_channels': String with name of channel
+    %                     'channel': String with name of channel
     %                     'selected_channels': Boolean if channel is used
     %                     'user_channels': String with user defined mapping
     %                     'label': String: associated region or grouping of electrodes
@@ -26,7 +26,7 @@ function [label_log, mnts_struct, event_info, band_shifts] = reshape_to_mnts(lab
     %                  format layout: power:region, power+power:region+region;power:region, etc
     %% Output:
     % label_log: table with columns
-    %                'sig_channels': String with name of channel
+    %                'channel': String with name of channel
     %                'selected_channels': Boolean if channel is used
     %                'user_channels': String with user defined mapping
     %                'label': String: associated region or grouping of electrodes

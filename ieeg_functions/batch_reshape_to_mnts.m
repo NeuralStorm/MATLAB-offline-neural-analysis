@@ -13,7 +13,7 @@ function [] = batch_reshape_to_mnts(save_path, failed_path, data_path, ...
     % dir_config: config settings for that subject
     % label_table: table with information of current recording
     %              field: table with columns
-    %                     'sig_channels': String with name of channel
+    %                     'channel': String with name of channel
     %                     'selected_channels': Boolean if channel is used
     %                     'user_channels': String with user defined mapping
     %                     'label': String: associated region or grouping of electrodes

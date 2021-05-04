@@ -5,7 +5,7 @@ function [pca_results, labeled_pcs, pc_log] = calc_pca(label_log, mnts_struct, .
     %% Input
     % label_log: struct w/ fields for each feature set
     %            field: table with columns
-    %                       'sig_channels': String with name of channel
+    %                       'channel': String with name of channel
     %                       'selected_channels': Boolean if channel is used
     %                       'user_channels': String with user defined mapping
     %                       'label': String: associated region or grouping of electrodes
@@ -44,7 +44,7 @@ function [pca_results, labeled_pcs, pc_log] = calc_pca(label_log, mnts_struct, .
     %                                                   Columns: Component Row: Feature
     %                                        estimated_mean: Vector with estimated means for each feature
     %                                        mnts: mnts mapped into pc space with feature filter applied
-    % labeled_pcs: similar to label_log, but sig_channels is replaced with pc # since channels have been mapped
+    % labeled_pcs: similar to label_log, but channel is replaced with pc # since channels have been mapped
     % labeled_pcs: Same as labeled_pcs, but with feature filter applied (ex: 3 pcs would only contain 3 pc names)
 
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -103,7 +103,7 @@ function [pca_results, labeled_pcs, pc_log] = calc_pca(label_log, mnts_struct, .
             pc_names{component_i} = [region, '_pc_', num2str(component_i)];
         end
         %% Reset labeled data
-        labeled_pcs.sig_channels = pc_names;
+        labeled_pcs.channel = pc_names;
         labeled_pcs.user_channels = pc_names;
         pca_results.(region).chan_order = pc_names;
         pc_log = [pc_log; labeled_pcs];

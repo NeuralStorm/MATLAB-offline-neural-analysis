@@ -36,18 +36,18 @@ function [mnts_struct, event_info, selected_channels] = format_mnts(...
         for col = 1:mnts_cols
             unique_response = unique(mnts(:, col));
             if length(unique_response) == 1
-                channel_list = [channel_list, region_channels.sig_channels(col)];
+                channel_list = [channel_list, region_channels.channel(col)];
                 remove_units = [remove_units; col];
             end
         end
         if ~isempty(remove_units)
             %% Remove empty channels
-            selected_channels = selected_channels(~ismember(selected_channels.sig_channels, channel_list), :);
-            region_channels = region_channels(~ismember(region_channels.sig_channels, channel_list), :);
+            selected_channels = selected_channels(~ismember(selected_channels.channel, channel_list), :);
+            region_channels = region_channels(~ismember(region_channels.channel, channel_list), :);
             mnts(:, remove_units) = [];
         end
         %% Store mnts
         mnts_struct.(region).mnts = mnts;
-        mnts_struct.(region).orig_chan_order = region_channels.sig_channels;
+        mnts_struct.(region).orig_chan_order = region_channels.channel;
     end
 end
