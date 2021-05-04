@@ -17,13 +17,13 @@ function [res] = calc_shannon_info(psth_struct, event_info, bin_size, window_sta
 
     for reg_i = 1:length(unique_regions)
         region = unique_regions{reg_i};
-        chan_order = psth_struct.(region).label_order;
+        chan_order = psth_struct.(region).chan_order;
         tot_chans = numel(chan_order);
         %% Start channel counter
         chan_s = 1;
         chan_e = tot_bins;
         for chan_i = 1:tot_chans
-            chan = psth_struct.(region).label_order{chan_i};
+            chan = psth_struct.(region).chan_order{chan_i};
             %% Grab entire response for channel
             chan_rr = psth_struct.(region).relative_response(:, chan_s:chan_e);
             response_rr = slice_rr(chan_rr, bin_size, window_start, ...

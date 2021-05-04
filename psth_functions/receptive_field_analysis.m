@@ -33,12 +33,12 @@ function [rec_res] = receptive_field_analysis(psth_struct, event_info, ...
     [response_edges, ~] = get_bins(response_start, response_end, bin_size);
     for region_i = 1:length(unique_regions)
         region = unique_regions{region_i};
-        tot_chans = numel(psth_struct.(region).label_order);
+        tot_chans = numel(psth_struct.(region).chan_order);
 
         chan_s = 1;
         chan_e = tot_bins;
         for chan_i = 1:tot_chans
-            chan = psth_struct.(region).label_order{chan_i};
+            chan = psth_struct.(region).chan_order{chan_i};
             %% Initalize variables to find principal event per channel
             chan_res = []; max_rm = 0; principal_event = cell(tot_events, 1);
             tot_sig_events = 0; norm_rm = nan(tot_events, 1);

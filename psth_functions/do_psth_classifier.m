@@ -17,7 +17,7 @@ function [pop_table, chan_table, classify_res] = do_psth_classifier(psth_struct,
 
     for reg_i = 1:length(unique_regions)
         region = unique_regions{reg_i};
-        chan_order = psth_struct.(region).label_order;
+        chan_order = psth_struct.(region).chan_order;
         tot_chans = numel(chan_order);
 
         event_struct = create_event_struct(psth_struct.(region), event_info, ...

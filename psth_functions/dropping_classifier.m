@@ -11,7 +11,7 @@ function [res] = dropping_classifier(psth_struct, event_info, drop_method, ...
 
     for reg_i = 1:length(unique_regions)
         region = unique_regions{reg_i};
-        chan_list = psth_struct.(region).label_order;
+        chan_list = psth_struct.(region).chan_order;
         tot_chans = numel(chan_list);
 
         %% Population classification
@@ -26,7 +26,7 @@ function [res] = dropping_classifier(psth_struct, event_info, drop_method, ...
         chan_order = get_chan_order(chan_list, drop_method, reg_info);
         while tot_chans > 1
             chan = chan_order{1};
-            chan_i = find(ismember(psth_struct.(region).label_order, chan));
+            chan_i = find(ismember(psth_struct.(region).chan_order, chan));
             %% Get channel relative response
             chan_e = chan_i * tot_bins;
             chan_s = chan_e - tot_bins + 1;
@@ -41,7 +41,7 @@ function [res] = dropping_classifier(psth_struct, event_info, drop_method, ...
 
             %% Update channel order
             chan_order(1) = [];
-            psth_struct.(region).label_order = chan_order;
+            psth_struct.(region).chan_order = chan_order;
             tot_chans = numel(chan_order);
 
             %% Store results

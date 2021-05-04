@@ -18,7 +18,7 @@ function [pop_table, chan_table] = psth_bootstrapper(...
     %% Bootstrapping
     for reg_i = 1:length(unique_regions)
         region = unique_regions{reg_i};
-        chan_order = psth_struct.(region).label_order;
+        chan_order = psth_struct.(region).chan_order;
         tot_chans = numel(chan_order);
         %% Preallocate region boot arrays
         reg_perf = prealloc_boot_array(boot_iterations, 1);

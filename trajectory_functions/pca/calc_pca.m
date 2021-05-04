@@ -105,7 +105,7 @@ function [pca_results, labeled_pcs, pc_log] = calc_pca(label_log, mnts_struct, .
         %% Reset labeled data
         labeled_pcs.sig_channels = pc_names;
         labeled_pcs.user_channels = pc_names;
-        pca_results.(region).label_order = pc_names;
+        pca_results.(region).chan_order = pc_names;
         pc_log = [pc_log; labeled_pcs];
     end
 end

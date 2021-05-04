@@ -16,7 +16,7 @@ function [] = graph_PSTH(save_path, filename, psth_struct, event_info, bin_size,
 
     parfor reg_i = 1:length(unique_regions)
         region = unique_regions{reg_i};
-        chan_order = psth_struct.(region).label_order;
+        chan_order = psth_struct.(region).chan_order;
         for event_i = 1:tot_events
             main_plot = figure;
             event = unique_events{event_i};

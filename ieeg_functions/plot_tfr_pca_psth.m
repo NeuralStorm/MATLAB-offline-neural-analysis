@@ -92,7 +92,7 @@ function [] = plot_tfr_pca_psth(save_path, tfr_path, tfr_file_list, label_log, m
         region_log = label_log(strcmpi(label_log.label, region), :);
         [color_struct, region_list] = create_color_struct(color_map, ...
             region, region_log);
-        chan_order = psth_struct.(region).label_order;
+        chan_order = psth_struct.(region).chan_order;
         tot_reg_chans = numel(chan_order);
         for event_i = 1:numel(unique_events)
             event = unique_events{event_i};
@@ -194,7 +194,7 @@ function [] = plot_tfr_pca_psth(save_path, tfr_path, tfr_file_list, label_log, m
             event_indices = event_info.event_indices(strcmpi(event_info.event_labels, event));
             event_matrix = get_event_response(psth_struct.(region).relative_response, event_indices);
             event_psth = calc_psth(event_matrix);
-            unit_struct = slice_unit_response(event_matrix, psth_struct.(region).label_order, tot_window_bins);
+            unit_struct = slice_unit_response(event_matrix, psth_struct.(region).chan_order, tot_window_bins);
 
             %% Set event min and max for plotting
             event_max = 1.1 * max(event_psth) + eps;
