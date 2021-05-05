@@ -1,9 +1,9 @@
-function [pca_results, labeled_pcs, pc_log] = calc_pca(label_log, mnts_struct, ...
+function [pca_results, labeled_pcs, pc_log] = calc_pca(chan_group_log, mnts_struct, ...
         feature_filter, feature_value, apply_z_score)
 
     %% Purpose: Run Principal Component Analysis (pca) on feature sets stored in mnts_struct
     %% Input
-    % label_log: struct w/ fields for each feature set
+    % chan_group_log: struct w/ fields for each feature set
     %            field: table with columns
     %                       'channel': String with name of channel
     %                       'selected_channels': Boolean if channel is used
@@ -12,7 +12,7 @@ function [pca_results, labeled_pcs, pc_log] = calc_pca(label_log, mnts_struct, .
     %                       'label_id': Int: unique id used for labels
     %                       'recording_session': Int: File recording session number that above applies to
     %                       'recording_notes': String with user defined notes for channel
-    % mnts_struct: struct w/ fields for each feature set matching the feature set in label_log
+    % mnts_struct: struct w/ fields for each feature set matching the feature set in chan_group_log
     %              fields:
     %                     'all_events': Nx2 cell array where N is the number of events
     %                                   Column 1: event label (ex: event_1)
@@ -44,7 +44,7 @@ function [pca_results, labeled_pcs, pc_log] = calc_pca(label_log, mnts_struct, .
     %                                                   Columns: Component Row: Feature
     %                                        estimated_mean: Vector with estimated means for each feature
     %                                        mnts: mnts mapped into pc space with feature filter applied
-    % labeled_pcs: similar to label_log, but channel is replaced with pc # since channels have been mapped
+    % labeled_pcs: similar to chan_group_log, but channel is replaced with pc # since channels have been mapped
     % labeled_pcs: Same as labeled_pcs, but with feature filter applied (ex: 3 pcs would only contain 3 pc names)
 
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -56,7 +56,7 @@ function [pca_results, labeled_pcs, pc_log] = calc_pca(label_log, mnts_struct, .
 
     pca_results = struct;
 
-    unique_regions = unique(label_log.chan_group);
+    unique_regions = unique(chan_group_log.chan_group);
     pc_log = table;
     for region_index = 1:length(unique_regions)
         region = unique_regions{region_index};
@@ -67,7 +67,7 @@ function [pca_results, labeled_pcs, pc_log] = calc_pca(label_log, mnts_struct, .
         end
         [coeff, pca_score, eigenvalues, ~, pc_variance, estimated_mean] = pca(pca_input);
 
-        labeled_pcs = label_log(strcmpi(label_log.chan_group, region), :);
+        labeled_pcs = chan_group_log(strcmpi(chan_group_log.chan_group, region), :);
 
         %% Store PCA results
         pca_results.(region).component_variance = pc_variance;

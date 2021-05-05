@@ -48,7 +48,7 @@ function [] = batch_recfield(project_path, save_path, failed_path, data_path, di
             file = fullfile(data_path, file_list(file_index).name);
 
             %% Load needed variables from psth and does the receptive field analysis
-            load(file, 'psth_struct', 'event_info', 'label_log', 'filename_meta');
+            load(file, 'psth_struct', 'event_info', 'chan_group_log', 'filename_meta');
 
             %% Receptive field analysis
             rec_res = receptive_field_analysis(psth_struct, event_info, ...
@@ -74,10 +74,10 @@ function [] = batch_recfield(project_path, save_path, failed_path, data_path, di
             %% Save receptive field matlab output
             matfile = fullfile(save_path, ['rec_field_', filename_meta.filename, '.mat']);
             if config.cluster_analysis
-                save(matfile, 'label_log', 'rec_res', 'filename_meta', 'config_log', ...
+                save(matfile, 'chan_group_log', 'rec_res', 'filename_meta', 'config_log', ...
                     'cluster_struct', 'cluster_res');
             else
-                save(matfile, 'label_log', 'rec_res', 'filename_meta', 'config_log');
+                save(matfile, 'chan_group_log', 'rec_res', 'filename_meta', 'config_log');
             end
 
             %% Capture data to save to csv from current day
@@ -105,10 +105,10 @@ function [] = batch_recfield(project_path, save_path, failed_path, data_path, di
 
             %% Clean up workspace
             if config.cluster_analysis
-                clear('psth_struct', 'label_log', 'rec_res', 'filename_meta', ...
+                clear('psth_struct', 'chan_group_log', 'rec_res', 'filename_meta', ...
                     'event_info', 'cluster_struct', 'cluster_res');
             else
-                clear('psth_struct', 'label_log', 'rec_res', 'filename_meta', ...
+                clear('psth_struct', 'chan_group_log', 'rec_res', 'filename_meta', ...
                     'event_info');
             end
         catch ME

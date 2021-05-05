@@ -1,11 +1,11 @@
-function [psth_struct] = reformat_mnts(label_log, component_results, tot_bins)
+function [psth_struct] = reformat_mnts(chan_group_log, component_results, tot_bins)
     %% Purpose: Reformat MNTS to PSTH
     % mnts: multineuron time series
     %       Observations (trials * tot bins) x Features (components or channels)
     % psth: peri-stimulis time histogram
     %       Trials X (Features (components or channels) * tot bins)
     %% Input
-    % label_log: struct w/ fields for each feature set
+    % chan_group_log: struct w/ fields for each feature set
     %            field: table with columns
     %                   'channel': String with name of channel
     %                   'selected_channels': Boolean if channel is used
@@ -28,7 +28,7 @@ function [psth_struct] = reformat_mnts(label_log, component_results, tot_bins)
     %              feature_name: struct typically based on regions and powers
     %                            relative_response: Numerical matrix with dimensions Trials x ((tot pcs or channels) * tot bins)
     psth_struct = struct;
-    unique_regions = unique(label_log.chan_group);
+    unique_regions = unique(chan_group_log.chan_group);
     %% Convert weighted mnts into relative response
     for region_index = 1:length(unique_regions)
         region = unique_regions{region_index};

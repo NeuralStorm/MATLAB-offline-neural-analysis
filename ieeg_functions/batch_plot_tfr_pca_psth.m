@@ -37,7 +37,7 @@ function [] = batch_plot_tfr_pca_psth(dir_name, save_path, failed_path, tfr_path
         filename_meta.filename = filename;
         try
             pca_file = fullfile(pca_data_path, pca_file_list(file_index).name);
-            load(pca_file, 'component_results', 'filename_meta', 'label_log', 'event_info');
+            load(pca_file, 'component_results', 'filename_meta', 'chan_group_log', 'event_info');
 
             if any(contains({psth_file_list.name}, filename_meta.filename))
                 psth_filename = psth_file_list(...
@@ -57,7 +57,7 @@ function [] = batch_plot_tfr_pca_psth(dir_name, save_path, failed_path, tfr_path
                 error('Missing %s to plot average power', filename_meta.filename);
             end
 
-            plot_tfr_pca_psth(save_path, tfr_path, tfr_file_list, label_log, mnts_struct, band_shifts, ...
+            plot_tfr_pca_psth(save_path, tfr_path, tfr_file_list, chan_group_log, mnts_struct, band_shifts, ...
                 component_results, psth_struct, event_info, dir_config.bin_size, ...
                 dir_config.window_start, dir_config.window_end, dir_config.baseline_start, ...
                 dir_config.baseline_end, dir_config.response_start, ...
@@ -67,7 +67,7 @@ function [] = batch_plot_tfr_pca_psth(dir_name, save_path, failed_path, tfr_path
                 dir_config.ymax_scale, dir_config.transparency, dir_config.font_size, ...
                 dir_config.min_components, dir_config.plot_avg_pow, dir_config.plot_shift_labels);
 
-                clear('component_results', 'filename_meta', 'label_log', 'psth_struct');
+                clear('component_results', 'filename_meta', 'chan_group_log', 'psth_struct');
 
         catch ME
             handle_ME(ME, failed_path, filename_meta.filename);

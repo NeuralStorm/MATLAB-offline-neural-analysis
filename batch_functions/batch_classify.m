@@ -31,9 +31,9 @@ function [] = batch_classify(project_path, save_path, failed_path, data_path, di
         %% Run through files
         try
             file = fullfile(data_path, file_list(file_index).name);
-            load(file, 'psth_struct', 'event_info', 'filename_meta', 'label_log');
+            load(file, 'psth_struct', 'event_info', 'filename_meta', 'chan_group_log');
             %% Check psth variables to make sure they are not empty
-            empty_vars = check_variables(file, psth_struct, event_info, label_log);
+            empty_vars = check_variables(file, psth_struct, event_info, chan_group_log);
             if empty_vars
                 continue
             end
@@ -92,7 +92,7 @@ function [] = batch_classify(project_path, save_path, failed_path, data_path, di
             matfile = fullfile(save_path, ['psth_classifier_', filename_meta.filename, '.mat']);
             check_variables(matfile, classify_res, pop_table, chan_table);
             save(matfile, 'classify_res', 'pop_table', 'chan_table', ...
-                'config_log', 'label_log');
+                'config_log', 'chan_group_log');
 
             %% Add meta data to table before export to csv
             meta_data = [
@@ -108,11 +108,11 @@ function [] = batch_classify(project_path, save_path, failed_path, data_path, di
             pop_table = horzcat_cell(pop_table, repmat(meta_data, [tot_rows, 1]), meta_headers, 'before');
             tot_rows = height(chan_table);
             chan_table = horzcat_cell(chan_table, repmat(meta_data, [tot_rows, 1]), meta_headers, 'before');
-            chan_table = join_label_meta(label_log, chan_table);
+            chan_table = join_label_meta(chan_group_log, chan_table);
             %% Append to CSV
             export_csv(pop_csv_path, pop_table, ignore_headers)
             export_csv(chan_csv_path, chan_table, ignore_headers);
-            clear('classify_res', 'pop_table', 'chan_table', 'label_log');
+            clear('classify_res', 'pop_table', 'chan_table', 'chan_group_log');
         catch ME
             handle_ME(ME, failed_path, filename_meta.filename);
         end

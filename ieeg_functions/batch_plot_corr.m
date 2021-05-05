@@ -22,14 +22,14 @@ function [] = batch_plot_corr(project_path, dir_name, save_path, failed_path, ..
         try
             %% pull info from filename and set up file path for analysis
             file = fullfile(data_path, file_list(file_index).name);
-            load(file, 'component_results', 'label_log', 'filename_meta');
+            load(file, 'component_results', 'chan_group_log', 'filename_meta');
             %% Check psth variables to make sure they are not empty
-            empty_vars = check_variables(file, component_results, label_log);
+            empty_vars = check_variables(file, component_results, chan_group_log);
             if empty_vars
                 continue
             end
 
-            results = plot_corr(save_path, component_results, label_log, ...
+            results = plot_corr(save_path, component_results, chan_group_log, ...
                 dir_config.feature_filter, dir_config.feature_value, ...
                 dir_config.min_components, dir_config.corr_components, ...
                 dir_config.sub_rows, dir_config.sub_columns, ...
@@ -46,7 +46,7 @@ function [] = batch_plot_corr(project_path, dir_name, save_path, failed_path, ..
             csv_path = fullfile(project_path, 'correlation_results.csv');
             export_csv(csv_path, results, {'rsq'});
 
-            clear('component_results', 'label_log', 'filename_meta');
+            clear('component_results', 'chan_group_log', 'filename_meta');
         catch ME
             handle_ME(ME, failed_path, filename_meta.filename);
         end

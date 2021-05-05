@@ -55,13 +55,13 @@ function [] = batch_brain_weights(dir_name, save_path, failed_path, elec_path, .
         filename_meta.filename = filename;
         try
             pca_file = fullfile(pca_data_path, pca_file_list(file_index).name);
-            load(pca_file, 'component_results', 'filename_meta', 'label_log');
+            load(pca_file, 'component_results', 'filename_meta', 'chan_group_log');
 
             plot_brain_weights(save_path, dir_name, mesh_struct, elec, component_results, ...
-                label_log, dir_config.min_components, dir_config.feature_filter, ...
+                chan_group_log, dir_config.min_components, dir_config.feature_filter, ...
                 dir_config.feature_value, dir_config.save_png);
 
-            clear('component_results', 'filename_meta', 'label_log');
+            clear('component_results', 'filename_meta', 'chan_group_log');
 
         catch ME
             handle_ME(ME, failed_path, filename_meta.filename);

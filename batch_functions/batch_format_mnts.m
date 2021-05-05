@@ -33,8 +33,8 @@ function [] = batch_format_mnts(save_path, failed_path, data_path, dir_name, ...
                 dir_config.window_end);
 
             %% Create label log
-            label_log = selected_channels;
-            label_log = removevars(label_log, 'channel_data');
+            chan_group_log = selected_channels;
+            chan_group_log = removevars(chan_group_log, 'channel_data');
 
             %% Saving outputs
             matfile = fullfile(save_path, ['mnts_format_', ...
@@ -48,8 +48,8 @@ function [] = batch_format_mnts(save_path, failed_path, data_path, dir_name, ...
 
             %% Save file if all variables are not empty
             save(matfile, 'mnts_struct', 'event_info', 'selected_channels', ...
-                'filename_meta', 'config_log', 'label_log');
-            clear('mnts_struct', 'event_info', 'selected_channels', 'filename_meta', 'label_log');
+                'filename_meta', 'config_log', 'chan_group_log');
+            clear('mnts_struct', 'event_info', 'selected_channels', 'filename_meta', 'chan_group_log');
         catch ME
             handle_ME(ME, failed_path, filename_meta.filename);
         end

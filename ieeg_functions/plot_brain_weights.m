@@ -1,5 +1,5 @@
 function [] = plot_brain_weights(save_path, dir_name, mesh_struct, elec_struct, ...
-        component_results, label_log, min_components, feature_filter, ...
+        component_results, chan_group_log, min_components, feature_filter, ...
         feature_value, save_png)
 
     %% Purpose: Create subplot w/ electrode weights from pca plotted on brain mesh
@@ -23,7 +23,7 @@ function [] = plot_brain_weights(save_path, dir_name, mesh_struct, elec_struct, 
     %                                  coeff: NxN (N = tot features) matrix with coeff weights used to scale mnts into PC space
     %                                             Columns: Component Row: Feature
     %                                  orig_chan_order: order of electrodes in feature space
-    % label_log: table with channel and region info --> only used to get unique feature spaces for loop
+    % chan_group_log: table with channel and region info --> only used to get unique feature spaces for loop
     % min_components: Int: min componenets needed to make subplot
     % feature_filter: String with description for pcs
     %                 'all': keep all pcs after PCA
@@ -55,7 +55,7 @@ function [] = plot_brain_weights(save_path, dir_name, mesh_struct, elec_struct, 
         end
     end
 
-    unique_spaces = unique(label_log.chan_group);
+    unique_spaces = unique(chan_group_log.chan_group);
     parfor space_i = 1:numel(unique_spaces)
         curr_space = unique_spaces{space_i};
         chan_order = component_results.(curr_space).orig_chan_order;

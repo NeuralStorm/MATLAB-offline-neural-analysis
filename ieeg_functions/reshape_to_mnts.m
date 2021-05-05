@@ -1,4 +1,4 @@
-function [label_log, mnts_struct, event_info, band_shifts] = reshape_to_mnts(label_table, power_struct, ...
+function [chan_group_log, mnts_struct, event_info, band_shifts] = reshape_to_mnts(label_table, power_struct, ...
         select_features, include_events, use_z_score, smooth_power, smoothing_direction, span, downsample_pow, ...
         downsample_rate, slice_time, bin_size, window_start, slice_start, slice_end)
 
@@ -25,7 +25,7 @@ function [label_log, mnts_struct, event_info, band_shifts] = reshape_to_mnts(lab
     % select_features: string that determines how to combine powers and regions to make features
     %                  format layout: power:region, power+power:region+region;power:region, etc
     %% Output:
-    % label_log: table with columns
+    % chan_group_log: table with columns
     %                'channel': String with name of channel
     %                'selected_channels': Boolean if channel is used
     %                'user_channels': String with user defined mapping
@@ -33,7 +33,7 @@ function [label_log, mnts_struct, event_info, band_shifts] = reshape_to_mnts(lab
     %                'label_id': Int: unique id used for labels
     %                'recording_session': Int: File recording session number that above applies to
     %                'recording_notes': String with user defined notes for channel
-    % mnts_struct: struct w/ fields for each feature set matching the feature set in label_log
+    % mnts_struct: struct w/ fields for each feature set matching the feature set in chan_group_log
     %                 feature_name: struct with fields:
     %                               Note: Order of observations are assumed to be group by event types for later separation
     %                               mnts/z_mnts: Numeric input array for PCA (may be z-scored depending on use_z_score)
@@ -54,7 +54,7 @@ function [label_log, mnts_struct, event_info, band_shifts] = reshape_to_mnts(lab
     unique_bands = unique_bands(~ismember(unique_bands, ...
         {'anat', 'beh', 'fsample', 'time'}));
     unique_regions = unique(power_struct.anat.ROIs);
-    label_log = table();
+    chan_group_log = table();
     mnts_struct = struct;
     band_shifts = struct;
 
@@ -99,7 +99,7 @@ function [label_log, mnts_struct, event_info, band_shifts] = reshape_to_mnts(lab
                 mnts_struct.(feature).chan_order = chan_list;
                 mnts_struct.(feature).orig_chan_order = chan_list;
                 band_shifts.(feature) = [];
-                label_log = append_labels(feature, region, label_table, label_log);
+                chan_group_log = append_labels(feature, region, label_table, chan_group_log);
             end
         end
     else
@@ -147,7 +147,7 @@ function [label_log, mnts_struct, event_info, band_shifts] = reshape_to_mnts(lab
                         chan_list = append_feature(power_struct.anat.channels(region_channel_i), feature);
                         mnts_struct.(feature).chan_order = [mnts_struct.(feature).chan_order; chan_list];
                         mnts_struct.(feature).orig_chan_order = [mnts_struct.(feature).orig_chan_order; chan_list];
-                        label_log = append_labels(feature, region, label_table, label_log);
+                        chan_group_log = append_labels(feature, region, label_table, chan_group_log);
                     end
                     band_shifts.(feature) = [band_shifts.(feature); {numel(mnts_struct.(feature).orig_chan_order)}];
                 end
@@ -211,10 +211,10 @@ function [mnts] = create_mnts(powspctrm)
     end
 end
 
-function [label_log] = append_labels(feature, region, label_table, label_log)
+function [chan_group_log] = append_labels(feature, region, label_table, chan_group_log)
     region_table = label_table(ismember(label_table.chan_group, region), :);
     region_table.chan_group = repmat({feature}, [height(region_table), 1]);
-    label_log = [label_log; region_table];
+    chan_group_log = [chan_group_log; region_table];
 end
 
 function [chan_order] = append_feature(chan_order, feature)

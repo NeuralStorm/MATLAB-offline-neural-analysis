@@ -26,14 +26,14 @@ function [] = batch_format_psth(save_path, failed_path, data_path, dir_name, con
             [psth_struct, event_info] = format_PSTH(event_info, ...
                 selected_channels, config.bin_size, config.window_start, config.window_end);
 
-            label_log = selected_channels;
-            label_log = removevars(label_log, 'channel_data');
+            chan_group_log = selected_channels;
+            chan_group_log = removevars(chan_group_log, 'channel_data');
 
             %% Saving outputs
             matfile = fullfile(save_path, ['PSTH_format_', filename_meta.filename, '.mat']);
             save(matfile, 'psth_struct', 'event_info', 'selected_channels', ...
-                'filename_meta', 'config_log', 'label_log');
-            clear('psth_struct', 'event_info', 'selected_channels', 'label_log', ...
+                'filename_meta', 'config_log', 'chan_group_log');
+            clear('psth_struct', 'event_info', 'selected_channels', 'chan_group_log', ...
                 'filename_meta', 'channel_map');
         catch ME
             handle_ME(ME, failed_path, filename_meta.filename);

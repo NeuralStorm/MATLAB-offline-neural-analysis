@@ -28,10 +28,10 @@ function [] = batch_mnts_to_psth(save_path, failed_path, data_path, ...
 
             %% Load mnts data
             if dir_config.use_mnts
-                load(file, 'mnts_struct', 'event_info', 'label_log', 'filename_meta');
+                load(file, 'mnts_struct', 'event_info', 'chan_group_log', 'filename_meta');
                 mnts_data = mnts_struct; clear('mnts_struct');
             else
-                load(file, 'component_results', 'event_info', 'label_log', ...
+                load(file, 'component_results', 'event_info', 'chan_group_log', ...
                     'filename_meta');
                 mnts_data = component_results; clear('component_results');
             end
@@ -41,13 +41,13 @@ function [] = batch_mnts_to_psth(save_path, failed_path, data_path, ...
                 continue
             end
 
-            psth_struct = reformat_mnts(label_log, mnts_data, tot_bins);
+            psth_struct = reformat_mnts(chan_group_log, mnts_data, tot_bins);
 
             matfile = fullfile(save_path, [filename_substring_one, ...
                 '_format_' filename_meta.filename, '.mat']);
             save(matfile, 'psth_struct', 'event_info', 'filename_meta', 'config_log', ...
-                'label_log');
-            clear('psth_struct', 'event_info', 'filename_meta', 'label_log', 'mnts_data');
+                'chan_group_log');
+            clear('psth_struct', 'event_info', 'filename_meta', 'chan_group_log', 'mnts_data');
         catch ME
             handle_ME(ME, failed_path, filename_meta.filename);
         end

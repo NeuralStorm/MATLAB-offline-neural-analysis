@@ -1,4 +1,4 @@
-function [] = plot_tfr_pca_psth(save_path, tfr_path, tfr_file_list, label_log, mnts_struct, band_shifts,...
+function [] = plot_tfr_pca_psth(save_path, tfr_path, tfr_file_list, chan_group_log, mnts_struct, band_shifts,...
     component_results, psth_struct, event_info, bin_size, window_start, ...
     window_end, baseline_start, baseline_end, response_start, response_end, ...
     feature_filter, feature_value, sub_rows, sub_cols, st_type, ymax_scale, ...
@@ -12,7 +12,7 @@ function [] = plot_tfr_pca_psth(save_path, tfr_path, tfr_file_list, label_log, m
     % tfr_path: path to contour tfr plots gor given subject and recording session
     % tfr_file_list: list of .fig files at tfr_path
     %                (can be created by calling get_file_list(tfr_path, '.fig')
-    % label_log: table with columns
+    % chan_group_log: table with columns
     %                   'channel': String with name of channel
     %                   'selected_channels': Boolean if channel is used
     %                   'user_channels': String with user defined mapping
@@ -89,7 +89,7 @@ function [] = plot_tfr_pca_psth(save_path, tfr_path, tfr_file_list, label_log, m
         region = unique_regions{reg_i};
         st_vec = [];
 
-        region_log = label_log(strcmpi(label_log.chan_group, region), :);
+        region_log = chan_group_log(strcmpi(chan_group_log.chan_group, region), :);
         [color_struct, region_list] = create_color_struct(color_map, region_log);
         chan_order = psth_struct.(region).chan_order;
         tot_reg_chans = numel(chan_order);

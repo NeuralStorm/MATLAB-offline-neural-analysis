@@ -43,9 +43,9 @@ function [] = batch_dropping_classifier(project_path, save_path, failed_path, ..
         %% Run through files
         try
             file = fullfile(data_path, file_list(file_index).name);
-            load(file, 'psth_struct', 'event_info', 'filename_meta', 'label_log');
+            load(file, 'psth_struct', 'event_info', 'filename_meta', 'chan_group_log');
             %% Check psth variables to make sure they are not empty
-            empty_vars = check_variables(file, psth_struct, event_info, label_log);
+            empty_vars = check_variables(file, psth_struct, event_info, chan_group_log);
             if empty_vars
                 continue
             end
@@ -73,7 +73,7 @@ function [] = batch_dropping_classifier(project_path, save_path, failed_path, ..
                 load(var_file, 'component_results');
                 chan_info = get_chan_vars(component_results);
             elseif strcmpi(drop_method, 'random')
-                chan_info = label_log;
+                chan_info = chan_group_log;
                 chan_info = renamevars(chan_info, "chan_group", "region");
             else
                 is_unrecoverable = true;

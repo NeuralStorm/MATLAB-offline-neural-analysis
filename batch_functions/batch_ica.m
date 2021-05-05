@@ -12,7 +12,7 @@ function [] = batch_ica(save_path, failed_path, data_path, dir_name, dir_config)
         try
             %% pull info from filename and set up file path for analysis
             file = fullfile(data_path, file_list(file_index).name);
-            load(file, 'event_info', 'mnts_struct', 'filename_meta', 'label_log');
+            load(file, 'event_info', 'mnts_struct', 'filename_meta', 'chan_group_log');
             %% Check variables to make sure they are not empty
             empty_vars = check_variables(file, event_info, mnts_struct);
             if empty_vars
@@ -20,7 +20,7 @@ function [] = batch_ica(save_path, failed_path, data_path, dir_name, dir_config)
             end
 
             %% ICA
-            [component_results, ~, label_log] = calc_ica(label_log, ...
+            [component_results, ~, chan_group_log] = calc_ica(chan_group_log, ...
                 mnts_struct, dir_config.ic_pc, dir_config.extended, ...
                 dir_config.sphering, dir_config.anneal, dir_config.anneal_deg, ...
                 dir_config.bias, dir_config.momentum, dir_config.max_steps, ...
@@ -33,9 +33,9 @@ function [] = batch_ica(save_path, failed_path, data_path, dir_name, dir_config)
                 continue
             end
             save(matfile, 'event_info', 'component_results', ...
-                'filename_meta', 'config_log', 'label_log');
+                'filename_meta', 'config_log', 'chan_group_log');
             clear('event_info', 'component_results', ...
-                'filename_meta', 'label_log');
+                'filename_meta', 'chan_group_log');
         catch ME
             handle_ME(ME, failed_path, filename_meta.filename);
         end

@@ -1,4 +1,4 @@
-function [results] = plot_corr(save_path, component_results, label_log, ...
+function [results] = plot_corr(save_path, component_results, chan_group_log, ...
         feature_filter, feature_value, min_components, corr_components, ...
         sub_rows, sub_columns, subplot_shrinking, legend_loc)
 
@@ -13,7 +13,7 @@ function [results] = plot_corr(save_path, component_results, label_log, ...
     %                                  coeff: NxN (N = tot features) matrix with coeff weights used to scale mnts into PC space
     %                                             Columns: Component Row: Feature
     %                                  orig_chan_order: C x 1 cell array, C = tot channels. Order of electrodes fed into PCA
-    % label_log: table with columns (relevant columns shown only)
+    % chan_group_log: table with columns (relevant columns shown only)
     %            'channel': String with name of channel
     %            'label': String: associated region or grouping of electrodes
     % feature_filter: String with description for pcs
@@ -40,10 +40,10 @@ function [results] = plot_corr(save_path, component_results, label_log, ...
                 255 128 0] ./ 256; % yellow
 
     %% Create color_struct
-    unique_features = unique(label_log.chan_group);
+    unique_features = unique(chan_group_log.chan_group);
     combined_feature_space = unique_features{1};
-    color_log.chan_group = label_log.chan_group;
-    color_log.channel = label_log.channel;
+    color_log.chan_group = chan_group_log.chan_group;
+    color_log.channel = chan_group_log.channel;
     for feature_i = 2:numel(unique_features)
         feature = unique_features{feature_i};
         combined_feature_space = [combined_feature_space, '_', feature];

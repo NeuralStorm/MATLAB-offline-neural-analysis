@@ -1,4 +1,4 @@
-function [ica_results, labeled_ics, ic_log] = calc_ica(label_log, mnts_struct, ...
+function [ica_results, labeled_ics, ic_log] = calc_ica(chan_group_log, mnts_struct, ...
         tot_pcs, extended, sphering, anneal, anneal_deg, bias_switch, ...
         momentum, max_steps, stop_train, rnd_reset, verbose)
     %TODO add option to go straight from relative response to ica with no PCA middleman
@@ -7,7 +7,7 @@ function [ica_results, labeled_ics, ic_log] = calc_ica(label_log, mnts_struct, .
     ica_results = struct;
     labeled_ics = struct;
     ic_log = table();
-    unique_regions = unique(label_log.chan_group);
+    unique_regions = unique(chan_group_log.chan_group);
     for reg_i = 1:numel(unique_regions)
         region = unique_regions{reg_i};
         % Multineuron timeseries is transposed to match expected dimensionality of runica from EEGLabs
@@ -61,7 +61,7 @@ function [ica_results, labeled_ics, ic_log] = calc_ica(label_log, mnts_struct, .
         for component_i = 1:tot_components
             ic_names{component_i} = [region, '_ic_', num2str(component_i)];
         end
-        region_table = label_log(1:tot_components, :);
+        region_table = chan_group_log(1:tot_components, :);
         region_table.channel = ic_names; region_table.user_channels = ic_names;
         region_table.channel_data = num2cell(mnts, 1)';
         labeled_ics.(region) = region_table;
