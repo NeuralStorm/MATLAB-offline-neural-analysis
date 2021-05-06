@@ -10,7 +10,7 @@ function [psth_struct] = reformat_mnts(chan_group_log, component_results, tot_bi
     %                   'channel': String with name of channel
     %                   'selected_channels': Boolean if channel is used
     %                   'user_channels': String with user defined mapping
-    %                   'label': String: associated region or grouping of electrodes
+    %                   'chan_group': String: associated chan_group or grouping of electrodes
     %                   'label_id': Int: unique id used for labels
     %                   'recording_session': Int: File recording session number that above applies to
     %                   'recording_notes': String with user defined notes for channel
@@ -25,19 +25,19 @@ function [psth_struct] = reformat_mnts(chan_group_log, component_results, tot_bi
     % tot_bins: total bins that unit has within the mnts
     %% Output:
     % psth_struct: struct w/ fields for each feature
-    %              feature_name: struct typically based on regions and powers
+    %              feature_name: struct typically based on chan_group and powers
     %                            relative_response: Numerical matrix with dimensions Trials x ((tot pcs or channels) * tot bins)
     psth_struct = struct;
-    unique_regions = unique(chan_group_log.chan_group);
+    unique_ch_groups = unique(chan_group_log.chan_group);
     %% Convert weighted mnts into relative response
-    for region_index = 1:length(unique_regions)
-        region = unique_regions{region_index};
-        region_mnts = component_results.(region).mnts;
-        [tot_rows, tot_components] = size(region_mnts);
+    for ch_group_i = 1:length(unique_ch_groups)
+        ch_group = unique_ch_groups{ch_group_i};
+        ch_group_mnts = component_results.(ch_group).mnts;
+        [tot_rows, tot_components] = size(ch_group_mnts);
         tot_trials = tot_rows / tot_bins;
-        relative_response = mnts_to_psth(region_mnts, tot_trials, tot_components, tot_bins);
-        psth_struct.(region).relative_response = relative_response;
-        psth_struct.(region).chan_order = component_results.(region).chan_order;
-        psth_struct.(region).orig_chan_order = component_results.(region).orig_chan_order;
+        relative_response = mnts_to_psth(ch_group_mnts, tot_trials, tot_components, tot_bins);
+        psth_struct.(ch_group).relative_response = relative_response;
+        psth_struct.(ch_group).chan_order = component_results.(ch_group).chan_order;
+        psth_struct.(ch_group).orig_chan_order = component_results.(ch_group).orig_chan_order;
     end
 end

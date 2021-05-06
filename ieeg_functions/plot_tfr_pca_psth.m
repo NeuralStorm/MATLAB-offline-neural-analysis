@@ -16,20 +16,20 @@ function [] = plot_tfr_pca_psth(save_path, tfr_path, tfr_file_list, chan_group_l
     %                   'channel': String with name of channel
     %                   'selected_channels': Boolean if channel is used
     %                   'user_channels': String with user defined mapping
-    %                   'label': String: associated region or grouping of electrodes
+    %                   'label': String: associated chan_group or grouping of electrodes
     %                   'label_id': Int: unique id used for labels
     %                   'recording_session': Int: File recording session number that above applies to
     %                   'recording_notes': String with user defined notes for channel
-    % component_results: struct w/ fields for each region set ran through PCA
+    % component_results: struct w/ fields for each chan_group set ran through PCA
     %                    feature_name: struct with fields
     %                                  componenent_variance: Vector with % variance explained by each component
     %                                  eigenvalues: Vector with eigen values
     %                                  coeff: NxN (N = tot features) matrix with coeff weights used to scale mnts into PC space
     %                                             Columns: Component Row: Feature
-    %                                  estimated_mean: Vector with estimated means for each region
-    %                                  mnts: mnts mapped into pc space with region filter applied
-    % psth_struct: struct w/ fields for each region
-    %              region: structwith fields:
+    %                                  estimated_mean: Vector with estimated means for each chan_group
+    %                                  mnts: mnts mapped into pc space with chan_group filter applied
+    % psth_struct: struct w/ fields for each chan_group
+    %              chan_group: structwith fields:
     %                          relative_response: Numerical matrix with dimensions Trials x ((tot pcs or channels) * tot bins)
     %                          label_order: order of pcs
     %                          chan_order: order of channels
@@ -83,15 +83,15 @@ function [] = plot_tfr_pca_psth(save_path, tfr_path, tfr_file_list, chan_group_l
     end
 
     unique_events = unique(event_info.event_labels);
-    unique_regions = fieldnames(psth_struct);
+    unique_ch_group = fieldnames(psth_struct);
 
-    parfor reg_i = 1:length(unique_regions)
-        region = unique_regions{reg_i};
+    parfor ch_group_i = 1:length(unique_ch_group)
+        ch_group = unique_ch_group{ch_group_i};
         st_vec = [];
 
-        region_log = chan_group_log(strcmpi(chan_group_log.chan_group, region), :);
-        [color_struct, region_list] = create_color_struct(color_map, region_log);
-        chan_order = psth_struct.(region).chan_order;
+        ch_group_table = chan_group_log(strcmpi(chan_group_log.chan_group, ch_group), :);
+        [color_struct, ch_group_list] = create_color_struct(color_map, ch_group_table);
+        chan_order = psth_struct.(ch_group).chan_order;
         tot_reg_chans = numel(chan_order);
         for event_i = 1:numel(unique_events)
             event = unique_events{event_i};
@@ -102,7 +102,7 @@ function [] = plot_tfr_pca_psth(save_path, tfr_path, tfr_file_list, chan_group_l
             main_plot = figure;
             set(gca,'DefaultTextFontSize', 1)
             %TODO add more info to title plot
-            component_var = component_results.(region).component_variance;
+            component_var = component_results.(ch_group).component_variance;
             tot_chans = length(component_var);
             if tot_chans < min_chans
                 continue
@@ -110,7 +110,7 @@ function [] = plot_tfr_pca_psth(save_path, tfr_path, tfr_file_list, chan_group_l
             %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
             %% Text plot
             % Position: 1st row, last column
-            description = [region, ' event: ' event, ' tot components: ', num2str(tot_chans)];
+            description = [ch_group, ' event: ' event, ' tot components: ', num2str(tot_chans)];
             description = strrep(description, '_', ' ');
             figure(main_plot);
             ax = scrollsubplot(sub_rows, sub_cols, 1);
@@ -123,8 +123,8 @@ function [] = plot_tfr_pca_psth(save_path, tfr_path, tfr_file_list, chan_group_l
             %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
             % Frequency is not an issue since we plot all the frequencies
             tfr_counter = 3;
-            for sub_reg_i = 1:numel(region_list)
-                sub_reg = region_list{sub_reg_i};
+            for sub_reg_i = 1:numel(ch_group_list)
+                sub_reg = ch_group_list{sub_reg_i};
                 if contains(sub_reg, '_')
                     split_reg = strsplit(sub_reg, '_');
                     sub_reg = split_reg{end};
@@ -191,9 +191,9 @@ function [] = plot_tfr_pca_psth(save_path, tfr_path, tfr_file_list, chan_group_l
             weight_counter = tfr_counter + 1;
             %% Get event response and separate into units
             event_indices = event_info.event_indices(strcmpi(event_info.event_labels, event));
-            event_matrix = get_event_response(psth_struct.(region).relative_response, event_indices);
+            event_matrix = get_event_response(psth_struct.(ch_group).relative_response, event_indices);
             event_psth = calc_psth(event_matrix);
-            unit_struct = slice_unit_response(event_matrix, psth_struct.(region).chan_order, tot_window_bins);
+            unit_struct = slice_unit_response(event_matrix, psth_struct.(ch_group).chan_order, tot_window_bins);
 
             %% Set event min and max for plotting
             event_max = 1.1 * max(event_psth) + eps;
@@ -230,7 +230,7 @@ function [] = plot_tfr_pca_psth(save_path, tfr_path, tfr_file_list, chan_group_l
 
                 if plot_avg_pow
                     yyaxis right
-                    [tfr, st_tfr] = calc_tfr(mnts_struct.(region).mnts, event_indices, st_type, tot_window_bins);
+                    [tfr, st_tfr] = calc_tfr(mnts_struct.(ch_group).mnts, event_indices, st_type, tot_window_bins);
                     [l, ~] = boundedline(event_window, tfr, st_tfr, 'transparency', transparency);
                     legend_lines = [legend_lines, l];
                     lg = legend(legend_lines, ["pc", "avg power"]);
@@ -248,7 +248,7 @@ function [] = plot_tfr_pca_psth(save_path, tfr_path, tfr_file_list, chan_group_l
             %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
             %% Plot PCA weights
             plot_incrememnt = sub_cols;
-            pca_weights = component_results.(region).coeff;
+            pca_weights = component_results.(ch_group).coeff;
             [~, tot_chans] = size(pca_weights);
             if strcmpi(feature_filter, 'pcs') && feature_value < tot_chans
                 %% Grabs desired number of principal components weights
@@ -257,15 +257,15 @@ function [] = plot_tfr_pca_psth(save_path, tfr_path, tfr_file_list, chan_group_l
             tot_plots = plot_weights(pca_weights, ymax_scale, color_struct, ...
                 sub_rows, sub_cols, weight_counter, plot_incrememnt, font_size);
 
-            plot_power_shifts(band_shifts.(region), plot_shift_labels, ...
+            plot_power_shifts(band_shifts.(ch_group), plot_shift_labels, ...
                 weight_counter, plot_incrememnt, tot_plots, sub_rows, sub_cols, font_size);
             %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
             figure(main_plot);
             try
-                filename = [region, '_', event, '.png'];
+                filename = [ch_group, '_', event, '.png'];
                 saveas(gcf, fullfile(save_path, filename));
             end
-            filename = [region, '_', event, '.fig'];
+            filename = [ch_group, '_', event, '.fig'];
             set(gcf, 'CreateFcn', 'set(gcbo,''Visible'',''on'')'); 
             savefig(gcf, fullfile(save_path, filename));
             close all

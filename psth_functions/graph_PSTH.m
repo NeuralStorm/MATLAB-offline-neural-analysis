@@ -2,7 +2,7 @@ function [] = graph_PSTH(save_path, filename, psth_struct, event_info, bin_size,
         window_start, window_end, baseline_start, baseline_end, response_start, ...
         response_end, sub_rows, sub_cols, plot_rf, rf_res, mixed_smoothing, span)
 
-    unique_regions = fieldnames(psth_struct);
+    unique_ch_groups = fieldnames(psth_struct);
     unique_events = unique(event_info.event_labels);
     tot_events = numel(unique_events);
 
@@ -14,16 +14,16 @@ function [] = graph_PSTH(save_path, filename, psth_struct, event_info, bin_size,
     event_window(end) = [];
     tot_bins = numel(event_window);
 
-    parfor reg_i = 1:length(unique_regions)
-        region = unique_regions{reg_i};
-        chan_order = psth_struct.(region).chan_order;
+    parfor reg_i = 1:length(unique_ch_groups)
+        ch_group = unique_ch_groups{reg_i};
+        chan_order = psth_struct.(ch_group).chan_order;
         for event_i = 1:tot_events
             main_plot = figure;
             event = unique_events{event_i};
             event_indices = event_info.event_indices(strcmpi(event_info.event_labels, event), :);
 
             %% Determine y lim of event psth
-            event_rr = psth_struct.(region).relative_response(event_indices, :);
+            event_rr = psth_struct.(ch_group).relative_response(event_indices, :);
             event_psth = calc_psth(event_rr);
 
             if plot_rf && ~mixed_smoothing && span >= 3
@@ -41,7 +41,7 @@ function [] = graph_PSTH(save_path, filename, psth_struct, event_info, bin_size,
             chan_e = tot_bins;
             for chan_i = 1:numel(chan_order)
                 chan = chan_order{chan_i};
-                chan_rr = psth_struct.(region).relative_response(event_indices, chan_s:chan_e);
+                chan_rr = psth_struct.(ch_group).relative_response(event_indices, chan_s:chan_e);
                 psth = calc_psth(chan_rr);
 
                 if plot_rf && ~mixed_smoothing && span >= 3
@@ -66,12 +66,12 @@ function [] = graph_PSTH(save_path, filename, psth_struct, event_info, bin_size,
                 ylabel('Magnitude');
                 title(chan);
                 if plot_rf
-                    %% Get rf measures for region, event, and channel
-                    threshold = rf_res.threshold(strcmpi(rf_res.region, region) ...
+                    %% Get rf measures for chan_group, event, and channel
+                    threshold = rf_res.threshold(strcmpi(rf_res.chan_group, ch_group) ...
                         & strcmpi(rf_res.event, event) & strcmpi(rf_res.channel, chan));
-                    fbl = rf_res.first_latency(strcmpi(rf_res.region, region) ...
+                    fbl = rf_res.first_latency(strcmpi(rf_res.chan_group, ch_group) ...
                         & strcmpi(rf_res.event, event) & strcmpi(rf_res.channel, chan));
-                    lbl = rf_res.last_latency(strcmpi(rf_res.region, region) ...
+                    lbl = rf_res.last_latency(strcmpi(rf_res.chan_group, ch_group) ...
                         & strcmpi(rf_res.event, event) & strcmpi(rf_res.channel, chan));
                     %% Plot measures over chan psth
                     plot_recfield(main_plot, event_window, psth, fbl, lbl, threshold, bin_size, window_start)
@@ -82,7 +82,7 @@ function [] = graph_PSTH(save_path, filename, psth_struct, event_info, bin_size,
                 chan_e = chan_e + tot_bins;
             end
             %% Save figure
-            fig_filename = [filename, '_', region, '_', event, '.fig'];
+            fig_filename = [filename, '_', ch_group, '_', event, '.fig'];
             set(gcf, 'CreateFcn', 'set(gcbo,''Visible'',''on'')'); 
             savefig(gcf, fullfile(save_path, fig_filename));
             close gcf

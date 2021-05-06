@@ -2,12 +2,12 @@ function [pop_table, chan_table] = psth_bootstrapper(...
         psth_struct, event_info, bin_size, window_start, window_end, ...
         response_start, response_end, boot_iterations)
 
-    unique_regions = fieldnames(psth_struct);
+    unique_ch_groups = fieldnames(psth_struct);
     unique_events = unique(event_info.event_labels);
     [~, tot_bins] = get_bins(response_start, response_end, bin_size);
 
     %% Create population table
-    pop_headers = [["region", "string"]; ["boot_perf", "double"]; ...
+    pop_headers = [["chan_group", "string"]; ["boot_perf", "double"]; ...
                    ["boot_mutual_info", "double"]];
     pop_table = prealloc_table(pop_headers, [0, size(pop_headers, 1)]);
     %% Create channel table
@@ -16,11 +16,11 @@ function [pop_table, chan_table] = psth_bootstrapper(...
     chan_table = prealloc_table(chan_headers, [0, size(chan_headers, 1)]);
 
     %% Bootstrapping
-    for reg_i = 1:length(unique_regions)
-        region = unique_regions{reg_i};
-        chan_order = psth_struct.(region).chan_order;
+    for ch_group_i = 1:length(unique_ch_groups)
+        ch_group = unique_ch_groups{ch_group_i};
+        chan_order = psth_struct.(ch_group).chan_order;
         tot_chans = numel(chan_order);
-        %% Preallocate region boot arrays
+        %% Preallocate chan_group boot arrays
         reg_perf = prealloc_boot_array(boot_iterations, 1);
         reg_info = prealloc_boot_array(boot_iterations, 1);
         %% Preallocate channel boot arrays
@@ -32,7 +32,7 @@ function [pop_table, chan_table] = psth_bootstrapper(...
             shuffled_events = event_info;
             shuffled_events.event_indices = shuffled_events.event_indices(randperm(numel(shuffled_events.event_indices)));
             %% Create shuffled event struct to classify with
-            shuffled_struct = create_event_struct(psth_struct.(region), shuffled_events, ...
+            shuffled_struct = create_event_struct(psth_struct.(ch_group), shuffled_events, ...
                 bin_size, window_start, window_end, response_start, response_end);
 
             %% Unit classification
@@ -54,11 +54,11 @@ function [pop_table, chan_table] = psth_bootstrapper(...
             reg_perf(1, i) = shuffled_perf;
             reg_info(1, i) = shuffled_info;
         end
-        %% Region avg
+        %% chan_group avg
         avg_reg_perf = get_avg_boot(reg_perf);
         avg_reg_info = get_avg_boot(reg_info);
-        %% Add region boot information to pop table
-        a = [{region}, avg_reg_perf, avg_reg_info];
+        %% Add chan_group boot information to pop table
+        a = [{ch_group}, avg_reg_perf, avg_reg_info];
         pop_table = vertcat_cell(pop_table, a, pop_headers(:, 1), "after");
         %% Channel avg
         avg_chan_perf = get_avg_boot(chan_perf);

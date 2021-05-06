@@ -6,15 +6,15 @@ function [mnts_struct, event_info, selected_channels] = format_mnts(...
 
     tot_trials = height(event_info);
 
-    unique_regions = unique(selected_channels.chan_group);
-    for reg_i = 1:length(unique_regions)
-        region = unique_regions{reg_i};
-        region_channels = selected_channels(strcmpi(selected_channels.chan_group, region), :);
-        tot_chans = height(region_channels);
+    unique_ch_groups = unique(selected_channels.chan_group);
+    for ch_group_i = 1:length(unique_ch_groups)
+        ch_group = unique_ch_groups{ch_group_i};
+        chan_list = selected_channels(strcmpi(selected_channels.chan_group, ch_group), :);
+        tot_chans = height(chan_list);
         mnts = nan((tot_bins * tot_trials), tot_chans);
 
         for chan_i = 1:tot_chans
-            spike_ts = region_channels.channel_data{chan_i};
+            spike_ts = chan_list.channel_data{chan_i};
             trial_s = 1;
             trial_e = tot_bins;
             for trial_i = 1:tot_trials
@@ -36,18 +36,18 @@ function [mnts_struct, event_info, selected_channels] = format_mnts(...
         for col = 1:mnts_cols
             unique_response = unique(mnts(:, col));
             if length(unique_response) == 1
-                channel_list = [channel_list, region_channels.channel(col)];
+                channel_list = [channel_list, chan_list.channel(col)];
                 remove_units = [remove_units; col];
             end
         end
         if ~isempty(remove_units)
             %% Remove empty channels
             selected_channels = selected_channels(~ismember(selected_channels.channel, channel_list), :);
-            region_channels = region_channels(~ismember(region_channels.channel, channel_list), :);
+            chan_list = chan_list(~ismember(chan_list.channel, channel_list), :);
             mnts(:, remove_units) = [];
         end
         %% Store mnts
-        mnts_struct.(region).mnts = mnts;
-        mnts_struct.(region).orig_chan_order = region_channels.channel;
+        mnts_struct.(ch_group).mnts = mnts;
+        mnts_struct.(ch_group).orig_chan_order = chan_list.channel;
     end
 end

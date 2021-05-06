@@ -23,7 +23,7 @@ function [] = plot_brain_weights(save_path, dir_name, mesh_struct, elec_struct, 
     %                                  coeff: NxN (N = tot features) matrix with coeff weights used to scale mnts into PC space
     %                                             Columns: Component Row: Feature
     %                                  orig_chan_order: order of electrodes in feature space
-    % chan_group_log: table with channel and region info --> only used to get unique feature spaces for loop
+    % chan_group_log: table with channel and chan_group info --> only used to get unique feature spaces for loop
     % min_components: Int: min componenets needed to make subplot
     % feature_filter: String with description for pcs
     %                 'all': keep all pcs after PCA

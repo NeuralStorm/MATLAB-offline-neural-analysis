@@ -16,7 +16,7 @@ function [] = batch_reshape_to_mnts(save_path, failed_path, data_path, ...
     %                     'channel': String with name of channel
     %                     'selected_channels': Boolean if channel is used
     %                     'user_channels': String with user defined mapping
-    %                     'label': String: associated region or grouping of electrodes
+    %                     'label': String: associated chan_group or grouping of electrodes
     %                     'label_id': Int: unique id used for labels
     %                     'recording_session': Int: File recording session number that above applies to
     %                     'recording_notes': String with user defined notes for channel

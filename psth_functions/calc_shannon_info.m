@@ -4,28 +4,28 @@ function [res] = calc_shannon_info(psth_struct, event_info, bin_size, window_sta
     % *_t = timing, *_c = count
 
     %% Create info table
-    headers = [["region", "string"]; ["channel", "string"]; ...
+    headers = [["chan_group", "string"]; ["channel", "string"]; ...
                ["event", "string"]; ["entropy_time", "double"]; ...
                ["entropy_count", "double"]; ["mutual_info_time", "double"]; ...
                ["mutual_info_count", "double"];];
     res = prealloc_table(headers, [0, size(headers, 1)]);
 
-    unique_regions = fieldnames(psth_struct);
+    unique_ch_groups = fieldnames(psth_struct);
     unique_events = unique(event_info.event_labels);
     tot_events = numel(unique_events);
     [~, tot_bins] = get_bins(window_start, window_end, bin_size);
 
-    for reg_i = 1:length(unique_regions)
-        region = unique_regions{reg_i};
-        chan_order = psth_struct.(region).chan_order;
+    for ch_group_i = 1:length(unique_ch_groups)
+        ch_group = unique_ch_groups{ch_group_i};
+        chan_order = psth_struct.(ch_group).chan_order;
         tot_chans = numel(chan_order);
         %% Start channel counter
         chan_s = 1;
         chan_e = tot_bins;
         for chan_i = 1:tot_chans
-            chan = psth_struct.(region).chan_order{chan_i};
+            chan = psth_struct.(ch_group).chan_order{chan_i};
             %% Grab entire response for channel
-            chan_rr = psth_struct.(region).relative_response(:, chan_s:chan_e);
+            chan_rr = psth_struct.(ch_group).relative_response(:, chan_s:chan_e);
             response_rr = slice_rr(chan_rr, bin_size, window_start, ...
                 window_end, response_start, response_end);
             %% Find timing mutual information for response_rr
@@ -35,7 +35,7 @@ function [res] = calc_shannon_info(psth_struct, event_info, bin_size, window_sta
                 %% Calculate event entropies
                 event = unique_events{event_i};
                 event_indices = event_info.event_indices(strcmpi(event_info.event_labels, event), :);
-                chan_rr = psth_struct.(region).relative_response(event_indices, chan_s:chan_e);
+                chan_rr = psth_struct.(ch_group).relative_response(event_indices, chan_s:chan_e);
                 response_rr = slice_rr(chan_rr, bin_size, window_start, ...
                     window_end, response_start, response_end);
 
@@ -47,7 +47,7 @@ function [res] = calc_shannon_info(psth_struct, event_info, bin_size, window_sta
                 [~, prob_c] = get_prob(sum(response_rr, 2));
                 entropy_c = calc_entropy(prob_c);
 
-                a = [{region}, {chan}, {event}, entropy_t, entropy_c, mi_t, mi_c];
+                a = [{ch_group}, {chan}, {event}, entropy_t, entropy_c, mi_t, mi_c];
                 %% Store results in table
                 res = vertcat_cell(res, a, headers(:, 1), "after");
             end

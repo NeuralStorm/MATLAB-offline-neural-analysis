@@ -8,7 +8,7 @@ function [pca_results, labeled_pcs, pc_log] = calc_pca(chan_group_log, mnts_stru
     %                       'channel': String with name of channel
     %                       'selected_channels': Boolean if channel is used
     %                       'user_channels': String with user defined mapping
-    %                       'label': String: associated region or grouping of electrodes
+    %                       'label': String: associated chan_group or grouping of electrodes
     %                       'label_id': Int: unique id used for labels
     %                       'recording_session': Int: File recording session number that above applies to
     %                       'recording_notes': String with user defined notes for channel
@@ -56,24 +56,24 @@ function [pca_results, labeled_pcs, pc_log] = calc_pca(chan_group_log, mnts_stru
 
     pca_results = struct;
 
-    unique_regions = unique(chan_group_log.chan_group);
+    unique_ch_groups = unique(chan_group_log.chan_group);
     pc_log = table;
-    for region_index = 1:length(unique_regions)
-        region = unique_regions{region_index};
+    for ch_group_i = 1:length(unique_ch_groups)
+        ch_group = unique_ch_groups{ch_group_i};
         %% Grab mnts and apply z score accordingly
-        pca_input = mnts_struct.(region).mnts;
+        pca_input = mnts_struct.(ch_group).mnts;
         if apply_z_score
             pca_input = zscore(pca_input);
         end
         [coeff, pca_score, eigenvalues, ~, pc_variance, estimated_mean] = pca(pca_input);
 
-        labeled_pcs = chan_group_log(strcmpi(chan_group_log.chan_group, region), :);
+        labeled_pcs = chan_group_log(strcmpi(chan_group_log.chan_group, ch_group), :);
 
         %% Store PCA results
-        pca_results.(region).component_variance = pc_variance;
-        pca_results.(region).eigenvalues = eigenvalues;
-        pca_results.(region).coeff = coeff;
-        pca_results.(region).estimated_mean = estimated_mean;
+        pca_results.(ch_group).component_variance = pc_variance;
+        pca_results.(ch_group).eigenvalues = eigenvalues;
+        pca_results.(ch_group).coeff = coeff;
+        pca_results.(ch_group).estimated_mean = estimated_mean;
 
         %% Adjust score matrix according to feature filter
         [~, tot_pcs] = size(pca_score);
@@ -95,17 +95,17 @@ function [pca_results, labeled_pcs, pc_log] = calc_pca(chan_group_log, mnts_stru
             pca_score = pca_score(:,1:tot_pcs);
             labeled_pcs = labeled_pcs(1:tot_pcs, :);
         end
-        pca_results.(region).orig_chan_order = mnts_struct.(region).orig_chan_order;
-        pca_results.(region).mnts = pca_score;
+        pca_results.(ch_group).orig_chan_order = mnts_struct.(ch_group).orig_chan_order;
+        pca_results.(ch_group).mnts = pca_score;
         [~, tot_components] = size(pca_score);
         pc_names = cell(tot_components, 1);
         for component_i = 1:tot_components
-            pc_names{component_i} = [region, '_pc_', num2str(component_i)];
+            pc_names{component_i} = [ch_group, '_pc_', num2str(component_i)];
         end
         %% Reset labeled data
         labeled_pcs.channel = pc_names;
         labeled_pcs.user_channels = pc_names;
-        pca_results.(region).chan_order = pc_names;
+        pca_results.(ch_group).chan_order = pc_names;
         pc_log = [pc_log; labeled_pcs];
     end
 end

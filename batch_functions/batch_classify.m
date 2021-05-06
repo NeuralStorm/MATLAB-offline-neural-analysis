@@ -38,7 +38,7 @@ function [] = batch_classify(project_path, save_path, failed_path, data_path, di
                 continue
             end
 
-            if config.combine_regions
+            if config.combine_chan_groups
                 psth_struct = combine_regions(psth_struct);
             end
 
@@ -69,7 +69,7 @@ function [] = batch_classify(project_path, save_path, failed_path, data_path, di
                 assert(height(chan_table) == height(boot_chan), ...
                     'Join assumes a 1-1 mapping but found %d rows in chan_table and %d rows in boot_chan', ...
                     height(chan_table), height(boot_chan));
-                pop_table = join(pop_table, boot_pop, 'Keys', 'region');
+                pop_table = join(pop_table, boot_pop, 'Keys', 'chan_group');
                 chan_table = join(chan_table, boot_chan, 'Keys', 'channel');
                 assert(height(pop_table) == height(boot_pop), ...
                     'Join assumes a 1-1 mapping but found %d rows in pop and %d rows in boot pop after join', ...

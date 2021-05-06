@@ -30,7 +30,7 @@ function [confusion_matrix, mutual_info, correct_trials, performance] = psth_cla
         end
         psth_struct.(current_event).psth = calc_psth(current_response);
     end
-    %% Find the information and performance for current region
+    %% Find the information and performance for current chan_group
     confusion_matrix = confusionmat(true_events, predicted_events);
     mutual_info = I_confmatr(confusion_matrix);
     correct_trials = cellfun(@strcmp, true_events, predicted_events);

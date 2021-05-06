@@ -37,7 +37,7 @@ bootstrap_psth_main
 
 # Pipeline
 ## Overview
-1. Organize regions and powers according to pool set in config
+1. Organize chan_group and powers according to pool set in config
      * Debug: pool 1: All powerbands for LPFC and OFC separately
      * pool 2: high bands: LPFC + OFC, low bands: LPFC + OFC
 2. downsample and smooth according to span and downsample rate in config
@@ -52,7 +52,7 @@ bootstrap_psth_main
 7. format PC score into PSTH format  
 ---End of IEEG Main---  
 The following is controlled by a psth_bootstrapper_main
-8. Combine power-region PCs
+8. Combine power-chan_group PCs
 9. Slice out response window and classify
     * Debug: -2s to 0s response window
 
@@ -60,7 +60,7 @@ The following is controlled by a psth_bootstrapper_main
 Classifying is a bit more complicated when it comes to the parameter search. The pipeline is detailed below.
 
 ### Bin Analysis
-1. Organize regions and powers according to pool set in config
+1. Organize chan_group and powers according to pool set in config
      * Debug: pool 1: All powerbands for LPFC and OFC separately
      * pool 2: high bands: LPFC + OFC, low bands: LPFC + OFC
 2. downsample and smooth according to span and downsample rate in config
@@ -76,11 +76,11 @@ Classifying is a bit more complicated when it comes to the parameter search. The
 7. format PC score into PSTH format  
 ---End of IEEG Main---  
 The following is controlled by a psth_bootstrapper_main
-8. Combine power-region PCs
+8. Combine power-chan_group PCs
 9. Slice out response window and classify
 
 ### Window Analysis
-1. Organize regions and powers according to pool set in config
+1. Organize chan_group and powers according to pool set in config
      * Debug: pool 1: All powerbands for LPFC and OFC separately
      * pool 2: high bands: LPFC + OFC, low bands: LPFC + OFC
 2. downsample and smooth according to span and downsample rate in config
@@ -101,7 +101,7 @@ The following is controlled by a window main (work in progress)
     * to_response_end: Expand window towards 0s stepping by bin size
 
 ### Channel Dropping
-1. Organize regions and powers according to pool set in config
+1. Organize chan_group and powers according to pool set in config
      * Debug: pool 1: All powerbands for LPFC and OFC separately
      * pool 2: high bands: LPFC + OFC, low bands: LPFC + OFC
 2. downsample and smooth according to span and downsample rate in config
@@ -116,7 +116,7 @@ The following is controlled by a window main (work in progress)
 7. format PC score into PSTH format  
 ---End of IEEG Main---  
 The following is controlled by a component dropping main (work in progress)
-8. Combine power-region PCs
+8. Combine power-chan_group PCs
 9. Order PCs by % variance (max -> min)
 10. Drop max pc and redefine population PSTH until all channels are dropped
     * Slice out response window and classify

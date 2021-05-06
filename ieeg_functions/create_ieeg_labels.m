@@ -7,13 +7,13 @@ function [label_table] = create_ieeg_labels(label_table, ieeg_anat, session_num)
     %                     'channel': String with name of channel
     %                     'selected_channels': Boolean if channel is used
     %                     'user_channels': String with user defined mapping
-    %                     'label': String: associated region or grouping of electrodes
+    %                     'label': String: associated chan_group or grouping of electrodes
     %                     'label_id': Int: unique id used for chan_group
     %                     'recording_session': Int: File recording session number that above applies to
     %                     'recording_notes': String with user defined notes for channel
-    % ieeg_anat: struct with channels and regions
+    % ieeg_anat: struct with channels and chan_group
     %            channels: cell vector with names of channels
-    %            ROIs: cell vector with regions channels belong to
+    %            ROIs: cell vector with chan_group channels belong to
     % session_num: Int with session num of current file
     %% Output:
     % label_table: Concated label table from current recording session

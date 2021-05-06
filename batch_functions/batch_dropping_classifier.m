@@ -74,17 +74,16 @@ function [] = batch_dropping_classifier(project_path, save_path, failed_path, ..
                 chan_info = get_chan_vars(component_results);
             elseif strcmpi(drop_method, 'random')
                 chan_info = chan_group_log;
-                chan_info = renamevars(chan_info, "chan_group", "region");
             else
                 is_unrecoverable = true;
                 error('Unknown drop method: %s')
             end
 
-            if config.combine_regions
+            if config.combine_chan_groups
                 psth_struct = combine_regions(psth_struct);
-                %% Convert region label to match combined region label
+                %% Convert combine_chan_groups label to match combined combine_chan_groups label
                 tot_rows = height(chan_info);
-                chan_info.region = repmat("all_regions", [tot_rows, 1]);
+                chan_info.combine_chan_groups = repmat("all_chan_groups", [tot_rows, 1]);
             end
 
             %% Drop classify
@@ -117,16 +116,16 @@ function [] = batch_dropping_classifier(project_path, save_path, failed_path, ..
 end
 
 function [res] = get_chan_vars(component_results)
-    headers = [["region", "string"]; ["channel", "string"]; ["variance", "double"]];
+    headers = [["combine_chan_groups", "string"]; ["channel", "string"]; ["variance", "double"]];
     res = prealloc_table(headers, [0, size(headers, 1)]);
-    unique_regions = fieldnames(component_results);
-    for reg_i = 1:numel(unique_regions)
-        region = unique_regions{reg_i};
-        reg_chans = component_results.(region).chan_order;
+    unique_ch_group = fieldnames(component_results);
+    for ch_group_i = 1:numel(unique_ch_group)
+        ch_group = unique_ch_group{ch_group_i};
+        reg_chans = component_results.(ch_group).chan_order;
         tot_chans = numel(reg_chans);
-        reg_vars = component_results.(region).component_variance;
+        reg_vars = component_results.(ch_group).component_variance;
         reg_vars = reg_vars(1:numel(reg_chans));
-        a = [repmat({region}, [tot_chans, 1]), reg_chans, num2cell(reg_vars)];
+        a = [repmat({ch_group}, [tot_chans, 1]), reg_chans, num2cell(reg_vars)];
         res = vertcat_cell(res, a, headers(:, 1), "after");
     end
 end

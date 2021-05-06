@@ -9,7 +9,7 @@ function [tot_plots] = plot_weights(pca_weights, ymax_scale, color_struct, ...
         y_min = -y_min;
     end
     [~, tot_components] = size(pca_weights);
-    unique_regions = fieldnames(color_struct);
+    unique_ch_group = fieldnames(color_struct);
     for comp_i = 1:tot_components
         comp_weights = pca_weights(:, comp_i);
         scrollsubplot(sub_rows, sub_cols, plot_counter);
@@ -17,15 +17,15 @@ function [tot_plots] = plot_weights(pca_weights, ymax_scale, color_struct, ...
         if tot_components == 0
             continue
         end
-        for region_i = 1:numel(unique_regions)
-            region = unique_regions{region_i};
-            reg_i = color_struct.(region).indices;
+        for ch_group_i = 1:numel(unique_ch_group)
+            ch_group = unique_ch_group{ch_group_i};
+            reg_i = color_struct.(ch_group).indices;
             bar(reg_i, comp_weights(reg_i), ...
-                'FaceColor', color_struct.(region).color, ...
+                'FaceColor', color_struct.(ch_group).color, ...
                 'EdgeColor', 'none');
         end
-        if numel(unique_regions) > 1
-            lg = legend(unique_regions);
+        if numel(unique_ch_group) > 1
+            lg = legend(unique_ch_group);
             legend('boxoff');
             lg.Location = 'Best';
             lg.Orientation = 'Horizontal';

@@ -1,51 +1,51 @@
 function [res] = dropping_classifier(psth_struct, event_info, drop_method, ...
         channel_info, bin_size, window_start, window_end, response_start, response_end)
     %% Create res table
-    headers = [["region", "string"]; ["tot_chans", "double"]; ["dropped_chan", "double"]; ...
+    headers = [["chan_group", "string"]; ["tot_chans", "double"]; ["dropped_chan", "double"]; ...
                ["performance", "double"]; ["mutual_info", "double"]];
     res = prealloc_table(headers, [0, size(headers, 1)]);
 
-    unique_regions = fieldnames(psth_struct);
+    unique_ch_groups = fieldnames(psth_struct);
     unique_events = unique(event_info.event_labels);
     [~, tot_bins] = get_bins(window_start, window_end, bin_size);
 
-    for reg_i = 1:length(unique_regions)
-        region = unique_regions{reg_i};
-        chan_list = psth_struct.(region).chan_order;
+    for ch_group_i = 1:length(unique_ch_groups)
+        ch_group = unique_ch_groups{ch_group_i};
+        chan_list = psth_struct.(ch_group).chan_order;
         tot_chans = numel(chan_list);
 
         %% Population classification
-        event_struct = create_event_struct(psth_struct.(region), event_info, ...
+        event_struct = create_event_struct(psth_struct.(ch_group), event_info, ...
             bin_size, window_start, window_end, response_start, response_end);
         [~, mutual_info, ~, perf] = psth_classifier(event_struct, unique_events);
         %% Classification results with all channels
-        a = [{region}, tot_chans, {"none"}, perf, mutual_info];
+        a = [{ch_group}, tot_chans, {"none"}, perf, mutual_info];
         res = vertcat_cell(res, a, headers(:, 1), "after");
-        %% Get drop order for region
-        reg_info = channel_info(strcmpi(channel_info.region, region), :);
+        %% Get drop order for chan_group
+        reg_info = channel_info(strcmpi(channel_info.chan_group, ch_group), :);
         chan_order = get_chan_order(chan_list, drop_method, reg_info);
         while tot_chans > 1
             chan = chan_order{1};
-            chan_i = find(ismember(psth_struct.(region).chan_order, chan));
+            chan_i = find(ismember(psth_struct.(ch_group).chan_order, chan));
             %% Get channel relative response
             chan_e = chan_i * tot_bins;
             chan_s = chan_e - tot_bins + 1;
 
             %% Drop channel
-            psth_struct.(region).relative_response(:, chan_s:chan_e) = [];
+            psth_struct.(ch_group).relative_response(:, chan_s:chan_e) = [];
 
             %% Build up event struct and classify
-            event_struct = create_event_struct(psth_struct.(region), event_info, ...
+            event_struct = create_event_struct(psth_struct.(ch_group), event_info, ...
                 bin_size, window_start, window_end, response_start, response_end);
             [~, mutual_info, ~, perf] = psth_classifier(event_struct, unique_events);
 
             %% Update channel order
             chan_order(1) = [];
-            psth_struct.(region).chan_order = chan_order;
+            psth_struct.(ch_group).chan_order = chan_order;
             tot_chans = numel(chan_order);
 
             %% Store results
-            a = [{region}, tot_chans, {chan}, perf, mutual_info];
+            a = [{ch_group}, tot_chans, {chan}, perf, mutual_info];
             res = vertcat_cell(res, a, headers(:, 1), "after");
         end
     end

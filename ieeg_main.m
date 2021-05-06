@@ -26,9 +26,9 @@ function [] = ieeg_main(varargin)
     %          If array is left empty, it will take all files"
     %          make_labels: Boolean: Create labels with electrodes for each file included in pipeline
     %          create_mnts: Boolean: Create MNTS format from the pre-processed data
-    %          select_features: "String: Controls the powers and regions used to create the MNTS
-    %          Format: power+power:region+region,power:region,etc.
-    %          If empty it will powers (m) and regions (n) and run pca on all for m * n times"
+    %          select_features: "String: Controls the powers and chan_group used to create the MNTS
+    %          Format: power+power:chan_group+chan_group,power:chan_group,etc.
+    %          If empty it will powers (m) and chan_group (n) and run pca on all for m * n times"
     %          do_pca: Boolean: Controls if pca is ran on the MNTS with features defined in select features
     %          use_z_mnts: Boolean: Controls if z scored MNTS is used as input to PCA
     %          feature_filter: "String: Controls output of PCA. 

@@ -9,28 +9,28 @@ function [chan_group_log, mnts_struct, event_info, band_shifts] = reshape_to_mnt
     %                     'channel': String with name of channel
     %                     'selected_channels': Boolean if channel is used
     %                     'user_channels': String with user defined mapping
-    %                     'label': String: associated region or grouping of electrodes
-    %                     'label_id': Int: unique id used for labels
+    %                     'chan_group': String: associated chan_group or grouping of electrodes
+    %                     'chan_group_id': Int: unique id used for labels
     %                     'recording_session': Int: File recording session number that above applies to
     %                     'recording_notes': String with user defined notes for channel
     % power_struct: Struct with required fields (not exlusive list, but list of fields needed for pipeline):
     %      anat: struct with fields
     %                channels: cell vector with names of channels
-    %                ROIs: cell vector with regions channels belong to
+    %                ROIs: cell vector with chan_group channels belong to
     %      beh: struct with fields for event types
     %           event_type: logical array with length of tot_trials where 1 means the event_type occured
     %      bandname: struct with fields:
     %                        dimord: description of 4d dimensions
     %                        powspctrm: 3D matrix with dimension trials x channels x time
-    % select_features: string that determines how to combine powers and regions to make features
-    %                  format layout: power:region, power+power:region+region;power:region, etc
+    % select_features: string that determines how to combine powers and chan_group to make features
+    %                  format layout: power:chan_group, power+power:chan_group+chan_group;power:chan_group, etc
     %% Output:
     % chan_group_log: table with columns
     %                'channel': String with name of channel
     %                'selected_channels': Boolean if channel is used
     %                'user_channels': String with user defined mapping
-    %                'label': String: associated region or grouping of electrodes
-    %                'label_id': Int: unique id used for labels
+    %                'chan_group': String: associated chan_group or grouping of electrodes
+    %                'chan_group_id': Int: unique id used for labels
     %                'recording_session': Int: File recording session number that above applies to
     %                'recording_notes': String with user defined notes for channel
     % mnts_struct: struct w/ fields for each feature set matching the feature set in chan_group_log
@@ -53,7 +53,7 @@ function [chan_group_log, mnts_struct, event_info, band_shifts] = reshape_to_mnt
     unique_bands = fieldnames(power_struct);
     unique_bands = unique_bands(~ismember(unique_bands, ...
         {'anat', 'beh', 'fsample', 'time'}));
-    unique_regions = unique(power_struct.anat.ROIs);
+    unique_ch_groups = unique(power_struct.anat.ROIs);
     chan_group_log = table();
     mnts_struct = struct;
     band_shifts = struct;
@@ -79,31 +79,31 @@ function [chan_group_log, mnts_struct, event_info, band_shifts] = reshape_to_mnt
     if isempty(select_features) ...
             || (~iscell(select_features) && any(isnan(select_features))) ...
             || iscell(select_features) && isempty(select_features{:})
-        %% Default: Combine all powers and regions together
+        %% Default: Combine all powers and chan_group together
         for band_i = 1:numel(unique_bands)
             bandname = unique_bands{band_i};
-            for region_i = 1:numel(unique_regions)
-                region = unique_regions{region_i};
-                region_channel_i = ismember(power_struct.anat.ROIs, region);
-                %% Grab region power spectrums
-                region_powspctrm = get_powspctrm(power_struct.(bandname), ...
-                    region_channel_i, use_z_score, smooth_power, smoothing_direction, ...
+            for ch_group_i = 1:numel(unique_ch_groups)
+                ch_group = unique_ch_groups{ch_group_i};
+                ch_i = ismember(power_struct.anat.ROIs, ch_group); % get chan inds in group
+                %% Grab chan_group power spectrums
+                ch_group_spctrm = get_powspctrm(power_struct.(bandname), ...
+                    ch_i, use_z_score, smooth_power, smoothing_direction, ...
                     span, downsample_pow, downsample_rate);
                 if slice_time
-                    region_powspctrm = region_powspctrm(:, :, slice_i);
+                    ch_group_spctrm = ch_group_spctrm(:, :, slice_i);
                 end
-                mnts = create_mnts(region_powspctrm);
-                feature = [bandname, '_', region];
+                mnts = create_mnts(ch_group_spctrm);
+                feature = [bandname, '_', ch_group];
                 mnts_struct.(feature).mnts = mnts;
-                chan_list = append_feature(power_struct.anat.channels(region_channel_i), feature);
+                chan_list = append_feature(power_struct.anat.channels(ch_i), feature);
                 mnts_struct.(feature).chan_order = chan_list;
                 mnts_struct.(feature).orig_chan_order = chan_list;
                 band_shifts.(feature) = [];
-                chan_group_log = append_labels(feature, region, label_table, chan_group_log);
+                chan_group_log = append_labels(feature, ch_group, label_table, chan_group_log);
             end
         end
     else
-        %% Case: Specified feature space with combos of powers + regions
+        %% Case: Specified feature space with combos of powers + chan_group
         select_features = strrep(select_features, ' ', '');
         split_features = strsplit(select_features, ';');
         for feature_i = 1:numel(split_features)
@@ -117,37 +117,37 @@ function [chan_group_log, mnts_struct, event_info, band_shifts] = reshape_to_mnt
             mnts_struct.(feature).chan_order = [];
             band_shifts.(feature) = [];
             for sub_feature_i = 1:numel(sub_feature)
-                %% Split into powers and regions
+                %% Split into powers and chan_group
                 pow_regs = sub_feature{sub_feature_i};
                 split_pow_reg = strsplit(pow_regs, ':');
                 pows = split_pow_reg{1};
                 split_powers = strsplit(pows, '+');
                 regs = split_pow_reg{2};
-                split_regions = strsplit(regs, '+');
+                ch_group_list = strsplit(regs, '+');
                 for band_i = 1:numel(split_powers)
                     %% iterate through powers
                     bandname = split_powers{band_i};
-                    for region_i = 1:numel(split_regions)
-                        %% Iterate through regions
-                        region = split_regions{region_i};
-                        region_channel_i = ismember(power_struct.anat.ROIs, region);
+                    for ch_group_i = 1:numel(ch_group_list)
+                        %% Iterate through chan_group
+                        ch_group = ch_group_list{ch_group_i};
+                        ch_i = ismember(power_struct.anat.ROIs, ch_group); % get chan inds in group
                         %% Grab power spectrums
-                        region_powspctrm = get_powspctrm(power_struct.(bandname), ...
-                            region_channel_i, use_z_score, smooth_power, smoothing_direction, ...
+                        ch_group_spctrm = get_powspctrm(power_struct.(bandname), ...
+                            ch_i, use_z_score, smooth_power, smoothing_direction, ...
                             span, downsample_pow, downsample_rate);
 
                         if slice_time
-                            region_powspctrm = region_powspctrm(:, :, slice_i);
+                            ch_group_spctrm = ch_group_spctrm(:, :, slice_i);
                         end
                         %% Reshape into MNTS and store in mnts_struct for feature
-                        region_mnts = create_mnts(region_powspctrm);
-                        mnts_struct.(feature).mnts = [mnts_struct.(feature).mnts, region_mnts];
+                        ch_group_mnts = create_mnts(ch_group_spctrm);
+                        mnts_struct.(feature).mnts = [mnts_struct.(feature).mnts, ch_group_mnts];
 
                         %% label log
-                        chan_list = append_feature(power_struct.anat.channels(region_channel_i), feature);
+                        chan_list = append_feature(power_struct.anat.channels(ch_i), feature);
                         mnts_struct.(feature).chan_order = [mnts_struct.(feature).chan_order; chan_list];
                         mnts_struct.(feature).orig_chan_order = [mnts_struct.(feature).orig_chan_order; chan_list];
-                        chan_group_log = append_labels(feature, region, label_table, chan_group_log);
+                        chan_group_log = append_labels(feature, ch_group, label_table, chan_group_log);
                     end
                     band_shifts.(feature) = [band_shifts.(feature); {numel(mnts_struct.(feature).orig_chan_order)}];
                 end
@@ -163,13 +163,13 @@ function [chan_group_log, mnts_struct, event_info, band_shifts] = reshape_to_mnt
     end
 end
 
-function [results] = get_powspctrm(pow_struct, region_channel_i, use_z_score, ...
+function [results] = get_powspctrm(pow_struct, ch_i, use_z_score, ...
         smooth_power, smoothing_direction, span, downsample_pow, downsample_rate)
     powspctrm = pow_struct.powspctrm;
-    region_powspctrm = powspctrm(:, region_channel_i, :);
+    ch_group_spctrm = powspctrm(:, ch_i, :);
     %% Iterate through trials and smooth each trials
     if downsample_pow || smooth_power
-        [tot_trials, tot_chans, tot_samples] = size(region_powspctrm);
+        [tot_trials, tot_chans, tot_samples] = size(ch_group_spctrm);
         if downsample_pow
             down_i = 1:downsample_rate:tot_samples;
             results = nan(tot_trials, tot_chans, (numel(down_i) - 1));
@@ -180,15 +180,15 @@ function [results] = get_powspctrm(pow_struct, region_channel_i, use_z_score, ..
             for trial_i = 1:tot_trials
                 %% smooth
                 if smooth_power
-                    trial_response = smooth_down(region_powspctrm(trial_i, unit_i, :), span, downsample_rate, smoothing_direction);
+                    trial_response = smooth_down(ch_group_spctrm(trial_i, unit_i, :), span, downsample_rate, smoothing_direction);
                 else
-                    trial_response = region_powspctrm(trial_i, unit_i, :);
+                    trial_response = ch_group_spctrm(trial_i, unit_i, :);
                 end
                 results(trial_i, unit_i, :) = trial_response;
             end
         end
     else
-        results = region_powspctrm;
+        results = ch_group_spctrm;
     end
     if use_z_score
         results = zscore(results,0,3);
@@ -211,10 +211,10 @@ function [mnts] = create_mnts(powspctrm)
     end
 end
 
-function [chan_group_log] = append_labels(feature, region, label_table, chan_group_log)
-    region_table = label_table(ismember(label_table.chan_group, region), :);
-    region_table.chan_group = repmat({feature}, [height(region_table), 1]);
-    chan_group_log = [chan_group_log; region_table];
+function [chan_group_log] = append_labels(feature, ch_group, ch_group_table, chan_group_log)
+    ch_group_list = ch_group_table(ismember(ch_group_table.chan_group, ch_group), :);
+    ch_group_list.chan_group = repmat({feature}, [height(ch_group_list), 1]);
+    chan_group_log = [chan_group_log; ch_group_list];
 end
 
 function [chan_order] = append_feature(chan_order, feature)

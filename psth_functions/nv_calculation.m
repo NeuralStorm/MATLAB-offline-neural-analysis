@@ -2,7 +2,7 @@ function res = nv_calculation(psth_struct, event_info, window_start, window_end,
         baseline_start, baseline_end, bin_size, epsilon, norm_var_scaling)
 
     %% Create normalized variance table
-    headers = [["region", "string"]; ["channel", "string"]; ...
+    headers = [["chan_group", "string"]; ["channel", "string"]; ...
             ["event", "string"]; ["bfr_s", "double"]; ...
             ["bfr_var", "double"]; ["fano", "double"]; ["norm_var", "double"]];
     res = prealloc_table(headers, [0, size(headers, 1)]);
@@ -11,19 +11,19 @@ function res = nv_calculation(psth_struct, event_info, window_start, window_end,
     [~, tot_baseline_bins] = get_bins(baseline_start, baseline_end, bin_size);
     duration = tot_baseline_bins * bin_size;
 
-    unique_regions = fieldnames(psth_struct);
+    unique_ch_groups = fieldnames(psth_struct);
     unique_events = unique(event_info.event_labels);
-    for region_i = 1:length(unique_regions)
-        region = unique_regions{region_i};
-        tot_chans = numel(psth_struct.(region).chan_order);
+    for ch_group_i = 1:length(unique_ch_groups)
+        ch_group = unique_ch_groups{ch_group_i};
+        tot_chans = numel(psth_struct.(ch_group).chan_order);
         chan_s = 1;
         chan_e = tot_bins;
         for chan_i = 1:tot_chans
-            chan = psth_struct.(region).chan_order{chan_i};
+            chan = psth_struct.(ch_group).chan_order{chan_i};
             for event_i = 1:length(unique_events)
                 event = unique_events{event_i};
                 event_indices = event_info.event_indices(strcmpi(event_info.event_labels, event), :);
-                chan_rr = psth_struct.(region).relative_response(event_indices, chan_s:chan_e);
+                chan_rr = psth_struct.(ch_group).relative_response(event_indices, chan_s:chan_e);
                 baseline_response = slice_rr(chan_rr, bin_size, window_start, ...
                     window_end, baseline_start, baseline_end);
 
@@ -36,7 +36,7 @@ function res = nv_calculation(psth_struct, event_info, window_start, window_end,
                 norm_var = norm_var_scaling * (epsilon + bfr_var)/(norm_var_scaling * epsilon + avg_bfr);
                 fano = avg_bfr / bfr_var;
 
-                a = [{region}, {chan}, {event}, avg_bfr, bfr_var, norm_var, fano];
+                a = [{ch_group}, {chan}, {event}, avg_bfr, bfr_var, norm_var, fano];
                 %% Store results in table
                 res = vertcat_cell(res, a, headers(:, 1), "after");
             end

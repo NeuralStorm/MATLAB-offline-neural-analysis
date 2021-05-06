@@ -15,7 +15,7 @@ function [results] = plot_corr(save_path, component_results, chan_group_log, ...
     %                                  orig_chan_order: C x 1 cell array, C = tot channels. Order of electrodes fed into PCA
     % chan_group_log: table with columns (relevant columns shown only)
     %            'channel': String with name of channel
-    %            'label': String: associated region or grouping of electrodes
+    %            'label': String: associated chan_group or grouping of electrodes
     % feature_filter: String with description for pcs
     %                 'all': keep all pcs after PCA
     %                 'pcs': Keep # of pcs set in feature_value
@@ -97,16 +97,16 @@ function [results] = plot_corr(save_path, component_results, chan_group_log, ...
                 %% Grab coeff weights from first (x) and second (y) feature space
                 x_values = first_weights(first_i, comp_i);
                 y_values = second_weights(second_i, comp_i);
-                [~, label_i, ~] = intersect(color_log.channel, elec_intersect);
-                region_order = color_log.chan_group(label_i);
-                unique_regions = unique(region_order);
+                [~, chan_i, ~] = intersect(color_log.channel, elec_intersect);
+                ch_group_order = color_log.chan_group(chan_i);
+                unique_ch_group = unique(ch_group_order);
                 scrollsubplot(sub_rows, sub_columns, subplot_i);
                 hold on
-                for reg_i = 1:numel(unique_regions)
-                    %% Plot scatter for each unique region in intersection
-                    region = unique_regions{reg_i};
-                    reg_color = color_struct.(region).color;
-                    reg_locs = ismember(region_order, region);
+                for ch_group_i = 1:numel(unique_ch_group)
+                    %% Plot scatter for each unique chan_group in intersection
+                    chan_group = unique_ch_group{ch_group_i};
+                    reg_color = color_struct.(chan_group).color;
+                    reg_locs = ismember(ch_group_order, chan_group);
                     scatter(x_values(reg_locs), y_values(reg_locs), ...
                         'MarkerFaceColor', reg_color, 'MarkerEdgeColor', 'none');
                 end
@@ -125,7 +125,7 @@ function [results] = plot_corr(save_path, component_results, chan_group_log, ...
                 ylabel(strrep(space_two, '_', ' '))
                 ytickformat('%.2f');
                 %% legend set up
-                lg = legend(unique_regions);
+                lg = legend(unique_ch_group);
                 lg.Orientation = 'Horizontal';
                 lg.Location = legend_loc;
                 %% shrink height of graphs slightly to stop overlap of text in fullscreen

@@ -6,7 +6,7 @@ function [rec_res] = receptive_field_analysis(psth_struct, event_info, ...
     %% rm = response magnitude, bfr = background firing rate
 
     %% Create population table
-    headers = [["region", "string"]; ["channel", "string"]; ...
+    headers = [["chan_group", "string"]; ["channel", "string"]; ...
                    ["event", "string"]; ["significant", "double"]; ...
                    ["background_rate", "double"]; ["background_std", "double"]; ...
                    ["response_window_firing_rate", "double"]; ...
@@ -26,26 +26,26 @@ function [rec_res] = receptive_field_analysis(psth_struct, event_info, ...
             'span >= 3 if mixed smoothing is true. Span < 3 does not smooth.')
     end
 
-    unique_regions = fieldnames(psth_struct);
+    unique_ch_groups = fieldnames(psth_struct);
     unique_events = unique(event_info.event_labels);
     tot_events = numel(unique_events);
     [~, tot_bins] = get_bins(window_start, window_end, bin_size);
     [response_edges, ~] = get_bins(response_start, response_end, bin_size);
-    for region_i = 1:length(unique_regions)
-        region = unique_regions{region_i};
-        tot_chans = numel(psth_struct.(region).chan_order);
+    for ch_group_i = 1:length(unique_ch_groups)
+        ch_group = unique_ch_groups{ch_group_i};
+        tot_chans = numel(psth_struct.(ch_group).chan_order);
 
         chan_s = 1;
         chan_e = tot_bins;
         for chan_i = 1:tot_chans
-            chan = psth_struct.(region).chan_order{chan_i};
+            chan = psth_struct.(ch_group).chan_order{chan_i};
             %% Initalize variables to find principal event per channel
             chan_res = []; max_rm = 0; principal_event = cell(tot_events, 1);
             tot_sig_events = 0; norm_rm = nan(tot_events, 1);
             for event_i = 1:tot_events
                 event = unique_events{event_i};
                 event_indices = event_info.event_indices(strcmpi(event_info.event_labels, event), :);
-                chan_rr = psth_struct.(region).relative_response(event_indices, chan_s:chan_e);
+                chan_rr = psth_struct.(ch_group).relative_response(event_indices, chan_s:chan_e);
 
                 %% Get current PSTH and smooth it based on span
                 psth = calc_psth(chan_rr);
@@ -94,7 +94,7 @@ function [rec_res] = receptive_field_analysis(psth_struct, event_info, ...
                 response_window_firing_rate = mean(response_psth);
                 response_window_tot_spikes = sum(response_psth); 
                 % Add rec results
-                chan_res = [chan_res; {region}, {chan}, {event}, is_sig, avg_bfr, ...
+                chan_res = [chan_res; {ch_group}, {chan}, {event}, is_sig, avg_bfr, ...
                     bfr_std, response_window_firing_rate, response_window_tot_spikes, ...
                     threshold, p_val, fl, ll, duration, pl, peak, corrected_peak, rm, corrected_rm];
             end

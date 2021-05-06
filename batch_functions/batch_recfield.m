@@ -69,7 +69,7 @@ function [] = batch_recfield(project_path, save_path, failed_path, data_path, di
             assert(height(rec_res) == height(nv_res), ...
                 'Join assumes a 1-1 mapping but found %d rows in rf and %d rows in nv', ...
                 height(rec_res), height(nv_res));
-            rec_res = join(rec_res, nv_res, 'Keys', {'region', 'event', 'channel'});
+            rec_res = join(rec_res, nv_res, 'Keys', {'chan_group', 'event', 'channel'});
 
             %% Save receptive field matlab output
             matfile = fullfile(save_path, ['rec_field_', filename_meta.filename, '.mat']);

@@ -3,7 +3,7 @@ function [cluster_struct, res] = do_cluster_analysis(rec_results, psth_struct, .
         bin_size, mixed_smoothing, span, consec_bins, bin_gap)
 
     %% Create cluster results table
-    headers = [["region", "string"]; ["channel", "string"]; ["event", "string"]; ...
+    headers = [["chan_group", "string"]; ["channel", "string"]; ["event", "string"]; ...
                ["tot_clusters", "double"]; ["first_first_latency", "double"]; ...
                ["first_last_latency", "double"]; ["first_duration", "double"]; ...
                ["first_peak_latency", "double"]; ["first_peak_response", "double"]; ...
@@ -21,16 +21,16 @@ function [cluster_struct, res] = do_cluster_analysis(rec_results, psth_struct, .
     res = prealloc_table(headers, [0, size(headers, 1)]);
     cluster_struct = struct;
 
-    %% Get info on regions, events, and bins
+    %% Get info on chan_group, events, and bins
     [~, tot_bins] = get_bins(window_start, window_end, bin_size);
-    unique_regions = fieldnames(psth_struct);
+    unique_ch_groups = fieldnames(psth_struct);
     unique_events = unique(event_info.event_labels);
-    for reg_i = 1:numel(unique_regions)
-        region = unique_regions{reg_i};
-        chan_order = psth_struct.(region).chan_order;
+    for ch_group_i = 1:numel(unique_ch_groups)
+        ch_group = unique_ch_groups{ch_group_i};
+        chan_order = psth_struct.(ch_group).chan_order;
         for event_i = 1:numel(unique_events)
             event = unique_events{event_i};
-            sig_chans = rec_results.channel(strcmpi(rec_results.region, region) ...
+            sig_chans = rec_results.channel(strcmpi(rec_results.chan_group, ch_group) ...
                 & strcmpi(rec_results.event, event) & rec_results.significant == 1, :);
             [~, sig_chan_i, ~] = intersect(chan_order, sig_chans);
             if isempty(sig_chan_i)
@@ -41,21 +41,21 @@ function [cluster_struct, res] = do_cluster_analysis(rec_results, psth_struct, .
             for sig_i = 1:numel(sig_chan_i)
                 chan_i = sig_chan_i(sig_i);
                 chan = chan_order{chan_i};
-                threshold = rec_results.threshold(strcmpi(rec_results.region, region) ...
+                threshold = rec_results.threshold(strcmpi(rec_results.chan_group, ch_group) ...
                     & strcmpi(rec_results.event, event) & strcmpi(rec_results.channel, chan), :);
-                bfr = rec_results.background_rate(strcmpi(rec_results.region, region) ...
+                bfr = rec_results.background_rate(strcmpi(rec_results.chan_group, ch_group) ...
                     & strcmpi(rec_results.event, event) & strcmpi(rec_results.channel, chan), :);
                 %% Get channel relative response
                 chan_e = chan_i * tot_bins;
                 chan_s = chan_e - tot_bins + 1;
-                chan_rr = psth_struct.(region).relative_response(event_indices, chan_s:chan_e);
+                chan_rr = psth_struct.(ch_group).relative_response(event_indices, chan_s:chan_e);
                 [chan_clusters, cluster_res] = find_clusters(chan_rr, ...
                     window_start, window_end, response_start, response_end, ...
                     bin_size, mixed_smoothing, span, bin_gap, consec_bins, bfr, threshold);
                 %% Append on other results to array
                 if ~isempty(cluster_res)
-                    cluster_struct.(region).(chan).(event) = chan_clusters;
-                    a = [{region}, {chan}, {event}, num2cell(cluster_res)];
+                    cluster_struct.(ch_group).(chan).(event) = chan_clusters;
+                    a = [{ch_group}, {chan}, {event}, num2cell(cluster_res)];
                     res = vertcat_cell(res, a, headers(:, 1), "after");
                 end
             end
