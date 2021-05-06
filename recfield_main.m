@@ -32,7 +32,7 @@ function [] = recfield_main(varargin)
                     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
                     %%        Format PSTH         %%
                     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-                    batch_format_psth(dir_save_path, dir_failed_path, parsed_dir_path, curr_dir, dir_config, label_table);
+                    batch_format_rr(dir_save_path, dir_failed_path, parsed_dir_path, curr_dir, dir_config, label_table);
                 catch ME
                     handle_ME(ME, psth_failed_path, [curr_dir, '_missing_dir.mat']);
                 end
