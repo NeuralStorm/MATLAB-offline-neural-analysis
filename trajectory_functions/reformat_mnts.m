@@ -1,4 +1,4 @@
-function [psth_struct] = reformat_mnts(chan_group_log, component_results, tot_bins)
+function [rr_data] = reformat_mnts(chan_group_log, component_results, tot_bins)
     %% Purpose: Reformat MNTS to PSTH
     % mnts: multineuron time series
     %       Observations (trials * tot bins) x Features (components or channels)
@@ -11,7 +11,7 @@ function [psth_struct] = reformat_mnts(chan_group_log, component_results, tot_bi
     %                   'selected_channels': Boolean if channel is used
     %                   'user_channels': String with user defined mapping
     %                   'chan_group': String: associated chan_group or grouping of electrodes
-    %                   'label_id': Int: unique id used for labels
+    %                   'chan_group_id': Int: unique id used for chan_groups
     %                   'recording_session': Int: File recording session number that above applies to
     %                   'recording_notes': String with user defined notes for channel
     % component_results: struct w/ fields for each feature set ran through PCA
@@ -24,10 +24,10 @@ function [psth_struct] = reformat_mnts(chan_group_log, component_results, tot_bi
     %                                  mnts: mnts matrix
     % tot_bins: total bins that unit has within the mnts
     %% Output:
-    % psth_struct: struct w/ fields for each feature
+    % rr_data: struct w/ fields for each feature
     %              feature_name: struct typically based on chan_group and powers
     %                            relative_response: Numerical matrix with dimensions Trials x ((tot pcs or channels) * tot bins)
-    psth_struct = struct;
+    rr_data = struct;
     unique_ch_groups = unique(chan_group_log.chan_group);
     %% Convert weighted mnts into relative response
     for ch_group_i = 1:length(unique_ch_groups)
@@ -35,9 +35,9 @@ function [psth_struct] = reformat_mnts(chan_group_log, component_results, tot_bi
         ch_group_mnts = component_results.(ch_group).mnts;
         [tot_rows, tot_components] = size(ch_group_mnts);
         tot_trials = tot_rows / tot_bins;
-        relative_response = mnts_to_psth(ch_group_mnts, tot_trials, tot_components, tot_bins);
-        psth_struct.(ch_group).relative_response = relative_response;
-        psth_struct.(ch_group).chan_order = component_results.(ch_group).chan_order;
-        psth_struct.(ch_group).orig_chan_order = component_results.(ch_group).orig_chan_order;
+        rr = mnts_to_psth(ch_group_mnts, tot_trials, tot_components, tot_bins);
+        rr_data.(ch_group).relative_response = rr;
+        rr_data.(ch_group).chan_order = component_results.(ch_group).chan_order;
+        rr_data.(ch_group).orig_chan_order = component_results.(ch_group).orig_chan_order;
     end
 end

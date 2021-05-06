@@ -11,9 +11,9 @@ function [] = batch_graph_psth(save_path, failed_path, data_path, dir_name, conf
         try
             %% pull info from filename and set up file path for analysis
             file = fullfile(data_path, file_list(file_index).name);
-            load(file, 'psth_struct', 'event_info', 'filename_meta');
+            load(file, 'rr_data', 'event_info', 'filename_meta');
             %% Check psth variables to make sure they are not empty
-            empty_vars = check_variables(file, psth_struct, event_info);
+            empty_vars = check_variables(file, rr_data, event_info);
             if empty_vars
                 continue
             end
@@ -36,12 +36,12 @@ function [] = batch_graph_psth(save_path, failed_path, data_path, dir_name, conf
             else
                 rec_res = NaN;
             end
-            graph_PSTH(save_path, filename_meta.filename, psth_struct, event_info, ...
+            graph_PSTH(save_path, filename_meta.filename, rr_data, event_info, ...
                 config.bin_size, config.window_start, config.window_end, ...
                 config.baseline_start, config.baseline_end, config.response_start, ...
                 config.response_end, config.sub_rows, config.sub_cols, ...
                 config.plot_rf, rec_res, config.mixed_smoothing, config.span);
-            clear('rec_res', 'config_log', 'filename_meta', 'psth_struct', 'event_info');
+            clear('rec_res', 'config_log', 'filename_meta', 'rr_data', 'event_info');
         catch ME
             handle_ME(ME, failed_path, filename_meta.filename);
         end

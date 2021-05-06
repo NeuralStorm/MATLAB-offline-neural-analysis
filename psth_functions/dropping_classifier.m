@@ -1,21 +1,21 @@
-function [res] = dropping_classifier(psth_struct, event_info, drop_method, ...
+function [res] = dropping_classifier(rr_data, event_info, drop_method, ...
         channel_info, bin_size, window_start, window_end, response_start, response_end)
     %% Create res table
     headers = [["chan_group", "string"]; ["tot_chans", "double"]; ["dropped_chan", "double"]; ...
                ["performance", "double"]; ["mutual_info", "double"]];
     res = prealloc_table(headers, [0, size(headers, 1)]);
 
-    unique_ch_groups = fieldnames(psth_struct);
+    unique_ch_groups = fieldnames(rr_data);
     unique_events = unique(event_info.event_labels);
     [~, tot_bins] = get_bins(window_start, window_end, bin_size);
 
     for ch_group_i = 1:length(unique_ch_groups)
         ch_group = unique_ch_groups{ch_group_i};
-        chan_list = psth_struct.(ch_group).chan_order;
+        chan_list = rr_data.(ch_group).chan_order;
         tot_chans = numel(chan_list);
 
         %% Population classification
-        event_struct = create_event_struct(psth_struct.(ch_group), event_info, ...
+        event_struct = create_event_struct(rr_data.(ch_group), event_info, ...
             bin_size, window_start, window_end, response_start, response_end);
         [~, mutual_info, ~, perf] = psth_classifier(event_struct, unique_events);
         %% Classification results with all channels
@@ -26,22 +26,22 @@ function [res] = dropping_classifier(psth_struct, event_info, drop_method, ...
         chan_order = get_chan_order(chan_list, drop_method, reg_info);
         while tot_chans > 1
             chan = chan_order{1};
-            chan_i = find(ismember(psth_struct.(ch_group).chan_order, chan));
+            chan_i = find(ismember(rr_data.(ch_group).chan_order, chan));
             %% Get channel relative response
             chan_e = chan_i * tot_bins;
             chan_s = chan_e - tot_bins + 1;
 
             %% Drop channel
-            psth_struct.(ch_group).relative_response(:, chan_s:chan_e) = [];
+            rr_data.(ch_group).relative_response(:, chan_s:chan_e) = [];
 
             %% Build up event struct and classify
-            event_struct = create_event_struct(psth_struct.(ch_group), event_info, ...
+            event_struct = create_event_struct(rr_data.(ch_group), event_info, ...
                 bin_size, window_start, window_end, response_start, response_end);
             [~, mutual_info, ~, perf] = psth_classifier(event_struct, unique_events);
 
             %% Update channel order
             chan_order(1) = [];
-            psth_struct.(ch_group).chan_order = chan_order;
+            rr_data.(ch_group).chan_order = chan_order;
             tot_chans = numel(chan_order);
 
             %% Store results

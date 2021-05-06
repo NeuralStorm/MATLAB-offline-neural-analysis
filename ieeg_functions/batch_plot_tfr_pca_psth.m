@@ -43,7 +43,7 @@ function [] = batch_plot_tfr_pca_psth(dir_name, save_path, failed_path, tfr_path
                 psth_filename = psth_file_list(...
                     contains({psth_file_list.name}, filename_meta.filename)).name;
                 psth_file = fullfile(pca_psth_path, psth_filename);
-                load(psth_file, 'psth_struct');
+                load(psth_file, 'rr_data');
             else
                 error('Missing %s to plot PSTH time course', filename_meta.filename);
             end
@@ -58,7 +58,7 @@ function [] = batch_plot_tfr_pca_psth(dir_name, save_path, failed_path, tfr_path
             end
 
             plot_tfr_pca_psth(save_path, tfr_path, tfr_file_list, chan_group_log, mnts_struct, band_shifts, ...
-                component_results, psth_struct, event_info, dir_config.bin_size, ...
+                component_results, rr_data, event_info, dir_config.bin_size, ...
                 dir_config.window_start, dir_config.window_end, dir_config.baseline_start, ...
                 dir_config.baseline_end, dir_config.response_start, ...
                 dir_config.response_end, dir_config.feature_filter, ...
@@ -67,7 +67,7 @@ function [] = batch_plot_tfr_pca_psth(dir_name, save_path, failed_path, tfr_path
                 dir_config.ymax_scale, dir_config.transparency, dir_config.font_size, ...
                 dir_config.min_components, dir_config.plot_avg_pow, dir_config.plot_shift_labels);
 
-                clear('component_results', 'filename_meta', 'chan_group_log', 'psth_struct');
+                clear('component_results', 'filename_meta', 'chan_group_log', 'rr_data');
 
         catch ME
             handle_ME(ME, failed_path, filename_meta.filename);

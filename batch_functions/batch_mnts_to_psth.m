@@ -41,13 +41,13 @@ function [] = batch_mnts_to_psth(save_path, failed_path, data_path, ...
                 continue
             end
 
-            psth_struct = reformat_mnts(chan_group_log, mnts_data, tot_bins);
+            rr_data = reformat_mnts(chan_group_log, mnts_data, tot_bins);
 
             matfile = fullfile(save_path, [filename_substring_one, ...
                 '_format_' filename_meta.filename, '.mat']);
-            save(matfile, 'psth_struct', 'event_info', 'filename_meta', 'config_log', ...
+            save(matfile, 'rr_data', 'event_info', 'filename_meta', 'config_log', ...
                 'chan_group_log');
-            clear('psth_struct', 'event_info', 'filename_meta', 'chan_group_log', 'mnts_data');
+            clear('rr_data', 'event_info', 'filename_meta', 'chan_group_log', 'mnts_data');
         catch ME
             handle_ME(ME, failed_path, filename_meta.filename);
         end

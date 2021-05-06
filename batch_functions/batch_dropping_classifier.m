@@ -43,9 +43,9 @@ function [] = batch_dropping_classifier(project_path, save_path, failed_path, ..
         %% Run through files
         try
             file = fullfile(data_path, file_list(file_index).name);
-            load(file, 'psth_struct', 'event_info', 'filename_meta', 'chan_group_log');
+            load(file, 'rr_data', 'event_info', 'filename_meta', 'chan_group_log');
             %% Check psth variables to make sure they are not empty
-            empty_vars = check_variables(file, psth_struct, event_info, chan_group_log);
+            empty_vars = check_variables(file, rr_data, event_info, chan_group_log);
             if empty_vars
                 continue
             end
@@ -80,14 +80,14 @@ function [] = batch_dropping_classifier(project_path, save_path, failed_path, ..
             end
 
             if config.combine_chan_groups
-                psth_struct = combine_chan_groups(psth_struct);
+                rr_data = combine_chan_groups(rr_data);
                 %% Convert combine_chan_groups label to match combined combine_chan_groups label
                 tot_rows = height(chan_info);
                 chan_info.combine_chan_groups = repmat("all_chan_groups", [tot_rows, 1]);
             end
 
             %% Drop classify
-            pop_table = dropping_classifier(psth_struct, event_info, drop_method, ...
+            pop_table = dropping_classifier(rr_data, event_info, drop_method, ...
                 chan_info, bin_size, window_start, window_end, ...
                 response_start, response_end);
 

@@ -1,15 +1,15 @@
-function [results] = feature_lda_classify(psth_struct, event_info)
+function [results] = feature_lda_classify(rr_data, event_info)
     tic
     %% grab label for all the trials
     labels = event_info.event_labels;
 
     results = struct;
 
-    unique_features = fieldnames(psth_struct);
+    unique_features = fieldnames(rr_data);
     for feature_i = 1:numel(unique_features)
         %% Go through each feature space to do classification
         feature = unique_features{feature_i};
-        relative_response = psth_struct.(feature).relative_response;
+        relative_response = rr_data.(feature).relative_response;
 
         [tot_trials, ~] = size(relative_response);
         predicted_events = cell(tot_trials, 1);

@@ -1,8 +1,8 @@
-function [] = graph_PSTH(save_path, filename, psth_struct, event_info, bin_size, ...
+function [] = graph_PSTH(save_path, filename, rr_data, event_info, bin_size, ...
         window_start, window_end, baseline_start, baseline_end, response_start, ...
         response_end, sub_rows, sub_cols, plot_rf, rf_res, mixed_smoothing, span)
 
-    unique_ch_groups = fieldnames(psth_struct);
+    unique_ch_groups = fieldnames(rr_data);
     unique_events = unique(event_info.event_labels);
     tot_events = numel(unique_events);
 
@@ -16,14 +16,14 @@ function [] = graph_PSTH(save_path, filename, psth_struct, event_info, bin_size,
 
     parfor reg_i = 1:length(unique_ch_groups)
         ch_group = unique_ch_groups{reg_i};
-        chan_order = psth_struct.(ch_group).chan_order;
+        chan_order = rr_data.(ch_group).chan_order;
         for event_i = 1:tot_events
             main_plot = figure;
             event = unique_events{event_i};
             event_indices = event_info.event_indices(strcmpi(event_info.event_labels, event), :);
 
             %% Determine y lim of event psth
-            event_rr = psth_struct.(ch_group).relative_response(event_indices, :);
+            event_rr = rr_data.(ch_group).relative_response(event_indices, :);
             event_psth = calc_psth(event_rr);
 
             if plot_rf && ~mixed_smoothing && span >= 3
@@ -41,7 +41,7 @@ function [] = graph_PSTH(save_path, filename, psth_struct, event_info, bin_size,
             chan_e = tot_bins;
             for chan_i = 1:numel(chan_order)
                 chan = chan_order{chan_i};
-                chan_rr = psth_struct.(ch_group).relative_response(event_indices, chan_s:chan_e);
+                chan_rr = rr_data.(ch_group).relative_response(event_indices, chan_s:chan_e);
                 psth = calc_psth(chan_rr);
 
                 if plot_rf && ~mixed_smoothing && span >= 3

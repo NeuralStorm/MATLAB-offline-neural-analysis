@@ -1,4 +1,4 @@
-function [event_struct] = create_event_struct(psth_struct, event_info, ...
+function [event_struct] = create_event_struct(rr_data, event_info, ...
         bin_size, window_start, window_end, new_start, new_end)
 
     unique_events = unique(event_info.event_labels);
@@ -8,8 +8,8 @@ function [event_struct] = create_event_struct(psth_struct, event_info, ...
         event_indices = event_info.event_indices(...
             strcmpi(event_info.event_labels, event));
 
-        chan_order = psth_struct.chan_order;
-        rr = psth_struct.relative_response(event_indices, :);
+        chan_order = rr_data.chan_order;
+        rr = rr_data.relative_response(event_indices, :);
         event_response = slice_rr(rr, bin_size, window_start, ...
             window_end, new_start, new_end);
         event_struct.(event).chan_order = chan_order;

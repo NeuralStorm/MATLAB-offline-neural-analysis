@@ -1,4 +1,4 @@
-function [cluster_struct, res] = do_cluster_analysis(rec_results, psth_struct, ...
+function [cluster_struct, res] = do_cluster_analysis(rec_results, rr_data, ...
         event_info, window_start, window_end, response_start, response_end, ...
         bin_size, mixed_smoothing, span, consec_bins, bin_gap)
 
@@ -23,11 +23,11 @@ function [cluster_struct, res] = do_cluster_analysis(rec_results, psth_struct, .
 
     %% Get info on chan_group, events, and bins
     [~, tot_bins] = get_bins(window_start, window_end, bin_size);
-    unique_ch_groups = fieldnames(psth_struct);
+    unique_ch_groups = fieldnames(rr_data);
     unique_events = unique(event_info.event_labels);
     for ch_group_i = 1:numel(unique_ch_groups)
         ch_group = unique_ch_groups{ch_group_i};
-        chan_order = psth_struct.(ch_group).chan_order;
+        chan_order = rr_data.(ch_group).chan_order;
         for event_i = 1:numel(unique_events)
             event = unique_events{event_i};
             sig_chans = rec_results.channel(strcmpi(rec_results.chan_group, ch_group) ...
@@ -48,7 +48,7 @@ function [cluster_struct, res] = do_cluster_analysis(rec_results, psth_struct, .
                 %% Get channel relative response
                 chan_e = chan_i * tot_bins;
                 chan_s = chan_e - tot_bins + 1;
-                chan_rr = psth_struct.(ch_group).relative_response(event_indices, chan_s:chan_e);
+                chan_rr = rr_data.(ch_group).relative_response(event_indices, chan_s:chan_e);
                 [chan_clusters, cluster_res] = find_clusters(chan_rr, ...
                     window_start, window_end, response_start, response_end, ...
                     bin_size, mixed_smoothing, span, bin_gap, consec_bins, bfr, threshold);

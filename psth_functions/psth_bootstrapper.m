@@ -1,8 +1,8 @@
 function [pop_table, chan_table] = psth_bootstrapper(...
-        psth_struct, event_info, bin_size, window_start, window_end, ...
+        rr_data, event_info, bin_size, window_start, window_end, ...
         response_start, response_end, boot_iterations)
 
-    unique_ch_groups = fieldnames(psth_struct);
+    unique_ch_groups = fieldnames(rr_data);
     unique_events = unique(event_info.event_labels);
     [~, tot_bins] = get_bins(response_start, response_end, bin_size);
 
@@ -18,7 +18,7 @@ function [pop_table, chan_table] = psth_bootstrapper(...
     %% Bootstrapping
     for ch_group_i = 1:length(unique_ch_groups)
         ch_group = unique_ch_groups{ch_group_i};
-        chan_order = psth_struct.(ch_group).chan_order;
+        chan_order = rr_data.(ch_group).chan_order;
         tot_chans = numel(chan_order);
         %% Preallocate chan_group boot arrays
         reg_perf = prealloc_boot_array(boot_iterations, 1);
@@ -32,7 +32,7 @@ function [pop_table, chan_table] = psth_bootstrapper(...
             shuffled_events = event_info;
             shuffled_events.event_indices = shuffled_events.event_indices(randperm(numel(shuffled_events.event_indices)));
             %% Create shuffled event struct to classify with
-            shuffled_struct = create_event_struct(psth_struct.(ch_group), shuffled_events, ...
+            shuffled_struct = create_event_struct(rr_data.(ch_group), shuffled_events, ...
                 bin_size, window_start, window_end, response_start, response_end);
 
             %% Unit classification

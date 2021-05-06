@@ -1,4 +1,4 @@
-function [rec_res] = receptive_field_analysis(psth_struct, event_info, ...
+function [rec_res] = receptive_field_analysis(rr_data, event_info, ...
         bin_size, window_start, window_end, baseline_start, baseline_end, ...
         response_start, response_end, span, threshold_scale, sig_check, ...
         sig_alpha, consec_bins, mixed_smoothing)
@@ -26,26 +26,26 @@ function [rec_res] = receptive_field_analysis(psth_struct, event_info, ...
             'span >= 3 if mixed smoothing is true. Span < 3 does not smooth.')
     end
 
-    unique_ch_groups = fieldnames(psth_struct);
+    unique_ch_groups = fieldnames(rr_data);
     unique_events = unique(event_info.event_labels);
     tot_events = numel(unique_events);
     [~, tot_bins] = get_bins(window_start, window_end, bin_size);
     [response_edges, ~] = get_bins(response_start, response_end, bin_size);
     for ch_group_i = 1:length(unique_ch_groups)
         ch_group = unique_ch_groups{ch_group_i};
-        tot_chans = numel(psth_struct.(ch_group).chan_order);
+        tot_chans = numel(rr_data.(ch_group).chan_order);
 
         chan_s = 1;
         chan_e = tot_bins;
         for chan_i = 1:tot_chans
-            chan = psth_struct.(ch_group).chan_order{chan_i};
+            chan = rr_data.(ch_group).chan_order{chan_i};
             %% Initalize variables to find principal event per channel
             chan_res = []; max_rm = 0; principal_event = cell(tot_events, 1);
             tot_sig_events = 0; norm_rm = nan(tot_events, 1);
             for event_i = 1:tot_events
                 event = unique_events{event_i};
                 event_indices = event_info.event_indices(strcmpi(event_info.event_labels, event), :);
-                chan_rr = psth_struct.(ch_group).relative_response(event_indices, chan_s:chan_e);
+                chan_rr = rr_data.(ch_group).relative_response(event_indices, chan_s:chan_e);
 
                 %% Get current PSTH and smooth it based on span
                 psth = calc_psth(chan_rr);

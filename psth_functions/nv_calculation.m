@@ -1,4 +1,4 @@
-function res = nv_calculation(psth_struct, event_info, window_start, window_end, ...
+function res = nv_calculation(rr_data, event_info, window_start, window_end, ...
         baseline_start, baseline_end, bin_size, epsilon, norm_var_scaling)
 
     %% Create normalized variance table
@@ -11,19 +11,19 @@ function res = nv_calculation(psth_struct, event_info, window_start, window_end,
     [~, tot_baseline_bins] = get_bins(baseline_start, baseline_end, bin_size);
     duration = tot_baseline_bins * bin_size;
 
-    unique_ch_groups = fieldnames(psth_struct);
+    unique_ch_groups = fieldnames(rr_data);
     unique_events = unique(event_info.event_labels);
     for ch_group_i = 1:length(unique_ch_groups)
         ch_group = unique_ch_groups{ch_group_i};
-        tot_chans = numel(psth_struct.(ch_group).chan_order);
+        tot_chans = numel(rr_data.(ch_group).chan_order);
         chan_s = 1;
         chan_e = tot_bins;
         for chan_i = 1:tot_chans
-            chan = psth_struct.(ch_group).chan_order{chan_i};
+            chan = rr_data.(ch_group).chan_order{chan_i};
             for event_i = 1:length(unique_events)
                 event = unique_events{event_i};
                 event_indices = event_info.event_indices(strcmpi(event_info.event_labels, event), :);
-                chan_rr = psth_struct.(ch_group).relative_response(event_indices, chan_s:chan_e);
+                chan_rr = rr_data.(ch_group).relative_response(event_indices, chan_s:chan_e);
                 baseline_response = slice_rr(chan_rr, bin_size, window_start, ...
                     window_end, baseline_start, baseline_end);
 

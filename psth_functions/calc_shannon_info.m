@@ -1,4 +1,4 @@
-function [res] = calc_shannon_info(psth_struct, event_info, bin_size, window_start, ...
+function [res] = calc_shannon_info(rr_data, event_info, bin_size, window_start, ...
                                 window_end, response_start, response_end)
     %% Abbreviations
     % *_t = timing, *_c = count
@@ -10,22 +10,22 @@ function [res] = calc_shannon_info(psth_struct, event_info, bin_size, window_sta
                ["mutual_info_count", "double"];];
     res = prealloc_table(headers, [0, size(headers, 1)]);
 
-    unique_ch_groups = fieldnames(psth_struct);
+    unique_ch_groups = fieldnames(rr_data);
     unique_events = unique(event_info.event_labels);
     tot_events = numel(unique_events);
     [~, tot_bins] = get_bins(window_start, window_end, bin_size);
 
     for ch_group_i = 1:length(unique_ch_groups)
         ch_group = unique_ch_groups{ch_group_i};
-        chan_order = psth_struct.(ch_group).chan_order;
+        chan_order = rr_data.(ch_group).chan_order;
         tot_chans = numel(chan_order);
         %% Start channel counter
         chan_s = 1;
         chan_e = tot_bins;
         for chan_i = 1:tot_chans
-            chan = psth_struct.(ch_group).chan_order{chan_i};
+            chan = rr_data.(ch_group).chan_order{chan_i};
             %% Grab entire response for channel
-            chan_rr = psth_struct.(ch_group).relative_response(:, chan_s:chan_e);
+            chan_rr = rr_data.(ch_group).relative_response(:, chan_s:chan_e);
             response_rr = slice_rr(chan_rr, bin_size, window_start, ...
                 window_end, response_start, response_end);
             %% Find timing mutual information for response_rr
@@ -35,7 +35,7 @@ function [res] = calc_shannon_info(psth_struct, event_info, bin_size, window_sta
                 %% Calculate event entropies
                 event = unique_events{event_i};
                 event_indices = event_info.event_indices(strcmpi(event_info.event_labels, event), :);
-                chan_rr = psth_struct.(ch_group).relative_response(event_indices, chan_s:chan_e);
+                chan_rr = rr_data.(ch_group).relative_response(event_indices, chan_s:chan_e);
                 response_rr = slice_rr(chan_rr, bin_size, window_start, ...
                     window_end, response_start, response_end);
 

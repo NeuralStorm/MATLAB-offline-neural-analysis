@@ -23,7 +23,7 @@ function [] = batch_format_psth(save_path, failed_path, data_path, dir_name, con
             assert(~isempty(selected_channels), "No channels have been selected for analysis")
 
             %% Format PSTH
-            [psth_struct, event_info] = format_PSTH(event_info, ...
+            [rr_data, event_info] = format_PSTH(event_info, ...
                 selected_channels, config.bin_size, config.window_start, config.window_end);
 
             chan_group_log = selected_channels;
@@ -31,9 +31,9 @@ function [] = batch_format_psth(save_path, failed_path, data_path, dir_name, con
 
             %% Saving outputs
             matfile = fullfile(save_path, ['PSTH_format_', filename_meta.filename, '.mat']);
-            save(matfile, 'psth_struct', 'event_info', 'selected_channels', ...
+            save(matfile, 'rr_data', 'event_info', 'selected_channels', ...
                 'filename_meta', 'config_log', 'chan_group_log');
-            clear('psth_struct', 'event_info', 'selected_channels', 'chan_group_log', ...
+            clear('rr_data', 'event_info', 'selected_channels', 'chan_group_log', ...
                 'filename_meta', 'channel_map');
         catch ME
             handle_ME(ME, failed_path, filename_meta.filename);

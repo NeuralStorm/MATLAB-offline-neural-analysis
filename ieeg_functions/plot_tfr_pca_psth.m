@@ -1,5 +1,5 @@
 function [] = plot_tfr_pca_psth(save_path, tfr_path, tfr_file_list, chan_group_log, mnts_struct, band_shifts,...
-    component_results, psth_struct, event_info, bin_size, window_start, ...
+    component_results, rr_data, event_info, bin_size, window_start, ...
     window_end, baseline_start, baseline_end, response_start, response_end, ...
     feature_filter, feature_value, sub_rows, sub_cols, st_type, ymax_scale, ...
     transparency, font_size, min_chans, plot_avg_pow, plot_shift_labels)
@@ -28,7 +28,7 @@ function [] = plot_tfr_pca_psth(save_path, tfr_path, tfr_file_list, chan_group_l
     %                                             Columns: Component Row: Feature
     %                                  estimated_mean: Vector with estimated means for each chan_group
     %                                  mnts: mnts mapped into pc space with chan_group filter applied
-    % psth_struct: struct w/ fields for each chan_group
+    % rr_data: struct w/ fields for each chan_group
     %              chan_group: structwith fields:
     %                          relative_response: Numerical matrix with dimensions Trials x ((tot pcs or channels) * tot bins)
     %                          label_order: order of pcs
@@ -83,7 +83,7 @@ function [] = plot_tfr_pca_psth(save_path, tfr_path, tfr_file_list, chan_group_l
     end
 
     unique_events = unique(event_info.event_labels);
-    unique_ch_group = fieldnames(psth_struct);
+    unique_ch_group = fieldnames(rr_data);
 
     parfor ch_group_i = 1:length(unique_ch_group)
         ch_group = unique_ch_group{ch_group_i};
@@ -91,7 +91,7 @@ function [] = plot_tfr_pca_psth(save_path, tfr_path, tfr_file_list, chan_group_l
 
         ch_group_table = chan_group_log(strcmpi(chan_group_log.chan_group, ch_group), :);
         [color_struct, ch_group_list] = create_color_struct(color_map, ch_group_table);
-        chan_order = psth_struct.(ch_group).chan_order;
+        chan_order = rr_data.(ch_group).chan_order;
         tot_reg_chans = numel(chan_order);
         for event_i = 1:numel(unique_events)
             event = unique_events{event_i};
@@ -191,9 +191,9 @@ function [] = plot_tfr_pca_psth(save_path, tfr_path, tfr_file_list, chan_group_l
             weight_counter = tfr_counter + 1;
             %% Get event response and separate into units
             event_indices = event_info.event_indices(strcmpi(event_info.event_labels, event));
-            event_matrix = get_event_response(psth_struct.(ch_group).relative_response, event_indices);
+            event_matrix = get_event_response(rr_data.(ch_group).relative_response, event_indices);
             event_psth = calc_psth(event_matrix);
-            unit_struct = slice_unit_response(event_matrix, psth_struct.(ch_group).chan_order, tot_window_bins);
+            unit_struct = slice_unit_response(event_matrix, rr_data.(ch_group).chan_order, tot_window_bins);
 
             %% Set event min and max for plotting
             event_max = 1.1 * max(event_psth) + eps;

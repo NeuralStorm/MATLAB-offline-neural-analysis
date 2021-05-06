@@ -1,4 +1,4 @@
-function [psth_struct, event_info] = format_PSTH(event_info, ...
+function [rr_data, event_info] = format_PSTH(event_info, ...
         selected_channels, bin_size, window_start, window_end)
     %%Inputs
     % event_info: table with columns event_labels, event_indices, and event_ts
@@ -8,13 +8,13 @@ function [psth_struct, event_info] = format_PSTH(event_info, ...
     % window_end: end time of window
     % bin_size: size of bin
     %% Output
-    % psth_struct: struct with fields chan_group
+    % rr_data: struct with fields chan_group
     %              chan_group fields: relative_response, label_order
     %              relative_response dimension: Trials (rows) x Neurons * Bins (columns)
     %              label_order: list of channels in relative response
     % event_info: event_info table above, but filtered according to include_events and trial_range
 
-    psth_struct = struct;
+    rr_data = struct;
 
     %% Creates the PSTH
     unique_ch_groups = unique(selected_channels.chan_group);
@@ -25,7 +25,7 @@ function [psth_struct, event_info] = format_PSTH(event_info, ...
         %% create relative response for chan_group neurons
         rr = create_relative_response(group_chans, event_info.event_ts, bin_edges);
         %% store relative response and labels in chan_group struct
-        psth_struct.(ch_group).relative_response = rr;
-        psth_struct.(ch_group).chan_order = selected_channels.channel(strcmpi(selected_channels.chan_group, ch_group));
+        rr_data.(ch_group).relative_response = rr;
+        rr_data.(ch_group).chan_order = selected_channels.channel(strcmpi(selected_channels.chan_group, ch_group));
     end
 end

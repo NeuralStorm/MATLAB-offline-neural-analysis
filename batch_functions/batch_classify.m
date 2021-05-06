@@ -31,15 +31,15 @@ function [] = batch_classify(project_path, save_path, failed_path, data_path, di
         %% Run through files
         try
             file = fullfile(data_path, file_list(file_index).name);
-            load(file, 'psth_struct', 'event_info', 'filename_meta', 'chan_group_log');
+            load(file, 'rr_data', 'event_info', 'filename_meta', 'chan_group_log');
             %% Check psth variables to make sure they are not empty
-            empty_vars = check_variables(file, psth_struct, event_info, chan_group_log);
+            empty_vars = check_variables(file, rr_data, event_info, chan_group_log);
             if empty_vars
                 continue
             end
 
             if config.combine_chan_groups
-                psth_struct = combine_chan_groups(psth_struct);
+                rr_data = combine_chan_groups(rr_data);
             end
 
             % %% Check uniqueness
@@ -54,12 +54,12 @@ function [] = batch_classify(project_path, save_path, failed_path, data_path, di
 
             %% Classify
             [pop_table, chan_table, classify_res] = do_psth_classifier(...
-                psth_struct, event_info, bin_size, window_start, window_end, ...
+                rr_data, event_info, bin_size, window_start, window_end, ...
                 response_start, response_end);
 
             %% Bootstrap
             if boot_iterations > 0
-                [boot_pop, boot_chan] = psth_bootstrapper(psth_struct, ...
+                [boot_pop, boot_chan] = psth_bootstrapper(rr_data, ...
                     event_info, bin_size, window_start, window_end, ...
                     response_start, response_end, boot_iterations);
                 %% Join classification and boot results

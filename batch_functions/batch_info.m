@@ -20,16 +20,16 @@ function [] = batch_info(project_path, save_path, failed_path, data_path, dir_na
         try
             %% pull info from filename and set up file path for analysis
             file = fullfile(data_path, file_list(file_index).name);
-            load(file, 'psth_struct', 'event_info', 'chan_group_log', 'filename_meta');
+            load(file, 'rr_data', 'event_info', 'chan_group_log', 'filename_meta');
             %% Check psth variables to make sure they are not empty
-            empty_vars = check_variables(file, psth_struct, event_info, chan_group_log);
+            empty_vars = check_variables(file, rr_data, event_info, chan_group_log);
             if empty_vars
                 warning('Animal: %s Does not have all the variables required for this analysis. Skipping...', dir_name);
                 continue
             end
 
             %% Mutual information
-            shannon_info = calc_shannon_info(psth_struct, event_info, ...
+            shannon_info = calc_shannon_info(rr_data, event_info, ...
                 config.bin_size, config.window_start, config.window_end, ...
                 config.response_start, config.response_end);
 
@@ -52,7 +52,7 @@ function [] = batch_info(project_path, save_path, failed_path, data_path, dir_na
             shannon_info = horzcat_cell(shannon_info, repmat(meta_data, [tot_rows, 1]), meta_headers, 'before');
             export_csv(csv_path, shannon_info, ignore_headers);
 
-            clear('chan_group_log', 'psth_struct', 'event_info', 'filename_meta', 'shannon_info');
+            clear('chan_group_log', 'rr_data', 'event_info', 'filename_meta', 'shannon_info');
         catch ME
             handle_ME(ME, failed_path, filename_meta.filename);
         end

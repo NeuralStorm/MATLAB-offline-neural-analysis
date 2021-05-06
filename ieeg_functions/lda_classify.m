@@ -1,8 +1,8 @@
-function [results] = lda_classify(psth_struct, event_info)
+function [results] = lda_classify(rr_data, event_info)
     true_list = event_info.event_labels;
 
     results = struct;
-    relative_response = psth_struct.relative_response;
+    relative_response = rr_data.relative_response;
 
     [tot_trials, ~] = size(relative_response);
     predicted_list = cell(tot_trials, 1);

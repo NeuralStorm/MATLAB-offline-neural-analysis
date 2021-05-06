@@ -1,4 +1,4 @@
-function [pop_table, chan_table, classify_res] = do_psth_classifier(psth_struct, event_info, bin_size, window_start, window_end, ...
+function [pop_table, chan_table, classify_res] = do_psth_classifier(rr_data, event_info, bin_size, window_start, window_end, ...
         response_start, response_end)
     %% Create population table
     pop_headers = [["chan_group", "string"]; ["performance", "double"]; ...
@@ -11,16 +11,16 @@ function [pop_table, chan_table, classify_res] = do_psth_classifier(psth_struct,
     %% Create struct to store all results from classifier
     classify_res = struct;
 
-    unique_ch_groups = fieldnames(psth_struct);
+    unique_ch_groups = fieldnames(rr_data);
     unique_events = unique(event_info.event_labels);
     [~, tot_bins] = get_bins(response_start, response_end, bin_size);
 
     for ch_group_i = 1:length(unique_ch_groups)
         ch_group = unique_ch_groups{ch_group_i};
-        chan_order = psth_struct.(ch_group).chan_order;
+        chan_order = rr_data.(ch_group).chan_order;
         tot_chans = numel(chan_order);
 
-        event_struct = create_event_struct(psth_struct.(ch_group), event_info, ...
+        event_struct = create_event_struct(rr_data.(ch_group), event_info, ...
             bin_size, window_start, window_end, response_start, response_end);
 
         %% Population classification
