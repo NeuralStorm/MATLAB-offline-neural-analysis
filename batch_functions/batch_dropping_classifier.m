@@ -80,7 +80,7 @@ function [] = batch_dropping_classifier(project_path, save_path, failed_path, ..
             end
 
             if config.combine_chan_groups
-                psth_struct = combine_regions(psth_struct);
+                psth_struct = combine_chan_groups(psth_struct);
                 %% Convert combine_chan_groups label to match combined combine_chan_groups label
                 tot_rows = height(chan_info);
                 chan_info.combine_chan_groups = repmat("all_chan_groups", [tot_rows, 1]);

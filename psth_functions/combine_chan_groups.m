@@ -1,4 +1,4 @@
-function [out_struct] = combine_regions(psth_struct)
+function [out_struct] = combine_chan_groups(psth_struct)
     unique_features = fieldnames(psth_struct);
     overall_feature = 'all_chan_groups';
     out_struct = struct;

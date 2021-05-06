@@ -39,7 +39,7 @@ function [] = batch_classify(project_path, save_path, failed_path, data_path, di
             end
 
             if config.combine_chan_groups
-                psth_struct = combine_regions(psth_struct);
+                psth_struct = combine_chan_groups(psth_struct);
             end
 
             % %% Check uniqueness
