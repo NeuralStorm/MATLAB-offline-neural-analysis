@@ -1,8 +1,7 @@
-function [ica_results, labeled_ics, ic_log] = calc_ica(chan_group_log, mnts_struct, ...
-        tot_pcs, extended, sphering, anneal, anneal_deg, bias_switch, ...
-        momentum, max_steps, stop_train, rnd_reset, verbose)
+function [ica_results, ic_log] = calc_ica(chan_group_log, mnts_struct, ...
+        apply_z_score, tot_pcs, extended, sphering, anneal, anneal_deg, ...
+        bias_switch, momentum, max_steps, stop_train, rnd_reset, verbose)
     %TODO add option to go straight from relative response to ica with no PCA middleman
-    %TODO dont forget to z score raw input
     % TODO add check to make sure ica input has enough data
     ica_results = struct;
     labeled_ics = struct;
@@ -19,7 +18,10 @@ function [ica_results, labeled_ics, ic_log] = calc_ica(chan_group_log, mnts_stru
             continue
         end
 
-        ica_input = mnts_struct.(ch_group).mnts';
+        ica_input = mnts_struct.(ch_group).mnts;
+        if apply_z_score
+            ica_input = zscore(ica_input)';
+        end
         if tot_pcs > (tot_chans - 1)
             %% Check set pcs is valid
             % Max allowed pcs is tot_chans - 1

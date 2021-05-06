@@ -193,7 +193,7 @@ function [] = plot_tfr_pca_psth(save_path, tfr_path, tfr_file_list, chan_group_l
             event_indices = event_info.event_indices(strcmpi(event_info.event_labels, event));
             event_matrix = get_event_response(rr_data.(ch_group).relative_response, event_indices);
             event_psth = calc_psth(event_matrix);
-            unit_struct = slice_unit_response(event_matrix, rr_data.(ch_group).chan_order, tot_window_bins);
+            unit_struct = slice_chan_response(event_matrix, rr_data.(ch_group).chan_order, tot_window_bins);
 
             %% Set event min and max for plotting
             event_max = 1.1 * max(event_psth) + eps;
@@ -296,5 +296,37 @@ function [tfr, st_tfr] = calc_tfr(mnts, event_indices, st_type, tot_bins)
     st_tfr = std(stacked_rr, 0, 1);
     if strcmpi(st_type, 'ste')
         st_tfr = st_tfr ./ sqrt(tot_trials);
+    end
+end
+
+function [chan_struct] = slice_chan_response(response_matrix, chan_order, tot_window_bins)
+    %% Purpose: Return struct with units relative response matrix and psth
+    %% Input:
+    % response_matrix: response matrix with dims trials x (units * total bins)
+    % chan_order: chan list of order of chans in rr
+    % tot_window_bins: total bins for a given chan
+    %% Output:
+    % chan_struct: struct with the following fields
+    %              chan: chan is defined by the contents of chan_order and has the fields
+    %                    relative_response: chan response matrix
+    %                    psth: avg response
+
+    %% assert chan labels and tot window bins are valid
+    [~, tot_cols] = size(response_matrix);
+    assert(tot_cols / (numel(chan_order) * tot_window_bins) == 1, ...
+        ['Total chan labels and bins provided do not cleanly go', ...
+        'into response matrix. Verify dimensions']);
+
+    chan_struct = struct;
+    chan_i = 1;
+    for chan_s_i = 1:tot_window_bins:tot_cols
+        %% determine chan label
+        chan = chan_order{chan_i};
+        chan_i = chan_i + 1;
+        %% slice time from response matrix and store in chan_struct
+        end_i = chan_s_i + tot_window_bins - 1;
+        unit_response = response_matrix(:, chan_s_i:end_i);
+        chan_struct.(chan).relative_response = unit_response;
+        chan_struct.(chan).psth = calc_psth(unit_response);
     end
 end

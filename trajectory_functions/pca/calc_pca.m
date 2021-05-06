@@ -1,4 +1,4 @@
-function [pca_results, labeled_pcs, pc_log] = calc_pca(chan_group_log, mnts_struct, ...
+function [pca_results, pc_log] = calc_pca(chan_group_log, mnts_struct, ...
         feature_filter, feature_value, apply_z_score)
 
     %% Purpose: Run Principal Component Analysis (pca) on feature sets stored in mnts_struct
@@ -44,8 +44,7 @@ function [pca_results, labeled_pcs, pc_log] = calc_pca(chan_group_log, mnts_stru
     %                                                   Columns: Component Row: Feature
     %                                        estimated_mean: Vector with estimated means for each feature
     %                                        mnts: mnts mapped into pc space with feature filter applied
-    % labeled_pcs: similar to chan_group_log, but channel is replaced with pc # since channels have been mapped
-    % labeled_pcs: Same as labeled_pcs, but with feature filter applied (ex: 3 pcs would only contain 3 pc names)
+    % pc_log: similar to chan_group_log, but with feature filter applied (ex: 3 pcs would only contain 3 pc names)
 
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
