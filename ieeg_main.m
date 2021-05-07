@@ -92,9 +92,9 @@ function [] = ieeg_main(varargin)
 
         if dir_config.make_labels
             %% Set up labels
-            labels_path = [project_path, '/', curr_dir, '_labels.csv'];
+            labels_path = [project_path, '/', 'labels_', curr_dir, '.csv'];
             if exist(labels_path)
-                label_table = load_labels(project_path, [curr_dir, '_labels.csv']);
+                label_table = load_labels(project_path, ['labels_', curr_dir, '.csv']);
             else
                 headers = {'channel', 'selected_channels', ...
                     'user_channels', 'chan_group', 'chan_group_id', ...
@@ -116,7 +116,7 @@ function [] = ieeg_main(varargin)
         end
 
         %% Load labels file to start analysis
-        label_table = load_labels(project_path, [curr_dir, '_labels.csv']);
+        label_table = load_labels(project_path, ['labels_', curr_dir, '.csv']);
 
         if dir_config.create_mnts
             try

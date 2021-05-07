@@ -5,7 +5,7 @@ function [config_table] = import_config(project_path, analysis_type)
     csv_files = dir(csv_path_list);
     for csv = 1:length(csv_files)
         csv_file = fullfile(project_path, csv_files(csv).name);
-        if contains(csv_files(csv).name, [analysis_type, '_config.csv'])
+        if contains(csv_files(csv).name, ['conf_', analysis_type, '.csv'])
             config_table = readtable(csv_file);
         end
     end

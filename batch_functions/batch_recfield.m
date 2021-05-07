@@ -13,8 +13,8 @@ function [] = batch_recfield(project_path, save_path, failed_path, data_path, di
     sig_alpha = config.cell_sig_alpha;
     bin_gap = config.bin_gap; mixed_smoothing = config.mixed_smoothing;
 
-    rec_csv_path = fullfile(project_path, [filename_substring_one, '_receptive_field_results.csv']);
-    cluster_csv_path = fullfile(project_path, [filename_substring_one, '_cluster_analysis_results.csv']);
+    rec_csv_path = fullfile(project_path, ['res_', filename_substring_one, '_receptive_field.csv']);
+    cluster_csv_path = fullfile(project_path, ['res_', filename_substring_one, '_cluster_analysis.csv']);
     meta_headers = {'filename', 'animal_id', 'exp_group', 'exp_condition', ...
         'optional_info', 'date', 'record_session', 'window_start', ...
         'baseline_start', 'baseline_end', 'window_end', 'response_start', 'response_end', 'bin_size', ...

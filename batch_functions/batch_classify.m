@@ -6,8 +6,8 @@ function [] = batch_classify(project_path, save_path, failed_path, data_path, di
     file_list = update_file_list(file_list, failed_path, config.include_sessions);
 
     %% Create csv paths
-    pop_csv_path = fullfile(project_path, [filename_substring_one, '_pop_classification_info.csv']);
-    chan_csv_path = fullfile(project_path, [filename_substring_one,'_chan_classification_info.csv']);
+    pop_csv_path = fullfile(project_path, ['res_', filename_substring_one, '_pop_eucl_classifier.csv']);
+    chan_csv_path = fullfile(project_path, ['res_', filename_substring_one,'_chan_eucl_classifier.csv']);
 
     %% Pull variable names into workspace scope for log
     bin_size = config.bin_size; window_start = config.window_start;

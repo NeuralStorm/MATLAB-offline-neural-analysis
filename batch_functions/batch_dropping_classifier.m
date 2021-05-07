@@ -8,7 +8,7 @@ function [] = batch_dropping_classifier(project_path, save_path, failed_path, ..
     file_list = update_file_list(file_list, failed_path, config.include_sessions);
 
     %% Create csv paths
-    res_csv_path = fullfile(project_path, [chan_type, '_chan_dropping.csv']);
+    res_csv_path = fullfile(project_path, ['res_', chan_type, '_eucl_drop_classifier.csv']);
 
     %% Pull variable names into workspace scope for log
     bin_size = config.bin_size; window_start = config.window_start;
@@ -27,7 +27,7 @@ function [] = batch_dropping_classifier(project_path, save_path, failed_path, ..
     %% Pull csv results from classifications to determine drop order
     is_csv = any(ismember(config.drop_method, {'performance', 'mutual_info', 'corrected_info'}));
     if is_csv
-        chan_csv_path = fullfile(project_path, [chan_type,'_chan_classification_info.csv']);
+        chan_csv_path = fullfile(project_path, ['res_', chan_type,'_chan_eucl_classifier.csv']);
         if exist(chan_csv_path, 'file')
             chan_table = readtable(chan_csv_path);
         else

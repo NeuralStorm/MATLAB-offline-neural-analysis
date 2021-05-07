@@ -3,7 +3,7 @@ function [] = batch_info(project_path, save_path, failed_path, data_path, dir_na
     config_log = config;
 
     %% Shannon table
-    csv_path = fullfile(project_path, [filename_substring_one, '_shannon_info_results.csv']);
+    csv_path = fullfile(project_path, ['res_', filename_substring_one, '_shannon_info.csv']);
     meta_headers = {'filename', 'animal_id', 'exp_group', 'exp_condition', ...
         'optional_info', 'date', 'record_session', 'window_start', 'window_end', ...
         'response_start', 'response_end', 'bin_size'};

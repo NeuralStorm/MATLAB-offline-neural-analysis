@@ -12,7 +12,7 @@ function [] = shannon_info_main(varargin)
         curr_dir = dir_list{dir_i};
         dir_config = config(dir_i, :);
         dir_config = convert_table_cells(dir_config);
-        label_table = load_labels(project_path, [curr_dir, '_labels.csv']);
+        label_table = load_labels(project_path, ['labels_', curr_dir, '.csv']);
 
         if strcmpi(dir_config.psth_type, 'psth')
             %% Creating paths to do psth formatting

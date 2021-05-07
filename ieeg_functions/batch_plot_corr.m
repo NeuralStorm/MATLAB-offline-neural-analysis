@@ -43,7 +43,7 @@ function [] = batch_plot_corr(project_path, dir_name, save_path, failed_path, ..
             results = cell2table(results, 'VariableNames', {'filename', 'id', ...
                 'session', 'pc_num', 'tot_chans', 'feature_1', 'feature_2', 'rsq'});
 
-            csv_path = fullfile(project_path, 'correlation_results.csv');
+            csv_path = fullfile(project_path, 'res_pca_corr.csv');
             export_csv(csv_path, results, {'rsq'});
 
             clear('component_results', 'chan_group_log', 'filename_meta');
