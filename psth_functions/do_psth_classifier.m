@@ -31,7 +31,7 @@ function [pop_table, chan_table, classify_res] = do_psth_classifier(rr_data, eve
         classify_res.(ch_group) = struct('confusion_matrix', conf, ...
             'mutual_info', mutual_info, 'performance', perf, 'trial_log', trial_log);
 
-        %% Unit classification
+        %% chan classification
         chan_s = 1;
         chan_e = tot_bins;
         for chan_i = 1:tot_chans

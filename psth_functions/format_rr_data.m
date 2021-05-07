@@ -10,7 +10,7 @@ function [rr_data, event_info] = format_rr_data(event_info, ...
     %% Output
     % rr_data: struct with fields chan_group
     %              chan_group fields: relative_response, chan_order
-    %              relative_response dimension: Trials (rows) x Neurons * Bins (columns)
+    %              relative_response dimension: Trials (rows) x chans * Bins (columns)
     %              chan_order: list of channels in relative response
     % event_info: event_info table above, but filtered according to include_events and trial_range
 
@@ -22,7 +22,7 @@ function [rr_data, event_info] = format_rr_data(event_info, ...
     for ch_group_i = 1:length(unique_ch_groups)
         ch_group = unique_ch_groups{ch_group_i};
         chan_list = selected_channels.channel_data(strcmpi(selected_channels.chan_group, ch_group));
-        %% create relative response for chan_group neurons
+        %% create relative response for chan_group chans
         rr = calc_rr(chan_list, event_info.event_ts, bin_edges);
         %% store relative response and labels in chan_group struct
         rr_data.(ch_group).relative_response = rr;
@@ -37,7 +37,7 @@ function [rr] = calc_rr(chan_ts, event_ts, bin_edges)
     % bin_edges: defined by window_start and window_end, stepped by bin_size
     %% Output
     % rr: relative response matrix
-    %     dimension: Trials (rows) x Neurons * Bins (columns)
+    %     dimension: Trials (rows) x chans * Bins (columns)
 
     tot_bins = numel(bin_edges) - 1;
     tot_trials = numel(event_ts);
@@ -48,9 +48,9 @@ function [rr] = calc_rr(chan_ts, event_ts, bin_edges)
         chan_s = 1;
         chan_e = tot_bins;
         trial_ts = event_ts(trial_i);
-        for neuron_i = 1:tot_chans
-            %% Iterate through neurons
-            spike_ts = chan_ts{neuron_i};
+        for chan_i = 1:tot_chans
+            %% Iterate through chans
+            spike_ts = chan_ts{chan_i};
             %% Offsets spike times and then bin spikes within window
             offset_ts = spike_ts - trial_ts;
             [binned_response, ~] = histcounts(offset_ts, bin_edges);

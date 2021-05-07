@@ -31,22 +31,22 @@ function [] = plx_spike_parser(parsed_path, failed_path, raw_file, config, label
             rethrow(ME);
         end
 
-        [tot_units, tot_channels] = size(tscounts);
+        [tot_chans, tot_channels] = size(tscounts);
         [~, channel_names] = plx_chan_names(raw_file);
 
         subchan = {'i','a','b','c','d'};
         channel_map = [];
-        for unit_i = 1:tot_units - 1 % Start at 0 for unsorted 
+        for chan_i = 1:tot_chans - 1 % Start at 0 for unsorted 
             for channel_i = 1:tot_channels - 1
-                if (tscounts(unit_i + 1, channel_i + 1) > 0) && unit_i < length(subchan)
-                    %% get the timestamps for this channel and unit 
-                    [~, channel_timestamps] = plx_ts(raw_file, channel_i, unit_i);
+                if (tscounts(chan_i + 1, channel_i + 1) > 0) && chan_i < length(subchan)
+                    %% get the timestamps for this channel and chan
+                    [~, channel_timestamps] = plx_ts(raw_file, channel_i, chan_i);
                     % channel_names is a char array
                     current_channel = channel_names(channel_i, :);
                     split_channel = strsplit(current_channel, ' ');
                     current_channel = split_channel{1};
                     current_channel = deblank(current_channel);
-                    current_subchan = subchan{unit_i + 1};
+                    current_subchan = subchan{chan_i + 1};
                     complete_channel_name = [current_channel, current_subchan];
                     channel_map = [channel_map; {complete_channel_name}, {channel_timestamps}];
                 end

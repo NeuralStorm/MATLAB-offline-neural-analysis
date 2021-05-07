@@ -12,13 +12,13 @@ function [pop_table] = synergy_redundancy(pop_table, chan_table, boot_iterations
             %% Grab chan_group corrected info
             ch_group_info = pop_table.corrected_info(strcmpi(pop_table.chan_group, ch_group));
 
-            %% Sum unit info above 0 for current chan_group
+            %% Sum chan info above 0 for current chan_group
             chan_info = sum(chan_table.corrected_info(strcmpi(chan_table.chan_group, ch_group)));
         else
             %% Grab chan_group info
             ch_group_info = pop_table.mutual_info(strcmpi(pop_table.chan_group, ch_group));
 
-            %% Sum unit info above 0 for current chan_group
+            %% Sum chan info above 0 for current chan_group
             chan_info = sum(chan_table.mutual_info(strcmpi(chan_table.chan_group, ch_group)));
         end
         %% Calculate synergy redundancy

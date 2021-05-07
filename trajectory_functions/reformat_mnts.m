@@ -22,7 +22,7 @@ function [rr_data] = reformat_mnts(chan_group_log, component_results, tot_bins)
     %                                         Columns: Component Row: Feature
     %                                  estimated_mean: Vector with estimated means for each feature
     %                                  mnts: mnts matrix
-    % tot_bins: total bins that unit has within the mnts
+    % tot_bins: total bins that chan has within the mnts
     %% Output:
     % rr_data: struct w/ fields for each feature
     %              feature_name: struct typically based on chan_group and powers

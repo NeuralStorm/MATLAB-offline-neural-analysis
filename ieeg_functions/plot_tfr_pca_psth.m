@@ -189,11 +189,11 @@ function [] = plot_tfr_pca_psth(save_path, tfr_path, tfr_file_list, chan_group_l
 
             %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
             weight_counter = tfr_counter + 1;
-            %% Get event response and separate into units
+            %% Get event response and separate into chans
             event_indices = event_info.event_indices(strcmpi(event_info.event_labels, event));
             event_matrix = get_event_response(rr_data.(ch_group).relative_response, event_indices);
             event_psth = calc_psth(event_matrix);
-            unit_struct = slice_chan_response(event_matrix, rr_data.(ch_group).chan_order, tot_window_bins);
+            chan_struct = slice_chan_response(event_matrix, rr_data.(ch_group).chan_order, tot_window_bins);
 
             %% Set event min and max for plotting
             event_max = 1.1 * max(event_psth) + eps;
@@ -206,8 +206,8 @@ function [] = plot_tfr_pca_psth(save_path, tfr_path, tfr_file_list, chan_group_l
             %% Creating the PSTH graphs
             for chan_i = 1:tot_reg_chans
                 psth_name = chan_order{chan_i};
-                psth = unit_struct.(psth_name).psth;
-                relative_response = unit_struct.(psth_name).relative_response;
+                psth = chan_struct.(psth_name).psth;
+                relative_response = chan_struct.(psth_name).relative_response;
                 if strcmpi(st_type, 'std')
                     st_vec = std(relative_response);
                 elseif strcmpi(st_type, 'ste')
@@ -300,9 +300,9 @@ function [tfr, st_tfr] = calc_tfr(mnts, event_indices, st_type, tot_bins)
 end
 
 function [chan_struct] = slice_chan_response(response_matrix, chan_order, tot_window_bins)
-    %% Purpose: Return struct with units relative response matrix and psth
+    %% Purpose: Return struct with chans relative response matrix and psth
     %% Input:
-    % response_matrix: response matrix with dims trials x (units * total bins)
+    % response_matrix: response matrix with dims trials x (chans * total bins)
     % chan_order: chan list of order of chans in rr
     % tot_window_bins: total bins for a given chan
     %% Output:
@@ -325,8 +325,8 @@ function [chan_struct] = slice_chan_response(response_matrix, chan_order, tot_wi
         chan_i = chan_i + 1;
         %% slice time from response matrix and store in chan_struct
         end_i = chan_s_i + tot_window_bins - 1;
-        unit_response = response_matrix(:, chan_s_i:end_i);
-        chan_struct.(chan).relative_response = unit_response;
-        chan_struct.(chan).psth = calc_psth(unit_response);
+        chan_rr = response_matrix(:, chan_s_i:end_i);
+        chan_struct.(chan).relative_response = chan_rr;
+        chan_struct.(chan).psth = calc_psth(chan_rr);
     end
 end

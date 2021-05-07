@@ -176,15 +176,15 @@ function [results] = get_powspctrm(pow_struct, ch_i, use_z_score, ...
         else
             results = nan(tot_trials, tot_chans, tot_samples);
         end
-        parfor unit_i = 1:tot_chans
+        parfor chan_i = 1:tot_chans
             for trial_i = 1:tot_trials
                 %% smooth
                 if smooth_power
-                    trial_response = smooth_down(ch_group_spctrm(trial_i, unit_i, :), span, downsample_rate, smoothing_direction);
+                    trial_response = smooth_down(ch_group_spctrm(trial_i, chan_i, :), span, downsample_rate, smoothing_direction);
                 else
-                    trial_response = ch_group_spctrm(trial_i, unit_i, :);
+                    trial_response = ch_group_spctrm(trial_i, chan_i, :);
                 end
-                results(trial_i, unit_i, :) = trial_response;
+                results(trial_i, chan_i, :) = trial_response;
             end
         end
     else

@@ -35,7 +35,7 @@ function [pop_table, chan_table] = psth_bootstrapper(...
             shuffled_struct = create_event_struct(rr_data.(ch_group), shuffled_events, ...
                 bin_size, window_start, window_end, response_start, response_end);
 
-            %% Unit classification
+            %% chan classification
             chan_s = 1;
             chan_e = tot_bins;
             for chan_i = 1:tot_chans

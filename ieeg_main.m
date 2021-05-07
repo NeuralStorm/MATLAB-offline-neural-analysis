@@ -52,7 +52,6 @@ function [] = ieeg_main(varargin)
     %          response_start: Float: left response edge
     %          response_end: Float: right response edge
     %          make_psth_graphs: Boolean: Controls if time course PCA PSTH plots are made
-    %          make_unit_plot: Boolean: Controls if individual time course plots are created and saved
     %          make_tfr_pca_psth: Boolean: Controls if subplot with TFRS, PCA weights, and time courses is made
     %          plot_avg_pow: Boolean: Controls if TFR avg is plotted on separate y axis with time course
     %          st_type: String: Controls if std or ste is used for shading in time course

@@ -31,20 +31,20 @@ function [mnts_struct, event_info, selected_channels] = format_mnts(...
 
         %% Find channels with no spikes
         [~, mnts_cols] = size(mnts);
-        remove_units = [];
+        remove_chans = [];
         channel_list = [];
         for col = 1:mnts_cols
             unique_response = unique(mnts(:, col));
             if length(unique_response) == 1
                 channel_list = [channel_list, chan_list.channel(col)];
-                remove_units = [remove_units; col];
+                remove_chans = [remove_chans; col];
             end
         end
-        if ~isempty(remove_units)
+        if ~isempty(remove_chans)
             %% Remove empty channels
             selected_channels = selected_channels(~ismember(selected_channels.channel, channel_list), :);
             chan_list = chan_list(~ismember(chan_list.channel, channel_list), :);
-            mnts(:, remove_units) = [];
+            mnts(:, remove_chans) = [];
         end
         %% Store mnts
         mnts_struct.(ch_group).mnts = mnts;

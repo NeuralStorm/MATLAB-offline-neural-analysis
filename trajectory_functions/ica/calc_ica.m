@@ -12,7 +12,7 @@ function [ica_results, ic_log] = calc_ica(chan_group_log, mnts_struct, ...
         % Multineuron timeseries is transposed to match expected dimensionality of runica from EEGLabs
         tot_chans = size(mnts_struct.(ch_group).mnts, 2);
 
-        %% Cannot do ica with less than 2 units
+        %% Cannot do ica with less than 2 chans
         if tot_chans < 2
             warning('chan_group: %s does not have enough features to do ICA', ch_group);
             continue

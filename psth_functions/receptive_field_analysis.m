@@ -86,7 +86,7 @@ function [rec_res] = receptive_field_analysis(rr_data, event_info, ...
                         response_psth = slice_rr(psth, bin_size, window_start, ...
                             window_end, response_start, response_end);
                     end
-                    % Puts NaN for non significant neurons
+                    % Puts NaN for non significant chans
                     fl = NaN; ll = NaN; duration = NaN; pl = NaN; peak = NaN;
                     corrected_peak = NaN; rm = NaN; corrected_rm = NaN;
                 end
