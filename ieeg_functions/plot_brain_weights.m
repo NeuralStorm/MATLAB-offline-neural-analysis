@@ -59,7 +59,8 @@ function [] = plot_brain_weights(save_path, dir_name, mesh_struct, elec_struct, 
     parfor space_i = 1:numel(unique_spaces)
         curr_space = unique_spaces{space_i};
         chan_order = component_results.(curr_space).orig_chan_order;
-        chan_order = erase(chan_order, [curr_space, '_']);
+        %% Erase all parts of bandname & chan group wording from channel order
+        chan_order = erase(chan_order, [strsplit(curr_space, '_'), {'_'}]);
 
         coeff = component_results.(curr_space).coeff;
         %% Skip components with not enough features
@@ -74,7 +75,7 @@ function [] = plot_brain_weights(save_path, dir_name, mesh_struct, elec_struct, 
         for comp_i = 1:tot_components
             comp_coeff = coeff(:, comp_i);
             % Find electrode coordinates present in feature space
-            [~, elec_cord_i] = ismember(chan_order, elec_struct.label);
+            [~, elec_cord_i] = ismember(chan_order, erase(elec_struct.label, '_'));
             elec_pos = elec_struct.chanpos(elec_cord_i,:);
 
             %% Assign colors to color map

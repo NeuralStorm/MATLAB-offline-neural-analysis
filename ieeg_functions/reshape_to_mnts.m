@@ -95,7 +95,7 @@ function [chan_group_log, mnts_struct, event_info, band_shifts] = reshape_to_mnt
                 mnts = create_mnts(ch_group_spctrm);
                 feature = [bandname, '_', ch_group];
                 mnts_struct.(feature).mnts = mnts;
-                chan_list = append_feature(power_struct.anat.channels(ch_i), feature);
+                chan_list = append_feature(power_struct.anat.channels(ch_i), bandname, ch_group);
                 mnts_struct.(feature).chan_order = chan_list;
                 mnts_struct.(feature).orig_chan_order = chan_list;
                 band_shifts.(feature) = [];
@@ -144,7 +144,7 @@ function [chan_group_log, mnts_struct, event_info, band_shifts] = reshape_to_mnt
                         mnts_struct.(feature).mnts = [mnts_struct.(feature).mnts, ch_group_mnts];
 
                         %% label log
-                        chan_list = append_feature(power_struct.anat.channels(ch_i), feature);
+                        chan_list = append_feature(power_struct.anat.channels(ch_i), bandname, ch_group);
                         mnts_struct.(feature).chan_order = [mnts_struct.(feature).chan_order; chan_list];
                         mnts_struct.(feature).orig_chan_order = [mnts_struct.(feature).orig_chan_order; chan_list];
                         chan_group_log = append_labels(feature, ch_group, label_table, chan_group_log);
@@ -217,10 +217,10 @@ function [chan_group_log] = append_labels(feature, ch_group, ch_group_table, cha
     chan_group_log = [chan_group_log; ch_group_list];
 end
 
-function [chan_order] = append_feature(chan_order, feature)
+function [chan_order] = append_feature(chan_order, bandname, chan_group)
     for chan_i = 1:numel(chan_order)
         chan = chan_order{chan_i};
-        new_chan = [feature, '_', chan];
+        new_chan = [bandname, '_', chan, '_', chan_group];
         chan_order{chan_i} = new_chan;
     end
 end

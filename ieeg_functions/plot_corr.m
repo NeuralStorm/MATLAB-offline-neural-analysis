@@ -62,7 +62,8 @@ function [results] = plot_corr(save_path, component_results, chan_group_log, ...
             %% Take electrodes from first feature space
             space_one = unique_features{space_one_i};
             first_elec_set = component_results.(space_one).orig_chan_order;
-            first_elec_set = erase(first_elec_set, [space_one, '_']);
+            %% Erase all parts of bandname & chan group wording from channel order
+            first_elec_set = erase(first_elec_set, [strsplit(space_one, '_'), {'_'}]);
             first_weights = component_results.(space_one).coeff;
             [~, first_components] = size(first_weights);
             if first_components < min_components || first_components < comp_i
@@ -78,7 +79,8 @@ function [results] = plot_corr(save_path, component_results, chan_group_log, ...
                 %% Compare first feature space to remaining feature spaces via intersection of electrodes
                 space_two = remaining_spaces{space_two_i};
                 second_elec_set = component_results.(space_two).orig_chan_order;
-                second_elec_set = erase(second_elec_set, [space_two, '_']);
+                %% Erase all parts of bandname & chan group wording from channel order
+                second_elec_set = erase(second_elec_set, [strsplit(space_two, '_'), {'_'}]);
                 second_weights = component_results.(space_two).coeff;
                 [~, second_components] = size(second_weights);
                 if second_components < min_components || second_components < comp_i

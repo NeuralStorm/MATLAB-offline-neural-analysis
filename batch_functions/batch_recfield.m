@@ -10,8 +10,7 @@ function [] = batch_recfield(project_path, save_path, failed_path, data_path, di
     window_end = config.window_end; response_start = config.response_start; response_end = config.response_end;
     bin_size = config.bin_size; threshold_scalar = config.threshold_scalar;
     sig_check = config.sig_check; consec_bins = config.consec_bins; span = config.span;
-    sig_alpha = config.cell_sig_alpha;
-    bin_gap = config.bin_gap; mixed_smoothing = config.mixed_smoothing;
+    sig_alpha = config.sig_alpha; bin_gap = config.bin_gap; mixed_smoothing = config.mixed_smoothing;
 
     rec_csv_path = fullfile(project_path, ['res_', filename_substring_one, '_receptive_field.csv']);
     cluster_csv_path = fullfile(project_path, ['res_', filename_substring_one, '_cluster_analysis.csv']);
