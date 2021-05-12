@@ -1,39 +1,35 @@
-function [gpfa_results] = do_gpfa(animal_id, session_num, selected_data, ...
-        psth_struct, bin_size, window_start, window_end, state_dimension)
+function [gpfa_results] = do_gpfa(subj_id, session_num, rr_data, event_info, ...
+        bin_size, window_start, window_end, response_start, response_end, state_dimension)
 
-    unique_regions = fieldnames(selected_data);
+    unique_ch_groups = fieldnames(rr_data);
+    unique_events = unique(event_info.event_labels);
+    tot_bins = get_tot_bins(response_start, response_end, bin_size);
     gpfa_results = struct;
-    for region = 1:length(unique_regions)
-        region_name = unique_regions{region};
-        region_events = psth_struct.(region_name).filtered_events;
-        event_strings = region_events(:,1)';
+    for ch_group_i = 1:length(unique_ch_groups)
+        ch_group = unique_ch_groups{ch_group_i};
 
-        total_region_neurons = height(selected_data.(region_name));
-        if bin_size ~= 0.001
-            %! Yu's code expects 1ms bin size --> Reshape neural data
-            total_bins = (length(-abs(window_start):.001:abs(window_end)) - 1);
-            region_neurons = [selected_data.(region_name).channel, selected_data.(region_name).channel_data];
-            response_struct = create_relative_response(region_neurons, ...
-                region_events, .001, window_start, window_end);
-        else
-            response_struct = psth_struct.(region_name);
-        end
+        tot_chans = numel(rr_data.(ch_group).chan_order);
+        %! Yu's code expects 1ms bin size
+        assert(bin_size == 0.001, 'To use GPFA code, bin size for data must be 1ms');
 
-        for event = 1:length(event_strings)
-            current_event = event_strings{event};
-            event_response = response_struct.(current_event).relative_response;
+        for event_i = 1:length(unique_events)
+            event = unique_events{event_i};
+            event_indices = event_info.event_indices(strcmpi(event_info.event_labels, event));
+            event_rr = rr_data.(ch_group).relative_response(event_indices, :);
+            event_rr = slice_rr(event_rr, bin_size, window_start, ...
+                window_end, response_start, response_end);
             %% Reformat event_response (TX(N*B)) to gpfa format
             % format = struct with fields trial id and spikes (NXB)
             gpfa_format = struct;
-            [tot_trials, ~] = size(event_response);
+            [tot_trials, ~] = size(event_rr);
             for trial = 1:tot_trials
                 gpfa_format(trial).trialId = trial;
-                current_response = event_response(trial, :);
-                spikes = reshape(current_response, total_region_neurons, total_bins);
+                trial_rr = event_rr(trial, :);
+                spikes = reshape(trial_rr, tot_chans, tot_bins);
                 gpfa_format(trial).spikes = spikes;
             end
 
-            runIdx = [animal_id, '_', region_name, '_', num2str(session_num), '_', current_event, '_', num2str(state_dimension)];
+            runIdx = [subj_id, '_', ch_group, '_', num2str(session_num), '_', event, '_', num2str(state_dimension)];
             result = neuralTraj(runIdx, gpfa_format, 'method', 'gpfa', 'xDim', state_dimension);
             % In Yu et al. 2009, C is the low dimensional matrix that maps neural trajectories
             % into recorded space (see pg: 621, 631-632)
@@ -44,9 +40,9 @@ function [gpfa_results] = do_gpfa(animal_id, session_num, selected_data, ...
             % title(runIdx);
             % set(gcf, 'Name', runIdx, 'NumberTitle', 'off');
             % plotEachDimVsTime(seqTrain, 'xorth', result.binWidth);
-            gpfa_results.(region_name).(current_event).result = result;
-            gpfa_results.(region_name).(current_event).estParams = estParams;
-            gpfa_results.(region_name).(current_event).seqTrain = seqTrain;
+            gpfa_results.(ch_group).(event).result = result;
+            gpfa_results.(ch_group).(event).estParams = estParams;
+            gpfa_results.(ch_group).(event).seqTrain = seqTrain;
         end
     end
 end
