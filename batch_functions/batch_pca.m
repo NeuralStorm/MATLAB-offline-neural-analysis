@@ -1,4 +1,14 @@
 function [] = batch_pca(save_path, failed_path, data_path, dir_name, dir_config)
+    %% Purpose: Go through file list and run pca on file set
+    %% Input:
+    % save_path: path to save files at
+    % failed_path: path to save errors at
+    % data_path: path to load files from before analysis is ran
+    % dir_name: Name of dir that data came from (usually subject #)
+    % dir_config: config settings for that subject
+    %% Output:
+    %  No output, analysis results are saved in file at specified save location
+
     pca_start = tic;
     config_log = dir_config;
     file_list = get_file_list(data_path, '.mat');
@@ -12,25 +22,26 @@ function [] = batch_pca(save_path, failed_path, data_path, dir_name, dir_config)
         try
             %% pull info from filename and set up file path for analysis
             file = fullfile(data_path, file_list(file_index).name);
-            load(file, 'event_ts', 'mnts_struct', 'selected_data',...
-                'filename_meta', 'label_log');
+            load(file, 'event_info', 'mnts_struct', ...
+                'filename_meta', 'chan_group_log');
             %% Check variables to make sure they are not empty
-            empty_vars = check_variables(file, event_ts, label_log, mnts_struct);
+            empty_vars = check_variables(file, event_info, chan_group_log, mnts_struct);
             if empty_vars
                 continue
             end
 
             %% PCA
-            [component_results, selected_data, label_log] = calc_pca(selected_data, ...
-                mnts_struct, dir_config.feature_filter, dir_config.feature_value);
+            [component_results, chan_group_log] = calc_pca(chan_group_log, ...
+                mnts_struct, dir_config.feature_filter, dir_config.feature_value, ...
+                dir_config.apply_z_score);
 
             %% Saving the file
             matfile = fullfile(save_path, ['pc_analysis_', ...
                 filename_meta.filename, '.mat']);
             check_variables(matfile, component_results);
-            save(matfile, 'selected_data', 'event_ts', 'component_results', ...
-                'filename_meta', 'config_log', 'label_log');
-            clear('label_log', 'event_ts', 'component_results', 'selected_data', ...
+            save(matfile, 'event_info', 'component_results', 'chan_group_log', ...
+                'filename_meta', 'config_log', 'chan_group_log');
+            clear('chan_group_log', 'event_ts', 'component_results', ...
                 'filename_meta');
         catch ME
             handle_ME(ME, failed_path, filename_meta.filename);

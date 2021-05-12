@@ -8,7 +8,7 @@ function [label_table] = load_labels(dir_path, csv_id)
 
     %% Gather headers and set expected headers
     label_headers = label_table.Properties.VariableNames;
-    expected_headers = [{'sig_channels'}, {'selected_channels'}, {'user_channels'}, {'label'}, {'label_id'}, ...
+    expected_headers = [{'channel'}, {'selected_channels'}, {'user_channels'}, {'chan_group'}, {'chan_group_id'}, ...
         {'recording_session'}, {'recording_notes'}];
     logical_headers = ismember(expected_headers, label_headers);
 

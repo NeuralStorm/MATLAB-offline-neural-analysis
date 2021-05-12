@@ -1,23 +1,18 @@
-function [] = plot_recfield(psth, first_bin_latency, last_bin_latency, threshold, ...
-        figure_handle, bin_size, window_start, event_window)
+function [] = plot_recfield(fig_h, x, y, fbl, lbl, threshold, bin_size, window_start)
     %% Plots elements from rec field analysis
-    figure(figure_handle);
+    figure(fig_h);
     hold on
-    if ~isnan(first_bin_latency)
+    if ~isnan(fbl)
         %red labelling
-        last_bin_latency = last_bin_latency - bin_size;
-        sig_start_index = round((first_bin_latency + abs(window_start)) / bin_size);
-        sig_end_index = round((last_bin_latency + abs(window_start)) / bin_size);
-        psth_bar = bar(event_window(sig_start_index:sig_end_index), ...
-            psth(sig_start_index:sig_end_index),'BarWidth', 1);
+        fbl_i = round((fbl - window_start) / bin_size) + 1;
+        lbl_i = round((lbl - fbl) / bin_size) + fbl_i - 1;
+        psth_bar = bar(x(fbl_i:lbl_i), y(fbl_i:lbl_i),'BarWidth', 1);
         set(psth_bar,'FaceColor','r', 'EdgeAlpha', 0);
 
         %% Plot receptive field measures
-        plot(xlim,[threshold threshold], 'r', 'LineWidth', 0.75);
-        line([(first_bin_latency - (bin_size / 2)) (first_bin_latency - (bin_size / 2))], ylim, 'Color', 'red', 'LineWidth', 0.75);
-        line([(last_bin_latency + (bin_size / 2)) (last_bin_latency + (bin_size / 2))], ylim, 'Color', 'red', 'LineWidth', 0.75);
-    else
-        plot(xlim,[threshold threshold], 'r', 'LineWidth', 0.75);
+        line([fbl fbl], ylim, 'Color', 'red', 'LineWidth', 0.75);
+        line([lbl lbl], ylim, 'Color', 'red', 'LineWidth', 0.75);
     end
+    plot(xlim,[threshold threshold], 'r', 'LineWidth', 0.75);
     hold off
 end

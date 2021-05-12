@@ -1,13 +1,13 @@
-function [selected_channels] = select_data(labeled_data, channel_table, session_num)
-    %% reformat labeled_data to channel_map
+function [selected_channels] = select_data(chan_data, chan_table, session_num)
+    %% reformat chan_data to channel_map
     channel_map = [];
-    unique_regions = fieldnames(labeled_data);
-    for region_i = 1:length(unique_regions)
-        region = unique_regions{region_i};
-        channel_map = [channel_map; labeled_data.(region).sig_channels, ...
-            labeled_data.(region).channel_data];
+    unique_ch_group = fieldnames(chan_data);
+    for ch_group_i = 1:length(unique_ch_group)
+        ch_group = unique_ch_group{ch_group_i};
+        channel_map = [channel_map; chan_data.(ch_group).channel, ...
+            chan_data.(ch_group).channel_data];
     end
 
     %% Call labeling function to take intersection of channels
-    selected_channels = label_data(channel_map, channel_table, session_num);
+    selected_channels = label_data(channel_map, chan_table, session_num);
 end

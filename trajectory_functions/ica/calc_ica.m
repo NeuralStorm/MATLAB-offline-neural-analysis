@@ -1,37 +1,36 @@
-function [ica_results, labeled_ics, ic_log] = calc_ica(label_log, mnts_struct, ...
-        tot_pcs, extended, sphering, anneal, anneal_deg, bias_switch, ...
-        momentum, max_steps, stop_train, rnd_reset, verbose)
+function [ica_results, ic_log] = calc_ica(chan_group_log, mnts_struct, ...
+        apply_z_score, tot_pcs, extended, sphering, anneal, anneal_deg, ...
+        bias_switch, momentum, max_steps, stop_train, rnd_reset, verbose)
     %TODO add option to go straight from relative response to ica with no PCA middleman
-    %TODO dont forget to z score raw input
     % TODO add check to make sure ica input has enough data
     ica_results = struct;
-    ica_results.all_events = mnts_struct.all_events;
     labeled_ics = struct;
-    region_names = fieldnames(label_log);
-    tot_regions = length(region_names);
-    ic_log = struct;
-    for region_index = 1:tot_regions
-        region = region_names{region_index};
+    ic_log = table();
+    unique_ch_groups = unique(chan_group_log.chan_group);
+    for ch_group_i = 1:numel(unique_ch_groups)
+        ch_group = unique_ch_groups{ch_group_i};
         % Multineuron timeseries is transposed to match expected dimensionality of runica from EEGLabs
-        [~, tot_units] = size(mnts_struct.(region).z_mnts);
+        tot_chans = size(mnts_struct.(ch_group).mnts, 2);
 
-        %% Cannot do ica with less than 2 units
-        if tot_units < 2
-            warning('Region: %s does not have enough features to do ICA', region);
+        %% Cannot do ica with less than 2 chans
+        if tot_chans < 2
+            warning('chan_group: %s does not have enough features to do ICA', ch_group);
             continue
         end
 
-        ica_input = mnts_struct.(region).z_mnts';
-        [tot_channels, ~] = size(ica_input);
-        if tot_pcs > (tot_channels - 1)
+        ica_input = mnts_struct.(ch_group).mnts;
+        if apply_z_score
+            ica_input = zscore(ica_input)';
+        end
+        if tot_pcs > (tot_chans - 1)
             %% Check set pcs is valid
-            % Max allowed pcs is tot_channels - 1
-            pcs = tot_channels - 1;
+            % Max allowed pcs is tot_chans - 1
+            pcs = tot_chans - 1;
         else
             pcs = tot_pcs;
         end
 
-        if strcmpi(stop_train, 'default') && tot_channels < 33
+        if strcmpi(stop_train, 'default') && tot_chans < 33
             stop_train = .000001;
         else
             stop_train = .0000001;
@@ -56,29 +55,31 @@ function [ica_results, labeled_ics, ic_log] = calc_ica(label_log, mnts_struct, .
                 'maxsteps', max_steps, 'stop', stop_train, 'rndreset', rnd_reset, 'verbose', verbose);
         end
         coeff = (ica_weights * ica_sphere)'; % Double transpose should properly line up data?
-        weighted_mnts = ica_input' * coeff;
+        mnts = ica_input' * coeff;
 
         %% Set up event struct so that analysis can go through rest of pipeline
-        [~, tot_components] = size(weighted_mnts);
+        [~, tot_components] = size(mnts);
         ic_names = cell(tot_components, 1);
         for component_i = 1:tot_components
-            ic_names{component_i} = ['ic_', num2str(component_i)];
+            ic_names{component_i} = [ch_group, '_ic_', num2str(component_i)];
         end
-        region_table = label_log.(region)(1:tot_components, :);
-        region_table.sig_channels = ic_names; region_table.user_channels = ic_names;
-        region_table.channel_data = num2cell(weighted_mnts, 1)';
-        labeled_ics.(region) = region_table;
+        ch_group_list = chan_group_log(1:tot_components, :);
+        ch_group_list.channel = ic_names; ch_group_list.user_channels = ic_names;
+        ch_group_list.channel_data = num2cell(mnts, 1)';
+        labeled_ics.(ch_group) = ch_group_list;
 
-        ic_log.(region) = removevars(labeled_ics.(region), 'channel_data');
+        ic_log = [ic_log; ch_group_list];
 
         %% Store ICA results
-        ica_results.(region).ica_weights = ica_weights;
-        ica_results.(region).ica_sphere = ica_sphere;
-        ica_results.(region).component_variance = compvars;
-        ica_results.(region).bias = bias;
-        ica_results.(region).signs = signs;
-        ica_results.(region).learning_rates = learning_rates;
-        ica_results.(region).activations = activations;
-        ica_results.(region).weighted_mnts = weighted_mnts;
+        ica_results.(ch_group).ica_weights = ica_weights;
+        ica_results.(ch_group).ica_sphere = ica_sphere;
+        ica_results.(ch_group).component_variance = compvars;
+        ica_results.(ch_group).bias = bias;
+        ica_results.(ch_group).signs = signs;
+        ica_results.(ch_group).learning_rates = learning_rates;
+        ica_results.(ch_group).activations = activations;
+        ica_results.(ch_group).mnts = mnts;
+        ica_results.(ch_group).chan_order = ic_names;
+        ica_results.(ch_group).orig_chan_order = mnts_struct.(ch_group).orig_chan_order;
     end
 end

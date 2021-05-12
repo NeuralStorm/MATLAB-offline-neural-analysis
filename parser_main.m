@@ -1,6 +1,6 @@
-function [] = parser_main()
+function [] = parser_main(varargin)
     %% Get project directory and check for raw directory
-    project_path = uigetdir(pwd);
+    project_path = get_project_path(varargin);
     start_time = tic;
     raw_path = [project_path, '/raw'];
     if ~exist(raw_path, 'dir')
@@ -17,7 +17,7 @@ function [] = parser_main()
         curr_dir = dir_list{dir_i};
         dir_config = config(strcmpi(config.dir_name, curr_dir), :);
         dir_config = convert_table_cells(dir_config);
-        label_table = load_labels(project_path, [curr_dir, '_labels.csv']);
+        label_table = load_labels(project_path, ['labels_', curr_dir, '.csv']);
 
         %% Check if spike or continuous
         %TODO handle scenario where both is included

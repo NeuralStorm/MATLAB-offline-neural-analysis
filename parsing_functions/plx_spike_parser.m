@@ -31,28 +31,27 @@ function [] = plx_spike_parser(parsed_path, failed_path, raw_file, config, label
             rethrow(ME);
         end
 
-        [tot_units, tot_channels] = size(tscounts);
+        [tot_chans, tot_channels] = size(tscounts);
         [~, channel_names] = plx_chan_names(raw_file);
 
         subchan = {'i','a','b','c','d'};
         channel_map = [];
-        for unit_i = 1:tot_units - 1 % Start at 0 for unsorted 
+        for chan_i = 1:tot_chans - 1 % Start at 0 for unsorted 
             for channel_i = 1:tot_channels - 1
-                if (tscounts(unit_i + 1, channel_i + 1) > 0) && unit_i < length(subchan)
-                    %% get the timestamps for this channel and unit 
-                    [~, channel_timestamps] = plx_ts(raw_file, channel_i, unit_i);
+                if (tscounts(chan_i + 1, channel_i + 1) > 0) && chan_i < length(subchan)
+                    %% get the timestamps for this channel and chan
+                    [~, channel_timestamps] = plx_ts(raw_file, channel_i, chan_i);
                     % channel_names is a char array
                     current_channel = channel_names(channel_i, :);
                     split_channel = strsplit(current_channel, ' ');
                     current_channel = split_channel{1};
                     current_channel = deblank(current_channel);
-                    current_subchan = subchan{unit_i + 1};
+                    current_subchan = subchan{chan_i + 1};
                     complete_channel_name = [current_channel, current_subchan];
                     channel_map = [channel_map; {complete_channel_name}, {channel_timestamps}];
                 end
             end
         end
-        total_neurons = length(channel_map(:,1));
 
         [total_event_chan, event_channels] = plx_event_chanmap(raw_file);
         event_ts = [];
@@ -61,15 +60,13 @@ function [] = plx_spike_parser(parsed_path, failed_path, raw_file, config, label
             %% strobbed channel is always 257
             current_channel = event_channels(channel);
             if current_channel == 257 && evcounts(channel) > 0
-                is_strobbed = true;
-                [total_timestamps, event_timestamps, strobed_values] = plx_event_ts(raw_file, current_channel);
+                [~, event_timestamps, strobed_values] = plx_event_ts(raw_file, current_channel);
                 event_ts = [strobed_values, event_timestamps];
             elseif evcounts(channel) > trial_lower_bound
                 [total_timestamps, event_timestamps, ~] = plx_event_ts(raw_file, current_channel);
-                total_timestamps = length(event_timestamps);
                 if is_non_strobed_and_strobed
-                    currenet_event = event_map(event_map_counter);
-                    event_ts = [event_ts; repmat(currenet_event, [total_timestamps, 1]), event_timestamps];
+                    current_event = event_map(event_map_counter);
+                    event_ts = [event_ts; repmat(current_event, [total_timestamps, 1]), event_timestamps];
                     event_map_counter = event_map_counter + 1;
                 else
                     event_ts = [event_ts; repmat(current_channel, [total_timestamps, 1]), event_timestamps];
@@ -99,20 +96,28 @@ function [] = plx_spike_parser(parsed_path, failed_path, raw_file, config, label
         end
 
         event_ts = sortrows(event_ts, 2);
+        [tot_trials, ~] = size(event_ts);
+        event_i = 1:1:tot_trials;
+        event_info = array2table([event_ts, event_i'], ...
+            'VariableNames', {'event_labels', 'event_ts', 'event_indices'});
+        event_strs = {};
+        for event_i = 1:height(event_info)
+            event = event_info.event_labels(event_i);
+            event_label = ['event_', num2str(event)];
+            event_strs = [event_strs; event_label];
+        end
+        event_info.event_labels = event_strs;
         channel_map = sortrows(channel_map, 1);
+        channel_map = cell2table(channel_map, 'VariableNames', ["channel", "channel_data"]);
 
-        %% label channel map
-        labeled_data = label_data(channel_map, label_table, ...
-            filename_meta.session_num);
-
-        channel_list = channel_map(:, 1);
-        label_list = label_table.sig_channels(filename_meta.session_num == label_table.recording_session);
-        enforce_labels(channel_list, label_list, filename_meta.session_num);
+        %% enforce labels is all inclusive
+        session_table = label_table(label_table.recording_session == filename_meta.session_num, :);
+        enforce_labels(channel_map.channel, session_table.channel, filename_meta.session_num)
 
         %% Saves parsed files
         matfile = fullfile(parsed_path, [filename_meta.filename, '.mat']);
-        save(matfile, 'event_ts', 'channel_map', 'filename_meta', 'labeled_data');
-        clear('event_ts', 'channel_map', 'filename_meta', 'labeled_data');
+        save(matfile, 'event_info', 'channel_map', 'filename_meta');
+        clear('event_ts', 'event_info', 'channel_map', 'filename_meta');
     catch ME
         handle_ME(ME, failed_path, filename_meta.filename);
     end

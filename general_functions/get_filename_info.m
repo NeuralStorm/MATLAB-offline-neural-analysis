@@ -45,9 +45,6 @@ function [meta_struct] = get_filename_info(filename)
         meta_struct.session_date = str2double(session_date);
 
         optional_info = split_name{end};
-        if strcmpi(optional_info, 'double') && isnan(optional_info)
-            optional_info = 'n/a';
-        end
         meta_struct.optional_info = optional_info;
     else
         error('Not a supported filename format');

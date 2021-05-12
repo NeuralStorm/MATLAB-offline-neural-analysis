@@ -1,62 +1,48 @@
-function nv_data = nv_calculation(label_log, baseline_window, baseline_start, baseline_end, ...
-        bin_size, epsilon, norm_var_scaling, separate_events, analysis_column_names)
+function res = nv_calculation(rr_data, event_info, window_start, window_end, ...
+        baseline_start, baseline_end, bin_size, epsilon, norm_var_scaling)
 
-    tot_bins = length(-abs(baseline_start):bin_size:-abs(baseline_end)) - 1;
-    tot_time = abs(abs(baseline_start) - abs(baseline_end));
+    %% Create normalized variance table
+    headers = [["chan_group", "string"]; ["channel", "string"]; ...
+            ["event", "string"]; ["bfr_s", "double"]; ...
+            ["bfr_var", "double"]; ["fano", "double"]; ["norm_var", "double"]];
+    res = prealloc_table(headers, [0, size(headers, 1)]);
 
-    nv_data = [];
-    event_strings = baseline_window.all_events(:,1);
+    [~, tot_bins] = get_bins(window_start, window_end, bin_size);
+    [~, tot_baseline_bins] = get_bins(baseline_start, baseline_end, bin_size);
+    duration = tot_baseline_bins * bin_size;
 
-    unique_regions = fieldnames(label_log);
-    for region = 1:length(unique_regions)
-        current_region = unique_regions{region};
-        region_table = label_log.(current_region);
-        if separate_events
-            %% Handles events as different datasets
-            for event = 1:length(event_strings)
-                current_event = event_strings{event};
-                for neuron = 1:height(region_table)
-                    current_neuron = region_table.sig_channels{neuron};
-                    user_channels = region_table.user_channels(strcmpi(region_table.sig_channels, current_neuron));
-                    notes = region_table.recording_notes(strcmpi(region_table.sig_channels, current_neuron));
-                    if strcmpi(class(notes), 'double') && isnan(notes)
-                        notes = 'n/a';
-                    end
-                    baseline_response = baseline_window.(current_region).(current_event).(current_neuron).relative_response;
-                    %% Calculate NV for each event for each trial for each neuron
-                    bfr = sum(baseline_response, 2) / (tot_time);
-                    avg_bfr = mean(bfr);
-                    bfr_var = var(bfr);
-                    norm_var = norm_var_scaling * (epsilon + bfr_var)/(norm_var_scaling * epsilon + avg_bfr);
-                    fano = avg_bfr / bfr_var;
-                    nv_data = [nv_data; {current_event}, {current_region}, {current_neuron}, {user_channels}, ...
-                        {avg_bfr}, {bfr_var}, {norm_var}, {fano}, {notes}];
-                end
-            end
-        else
-            %% Handles all trials from all events as one dataset
-            unit_index = tot_bins;
-            for neuron = 1:height(region_table)
-                current_neuron = region_table.sig_channels{neuron};
-                user_channels = region_table.user_channels(strcmpi(region_table.sig_channels, current_neuron));
-                notes = region_table.recording_notes(strcmpi(region_table.sig_channels, current_neuron));
-                if strcmpi(class(notes), 'double') && isnan(notes)
-                    notes = 'n/a';
-                end
-                %% Grabs all trials for given neuron
-                baseline_response = baseline_window.(current_region).relative_response(:, (unit_index - tot_bins + 1):unit_index);
-                %% Calculate NV for each trial for each neuron
-                bfr = sum(baseline_response, 2) / (tot_time);
+    unique_ch_groups = fieldnames(rr_data);
+    unique_events = unique(event_info.event_labels);
+    for ch_group_i = 1:length(unique_ch_groups)
+        ch_group = unique_ch_groups{ch_group_i};
+        tot_chans = numel(rr_data.(ch_group).chan_order);
+        chan_s = 1;
+        chan_e = tot_bins;
+        for chan_i = 1:tot_chans
+            chan = rr_data.(ch_group).chan_order{chan_i};
+            for event_i = 1:length(unique_events)
+                event = unique_events{event_i};
+                event_indices = event_info.event_indices(strcmpi(event_info.event_labels, event), :);
+                chan_rr = rr_data.(ch_group).relative_response(event_indices, chan_s:chan_e);
+                baseline_response = slice_rr(chan_rr, bin_size, window_start, ...
+                    window_end, baseline_start, baseline_end);
+
+                %% Calculate NV for single bin size
+                % bfr / duration because sum makes rr into 1 bin
+                % Note: conversion with multiple bins would be either bfr/bin_size or (bfr*tot_bins)/bin_size
+                bfr = sum(baseline_response, 2) / duration;
                 avg_bfr = mean(bfr);
                 bfr_var = var(bfr);
                 norm_var = norm_var_scaling * (epsilon + bfr_var)/(norm_var_scaling * epsilon + avg_bfr);
                 fano = avg_bfr / bfr_var;
-                nv_data = [nv_data; {'all_events'}, {current_region}, {current_neuron}, {user_channels}, ...
-                    {avg_bfr}, {bfr_var}, {norm_var}, {fano}, {notes}];
-                unit_index = unit_index + tot_bins;
+
+                a = [{ch_group}, {chan}, {event}, avg_bfr, bfr_var, norm_var, fano];
+                %% Store results in table
+                res = vertcat_cell(res, a, headers(:, 1), "after");
             end
+            %% Update channel counter
+            chan_s = chan_s + tot_bins;
+            chan_e = chan_e + tot_bins;
         end
     end
-    %% Convert results to table
-    nv_data = cell2table(nv_data, 'VariableNames', analysis_column_names);
 end

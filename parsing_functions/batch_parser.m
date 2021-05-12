@@ -4,7 +4,7 @@ function [] = batch_parser(parsed_path, failed_path, animal_path, dir_name, conf
         %% Create list of files to parse excluding directories, configs, labels, and logs
         file_list = get_file_list(animal_path, '.*');
         file_list = file_list([file_list.isdir] == 0 ...
-            & ~contains({file_list.name}, {'config.csv', 'labels.csv', 'log.csv', 'data.csv'}));
+            & ~contains({file_list.name}, {'conf*.csv', 'labels*.csv', 'log.csv', 'res*.csv'}));
         file_list = update_file_list(file_list, failed_path, config.include_sessions);
 
         %% Find unique file extensions

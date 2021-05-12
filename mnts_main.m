@@ -1,7 +1,7 @@
-function [] = mnts_main()
+function [] = mnts_main(varargin)
 
     %% Get data directory
-    project_path = uigetdir(pwd);
+    project_path = get_project_path(varargin);
     start_time = tic;
 
     %% Import psth config and removes ignored animals
@@ -18,7 +18,7 @@ function [] = mnts_main()
         curr_dir = dir_list{dir_i};
         dir_config = config(dir_i, :);
         dir_config = convert_table_cells(dir_config);
-        label_table = load_labels(project_path, [curr_dir, '_labels.csv']);
+        label_table = load_labels(project_path, ['labels_', curr_dir, '.csv']);
 
         if dir_config.create_mnts
             try

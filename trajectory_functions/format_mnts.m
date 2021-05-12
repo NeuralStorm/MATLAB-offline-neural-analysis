@@ -1,64 +1,53 @@
-function [mnts_struct, event_ts, selected_data, label_log] = format_mnts(...
-    event_ts, selected_data, bin_size, window_start, window_end, wanted_events, ...
-    trial_range, trial_lower_bound)
+function [mnts_struct, event_info, selected_channels] = format_mnts(...
+    event_info, selected_channels, bin_size, window_start, window_end)
 
     mnts_struct = struct;
-    event_window = -(abs(window_start)):bin_size:(abs(window_end));
-    tot_bins = length(event_window) - 1;
+    [bin_edges, tot_bins] = get_bins(window_start, window_end, bin_size);
 
-    %% Organize and group timestamps
-    [~, all_events, event_ts] = organize_events(event_ts, ...
-        trial_lower_bound, trial_range, wanted_events);
-    mnts_struct.all_events = all_events;
+    tot_trials = height(event_info);
 
-    %% Organize event_ts to be in chronological order by event label
-    event_ts = sortrows(event_ts);
-    tot_trials = length(event_ts(:, 1));
+    unique_ch_groups = unique(selected_channels.chan_group);
+    for ch_group_i = 1:length(unique_ch_groups)
+        ch_group = unique_ch_groups{ch_group_i};
+        chan_list = selected_channels(strcmpi(selected_channels.chan_group, ch_group), :);
+        tot_chans = height(chan_list);
+        mnts = nan((tot_bins * tot_trials), tot_chans);
 
-    unique_regions = fieldnames(selected_data);
-    label_log = struct;
-    for region_index = 1:length(unique_regions)
-        region = unique_regions{region_index};
-        region_neurons = [selected_data.(region).sig_channels, ...
-            selected_data.(region).channel_data];
-        [tot_region_neurons, ~] = size(region_neurons);
-        mnts = nan((tot_bins * tot_trials), tot_region_neurons);
-        for neuron_index = 1:tot_region_neurons
-            neuron_ts = region_neurons{neuron_index, 2};
-            neuron_response = nan((tot_bins * tot_trials), 1);
-            trial_start = 1;
-            trial_end = tot_bins;
-            for trial_index = 1:tot_trials
-                trial_ts = event_ts(trial_index, 2);
-                offset_ts = neuron_ts - trial_ts * ones(size(neuron_ts));
-                [offset_response, ~] = histcounts(offset_ts, event_window);
-                neuron_response(trial_start:trial_end) = offset_response;
-                trial_start = trial_start + tot_bins;
-                trial_end = trial_end + tot_bins;
+        for chan_i = 1:tot_chans
+            spike_ts = chan_list.channel_data{chan_i};
+            trial_s = 1;
+            trial_e = tot_bins;
+            for trial_i = 1:tot_trials
+                trial_ts = event_info.event_ts(trial_i);
+                %% Offsets spike times and then bin spikes within window
+                offset_ts = spike_ts -trial_ts;
+                [binned_response, ~] = histcounts(offset_ts, bin_edges);
+                mnts(trial_s:trial_e, chan_i) = binned_response';
+                %% Update index counters
+                trial_s = trial_s + tot_bins;
+                trial_e = trial_e + tot_bins;
             end
-            mnts(:, neuron_index) = neuron_response;
         end
 
-        %% Find responses with no spikes and removes them to prevent NAN when z scored
+        %% Find channels with no spikes
         [~, mnts_cols] = size(mnts);
-        remove_units = [];
+        remove_chans = [];
+        channel_list = [];
         for col = 1:mnts_cols
             unique_response = unique(mnts(:, col));
             if length(unique_response) == 1
-                remove_units = [remove_units; col];
+                channel_list = [channel_list, chan_list.channel(col)];
+                remove_chans = [remove_chans; col];
             end
         end
-        selected_data.(region)(remove_units, :) = [];
-        mnts(:, remove_units) = [];
-
-        %% Take z score of mnts and store both in mnts struct
-        z_mnts = zscore(mnts);
-        mnts_struct.(region).mnts = mnts;
-        mnts_struct.(region).z_mnts = z_mnts;
-
-        %% Create label log
-        region_table = selected_data.(region);
-        region_log = region_table(:, ~strcmpi(region_table.Properties.VariableNames, 'channel_data'));
-        label_log.(region) = region_log;
+        if ~isempty(remove_chans)
+            %% Remove empty channels
+            selected_channels = selected_channels(~ismember(selected_channels.channel, channel_list), :);
+            chan_list = chan_list(~ismember(chan_list.channel, channel_list), :);
+            mnts(:, remove_chans) = [];
+        end
+        %% Store mnts
+        mnts_struct.(ch_group).mnts = mnts;
+        mnts_struct.(ch_group).orig_chan_order = chan_list.channel;
     end
 end
