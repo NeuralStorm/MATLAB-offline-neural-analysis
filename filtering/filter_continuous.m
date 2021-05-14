@@ -1,4 +1,4 @@
-function [struct_map, label_log] = filter_continuous(selected_data, sample_rate, notch_filt, ...
+function [filtered_map] = filter_continuous(selected_chans, sample_rate, notch_filt, ...
     notch_freq, notch_bandwidth, filt_type, filt_freq, filt_order)
     %TODO change notch_filt variable name --> too close to notch_filter function
 
@@ -10,20 +10,16 @@ function [struct_map, label_log] = filter_continuous(selected_data, sample_rate,
         filt_type = filt_type{:};
     end
 
-    unique_regions = fieldnames(selected_data);
-    region_map = [];
-    label_log = struct;
+    unique_ch_groups = unique(selected_chans.chan_group);
+    filtered_map = [];
     filt_freq = filt_freq ./ (sample_rate/2);
-    for region_i = 1:length(unique_regions)
-        region = unique_regions{region_i};
-        region_table = selected_data.(region);
-        region_log = region_table(:, ~strcmpi(region_table.Properties.VariableNames, 'channel_data'));
-        label_log.(region) = region_log;
-        tot_region_channels = height(region_table);
-        filtered_region = cell(tot_region_channels, 5);
-        parfor channel_i = 1:tot_region_channels
-            channel_info = region_table(channel_i, :);
-            channel_data = cell2mat(channel_info.channel_data);
+    for ch_group_i = 1:length(unique_ch_groups)
+        ch_group = unique_ch_groups{ch_group_i};
+        chan_list = selected_chans(strcmpi(selected_chans.chan_group, ch_group), :);
+        tot_chans = height(chan_list);
+        filtered_chans = cell(tot_chans, 5);
+        for chan_i = 1:tot_chans
+            channel_data = chan_list.channel_data(chan_i, :);
             %% notch filter
             if notch_filt
                 filtered_data = notch_filter(channel_data, sample_rate, ...
@@ -51,12 +47,12 @@ function [struct_map, label_log] = filter_continuous(selected_data, sample_rate,
                 otherwise
                     error('Unsupported type: %s, try low, high, or band instead', filt_type);
             end
-            filtered_region(channel_i, :) = [channel_info.sig_channels(1), ...
-                channel_info.user_channels(1), channel_info.label(1), ...
-                channel_info.label_id(1), {filtered_data}];
+            filtered_chans(chan_i, :) = [chan_list.channel(chan_i), ...
+                chan_list.user_channels(chan_i), chan_list.chan_group(chan_i), ...
+                chan_list.chan_group_id(chan_i), {filtered_data}];
         end
-        region_map = [region_map; filtered_region];
+        filtered_map = [filtered_map; filtered_chans];
     end
-    struct_map = cell2struct(region_map, {'sig_channels', 'user_channels', ...
-        'label', 'label_id', 'data'}, 2);
+    filtered_map = cell2table(filtered_map, 'VariableNames', ["channel", ...
+        "user_channels", "chan_group", "chan_group_id", "channel_data"]);
 end
