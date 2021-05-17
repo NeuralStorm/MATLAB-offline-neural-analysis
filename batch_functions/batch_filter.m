@@ -16,7 +16,7 @@ function [] = batch_filter(save_path, failed_path, data_path, dir_name, ...
         try
             %% Load file contents
             file = [data_path, '/', file_list(file_index).name];
-            load(file, 'channel_map', 'sample_rate', 'filename_meta', 'event_samples');
+            load(file, 'channel_map', 'sample_rate', 'filename_meta', 'event_info');
 
             %% Select channels and label data
             selected_chans = label_data(channel_map, label_table, filename_meta.session_num);
@@ -37,8 +37,8 @@ function [] = batch_filter(save_path, failed_path, data_path, dir_name, ...
 
             matfile = fullfile(save_path, ['filtered_', filename_meta.filename]);
             save(matfile, '-v7.3', 'filtered_map', 'sample_rate', ...
-                'event_samples', 'filename_meta', 'config_log', 'chan_group_log');
-            clear('filtered_map', 'sample_rate', 'event_samples', 'filename_meta', 'chan_group_log');
+                'event_info', 'filename_meta', 'config_log', 'chan_group_log');
+            clear('filtered_map', 'sample_rate', 'event_info', 'filename_meta', 'chan_group_log');
         catch ME
             handle_ME(ME, failed_path, filename_meta.filename);
         end
