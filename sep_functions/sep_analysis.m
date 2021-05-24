@@ -46,24 +46,24 @@ function [sep_res] = sep_analysis(sep_data, event_info, window_s, window_e, base
 
                 %% Baseline SEP
                 baseline_sep = slice_rr(sep, bin_size, window_s, window_e, base_s, base_e);
-                [avg_bfr, bfr_std, pos_thresh, neg_thresh] = ...
+                [avg_bfr, bfr_std, upper_thresh, lower_thresh] = ...
                     get_threshold(baseline_sep, threshold_scalar);
 
                 %% early response
                 early_sep = slice_rr(sep, bin_size, window_s, window_e, early_res_s, early_res_e);
                 [early_pos_peak, early_neg_peak, early_pos_pl, early_neg_pl, sig_early] = ...
-                    select_peak(early_sep, pos_thresh, neg_thresh, eary_res_t);
+                    select_peak(early_sep, upper_thresh, lower_thresh, eary_res_t);
 
                 %% late window
                 late_sep = slice_rr(sep, bin_size, window_s, window_e, late_res_s, late_res_e);
                 [late_pos_peak, late_neg_peak, late_pos_pl, late_neg_pl, sig_late] = ...
-                    select_peak(late_sep, pos_thresh, neg_thresh, late_res_t);
+                    select_peak(late_sep, upper_thresh, lower_thresh, late_res_t);
 
                 sig_response = sig_early | sig_late;
 
 
                 %TODO store results in table
-                a = [{ch_group}, {chan}, {event}, {sep}, pos_thresh, neg_thresh, ...
+                a = [{ch_group}, {chan}, {event}, {sep}, upper_thresh, lower_thresh, ...
                     early_neg_peak, early_neg_pl, early_pos_peak, early_pos_pl, ...
                     sig_early, late_neg_peak, late_neg_pl, late_pos_peak, late_pos_pl, ...
                     sig_late, NaN, NaN, NaN, NaN, sig_response, avg_bfr, bfr_std];
@@ -76,9 +76,9 @@ function [sep_res] = sep_analysis(sep_data, event_info, window_s, window_e, base
     end
 end
 
-function [avg_bfr, bfr_std, pos_thresh, neg_thresh] = get_threshold(baseline_psth, threshold_scalar)
+function [avg_bfr, bfr_std, upper_thresh, lower_thresh] = get_threshold(baseline_psth, threshold_scalar)
     avg_bfr = mean(baseline_psth);
     bfr_std = std(baseline_psth);
-    pos_thresh = avg_bfr + (threshold_scalar * bfr_std);
-    neg_thresh = avg_bfr - (threshold_scalar * bfr_std);
+    upper_thresh = avg_bfr + (threshold_scalar * bfr_std);
+    lower_thresh = avg_bfr - (threshold_scalar * bfr_std);
 end
