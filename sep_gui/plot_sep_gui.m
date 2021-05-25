@@ -5,7 +5,7 @@ sep_window = sep_analysis_results(i).sep_window;
 early_window = sep_analysis_results(i).early_window;
 late_window = sep_analysis_results(i).late_window;
 animal_id = sep_analysis_results(i).animal_id;
-channel_name = sep_analysis_results(i).channel_name;
+channel_name = sep_analysis_results(i).channel;
 neg_peak(1) = sep_analysis_results(i).neg_peak1;
 neg_peak_latency(1) = sep_analysis_results(i).neg_peak_latency1;
 pos_peak(1) = sep_analysis_results(i).pos_peak1;
@@ -94,7 +94,7 @@ xlabel(handles.axes1, 'Time (s)');
 ylabel(handles.axes1, 'Voltage (mV)');
 hold off
 
-set(handles.notes_text, 'String', sep_analysis_results(i).analysis_notes);
+set(handles.notes_text, 'String', sep_analysis_results(i).recording_notes);
 
 end
 

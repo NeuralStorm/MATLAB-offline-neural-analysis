@@ -16,8 +16,8 @@ function [] = batch_sep_analysis(save_path, failed_path, data_path, dir_name, ..
     base_s = dir_config.baseline_start; base_e = dir_config.baseline_end;
     early_res_s = dir_config.early_response_start; early_res_e = dir_config.early_response_end;
     late_res_s = dir_config.late_response_start; late_res_e = dir_config.late_response_end;
-    sep_window = [base_s, base_e]; early_window = [early_res_s, early_res_e];
-    late_window = [late_res_s, late_res_e];
+    sep_window = [window_s, window_e]; base_window = [base_s, base_e];
+    early_window = [early_res_s, early_res_e]; late_window = [late_res_s, late_res_e];
 
     for file_index = 1:length(file_list)
         [~, filename, ~] = fileparts(file_list(file_index).name);
@@ -49,6 +49,7 @@ function [] = batch_sep_analysis(save_path, failed_path, data_path, dir_name, ..
             tot_rows = height(sep_analysis_results);
             sep_analysis_results = horzcat_cell(sep_analysis_results, ...
                 repmat(meta_data, [tot_rows, 1]), meta_headers, 'before');
+            sep_analysis_results = join_label_meta(chan_group_log, sep_analysis_results);
             sep_analysis_results = table2struct(sep_analysis_results);
 
 
