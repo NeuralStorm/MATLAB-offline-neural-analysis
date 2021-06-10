@@ -1,6 +1,7 @@
 function [chan_group_log, mnts_struct, event_info, band_shifts] = reshape_to_mnts(label_table, power_struct, ...
-        select_features, include_events, use_z_score, smooth_power, smoothing_direction, span, downsample_pow, ...
-        downsample_rate, slice_time, bin_size, window_start, slice_start, slice_end)
+        trial_meta, select_features, include_events, use_z_score, smooth_power, smoothing_direction, span, ...
+        downsample_pow, downsample_rate, slice_time, bin_size, window_start, slice_start, slice_end, ...
+        trial_filter, filter_val)
 
     %% Purpose: Reshape output from filtering process
     %% Input
@@ -73,6 +74,22 @@ function [chan_group_log, mnts_struct, event_info, band_shifts] = reshape_to_mnt
         event_ts = NaN(tot_trials, 1);
         event_table = table(event_labels, event_indices, event_ts);
         event_info = [event_info; event_table];
+    end
+    %% Combine event_info with trial_meta
+    event_info = [event_info, trial_meta];
+    if strcmpi(trial_filter, 'prob')
+        assert(numel(filter_val) == 2);
+        event_info.include_trials = event_info.win_prob <= filter_val(1) | ...
+                                    event_info.win_prob >= filter_val(2);
+    elseif strcmpi(trial_filter, 'correct_prob')
+        assert(numel(filter_val) == 2);
+        event_info.include_trials = (event_info.win_prob <= filter_val(1) | ...
+                                    event_info.win_prob >= filter_val(2)) & ...
+                                    logical(event_info.correct_trials);
+    elseif strcmpi(trial_filter, 'correct')
+        event_info.include_trials = logical(event_info.correct_trials);
+    else
+        error('%s not implemented yet. Try prob filter', trial_filter);
     end
     %% sort event_info chronologically since above method does not
     event_info = sortrows(event_info, 'event_indices');
