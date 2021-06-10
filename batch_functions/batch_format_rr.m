@@ -23,8 +23,8 @@ function [] = batch_format_rr(save_path, failed_path, data_path, dir_name, confi
             assert(~isempty(selected_channels), "No channels have been selected for analysis")
 
             %% Format PSTH
-            [rr_data, event_info] = format_rr_data(event_info, ...
-                selected_channels, config.bin_size, config.window_start, config.window_end);
+            rr_data= format_rr_data(event_info, selected_channels, ...
+                config.bin_size, config.window_start, config.window_end);
 
             chan_group_log = selected_channels;
             chan_group_log = removevars(chan_group_log, 'channel_data');

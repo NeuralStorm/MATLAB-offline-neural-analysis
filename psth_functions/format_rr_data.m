@@ -1,5 +1,5 @@
-function [rr_data, event_info] = format_rr_data(event_info, ...
-        selected_channels, bin_size, window_start, window_end)
+function rr_data = format_rr_data(event_info, selected_channels, bin_size, ...
+        window_start, window_end)
     %%Inputs
     % event_info: table with columns event_labels, event_indices, and event_ts
     % selected_data: struct with fields chan_group
