@@ -3,6 +3,7 @@ function batch_continuous_extract_format_spikes(save_path, failed_path, data_pat
     %% Continuous data spike extraction...
     extract_spikes_start = tic;
     fprintf('Extracting spikes for %s \n', dir_name);
+    headers = [["channel", "string"]; ["channel_data", "string"]];
     config_log = dir_config;
     curr_dir = [data_path, '/'];
     file_list = get_file_list(curr_dir, '.mat');
@@ -16,33 +17,17 @@ function batch_continuous_extract_format_spikes(save_path, failed_path, data_pat
         try
             %% Load file contents
             file = [curr_dir, '/', file_list(file_index).name];
-            load(file, 'event_samples', 'filename_meta', 'filtered_map', 'sample_rate');
-            %% Format events for spike extraction and psth formatting
-            unique_events = fieldnames(orderfields(event_samples));
-
-            event_ts = [];
-            sample_ts = event_samples.event_1(1,:);
-            for event_i = 1:length(unique_events)
-                temp_ts = [];
-                event = unique_events{event_i};
-
-                temp_sample_ts = event_samples.(event)(1,:);
-
-                temp_ts(:,2) = event_samples.(event)(1,:) / sample_rate;
-                temp_ts(:,1) = event_i;
-
-                event_ts = [event_ts; temp_ts];
-            end
-            event_ts = sortrows(event_ts, 2);
+            load(file, 'event_info', 'filename_meta', 'filtered_map', 'sample_rate');
 
             %% Extract spikes from filtered data
-            channel_map = {};
-            for chan = 1:length(filtered_map)
-                channel_map{chan, 1} = filtered_map(chan).sig_channels;
-                [spikes, threshold] = continuous_extract_spikes(filtered_map(chan).data, dir_config.spike_thresh,...
-                    sample_ts, sample_rate, dir_config.baseline_start, dir_config.baseline_end);
-                channel_map{chan, 2} = spikes';
-                % channel_map{chan, 3} = threshold;
+            channel_map = prealloc_table(headers, [0, size(headers, 1)]);
+            for chan_i = 1:height(filtered_map)
+                chan = filtered_map.channel{chan_i};
+                data = filtered_map.channel_data(:);
+                [spikes, threshold] = continuous_extract_spikes(data, dir_config.spike_thresh,...
+                    event_info.event_ts, sample_rate, dir_config.baseline_start, dir_config.baseline_end);
+                a = [{chan}, {spikes'}];
+                channel_map = vertcat_cell(channel_map, a, headers(:, 1), "after");
             end
 
             %% Label data
@@ -56,7 +41,7 @@ function batch_continuous_extract_format_spikes(save_path, failed_path, data_pat
             end
             
             %% Save spike data
-            save(matfile, '-v7.3', 'channel_map', 'event_ts', 'filename_meta', 'labeled_data', 'config_log');
+            save(matfile, '-v7.3', 'channel_map', 'event_info', 'filename_meta', 'labeled_data', 'config_log');
             clear('channel_map', 'event_ts', 'filename_meta', 'labeled_data');
             
         catch ME
