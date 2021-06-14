@@ -1,10 +1,28 @@
-function [confusion_matrix, mutual_info, correct_trials, performance] = psth_classifier_templates(rr_data, event_info)
+function [confusion_matrix, mutual_info, correct_trials, performance] = psth_classifier_templates(...
+        rr_data, event_info, classify_scheme)
+    event_info = sortrows(event_info, "event_indices");
+    if strcmpi(classify_scheme, 'non_template')
+        %TODO assert there are trials not in template set
+        train_set = event_info(event_info.include_trials == 1, :);
+        test_set = event_info(event_info.include_trials == 0, :);
+        assert(~isequal(train_set, test_set), ...
+            'Cannot classify non template trials when they are the same');
+    elseif strcmpi(classify_scheme, 'template')
+        test_set = event_info(event_info.include_trials == 1, :);
+    elseif strcmpi(classify_scheme, 'default')
+        test_set = event_info;
+    elseif strcmpi(classify_scheme, 'all')
+        a = ones(height(event_info), 1);
+        event_info.include_trials = a;
+        test_set = event_info;
+    end
+    assert(~isempty(test_set), 'Cannot classify with an empty test set scheme');
     predicted_events = [];
-    unique_events = unique(event_info.event_labels);
-    tot_trials = height(event_info);
+    unique_events = unique(test_set.event_labels);
+    tot_trials = height(test_set);
     for trial_i = 1:tot_trials
         %% Get the trial template and update current event template to exclude trial
-        trial = event_info.event_indices(trial_i);
+        trial = test_set.event_indices(trial_i);
         trial_template = rr_data(trial, :);
 
         %% Euclidian distance and fnding closest match
@@ -25,8 +43,7 @@ function [confusion_matrix, mutual_info, correct_trials, performance] = psth_cla
         classified_event = euclidian_results{min_index, 1};
         predicted_events = [predicted_events; {classified_event}];
     end
-    event_info = sortrows(event_info, "event_indices");
-    true_events = event_info.event_labels;
+    true_events = test_set.event_labels;
     %% Find the information and performance for current chan_group
     confusion_matrix = confusionmat(true_events, predicted_events);
     mutual_info = I_confmatr(confusion_matrix);
