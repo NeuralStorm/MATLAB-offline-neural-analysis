@@ -49,7 +49,7 @@ function [] = batch_classify_template(project_path, save_path, failed_path, data
 
             %% Bootstrap
             if boot_iterations > 0
-                [boot_pop, boot_chan] = psth_bootstrapper(rr_data, ...
+                [boot_pop, boot_chan] = scheme_psth_bootstrapper(rr_data, ...
                     event_info, bin_size, window_start, window_end, ...
                     response_start, response_end, boot_iterations);
                 %% Join classification and boot results
@@ -59,8 +59,8 @@ function [] = batch_classify_template(project_path, save_path, failed_path, data
                 assert(height(chan_table) == height(boot_chan), ...
                     'Join assumes a 1-1 mapping but found %d rows in chan_table and %d rows in boot_chan', ...
                     height(chan_table), height(boot_chan));
-                pop_table = join(pop_table, boot_pop, 'Keys', 'chan_group');
-                chan_table = join(chan_table, boot_chan, 'Keys', 'channel');
+                pop_table = join(pop_table, boot_pop, 'Keys', {'scheme', 'chan_group'});
+                chan_table = join(chan_table, boot_chan, 'Keys', {'scheme', 'channel'});
                 assert(height(pop_table) == height(boot_pop), ...
                     'Join assumes a 1-1 mapping but found %d rows in pop and %d rows in boot pop after join', ...
                     height(pop_table), height(boot_pop));
@@ -77,7 +77,7 @@ function [] = batch_classify_template(project_path, save_path, failed_path, data
             end
 
             %% PSTH synergy redundancy
-            pop_table = synergy_redundancy(pop_table, chan_table, boot_iterations);
+            pop_table = scheme_synergy_redundancy(pop_table, chan_table, boot_iterations);
 
             matfile = fullfile(save_path, ['psth_classifier_', filename_meta.filename, '.mat']);
             check_variables(matfile, classify_res, pop_table, chan_table);
