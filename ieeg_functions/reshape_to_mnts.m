@@ -77,7 +77,9 @@ function [chan_group_log, mnts_struct, event_info, band_shifts] = reshape_to_mnt
     end
     %% Combine event_info with trial_meta
     event_info = [event_info, trial_meta];
-    if strcmpi(trial_filter, 'prob')
+    if strcmpi(trial_filter, 'none')
+        event_info.include_trials = true(height(event_info), 1);
+    elseif strcmpi(trial_filter, 'prob')
         assert(numel(filter_val) == 2);
         event_info.include_trials = event_info.win_prob <= filter_val(1) | ...
                                     event_info.win_prob >= filter_val(2);
