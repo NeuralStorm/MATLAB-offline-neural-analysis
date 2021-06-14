@@ -11,11 +11,11 @@ function [] = batch_graph_sep(save_path, failed_path, data_path, ...
         filename_meta.filename = filename;
         try
             file = [data_path, '/', file_list(file_i).name];
-            load(file, 'sep_analysis_results', 'filename_meta', 'label_log');
+            load(file, 'sep_analysis_results', 'filename_meta', 'chan_group_log');
 
-            graph_sep(save_path, sep_analysis_results, filename_meta, label_log, ...
+            graph_sep(save_path, sep_analysis_results, filename_meta, chan_group_log, ...
                 dir_config.sub_rows, dir_config.sub_cols, dir_config.visible_plot);
-            clear('sep_analysis_results', 'filename_meta', 'label_log');
+            clear('sep_analysis_results', 'filename_meta', 'chan_group_log');
         catch ME
             handle_ME(ME, failed_path, filename_meta.filename);
         end
