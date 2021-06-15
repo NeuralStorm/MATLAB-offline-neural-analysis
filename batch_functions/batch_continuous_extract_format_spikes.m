@@ -1,9 +1,9 @@
 function batch_continuous_extract_format_spikes(save_path, failed_path, data_path,...
-    dir_name, dir_config, label_table)
+    dir_name, dir_config)
     %% Continuous data spike extraction...
     extract_spikes_start = tic;
     fprintf('Extracting spikes for %s \n', dir_name);
-    headers = [["channel", "string"]; ["channel_data", "string"]];
+    headers = [["channel", "cell"]; ["channel_data", "double"]];
     config_log = dir_config;
     curr_dir = [data_path, '/'];
     file_list = get_file_list(curr_dir, '.mat');
@@ -24,25 +24,22 @@ function batch_continuous_extract_format_spikes(save_path, failed_path, data_pat
             for chan_i = 1:height(filtered_map)
                 chan = filtered_map.channel{chan_i};
                 data = filtered_map.channel_data(:);
-                [spikes, threshold] = continuous_extract_spikes(data, dir_config.spike_thresh,...
+                [spikes, ~] = continuous_extract_spikes(data, dir_config.spike_thresh,...
                     event_info.event_ts, sample_rate, dir_config.baseline_start, dir_config.baseline_end);
-                a = [{chan}, {spikes'}];
+                a = [{chan}, spikes'];
                 channel_map = vertcat_cell(channel_map, a, headers(:, 1), "after");
             end
 
-            %% Label data
-            labeled_data = label_data(channel_map, label_table, filename_meta.session_num);
-            
             %% Saving outputs
             matfile = fullfile(save_path, ['spikes_', filename_meta.filename, '.mat']);
-            empty_vars = check_variables(matfile, channel_map, event_ts, labeled_data);
+            empty_vars = check_variables(matfile, channel_map, event_info);
             if empty_vars
                 continue
             end
             
             %% Save spike data
-            save(matfile, '-v7.3', 'channel_map', 'event_info', 'filename_meta', 'labeled_data', 'config_log');
-            clear('channel_map', 'event_ts', 'filename_meta', 'labeled_data');
+            save(matfile, '-v7.3', 'channel_map', 'event_info', 'filename_meta', 'config_log');
+            clear('channel_map', 'event_ts', 'filename_meta');
             
         catch ME
             handle_ME(ME, failed_path, filename_meta.filename);

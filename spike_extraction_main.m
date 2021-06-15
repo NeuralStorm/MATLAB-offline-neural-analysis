@@ -20,7 +20,7 @@ function [] = spike_extraction_main(varargin)
         dir_config = config(dir_i, :);
         dir_config = convert_table_cells(dir_config);
         label_table = load_labels(project_path, ['labels_', curr_dir, '.csv']);
-        
+
         if dir_config.filter_data
             [filter_data_path, filter_failed_path] = create_dir(continuous_path, 'filtered_data');
             export_params(filter_data_path, 'filter', config);
@@ -49,7 +49,7 @@ function [] = spike_extraction_main(varargin)
                 e_msg_1 = 'No parsed directory to extract spikes from';
                 e_msg_2 = ['No parsed directory for ', curr_dir, ' to extract spikes'];
                 parsed_dir_path = enforce_dir_layout(parsed_path, curr_dir, ...
-                    continuous_failed_path, e_msg_1, e_msg_2); 
+                    continuous_failed_path, e_msg_1, e_msg_2);
                 [dir_save_path, dir_failed_path] = create_dir(spikes_data_path, curr_dir);
 
                 batch_continuous_extract_format_spikes(dir_save_path, dir_failed_path, ...
@@ -65,7 +65,7 @@ function [] = spike_extraction_main(varargin)
                 %%        Extract Spikes      %%
                 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
                 batch_continuous_extract_format_spikes(dir_save_path, dir_failed_path, ...
-                    filter_dir_path, curr_dir, dir_config, label_table);
+                    filter_dir_path, curr_dir, dir_config);
             end
         catch ME
             handle_ME(ME, spikes_failed_path, [curr_dir, '_failed.mat']);

@@ -55,7 +55,7 @@ function [event_info] = find_event_samples(dig_sig)
     %x contains the time stamp of the low -> high part of the pulse
     %y contains the time stamp of the high -> low part of the pulse
 
-    headers = [["event_labels", "string"]; ["event_ts", "double"]];
+    headers = [["event_labels", "cell"]; ["event_ts", "double"]];
     event_info = prealloc_table(headers, [0, size(headers, 1)]);
     [tot_rows, tot_cols] = size(dig_sig);
     for row_i = 1:tot_rows
