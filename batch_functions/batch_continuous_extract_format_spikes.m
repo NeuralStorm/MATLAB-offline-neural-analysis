@@ -3,7 +3,6 @@ function batch_continuous_extract_format_spikes(save_path, failed_path, data_pat
     %% Continuous data spike extraction...
     extract_spikes_start = tic;
     fprintf('Extracting spikes for %s \n', dir_name);
-    headers = [["channel", "cell"]; ["channel_data", "double"]];
     config_log = dir_config;
     curr_dir = [data_path, '/'];
     file_list = get_file_list(curr_dir, '.mat');
@@ -19,16 +18,9 @@ function batch_continuous_extract_format_spikes(save_path, failed_path, data_pat
             file = [curr_dir, '/', file_list(file_index).name];
             load(file, 'event_info', 'filename_meta', 'filtered_map', 'sample_rate');
 
-            %% Extract spikes from filtered data
-            channel_map = prealloc_table(headers, [0, size(headers, 1)]);
-            for chan_i = 1:height(filtered_map)
-                chan = filtered_map.channel{chan_i};
-                data = filtered_map.channel_data(:);
-                [spikes, ~] = continuous_extract_spikes(data, dir_config.spike_thresh,...
-                    event_info.event_ts, sample_rate, dir_config.baseline_start, dir_config.baseline_end);
-                a = [{chan}, spikes'];
-                channel_map = vertcat_cell(channel_map, a, headers(:, 1), "after");
-            end
+            %% Create channel_map as input for other pipelines
+            channel_map = create_channel_map(filtered_map, event_info, sample_rate, ...
+                dir_config.baseline_start, dir_config.baseline_end, dir_config.spike_thresh);
 
             %% Saving outputs
             matfile = fullfile(save_path, ['spikes_', filename_meta.filename, '.mat']);
@@ -45,5 +37,6 @@ function batch_continuous_extract_format_spikes(save_path, failed_path, data_pat
             handle_ME(ME, failed_path, filename_meta.filename);
         end
     end
+    toc(extract_spikes_start);
 end
 

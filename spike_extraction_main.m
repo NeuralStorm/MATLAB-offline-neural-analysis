@@ -71,5 +71,5 @@ function [] = spike_extraction_main(varargin)
             handle_ME(ME, spikes_failed_path, [curr_dir, '_failed.mat']);
         end
      end
-     toc(start_time);
+    toc(start_time);
 end
