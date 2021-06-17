@@ -86,9 +86,9 @@ function [event_info] = find_event_samples(dig_sig)
 
         a = [lo_hi; hi_lo];
         event_info = vertcat_cell(event_info, a, headers(:, 1), "after");
-        event_info = sortrows(event_info, 'event_ts');
-        tot_trials = height(event_info);
-        event_i = 1:1:tot_trials;
-        event_info.event_indices = event_i';
     end
+    event_info = sortrows(event_info, 'event_ts');
+    tot_trials = height(event_info);
+    event_i = 1:1:tot_trials;
+    event_info.event_indices = event_i';
 end
