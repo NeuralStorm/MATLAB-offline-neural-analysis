@@ -8,7 +8,7 @@ function [] = spike_extraction_main(varargin)
 
     %% Creating paths to do analog analysis
     [continuous_path, continuous_failed_path] = create_dir(project_path, 'continuous');
-    export_params(continuous_path, 'continuous', config);
+    export_params(continuous_path, 'spike_extract', config);
     parsed_path = [project_path, '/parsed_continuous'];
     if ~exist(parsed_path, 'dir')
         error('Must have parsed continuous data for analysis');
@@ -45,28 +45,22 @@ function [] = spike_extraction_main(varargin)
         export_params(spikes_data_path, 'parsed_spike', config);
         try
             if dir_config.use_raw
-                parsed_path = [project_path, '/parsed_continuous'];
+                data_path = [project_path, '/parsed_continuous'];
                 e_msg_1 = 'No parsed directory to extract spikes from';
                 e_msg_2 = ['No parsed directory for ', curr_dir, ' to extract spikes'];
-                parsed_dir_path = enforce_dir_layout(parsed_path, curr_dir, ...
-                    continuous_failed_path, e_msg_1, e_msg_2);
-                [dir_save_path, dir_failed_path] = create_dir(spikes_data_path, curr_dir);
-
-                batch_extract_spikes(dir_save_path, dir_failed_path, ...
-                    parsed_dir_path, curr_dir, dir_config, label_table); 
             else
-                filter_path = [continuous_path, '/filtered_data'];
+                data_path = [continuous_path, '/filtered_data'];
                 e_msg_1 = 'No filter directory to extract spikes from';
                 e_msg_2 = ['No filter directory for ', curr_dir, ' to extract spikes'];
-                filter_dir_path = enforce_dir_layout(filter_path, curr_dir, ...
-                    continuous_failed_path, e_msg_1, e_msg_2);
-                [dir_save_path, dir_failed_path] = create_dir(spikes_data_path, curr_dir);
-                %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-                %%        Extract Spikes      %%
-                %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-                batch_extract_spikes(dir_save_path, dir_failed_path, ...
-                    filter_dir_path, curr_dir, dir_config);
             end
+            data_dir_path = enforce_dir_layout(data_path, curr_dir, ...
+                continuous_failed_path, e_msg_1, e_msg_2);
+            [dir_save_path, dir_failed_path] = create_dir(spikes_data_path, curr_dir);
+            %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+            %%        Extract Spikes      %%
+            %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+            batch_extract_spikes(dir_save_path, dir_failed_path, ...
+                data_dir_path, curr_dir, dir_config, label_table);
         catch ME
             handle_ME(ME, spikes_failed_path, [curr_dir, '_failed.mat']);
         end

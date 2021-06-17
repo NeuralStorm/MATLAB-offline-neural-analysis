@@ -3,12 +3,12 @@ function [] = sep_main(varargin)
     start_time = tic;
 
     %% Import psth config and removes ignored animals
-    config = import_config(project_path, 'continuous');
+    config = import_config(project_path, 'sep');
     config(config.include_dir == 0, :) = [];
 
     %% Creating paths to do analog analysis
     [continuous_path, continuous_failed_path] = create_dir(project_path, 'continuous');
-    export_params(continuous_path, 'continuous', config);
+    export_params(continuous_path, 'sep', config);
     parsed_path = [project_path, '/parsed_continuous'];
     if ~exist(parsed_path, 'dir')
         error('Must have parsed continuous data for analysis');

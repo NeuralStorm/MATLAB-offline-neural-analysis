@@ -1,5 +1,5 @@
 function [] = graph_sep(save_path, sep_struct, filename_meta, chan_group_log, ...
-        sub_rows, sub_cols, visible_plot)
+        sub_rows, sub_cols)
     %% Set x axis (time)
     time = linspace(sep_struct(1).sep_window(1), sep_struct(1).sep_window(2), ...
         length(sep_struct(1).sep_sliced_data));
@@ -23,7 +23,7 @@ function [] = graph_sep(save_path, sep_struct, filename_meta, chan_group_log, ..
         y_min = y_min + (y_min *.002) + eps;
 
         %% Plot each channel in scroll subplot
-        figure('visible', visible_plot);
+        figure('visible', 'off');
         sgtitle([filename_meta.animal_id, ' ', region]);
         for chan_i = 1:height(region_table)
             curr_chan = region_table.channel{chan_i};
@@ -39,8 +39,6 @@ function [] = graph_sep(save_path, sep_struct, filename_meta, chan_group_log, ..
         % Set CreateFcn callback
         set(gcf, 'CreateFcn', 'set(gcbo,''Visible'',''on'')');
         savefig(gcf, fullfile(save_path, filename));
-        if strcmpi(visible_plot, 'off')
-            close gcf
-        end
+        close gcf
     end
 end

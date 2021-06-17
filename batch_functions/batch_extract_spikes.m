@@ -1,5 +1,5 @@
 function batch_extract_spikes(save_path, failed_path, data_path,...
-    dir_name, dir_config)
+        dir_name, dir_config, label_table)
     %% Continuous data spike extraction...
     extract_spikes_start = tic;
     fprintf('Extracting spikes for %s \n', dir_name);
@@ -16,11 +16,20 @@ function batch_extract_spikes(save_path, failed_path, data_path,...
         try
             %% Load file contents
             file = [curr_dir, '/', file_list(file_index).name];
-            load(file, 'event_info', 'filename_meta', 'filtered_map', 'sample_rate');
+            if dir_config.use_raw
+                load(file, 'channel_map', 'filename_meta', 'event_info', 'sample_rate');
+                %% Select channels and label data, called filtered_map for convience of format_sep call below
+                filtered_map = label_data(channel_map, label_table, filename_meta.session_num);
+                chan_group_log = filtered_map;
+                chan_group_log = removevars(chan_group_log, 'channel_data');
+                clear('channel_map');
+            else
+                load(file, 'filtered_map', 'event_info', 'sample_rate', 'filename_meta', 'chan_group_log');
+            end
 
             %% Create channel_map as input for other pipelines
             channel_map = create_channel_map(filtered_map, event_info, sample_rate, ...
-                dir_config.baseline_start, dir_config.baseline_end, dir_config.spike_thresh);
+                dir_config.baseline_start, dir_config.baseline_end, dir_config.threshold_scalar);
 
             %% Saving outputs
             matfile = fullfile(save_path, ['spikes_', filename_meta.filename, '.mat']);
@@ -30,7 +39,7 @@ function batch_extract_spikes(save_path, failed_path, data_path,...
             end
             
             %% Save spike data
-            save(matfile, '-v7.3', 'channel_map', 'event_info', 'filename_meta', 'config_log');
+            save(matfile, '-v7.3', 'channel_map', 'event_info', 'filename_meta', 'config_log', 'chan_group_log');
             clear('channel_map', 'event_ts', 'filename_meta');
             
         catch ME
