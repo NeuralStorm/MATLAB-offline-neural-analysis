@@ -1,4 +1,4 @@
-function [] = continuous_main(varargin)
+function [] = sep_main(varargin)
     project_path = get_project_path(varargin);
     start_time = tic;
 

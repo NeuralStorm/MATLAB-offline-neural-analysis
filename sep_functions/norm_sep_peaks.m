@@ -1,4 +1,4 @@
-function [sep_res] = region_sep_analysis(sep_res)
+function [sep_res] = norm_sep_peaks(sep_res)
     unique_ch_groups = unique([sep_res.chan_group]);
     unique_events = unique([sep_res.event]);
     for ch_group_i = 1:length(unique_ch_groups)

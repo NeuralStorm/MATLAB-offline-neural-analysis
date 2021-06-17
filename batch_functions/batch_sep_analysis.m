@@ -55,7 +55,7 @@ function [] = batch_sep_analysis(save_path, failed_path, data_path, dir_name, ..
 
             %% Apply sep region analysis
             % (These analyses are updated if changes are made in the GUI)
-            sep_analysis_results = region_sep_analysis(sep_analysis_results);
+            sep_analysis_results = norm_sep_peaks(sep_analysis_results);
 
             %% Saving outputs
             matfile = fullfile(save_path, ['analysis_', filename_meta.filename, '.mat']);

@@ -738,7 +738,7 @@ function save_button_Callback(hObject, eventdata, handles)
     %save the data back to the loaded mat.flie 
     sep_analysis_results = handles.sep_data;
     %recalculates region / label based analysis
-    sep_analysis_results = region_sep_analysis(sep_analysis_results);
+    sep_analysis_results = norm_sep_peaks(sep_analysis_results);
     filename_meta = handles.filename_meta;
     chan_group_log = handles.chan_group_log;
     save(handles.save_file_path, 'sep_analysis_results', 'filename_meta', 'chan_group_log');

@@ -52,7 +52,7 @@ function [] = spike_extraction_main(varargin)
                     continuous_failed_path, e_msg_1, e_msg_2);
                 [dir_save_path, dir_failed_path] = create_dir(spikes_data_path, curr_dir);
 
-                batch_continuous_extract_format_spikes(dir_save_path, dir_failed_path, ...
+                batch_extract_spikes(dir_save_path, dir_failed_path, ...
                     parsed_dir_path, curr_dir, dir_config, label_table); 
             else
                 filter_path = [continuous_path, '/filtered_data'];
@@ -64,7 +64,7 @@ function [] = spike_extraction_main(varargin)
                 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
                 %%        Extract Spikes      %%
                 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-                batch_continuous_extract_format_spikes(dir_save_path, dir_failed_path, ...
+                batch_extract_spikes(dir_save_path, dir_failed_path, ...
                     filter_dir_path, curr_dir, dir_config);
             end
         catch ME
