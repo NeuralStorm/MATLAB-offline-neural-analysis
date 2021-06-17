@@ -1,12 +1,15 @@
 function [meta_struct] = get_filename_info(filename)
     meta_struct = struct;
     meta_struct.filename = filename;
+    fname_format_err = string(filename) + " is not a supported filename format." ...
+                         + newline + "Expected format: subjID_expGroup_expCond_file#_YYYYMMDD_optionalInfo.ext" ...
+                         + newline + "EX: EXA001_control_opto_5_19700101_na.plx";
     if contains(filename, '.')
         % Handles file with old format
         split_name = strsplit(filename, '.');
         %% Must be at least 5 long to have the right number of fields
         if length(split_name) < 5
-            error('Not a supported filename format');
+            error(fname_format_err);
         end
 
         %% Get animal info 
@@ -29,7 +32,7 @@ function [meta_struct] = get_filename_info(filename)
         split_name = strsplit(filename, '_');
         %% Must be at least 6 long to have the right number of fields
         if length(split_name) < 6
-            error('Not a supported filename format');
+            error(fname_format_err);
         end
 
         %% Get animal info 
@@ -47,6 +50,6 @@ function [meta_struct] = get_filename_info(filename)
         optional_info = split_name{end};
         meta_struct.optional_info = optional_info;
     else
-        error('Not a supported filename format');
+        error(fname_format_err);
     end
 end

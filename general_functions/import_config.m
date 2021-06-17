@@ -1,18 +1,11 @@
 function [config_table] = import_config(project_path, analysis_type)
 
-    %% Grabs config file and creates labels
-    csv_path_list = [project_path, '/*.csv'];
-    csv_files = dir(csv_path_list);
-    for csv = 1:length(csv_files)
-        csv_file = fullfile(project_path, csv_files(csv).name);
-        if contains(csv_files(csv).name, ['conf_', analysis_type, '.csv'])
-            config_table = readtable(csv_file);
-        end
+    csv_file = fullfile(project_path, ['conf_', analysis_type, '.csv']);
+    if ~isfile(csv_file)
+        conf_err = "Missing expected conf: "  + csv_file;
+        error(conf_err);
     end
-
-    if exist('config_table') == 0
-        error('Must have config file to run analysis')
-    end
+    config_table = readtable(csv_file);
 
     col_names = config_table.Properties.VariableNames;
     for col_i = 1:length(col_names)
