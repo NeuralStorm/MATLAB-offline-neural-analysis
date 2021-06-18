@@ -59,8 +59,8 @@ function [event_info] = find_event_samples(dig_sig)
     event_info = prealloc_table(headers, [0, size(headers, 1)]);
     [tot_rows, tot_cols] = size(dig_sig);
     for row_i = 1:tot_rows
-        lo_hi = [];
-        hi_lo = [];
+        lo_hi = cell(0,2); % prealloc so that empty cell array doesnt cause error
+        hi_lo = cell(0,2); % prealloc so that empty cell array doesnt cause error
         x = 1;
         while x <= tot_cols
             if dig_sig(row_i, x) == 1
