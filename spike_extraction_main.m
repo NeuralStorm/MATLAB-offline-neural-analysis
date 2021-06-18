@@ -6,6 +6,9 @@ function [] = spike_extraction_main(varargin)
     config = import_config(project_path, 'spike_extract');
     config(config.include_dir == 0, :) = [];
 
+    delete(gcp('nocreate'));
+    parpool(config.num_pools(1));
+
     %% Creating paths to do analog analysis
     [continuous_path, continuous_failed_path] = create_dir(project_path, 'continuous');
     export_params(continuous_path, 'spike_extract', config);
