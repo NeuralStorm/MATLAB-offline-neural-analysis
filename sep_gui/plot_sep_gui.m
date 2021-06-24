@@ -6,6 +6,7 @@ function plot_sep_gui(handles, sep_analysis_results, i)
     late_window = sep_analysis_results(i).late_window;
     animal_id = sep_analysis_results(i).animal_id;
     channel_name = sep_analysis_results(i).channel;
+    event = sep_analysis_results(i).event;
     neg_peak(1) = sep_analysis_results(i).neg_peak1;
     neg_peak_latency(1) = sep_analysis_results(i).neg_peak_latency1;
     pos_peak(1) = sep_analysis_results(i).pos_peak1;
@@ -86,7 +87,7 @@ function plot_sep_gui(handles, sep_analysis_results, i)
     end
 
     %add comments
-    title_text=['Animal: ', animal_id, '     Channel: ', channel_name];
+    title_text=strrep([animal_id, ' ', event, ' ', channel_name], '_', ' ');
     title(handles.axes1, title_text);
     xlabel(handles.axes1, 'Time (s)');
     ylabel(handles.axes1, 'Voltage (mV)');
