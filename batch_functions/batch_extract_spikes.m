@@ -31,6 +31,8 @@ function batch_extract_spikes(save_path, failed_path, data_path,...
             channel_map = create_channel_map(filtered_map, event_info, sample_rate, ...
                 dir_config.baseline_start, dir_config.baseline_end, dir_config.threshold_scalar);
 
+            event_info.event_ts = event_info.event_ts / sample_rate;
+
             %% Saving outputs
             matfile = fullfile(save_path, ['spikes_', filename_meta.filename, '.mat']);
             empty_vars = check_variables(matfile, channel_map, event_info);
