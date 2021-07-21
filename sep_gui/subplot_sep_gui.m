@@ -7,7 +7,7 @@ sep_data = sep_analysis_results(channel_index).sep_sliced_data;
 sep_window = sep_analysis_results(channel_index).sep_window;
 early_window = sep_analysis_results(channel_index).early_window;
 late_window = sep_analysis_results(channel_index).late_window;
-channel_name = sep_analysis_results(channel_index).channel_name;
+channel_name = sep_analysis_results(channel_index).channel;
 event_name = sep_analysis_results(channel_index).event;
 neg_peak(1) = sep_analysis_results(channel_index).neg_peak1;
 neg_peak_latency(1) = sep_analysis_results(channel_index).neg_peak_latency1;
@@ -27,7 +27,7 @@ negthresh = sep_analysis_results(channel_index).negthresh;
 max_point = max(sep_data);
 min_point = min(sep_data);
 %plot sep
-plot(sep_window(1):(1/(length(sep_data) - 1)) : sep_window(2), sep_data);     
+plot(sep_window(1):(1/(length(sep_data) - 1)) : sep_window(2), sep_data);
 hold ('on')
 %select the scale type, universal(1) or specified(2)
 scale_type = getappdata(0, 'scale_selection');
@@ -76,7 +76,7 @@ line([late_window(2) late_window(2)], ylim, 'Color', 'black', 'LineWidth',...
 set(gca,'tag',num2str(channel_index));
 set(gca,'ButtonDownFcn', @channel_select);
 %add comments
-title_text=[event_name, channel_name];
+title_text=strrep([event_name, channel_name], '_', ' ');
 title(title_text, 'FontSize', 7);
 hold off
 

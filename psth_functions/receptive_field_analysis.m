@@ -56,7 +56,7 @@ function [rec_res] = receptive_field_analysis(rr_data, event_info, ...
                     window_end, response_start, response_end);
 
                 %% Determine if psth is signficant
-                [threshold, avg_bfr, bfr_std] = get_threshold(baseline_psth, threshold_scale);
+                [avg_bfr, bfr_std, threshold, ~] = get_threshold(baseline_psth, threshold_scale);
                 [is_sig, p_val] = check_significance(baseline_psth, ...
                     response_psth, threshold, consec_bins, sig_check, sig_alpha);
 
@@ -141,10 +141,4 @@ function [is_sig, p_val] = check_significance(baseline_psth, response_psth, ...
             is_sig = true;
         end
     end
-end
-
-function [threshold, avg_bfr, bfr_std] = get_threshold(baseline_psth, threshold_scale)
-    avg_bfr = mean(baseline_psth);
-    bfr_std = std(baseline_psth);
-    threshold = avg_bfr + (threshold_scale * bfr_std);
 end

@@ -1,51 +1,39 @@
-function sliced_signals = format_sep(data_map, event_samples, ...
-        sample_rate, sep_window, square_pulse, include_events)
+function sep_data = format_sep(chan_table, event_info, ...
+        sample_rate, window_s, window_e)
 
-    unique_events = fieldnames(event_samples);
-    sliced_signals = struct([]);
-    for event_i = 1:length(unique_events)
-        event = unique_events{event_i};
+    sep_data = struct;
+    %% Calc sample edges
+    window_s = window_s * sample_rate;
+    window_e = window_e * sample_rate;
+    [bin_edges, ~] = get_bins(window_s, window_e, 1);
+    bin_edges(end) = [];
+    %% Creates the PSTH
+    unique_ch_groups = unique(chan_table.chan_group);
+    for ch_group_i = 1:length(unique_ch_groups)
+        ch_group = unique_ch_groups{ch_group_i};
+        chan_list = chan_table.channel_data(strcmpi(chan_table.chan_group, ch_group), :);
+        %% create relative response for chan_group chans
+        sep = calc_sep(chan_list, event_info.event_ts, bin_edges);
+        %% store relative response and labels in chan_group struct
+        sep_data.(ch_group).sep = sep;
+        sep_data.(ch_group).chan_order = chan_table.channel(strcmpi(chan_table.chan_group, ch_group));
+    end
+end
 
-        %% Skip unwanted events
-        if ~iscell(include_events) && ~isempty(include_events) && ~isnan(include_events)
-            if ~ismember(event_i, include_events)
-                continue
-            end
+function [sep] = calc_sep(chan_list, trial_list, edges)
+    tot_bins = numel(edges);
+    tot_trials = numel(trial_list);
+    [tot_chans, ~] = size(chan_list);
+    sep = nan(tot_trials, (tot_chans * tot_bins));
+    for trial_i = 1:tot_trials
+        chan_s = 1;
+        chan_e = tot_bins;
+        trial_bins = trial_list(trial_i) + edges;
+        for chan_i = 1:tot_chans
+            sep(trial_i, chan_s:chan_e) = chan_list(chan_i, trial_bins);
+            %% Update index counters
+            chan_s = chan_s + tot_bins;
+            chan_e = chan_e + tot_bins;
         end
-
-        if isempty(event_samples.(event))
-            warning('Empty event matrix. Skipping %s', event);
-            continue
-        end
-
-        %% Skip unwanted events
-        if square_pulse
-            event_ts = event_samples.(event)(1,:);
-        end
-
-        window_start = abs(sep_window(1)) * sample_rate; 
-        window_end = abs(sep_window(2)) * sample_rate; 
-
-        sample_window_start = arrayfun(@(x) (x - window_start), event_ts);
-        sample_window_end = arrayfun(@(x) (x + window_end), event_ts);
-        sample_window = [sample_window_start; sample_window_end];
-
-        event_map = data_map;
-        for channel = 1:length(data_map)
-            %% Initialize sep formatted data for event
-            chan_signals = zeros(length(event_ts), (sample_window(2,1) ...
-                - sample_window(1,1) + 1));
-            %% Go through each trial and slice out sep
-            for trial = 1:length(sample_window)
-                chan_signals(trial,:) = data_map(channel).data( ...
-                    sample_window(1, trial):sample_window(2, trial));
-            end
-            %% Replace data with sep data
-            event_map(channel).data = chan_signals;
-        end
-        [event_map(:).event] = deal({event});
-
-        %% Append event data to sliced signals
-        sliced_signals = [sliced_signals; event_map];
     end
 end

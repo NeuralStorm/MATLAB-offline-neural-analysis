@@ -16,28 +16,29 @@ function [] = batch_filter(save_path, failed_path, data_path, dir_name, ...
         try
             %% Load file contents
             file = [data_path, '/', file_list(file_index).name];
-            load(file, 'labeled_data', 'sample_rate', 'filename_meta', 'event_samples');
+            load(file, 'channel_map', 'sample_rate', 'filename_meta', 'event_info');
 
-            %% Select channels
-            selected_data = select_data(labeled_data, label_table, ...
-                filename_meta.session_num);
+            %% Select channels and label data
+            selected_chans = label_data(channel_map, label_table, filename_meta.session_num);
 
             %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
             %%           Filter           %%
             %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
             if ~dir_config.use_raw
-                [filtered_map, label_log] = filter_continuous(selected_data, ...
+                [filtered_map] = filter_continuous(selected_chans, ...
                     sample_rate, dir_config.notch_filt, dir_config.notch_freq, ...
                     dir_config.notch_bandwidth, dir_config.filt_type, ...
                     dir_config.filt_freq, dir_config.filt_order);
+                    chan_group_log = selected_chans;
+                    chan_group_log = removevars(chan_group_log, 'channel_data');
             else
                 error('Cannot filter and use raw data for analysis');
             end
 
             matfile = fullfile(save_path, ['filtered_', filename_meta.filename]);
             save(matfile, '-v7.3', 'filtered_map', 'sample_rate', ...
-                'event_samples', 'filename_meta', 'config_log', 'label_log');
-            clear('filtered_map', 'sample_rate', 'event_samples', 'filename_meta', 'label_log');
+                'event_info', 'filename_meta', 'config_log', 'chan_group_log');
+            clear('filtered_map', 'sample_rate', 'event_info', 'filename_meta', 'chan_group_log');
         catch ME
             handle_ME(ME, failed_path, filename_meta.filename);
         end
