@@ -14,6 +14,8 @@ The `shannon_info_main` function serves to calculate the entropy and mutual info
 
 ## Configuration File
 
+The particular variables MONA will expect to find in `conf_shannon_info.csv` are:
+
 |Variable Name|Description| Format |
 |:-----------:|:--:| :----------:|
 |`dir_name`|Name of directory containing data. Typically the subject ID.|`String`
