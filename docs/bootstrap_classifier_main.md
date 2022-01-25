@@ -38,7 +38,7 @@ The particular variables MONA will expect to find in `conf_bootstrap_classifier.
 
 The bootstrap classifier analysis will output a csv file containing the results across subjects and session files called `res_type_chan_eucl_classifier.csv` and `res_type_pop_eucl_classifier.csv` on the top level of the project directory, where `type` will be replaced by the value set for `psth_type` in the configuration file. The `chan` file is the performance of classifying with each channel separately while the `pop` file is the performance of using each `chan_group` to classify.
 
-Both of these `.csv` files share the following columns:
+In addition to a number of variables that reflect the settings defined in the configuration file, both of these `.csv` files share the following columns:
 
 |Variable Name| Description |
 |:-----------| :----------|
