@@ -1,7 +1,9 @@
 # Required Base Layout
-This is the base layout required to start running the code from the parser main. See the [parser main page](https://github.com/moxon-lab-codebase/MATLAB-offline-neural-analysis/wiki/Parser-Main) for a complete lists of current supported parsing formats.  
 
-There is a conf file for each main function. Please see the respictive markdown page for a desired analysis for more details on what parameters are needed.
+The Matlab Offline Neural Analysis program makes a number of assumptions regarding the file layout of the target directory, and these must be followed if the program is to run successfully. The layout should consist of a top level project folder containing the labels file for each subject and the configuration file for each main function. The project folder also contains a folder labeled `raw`, which should contain all of the directories listed in the configuration file. These should generally be named after individual subjects.
+
+To better illustrate this, here is a sample layout in which `conf_mainFn.csv` here is a stand-in for whichever main functions are to be run, such as `conf_recfield.csv` or `conf_mnts.csv`.
+
 ```
 Project_ABC
     ├──labels_ABC001.csv
@@ -14,4 +16,3 @@ Project_ABC
     |    ├──ABC###
     |    |    └──supported raw file format (plx/pl2, rhs/rhd, etc)
 ```
-Note that `conf_mainFn.csv`, `mainFn` is a place holder for the main that you intend to run. For example, if you intend to run the `recfielf_main` function, then that function will require `conf_recfield.csv` whereas the `mnts_main` function requires the `conf_mnts.csv`.
