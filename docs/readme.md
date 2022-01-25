@@ -147,11 +147,11 @@ Please keep in mind that label files are generally loaded in at the start of eac
 
 The configuration files define a number of parameters that control whichever main function (e.g. `parser_main.m`/`recfield_main.m`) is being run. Unlike the labels files, of which only one is necessary for each subject, the program requires a different config file for each such function, generally named `conf_<func>.m`, e.g. `conf_parser.csv`/`conf_recfield.csv`. For details on what the configuration file of each function should look like, click on the appropriate markdown (`.md`) file here:
 
-- [parsing_main.md](https://github.com/NeuralStorm/docs/blob/kev-rewrites/offline_analysis/parsing_main.md)
-- [recfield_main.md](https://github.com/NeuralStorm/docs/blob/kev-rewrites/offline_analysis/recfield_main.md)
-- [bootstrap_classifier_main.md](https://github.com/NeuralStorm/docs/blob/kev-rewrites/offline_analysis/bootstrap_classifier_main.md)
+- [parsing_main.md](https://github.com/NeuralStorm/MATLAB-offline-neural-analysis/blob/kevin-docs/docs/parsing_main.md)
+- [recfield_main.md](https://github.com/NeuralStorm/MATLAB-offline-neural-analysis/blob/kevin-docs/docs/recfield_main.md)
+- [bootstrap_classifier_main.md](https://github.com/NeuralStorm/MATLAB-offline-neural-analysis/blob/kevin-docs/docs/bootstrap_classifier_main.md)
 - [dropping_classifier_main.md]() (WIP).
-- [shannon_info_main.md](https://github.com/NeuralStorm/docs/blob/kev-rewrites/offline_analysis/shannon_info_main.md)
+- [shannon_info_main.md](https://github.com/NeuralStorm/MATLAB-offline-neural-analysis/blob/kevin-docs/docs/shannon_info_main.md)
 - [window_classify_main.md]() (WIP).
 
 ### <a name="running-program">Running the Program</a>
