@@ -2,7 +2,7 @@
 
 The `recfield_main` function performs a receptive field analysis, and will optionally perform a cluster analysis, as well as plot a peri-stimulus time histogram. The program requires the [Curve Fitting Toolbox](https://www.mathworks.com/products/curvefitting.html) for smoothing, and if graphing is enabled, the [Scrollsubplot](https://www.mathworks.com/matlabcentral/fileexchange/7730-scrollsubplot) to plot the PSTHs and the [Parallel Computing Toolbox](https://www.mathworks.com/products/parallel-computing.html) to speed that process up.
 
-Once these dependencies are installed, the required file structure outlined in the [general MONA documentation](https://github.com/NeuralStorm/docs/tree/kev-rewrites/offline_analysis) is set up and filenames match the naming conventions described in the aforementioned documentation, make sure that MONA is in your Matlab path and run `recfield_main` in the command window to start the program.
+Once these dependencies are installed, the required file structure outlined in the [general MONA documentation](https://github.com/NeuralStorm/MATLAB-offline-neural-analysis/blob/kevin-docs/README.md) is set up and filenames match the naming conventions described in the aforementioned documentation, make sure that MONA is in your Matlab path and run `recfield_main` in the command window to start the program.
 
 ## Program Workflow
 
