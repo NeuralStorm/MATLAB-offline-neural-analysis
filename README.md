@@ -101,33 +101,7 @@ To install this program, follow the steps outlined in the Git tutorial within th
 
 ### <a name="Labels-File">Labels File</a>
 
-As electrodes may be placed in different locations within the brain, label files are needed to allow end users to communicate some organization of these electrodes and the different groups they comprise to the program. Each label file must specify _**all**_ of the channels that are expected to appear in the raw neural data.
-
-The columns MONA expects all labels files to contain are:
-|Column label          |Contents                                                |Sample Values|
-|---------------------|--------------------------------------------------------|:---------------------:|
-|`sig_channels`|The name of each signal channel in the recording file.                  |`sig001a`/`wire1a`     |
-|`selected_channels`          |Denotes whether each channel ought to be included in the processing to come. [^selchan]                   |`0`/`1`/`TRUE`/`FALSE`    |
-|`user_channels`          |User-defined custom channel sortation.           |?    |
-|`label`|The label under which each channel ought to be grouped.|`HLM1`/`Parietal`/`LEFT`|
-|`label_id`|Unique ID associated with each label.|?|
-|`recording_session`|Tracks and sorts channels and labels across multiple recording sessions.|`0`/`3`/`6`|
-|`recording_notes`|Any notes experimenters had to make regarding a specific channel.|`got loose`/`ignore this one`
-
-[^selchan]: Please note that `selected_channels` is *not* used during parsing, i.e. it is not used by `parser_main.m`. MONA always parses all channels listed in a labels file.
-
-To further set appropriate expectations as to what label files should look like, here's a sample format:
-
-|sig_channels|selected_channels|user_channels|label|label_id|recording_session|recording_notes|
-|:-:|:-:|:-:|:-:|:-:|:-:|:-:|
-|sig001a|1|sig001a|Right|1|1|Blah|
-|&#8942;|&#8942;|&#8942;|&#8942;|&#8942;|&#8942;|&#8942;|
-|sig064d|0|sig064|Left|2|1|Blah|
-|sig001a|1|sig001|Right|1|2|Blah|
-|&#8942;|&#8942;|&#8942;|&#8942;|&#8942;|&#8942;|&#8942;|
-|sig064d|1|sigg064|Left|2|2|Blah|
-
-Please keep in mind that label files are generally loaded in at the start of each main function (e.g. `parser_main.m`/`recfield_main.m`), and that the program will return an error if any of the label files are missing channels listed in the raw data.
+As electrodes may be placed in different locations within the brain, label files are needed to allow end users to communicate some organization of these electrodes and the different groups they comprise to the program. Each label file must specify _**all**_ of the channels that are expected to appear in the raw neural data. For more on labels files and how they should be formatted, click [here](https://github.com/NeuralStorm/MATLAB-offline-neural-analysis/blob/kevin-docs/docs/labels_file.md).
 
 ### <a name="Config File">Config File</a>
 
