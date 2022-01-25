@@ -2,15 +2,15 @@
 As electrodes may be placed in different locations within the brain, label files are needed to allow end users to communicate some organization of these electrodes and the different groups they comprise to the program.
 
 ### Filename Convention
-**Examples:**
-`labels_CSM030.csv`
-`labels_CSM031.csv`
-`labels_EXP001.csv`
-`labels_EXP002.csv`
-
-**Representation:**
-`labels_SUBJID###.csv`
-
+**Examples:**   
+`labels_CSM030.csv`   
+`labels_CSM031.csv`    
+`labels_EXP001.csv`    
+`labels_EXP002.csv`   
+    
+**Representation:**    
+`labels_SUBJID###.csv`    
+    
 ...where SUBJID is a given project ID and ### is a given subject ID number.
 
 ### Label Columns
