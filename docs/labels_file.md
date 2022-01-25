@@ -1,26 +1,37 @@
-# Purpose
-Group electrodes together with a given name.
+## Purpose
+As electrodes may be placed in different locations within the brain, label files are needed to allow end users to communicate some organization of these electrodes and the different groups they comprise to the program.
 
-## Filename Convention
-labels_subjid###.csv where subjid = project id and ### = subject id number
+### Filename Convention
+**Examples:**
+`labels_CSM030.csv`
+`labels_CSM031.csv`
+`labels_EXP001.csv`
+`labels_EXP002.csv`
 
-## Summary
-Electrodes may be planted in different locations or layers in the brain and labels provides a way to organize the groups of electrodes. There needs to be a label file for each subject directory located in the project root directory.  
+**Representation:**
+`labels_SUBJID###.csv`
 
-The labels file must include the following columns:
-1. channel: Name of the channel in the file. The file must contain the <u>**complete list of channels for a given session**</u>
-2. selected_channels: Boolean column that controls which channels are used to create data structures and analysis.
-3. user_channels: Arbitrary way to sort channels defined by user. This order can be used to control plotting of SEPs in the [continuous pipeline][continuous_main].
-4. chan_group: Assigned label for each channel. This label is used to group together channels before going through a given analysis.
-5. chan_group_id: Assigned numerical channel id number. This mapping must be 1-1 and each chan_group must have a unique number.
-6. recording_session: Used to track and sort channels and groups across multiple files.
-7. recording_notes: Notes on channels for the given file.
+...where SUBJID is a given project ID and ### is a given subject ID number.
+
+### Label Columns
+
+MONA expects all labels files to contain the following columns:
+
+|Column label          |Contents                                                |Sample Values|
+|---------------------|--------------------------------------------------------|:---------------------:|
+|`sig_channels`|The name of each signal channel in the recording file.                  |`sig001a`/`wire1a`     |
+|`selected_channels`          |Denotes whether each channel ought to be included in the processing to come.|`0`/`1`/`TRUE`/`FALSE`    |
+|`user_channels`          |User-defined custom channel sortation.           |?    |
+|`label`|The label under which each channel ought to be grouped.|`HLM1`/`Parietal`/`LEFT`|
+|`label_id`|Unique ID associated with each label.|?|
+|`recording_session`|Tracks and sorts channels and labels across multiple recording sessions.|`0`/`3`/`6`|
+|`recording_notes`|Any notes experimenters had to make regarding a specific channel.|`got loose`/`ignore this one`
 
 The labels file is first loaded in when a data file is being converted into the .mat format for further processing in the `parser_main`. If there are labels that are in the recording file that are not in the labels file an error will be thrown with the list of missing channels for the recording session. The `selected_channels` is not applied in the `parser_main`, but is used in the subsequent mains when the data is organized and analyzed.
 
-## Example labels:
+To further set appropriate expectations as to what label files should look like, here's a sample format:
 
-|channel|selected_channels|user_channels|chan_group|chan_group_id|recording_session|recording_notes|
+|sig_channels|selected_channels|user_channels|label|label_id|recording_session|recording_notes|
 |:-:|:-:|:-:|:-:|:-:|:-:|:-:|
 |sig001a|1|sig001a|Right|1|1|Blah|
 |&#8942;|&#8942;|&#8942;|&#8942;|&#8942;|&#8942;|&#8942;|
@@ -29,4 +40,4 @@ The labels file is first loaded in when a data file is being converted into the 
 |&#8942;|&#8942;|&#8942;|&#8942;|&#8942;|&#8942;|&#8942;|
 |sig064d|1|sigg064|Left|2|2|Blah|
 
-[continuous_main]: https://github.com/moxon-lab-codebase/MATLAB-offline-neural-analysis/wiki/Continuous-Main
+Please keep in mind that label files are, again, generally loaded in at the start of each main function (e.g. `parser_main.m`/`recfield_main.m`), and that the program will return an error if any of the label files are missing channels listed in the raw data.
