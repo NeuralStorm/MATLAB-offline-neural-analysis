@@ -1,6 +1,6 @@
 ## Summary
 
-The `shannon_info_main` function serves to calculate the entropy and mutual information of spike counts and timings found in response windows across trial in parsed neural data. Once the required file structure outlined in the [general MONA documentation](https://github.com/NeuralStorm/docs/tree/kev-rewrites/offline_analysis) is set up and filenames match the naming conventions described in the aforementioned documentation, make sure that MONA is in your Matlab path and run `shannon_info_main` in the command window to start the program.
+The `shannon_info_main` function serves to calculate the entropy and mutual information of spike counts and timings found in response windows across trial in parsed neural data. Once the required file structure outlined in the [general MONA documentation](https://github.com/NeuralStorm/MATLAB-offline-neural-analysis/blob/kevin-docs/README.md) is set up and filenames match the naming conventions described in the aforementioned documentation, make sure that MONA is in your Matlab path and run `shannon_info_main` in the command window to start the program.
 
 ## Program Workflow
 
