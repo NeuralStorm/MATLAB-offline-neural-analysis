@@ -30,6 +30,6 @@ The particular variables MONA will expect to find in `conf_dropping_classifier.c
 |`trial_range`|If creating relative response, selects which trials are used to generate it.|`Numerical`
 |`include_events`|If creating relative response, selects which events are used to generate it.|`String`
 |`combine_chan_groups`|If `0`, keeps `chan_groups` separate. If `1`, combine all `chan_groups` together before classifying.|`Boolean`
-|`drop_method`|Specific dropping method to use.|`performance`/`random`/`corrected_info`/`percent_var`
+|`drop_method`|Specific basis on which to drop channels.|`performance`/`random`/`corrected_info`/`percent_var`
 
 ## Output
