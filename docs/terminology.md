@@ -6,7 +6,7 @@ We generally seek to describe selections of data using precise words. While ther
 |Term         | Description |Abbreviations|
 |:-----------|:----------|:---------------------|
 |Bin| Temporal resolution of data. |N/A|
-|Channel| Typically the physical channel from which data are collected (e.g. `sigchannel` for neural data or LFP), but can also be a population function (e.g. average firing rate across neurons, principal component, latent variable etc.|chan|
+|Channel| Typically the physical channel from which data are collected (e.g. `sigchannel` for neural data or LFP), but can also be a population function (e.g. average firing rate across neurons, principal component, latent variable, etc.)|chan|
 |Channel group|Collection of channels that should be grouped together when during analyses, such as brain regions, region & power combinations, et cetera.|chan_group, ch_group|
 |Relative Response Matrix|Data matrix whose every row represents one trial, and whose every column is one bin of one channel, for total dimensions of `Trials x (Chans * Bins)`. This matrix is typically relative to some stimulus or event.|RR|
 |Peri-Stimulus Time Histogram|Trial-averaged relative response matrix. Dimensions: `1 x (Chans * Bins)`.|PSTH|
