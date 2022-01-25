@@ -159,20 +159,7 @@ Project_ABC
     |    |    └──supported raw file format (plx/pl2, rhs/rhd, etc)
 ```
 
-Each of the files in the `raw` directory should in follow the Moxon Neurorobotics Laboratory's codebase-wide naming conventions, which dictates that file names consist of the study ID, the animal ID, the experimental group, the experimental condition, the recording session, the date, and key notes. To exemplify this:
-
-**File name:** `CSM001_control_opto_1_20190101_option.plx`
-**Representing:** `EXA001_ExperimentalGroup_ExperimentalCondition_#_YYYYMMDD_option.ext`
-
-Where:
-- `EXA` is the study ID.
-- `001` is the animal ID.
-- `ExperimentalGroup` could be control, sham, etc.
-- `ExperimentalCondition` could be OpenLoop, Opt, etc.
-- `#` refers to the recording session.
-- `YYYYMMDD` is the recording date.
-- `Option` refers to any additional notes.
-- `Ext` is the file extension.
+Each of the files in the `raw` directory should in follow the Moxon Neurorobotics Laboratory's codebase-wide naming conventions, which dictates that file names consist of the study ID, the animal ID, the experimental group, the experimental condition, the recording session, the date, and key notes. More on that [here](https://github.com/NeuralStorm/MATLAB-offline-neural-analysis/blob/kevin-docs/docs/filename_convention.md).
 
 Once the project directory is properly set up, calling `parser_main` in Matlab will open a file window. After the project directory is defined, the parser will generate new directories containing the raw data parsed into `.mat` files. From there, the process can be repeated with any other main function, each of which will either create its own directory, populate the graph directory, or both.
 
