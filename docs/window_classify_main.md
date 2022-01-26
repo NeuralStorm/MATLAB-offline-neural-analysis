@@ -1,6 +1,6 @@
 ## Summary
 
-The `window_classify_main` function serves to . Once the target directory has been set up with the [required file structure](https://github.com/NeuralStorm/MATLAB-offline-neural-analysis/blob/kevin-docs/docs/file_layout.md), and filenames match the [required naming conventions](https://github.com/NeuralStorm/MATLAB-offline-neural-analysis/blob/kevin-docs/docs/filename_convention.md), make sure that MONA is in your Matlab path and run `window_classify_main` in the command window to start the program.
+The `window_classify_main` function serves to change the window users are classifying by looking for the optimal time window for classification, allowing users to add bins to either the beginning of each response or the end of each response Once the target directory has been set up with the [required file structure](https://github.com/NeuralStorm/MATLAB-offline-neural-analysis/blob/kevin-docs/docs/file_layout.md), and filenames match the [required naming conventions](https://github.com/NeuralStorm/MATLAB-offline-neural-analysis/blob/kevin-docs/docs/filename_convention.md), make sure that MONA is in your Matlab path and run `window_classify_main` in the command window to start the program.
 
 ## Program Workflow
 
@@ -31,6 +31,4 @@ The particular variables MONA will expect to find in `conf_window_classify.csv` 
 |`include_events`|If creating relative response, selects which events are used to generate it.|`String`
 |`boot_iterations`|# of bootstrap iterations to run.|`Integer`
 |`combine_chan_groups`|If `0`, keeps `chan_groups` separate. If `1`, combine all `chan_groups` together before classifying.|`Boolean`
-|`window_direction`|Specific window direction.|`to_response_start`/`to_response_end`
-
-## Output
+|`window_direction`|Specific directions towards which a bin is added.|`to_response_start`/`to_response_end`
