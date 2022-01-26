@@ -42,6 +42,8 @@ Each of these inputs and outputs is discussed in further detail down below, and 
 
 The program is divided into a number of modular components that each handle a different part of the greater pipeline, and which can each be run either on their own or through a batch process.
 
+![MONA Flowchart](https://imgur.com/ni2EvR3.png)
+
 1. **Loading and Parsing** (Handled by `parser_main.m`.)
     1. Request project directory containing config, labels, and raw data.
     2. Read in parser configuration (`conf_parser.csv`) and subject listing (`subjID.csv`).
