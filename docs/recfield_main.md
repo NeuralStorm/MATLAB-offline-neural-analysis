@@ -107,7 +107,7 @@ If selected, the cluster analysis will also output a `.csv` file containing the 
 These metrics are calculated the same way as the receptive field metrics are, but applied to a "cluster" response. Each calculation is prefaced with which cluster it came from, of which three are reported: first, last, and primary cluster (Column names may vary for each cluster, e.g. `first_duration`, `primary_duration`, and `last_duration`). The primary cluster is the cluster with the biggest response and used for the normalization calculations for the other clusters. Values to be expected in these results include:
 
 |Variable Name| Description |
-|:-----------:| :----------:|
+|:-----------| :----------|
 |`chan_group`|Name of channel group specified in labels file.|
 |`channel`|Channel name.|
 |`event`|Event name.|
