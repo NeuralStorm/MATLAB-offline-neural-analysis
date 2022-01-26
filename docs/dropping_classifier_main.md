@@ -1,6 +1,6 @@
 ## Summary
 
-The `dropping_classifier_main` function serves to . Once the required file structure outlined in the [general MONA documentation](https://github.com/NeuralStorm/MATLAB-offline-neural-analysis/blob/kevin-docs/README.md) is set up and filenames match the naming conventions described in the aforementioned documentation, make sure that MONA is in your Matlab path and run `dropping_classifier_main` in the command window to start the program.
+The `dropping_classifier_main` function serves to . Once the target directory has been set up with the [required file structure](https://github.com/NeuralStorm/MATLAB-offline-neural-analysis/blob/kevin-docs/docs/file_layout.md), and filenames match the [required naming conventions](https://github.com/NeuralStorm/MATLAB-offline-neural-analysis/blob/kevin-docs/docs/filename_convention.md), make sure that MONA is in your Matlab path and run `dropping_classifier_main` in the command window to start the program.
 
 ## Program Workflow
 
