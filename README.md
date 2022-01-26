@@ -116,24 +116,9 @@ The configuration files define a number of parameters that control whichever mai
 
 ### <a name="running-program">Running the Program</a>
 
-The Matlab Offline Neural Analysis programs makes a number of assumptions regarding the file layout and file naming conventions of the target directory, and these must be followed if the program is to run successfully. The layout should consist of a top level project folder containing the labels file for each subject and the configuration file for each main function. The project folder also contains a folder labeled `raw`, which should contain all of the directories listed in the configuration file. These should generally be named after individual subjects.
+The Matlab Offline Neural Analysis program makes a number of assumptions regarding the file layout of the target directory, and these must be followed if the program is to run successfully. The layout should consist of a top level project folder containing the labels file for each subject and the configuration file for each main function. The project folder also contains a folder labeled `raw`, which should contain all of the directories listed in the configuration file. These should generally be named after individual subjects. For an example and further information regarding the layout, click [here](https://github.com/NeuralStorm/MATLAB-offline-neural-analysis/blob/kevin-docs/docs/file_layout.md).
 
-To better illustrate this, here is a sample layout in which `conf_mainFn.csv` here is a stand-in for whichever main functions are to be run, such as `conf_recfield.csv` or `conf_mnts.csv`.
-
-```
-Project_ABC
-    ├──labels_ABC001.csv
-    ├──labels_ABC###.csv
-    ├──conf_parser.csv
-    ├──conf_mainFn.csv
-    ├──raw
-    |    ├──ABC001
-    |    |    └──supported raw file format (plx/pl2, rhs/rhd, etc)
-    |    ├──ABC###
-    |    |    └──supported raw file format (plx/pl2, rhs/rhd, etc)
-```
-
-Each of the files in the `raw` directory should in follow the Moxon Neurorobotics Laboratory's codebase-wide naming conventions, which dictates that file names consist of the study ID, the animal ID, the experimental group, the experimental condition, the recording session, the date, and key notes. More on that [here](https://github.com/NeuralStorm/MATLAB-offline-neural-analysis/blob/kevin-docs/docs/filename_convention.md).
+There is a similar requirement for the naming conventions of each of the files in the `raw` directory. File names should consist of the study ID, the animal ID, the experimental group, the experimental condition, the recording session, the date, and key notes. More on that [here](https://github.com/NeuralStorm/MATLAB-offline-neural-analysis/blob/kevin-docs/docs/filename_convention.md).
 
 Once the project directory is properly set up, calling `parser_main` in Matlab will open a file window. After the project directory is defined, the parser will generate new directories containing the raw data parsed into `.mat` files. From there, the process can be repeated with any other main function, each of which will either create its own directory, populate the graph directory, or both.
 
