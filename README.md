@@ -107,12 +107,12 @@ As electrodes may be placed in different locations within the brain, label files
 
 The configuration files define a number of parameters that control whichever main function (e.g. `parser_main.m`/`recfield_main.m`) is being run. Unlike the labels files, of which only one is necessary for each subject, the program requires a different config file for each such function, generally named `conf_<func>.m`, e.g. `conf_parser.csv`/`conf_recfield.csv`. For details on what the configuration file of each function should look like, click on the appropriate markdown (`.md`) file here:
 
-- [parsing_main.md](https://github.com/NeuralStorm/MATLAB-offline-neural-analysis/blob/kevin-docs/docs/parsing_main.md)
-- [recfield_main.md](https://github.com/NeuralStorm/MATLAB-offline-neural-analysis/blob/kevin-docs/docs/recfield_main.md)
-- [bootstrap_classifier_main.md](https://github.com/NeuralStorm/MATLAB-offline-neural-analysis/blob/kevin-docs/docs/bootstrap_classifier_main.md)
-- [dropping_classifier_main.md](https://github.com/NeuralStorm/MATLAB-offline-neural-analysis/blob/kevin-docs/docs/dropping_classifier_main.md).
-- [shannon_info_main.md](https://github.com/NeuralStorm/MATLAB-offline-neural-analysis/blob/kevin-docs/docs/shannon_info_main.md)
-- [window_classify_main.md](https://github.com/NeuralStorm/MATLAB-offline-neural-analysis/blob/kevin-docs/docs/window_classify_main.md).
+- [parsing_main.md](https://github.com/NeuralStorm/MATLAB-offline-neural-analysis/blob/kevin-docs/docs/parsing_main.md): Parses raw neural data into browseable `.mat` files.
+- [recfield_main.md](https://github.com/NeuralStorm/MATLAB-offline-neural-analysis/blob/kevin-docs/docs/recfield_main.md): Perform receptive field analysis, optionally cluster analysis & plotting of PSTH and recfield metrics.
+- [bootstrap_classifier_main.md](https://github.com/NeuralStorm/MATLAB-offline-neural-analysis/blob/kevin-docs/docs/bootstrap_classifier_main.md): Runs a Euclidean distance PSTH classifier on parsed neural data and optionally bootstraps it.
+- [dropping_classifier_main.md](https://github.com/NeuralStorm/MATLAB-offline-neural-analysis/blob/kevin-docs/docs/dropping_classifier_main.md): Drops channels according to user-defined metrics, then attempts classification to test how channel populations affect classification performance.
+- [window_classify_main.md](https://github.com/NeuralStorm/MATLAB-offline-neural-analysis/blob/kevin-docs/docs/window_classify_main.md): Adds bins to response start or end to test for optimal classification window.
+- [shannon_info_main.md](https://github.com/NeuralStorm/MATLAB-offline-neural-analysis/blob/kevin-docs/docs/shannon_info_main.md): Calculates spike timing & spike count entropy and mutual information.
 
 ### <a name="running-program">Running the Program</a>
 
