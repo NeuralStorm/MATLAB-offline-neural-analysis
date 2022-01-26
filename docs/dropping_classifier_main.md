@@ -1,6 +1,6 @@
 ## Summary
 
-The `dropping_classifier_main` function serves to . Once the target directory has been set up with the [required file structure](https://github.com/NeuralStorm/MATLAB-offline-neural-analysis/blob/kevin-docs/docs/file_layout.md), and filenames match the [required naming conventions](https://github.com/NeuralStorm/MATLAB-offline-neural-analysis/blob/kevin-docs/docs/filename_convention.md), make sure that MONA is in your Matlab path and run `dropping_classifier_main` in the command window to start the program.
+The `dropping_classifier_main` function serves to drop channels according to metrics defined in the configuration file and then attempting classification to test how channel populations affect classification performance. Once the target directory has been set up with the [required file structure](https://github.com/NeuralStorm/MATLAB-offline-neural-analysis/blob/kevin-docs/docs/file_layout.md), and filenames match the [required naming conventions](https://github.com/NeuralStorm/MATLAB-offline-neural-analysis/blob/kevin-docs/docs/filename_convention.md), make sure that MONA is in your Matlab path and run `dropping_classifier_main` in the command window to start the program.
 
 ## Program Workflow
 
@@ -30,6 +30,8 @@ The particular variables MONA will expect to find in `conf_dropping_classifier.c
 |`trial_range`|If creating relative response, selects which trials are used to generate it.|`Numerical`
 |`include_events`|If creating relative response, selects which events are used to generate it.|`String`
 |`combine_chan_groups`|If `0`, keeps `chan_groups` separate. If `1`, combine all `chan_groups` together before classifying.|`Boolean`
-|`drop_method`|Specific basis on which to drop channels.|`performance`/`random`/`corrected_info`/`percent_var`
+|`drop_method`|Specific basis on which to drop channels.[^metric]|`performance`/`random`/`corrected_info`/`percent_var`
+
+[^metric]: `performance` and `corrected_info` are pulled from the output of [bootstrap_classifier_main](https://github.com/NeuralStorm/MATLAB-offline-neural-analysis/blob/kevin-docs/docs/bootstrap_classifier_main.md), `percent_var` refers to the percent variance output from PCA, and `random` randomly drops channels and classifies.
 
 ## Output
