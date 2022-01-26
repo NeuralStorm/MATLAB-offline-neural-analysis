@@ -31,6 +31,6 @@ The particular variables MONA will expect to find in `conf_window_classify.csv` 
 |`include_events`|If creating relative response, selects which events are used to generate it.|`String`
 |`boot_iterations`|# of bootstrap iterations to run.|`Integer`
 |`combine_chan_groups`|If `0`, keeps `chan_groups` separate. If `1`, combine all `chan_groups` together before classifying.|`Boolean`
-|`window_direction`|Specific window direction.|`to_response_end`/`?`
+|`window_direction`|Specific window direction.|`to_response_start`/`to_response_end`
 
 ## Output
