@@ -9,8 +9,6 @@ The `sep_main` function analyzes sensory evoked potentials. Once the target dire
 1. Preliminary Handling
     1. Request project directory containing config, labels, and parsed data.
     2. Read in SEP analysis configuration (`conf_sep.csv`) and subject labels (`labels_subjID.csv`).
-    3. Generate relative response matrix using parsed neural data.
-    4. Save relative response matrix to PSTH format file.
 
 2. Create SEP table.
 3. Get unique channel groups and calculate total bins.
