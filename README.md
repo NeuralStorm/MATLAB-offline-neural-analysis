@@ -124,7 +124,7 @@ There is a similar requirement for the naming conventions of each of the files i
 
 Once the project directory is properly set up, calling `parser_main` in Matlab will open a file window. After the project directory is defined, the parser will generate new directories containing the raw data parsed into `.mat` files. From there, the process can be repeated with any other main function, each of which will either create its own directory, populate the graph directory, or both.
 
-|**Note!**|
+|**Warning!**|
 |:-|
 |If you re-run the program after previously generating files, MONA will **overwrite** existing files in the working directory. To avoid this, save your output after using any main function.
 
