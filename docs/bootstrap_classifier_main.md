@@ -1,8 +1,12 @@
 # bootstrap_classifier_main
 
-## Summary
+## Purpose
 
-The `bootstrap_classifier_main` function serves to run a Euclidean distance PSTH classifier on parsed neural data and optionally bootstrap it. The program requires the [Parallel Computing Toolbox](https://www.mathworks.com/products/parallel-computing.html). Once this dependency is installed, the target directory has been set up with the [required file structure](https://github.com/NeuralStorm/MATLAB-offline-neural-analysis/blob/kevin-docs/docs/file_layout.md), and filenames match the [required naming conventions](https://github.com/NeuralStorm/MATLAB-offline-neural-analysis/blob/kevin-docs/docs/filename_convention.md), make sure that MONA is in your Matlab path and run `bootstrap_classifier_main` in the command window to start the program.
+The `bootstrap_classifier_main` function serves to run a Euclidean distance PSTH classifier on parsed neural data and optionally bootstrap it.
+
+## Usage
+
+The program requires the [Parallel Computing Toolbox](https://www.mathworks.com/products/parallel-computing.html). Once this dependency is installed, the target directory has been set up with the [required file structure](https://github.com/NeuralStorm/MATLAB-offline-neural-analysis/blob/kevin-docs/docs/file_layout.md), and filenames match the [required naming conventions](https://github.com/NeuralStorm/MATLAB-offline-neural-analysis/blob/kevin-docs/docs/filename_convention.md), make sure that MONA is in your Matlab path and run `bootstrap_classifier_main` in the command window to start the program.
 
 ## Program Workflow
 
