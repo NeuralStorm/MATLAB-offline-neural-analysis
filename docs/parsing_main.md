@@ -1,6 +1,6 @@
 # parsing_main
 
-## Summary
+## Purpose
 
 This function takes in raw neural data (`.rhs`/`.rhd`/`.plx`/`.pl2`) and converts it into browseable `.mat` files. It is very important to make sure that the file structure and all filenames follow the conventions described in the [general MONA documentation](https://github.com/NeuralStorm/docs/edit/kev-rewrites/offline_analysis/readme.md). After making sure that MONA is on your Matlab path, run `parser_main` in the command window to start the program.
 
