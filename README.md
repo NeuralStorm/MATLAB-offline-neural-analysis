@@ -18,9 +18,9 @@ The Moxon Neurorobotics Laboratory maintains a [Codebase Master Document](https:
 
 ## <a name="Summary">Summary</a>
 
-This program takes raw neural data, converts it into relative response matrices, runs a number of analyses, and visualizes aspects of the processed data. MONA is intentionally modular and most of its functions and plots are entirely optional, and it is **strongly** recommended that users read this documentation in its entirety so as to understand how to opt in and out of specific aspects of this program.
+This program takes raw neural data, parses it, runs a number of analyses, and visualizes aspects of the processed data. MONA is intentionally modular and most of its functions and plots are entirely optional, and it is **strongly** recommended that users read this documentation as well as any linked readmes in their entirety so as to understand how to prepare a directory for use with MONA, how to opt in and out of specific options, and what purpose each main function serves.
 
-MONA accepts the following files, **which must be provided by the user**:
+MONA accepts the following types of files, **which must be provided by the user**:
 |Terminology          |Contents                                                |Accepted File Formats|
 |---------------------|--------------------------------------------------------|:---------------------:|
 |Raw neural data|Contains the raw data to be converted and analyzed.                  |`.plx`/`.pl2`/`.rhd`/`.rhs` [^dataform]     |
@@ -29,67 +29,15 @@ MONA accepts the following files, **which must be provided by the user**:
 
 [^dataform]: Please note that spike data will generally use the `.plx`/`.pl2` formats, while continuous data will generally use the `.rhd`/`.rhs` formats.
 
-Once properly run, **the program will return these files**:
-|Terminology                |Contents                          |Expected File Formats                         |
-|----------------|-------------------------------|:-----------------------------:|
-|PSTH Format[^rrm]|File containing relative response matrix as well as channel & event information.            |`.mat`            |
+Once properly run, complete pipeline will create a number of directories and output files, indexed [here](https://github.com/NeuralStorm/MATLAB-offline-neural-analysis/blob/kevin-docs/docs/file_layout.md).
 
-[^rrm]: Within the PSTH format files, users can find relative response matrices for the various regions included in a recording, event information featuring the timestamps and trial indices of different event types, channel information featuring the names assigned to each channel and some of the configurable parameters associated with each of them (e.g. was a given channel configured to be included in any analyses?), and some further mapping information. 
-
-Each of these inputs and outputs is discussed in further detail down below, and we again strongly encourage new users to read this documentation in its entirety to obtain a comprehensive understanding of what the program does and how to make proper use of it.
+[^rrm]: Within the PSTH format files, users can find relative response matrices for the various regions included in a recording, event information featuring the timestamps and trial indices of different event types, channel information featuring the names assigned to each channel and some of the configurable parameters associated with each of them (e.g. was a given channel configured to be included in any analyses?), and some further mapping information.
 
 ## <a name="Pipeline">Pipeline</a>
 
 The program is divided into a number of modular components that each handle a different part of the greater pipeline, and which can each be run either on their own or through a batch process.
 
 ![MONA Flowchart](https://imgur.com/ni2EvR3.png)
-
-1. **Loading and Parsing** (Handled by `parser_main.m`.)
-    1. Request project directory containing config, labels, and raw data.
-    2. Read in parser configuration (`conf_parser.csv`) and subject listing (`subjID.csv`).
-    3. Extract raw information from proprietary data formats.
-    4. Save said information to a `.mat` file.
-
-2. **Receptive Field Analysis** (Handled by `recfield_main.m`.)
-    1. Preliminary Handling
-        1. Request project directory containing config, labels, and raw data.
-        2. Read in receptive field analysis configuration (`conf_recfield.csv`) and subject labels (`labels_subjID.csv`).
-        3. Generate relative response matrix using raw neural data.
-        4. Save relative response matrix to PSTH format file.
-        
-    2. Actual Analysis
-        1. Receptive Field Analysis
-        2. Cluster Analysis (Optional.)
-
-    3. Plotting Routines
-        1. Plot peri-stimulus time histogram.
-        2. Plot receptive field measures.
-        3. Save all plots to the graph directory.
-    
-3. **Euclidean Classifier**
-    1. Preliminary Handling
-        1. Request project directory containing config, labels, and parsed data.
-        2. Read in receptive field analysis configuration (`conf_bootstrap_classifier.csv`) and subject labels (`labels_subjID.csv`).
-        3. Generate relative response matrix using using parsed neural data.
-
-    2. Classification
-        1. Run Euclidean Distance PSTH classifier.
-        2. Run bootstrap (Optional, only if `bootstrap_iterations` > 0).
-
-4. **Shannon Mutual Information** (Handled by `shannon_info_main.m`.)
-    1. Preliminary Handling
-        1. Request project directory containing config, labels, and raw data.
-        2. Read in receptive field analysis configuration (`conf_shannon_info.csv`) and subject labels (`labels_subjID.csv`).
-        3. Load relative response matrix from directory listed in the config file. [^rrmsmi]
-        4. Save relative response matrix to PSTH format file.
-        
-    2. Actual Analysis
-        1. Calculate Shannon Mutual Information.
-
-5. **Component Analysis (PCA/ICA)** (Handled by `mnts_main.m`.)
-
-[^boot]: If `bootstrap_iterations` is greater than `0`, bootstrap classifier.
-[^rrmsmi]: If the relative response matrix cannot be found in the specified directory, the program will attempt to generate it at this point.
 
 ## <a name="Terminology">Terminology</a>
 
@@ -115,10 +63,14 @@ The configuration files define a number of parameters that control whichever mai
 - [dropping_classifier_main.md](https://github.com/NeuralStorm/MATLAB-offline-neural-analysis/blob/kevin-docs/docs/dropping_classifier_main.md): Drops select channels to test for impact of channel population on classification performance. 
 - [window_classify_main.md](https://github.com/NeuralStorm/MATLAB-offline-neural-analysis/blob/kevin-docs/docs/window_classify_main.md): Adds bins to response start or end to test for optimal classification window.
 - [shannon_info_main.md](https://github.com/NeuralStorm/MATLAB-offline-neural-analysis/blob/kevin-docs/docs/shannon_info_main.md): Calculates spike timing & spike count entropy and mutual information.
+- [spike_extraction_main.md](https://github.com/NeuralStorm/MATLAB-offline-neural-analysis/blob/kevin-docs/docs/spike_extraction_main.md): Extracts spikes from continuous neural data.
+- [sep_main.md](https://github.com/NeuralStorm/MATLAB-offline-neural-analysis/blob/kevin-docs/docs/sep_main.md): Analyzes sensory evoked potentials in parsed continuous data.
+- [pca_main.md](https://github.com/NeuralStorm/MATLAB-offline-neural-analysis/blob/kevin-docs/docs/pca_main.md): Performs principal component analysis, optionally filters principal components.
+- [ica_main.md](https://github.com/NeuralStorm/MATLAB-offline-neural-analysis/blob/kevin-docs/docs/ica_main.md): Performs independent component analysis.
 
 ### <a name="running-program">Running the Program</a>
 
-The Matlab Offline Neural Analysis program makes a number of assumptions regarding the file layout of the target directory, and these must be followed if the program is to run successfully. The layout should consist of a top level project folder containing the labels file for each subject and the configuration file for each main function. The project folder also contains a folder labeled `raw`, which should contain all of the directories listed in the configuration file. These should generally be named after individual subjects. For an example and further information regarding the layout, click [here](https://github.com/NeuralStorm/MATLAB-offline-neural-analysis/blob/kevin-docs/docs/file_layout.md).
+The Matlab Offline Neural Analysis program has a number of requirements regarding the file layout of the target directory, and these must be followed if the program is to run successfully. The layout should consist of a top level project folder containing the labels file for each subject and the configuration file for each main function. The project folder also contains a folder labeled `raw`, which should contain all of the directories listed in the configuration file. These should generally be named after individual subjects. For an example and further information regarding the layout, click [here](https://github.com/NeuralStorm/MATLAB-offline-neural-analysis/blob/kevin-docs/docs/file_layout.md).
 
 There is a similar requirement for the naming conventions of each of the files in the `raw` directory. File names should consist of the study ID, the animal ID, the experimental group, the experimental condition, the recording session, the date, and key notes. More on that [here](https://github.com/NeuralStorm/MATLAB-offline-neural-analysis/blob/kevin-docs/docs/filename_convention.md).
 
@@ -127,7 +79,3 @@ Once the project directory is properly set up, calling `parser_main` in Matlab w
 |**Warning!**|
 |:-|
 |If you re-run the program after previously generating files, MONA will **overwrite** existing files in the working directory. To avoid this, save your output after using any main function.
-
-[^negn]: Must be negative.
-[^posn]: Must be positive.
-[^negpre]: Must be negative if it precedes event onset.
