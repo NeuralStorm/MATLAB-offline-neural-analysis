@@ -1,3 +1,5 @@
+# Labels file guide
+
 ## Purpose
 As electrodes may be placed in different locations within the brain, label files are needed to allow end users to communicate some organization of these electrodes and the different groups they comprise to the program.
 
