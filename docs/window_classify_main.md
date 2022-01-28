@@ -1,15 +1,12 @@
-## Summary
+# window_classify_main
 
-The `window_classify_main` function serves to change the window users are classifying by looking for the optimal time window for classification, allowing users to add bins to either the beginning of each response or the end of each response Once the target directory has been set up with the [required file structure](https://github.com/NeuralStorm/MATLAB-offline-neural-analysis/blob/kevin-docs/docs/file_layout.md), and filenames match the [required naming conventions](https://github.com/NeuralStorm/MATLAB-offline-neural-analysis/blob/kevin-docs/docs/filename_convention.md), make sure that MONA is in your Matlab path and run `window_classify_main` in the command window to start the program.
+## Purpose
 
-## Program Workflow
+The `window_classify_main` function serves to change the window users are classifying by looking for the optimal time window for classification, allowing users to add bins to either the beginning of each response or the end of each response.
 
-1. Preliminary Handling
-    1. Request project directory containing config, labels, and parsed data.
-    2. Read in window classifier configuration (`conf_window_classify.csv`) and subject labels (`labels_subjID.csv`).
-    3. Generate relative response matrix using parsed neural data.
+## Usage
 
-2. Classification
+Once the target directory has been set up with the [required file structure](https://github.com/NeuralStorm/MATLAB-offline-neural-analysis/blob/kevin-docs/docs/file_layout.md), and filenames match the [required naming conventions](https://github.com/NeuralStorm/MATLAB-offline-neural-analysis/blob/kevin-docs/docs/filename_convention.md), make sure that MONA is in your Matlab path and run `window_classify_main` in the command window to start the program.
 
 ## Configuration File
 
