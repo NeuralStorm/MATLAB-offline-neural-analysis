@@ -16,7 +16,7 @@ The `pca_main` function performs principal component analysis on feature sets st
 The particular variables MONA will expect to find in `conf_pca.csv` are:
 
 |Variable Name|Description| Format |
-|:-----------:|:--:| :----------:|
+|:-----------|:--| :----------:|
 |`feature_filter`|If `all`, keep all PCs after PCA. If `pcs`, keep # specified by `feature_value`. If `percent_var`, use PCs that meet % set by `feature_value` |`all`/`pcs`/`percent_var`
 |`feature_value`|If `feature_filter` = `pcs`, # of PCs to keep. If `percent_var`, % of variance explained by PCs to be kept.|`Integer`
 |`use_z_mnts`|If `0`, use MNTS for PCA input. If `1`, use `z_mnts`.|`Boolean`
