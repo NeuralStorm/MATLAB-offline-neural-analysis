@@ -1,8 +1,12 @@
 # ica_main
 
-## Summary
+## Purpose
 
-The `ica_main` function performs independent component analysis. Once the target directory has been set up with the [required file structure](https://github.com/NeuralStorm/MATLAB-offline-neural-analysis/blob/kevin-docs/docs/file_layout.md), and filenames match the [required naming conventions](https://github.com/NeuralStorm/MATLAB-offline-neural-analysis/blob/kevin-docs/docs/filename_convention.md), make sure that MONA is in your Matlab path and run `ica_main` in the command window to start the program.
+The `ica_main` function performs independent component analysis.
+
+## Usage
+
+Once the target directory has been set up with the [required file structure](https://github.com/NeuralStorm/MATLAB-offline-neural-analysis/blob/kevin-docs/docs/file_layout.md), and filenames match the [required naming conventions](https://github.com/NeuralStorm/MATLAB-offline-neural-analysis/blob/kevin-docs/docs/filename_convention.md), make sure that MONA is in your Matlab path and run `ica_main` in the command window to start the program.
 
 ## Configuration File
 
