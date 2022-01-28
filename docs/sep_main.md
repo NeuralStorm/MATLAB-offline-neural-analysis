@@ -18,13 +18,13 @@ These are the parameters MONA will expect to see in `conf_sep.csv`:
 |`include_dir`|Whether the directory ought to be searched.|`Boolean`
 |`include_sessions`|Controls which recording sessions are analyzed.|`Array`
 |`sep_analysis`|Controls if auto-analysis is performed on each SEP.|`Boolean`
-|`baseline_start`|Defines the beginning of the time window from which baseline measures are taken (pre-stimulation).|`Double` 
-|`baseline_end`|Defines the end of the time window from which baseline measures are taken (pre-stimulation).|`Double`
-|`threshold_scalar`|# of standard deviations added to background average to generate a threshold.|`Double`
-|`early_response_start`|Start time of response window 1 (post-stimulation).|`Double`
-|`early_response_start`|End time of response window 1 (post-stimulation).|`Double`
-|`late_response_start`|Start time of response window 2 (post-stimulation).|`Double`
-|`late_response_end`|End time of response window 2 (post-stimulation).|`Double`
+|`baseline_start`|Defines the beginning of the time window from which baseline measures are taken (pre-stimulation).|`Float` 
+|`baseline_end`|Defines the end of the time window from which baseline measures are taken (pre-stimulation).|`Float`
+|`threshold_scalar`|# of standard deviations added to background average to generate a threshold.|`Float`
+|`early_response_start`|Start time of response window 1 (post-stimulation).|`Float`
+|`early_response_start`|End time of response window 1 (post-stimulation).|`Float`
+|`late_response_start`|Start time of response window 2 (post-stimulation).|`Float`
+|`late_response_end`|End time of response window 2 (post-stimulation).|`Float`
 |`make_sep_graphs`|Controls whether SEP figures are generated.|`Boolean`
 |`sub_rows`|Defines # of rows displayed in the SEP subplots.|`Integer`
 |`sub_cols`|Defines # of columns displayed in the SEP subplots.|`Integer`
