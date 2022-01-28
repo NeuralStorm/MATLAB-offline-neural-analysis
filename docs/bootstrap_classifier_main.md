@@ -16,7 +16,7 @@ The program requires the [Parallel Computing Toolbox](https://www.mathworks.com/
     3. Generate relative response matrix using parsed neural data.
 
 2. Classification
-    1. Run Euclidean Distance PSTH classifier.
+    1. Run PSTH classifier.
     2. Run bootstrap (Optional, only if `bootstrap_iterations` > 0).
 
 ## Configuration File
