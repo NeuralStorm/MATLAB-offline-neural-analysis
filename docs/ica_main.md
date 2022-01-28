@@ -12,8 +12,14 @@ The particular variables MONA will expect to find in `conf_ica.csv` are:
 
 |Variable Name|Description| Format |
 |:-----------:|:--:| :----------:|
-
-## Output
-
-|Variable Name| Description |
-|:-----------| :----------|
+|`ic_pc`|# of PCs to use in ICA. `0` = no PCA.|`Integer`
+|`extended`|Perform tanh() "extended-ICA" with sign estimation this # of training blocks. If greater than `0`, automatically estimate the number of sub-Gaussian sources. If less, fix # of sub-Gaussian comps to -#.|`Integer`
+|`sphering`|Flag sphering of data|`on`/`off`
+|`anneal`|Annealing constant between (0,1], controls convergence speed.|`Float`
+|`anneal_deg`|Degrees weight change for annealing.|`Integer`
+|`stop`|Defines the weight change value at which training will be stopped.|`Float`
+|`max_steps`|Maximum number of ICA training steps.|`Integer`
+|`bias`|Whether to perform bias adjustment.|`on`/`off`
+|`momentum`|Training momentum, must be between (0,1].|`Float`
+|`rnd_reset`|Reset the random seed. If `off`, ICA will always return the same decomposition|`on`/`off`
+|`verbose`|Toggle ASCII message throughout run.|`on`/`off`
