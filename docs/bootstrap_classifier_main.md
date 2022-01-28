@@ -2,7 +2,7 @@
 
 ## Purpose
 
-The `bootstrap_classifier_main` function serves to run a Euclidean distance PSTH classifier on parsed neural data and optionally bootstrap it.
+The `bootstrap_classifier_main` function serves to run a PSTH classifier on parsed neural data and optionally bootstrap it.
 
 ## Usage
 
