@@ -1,4 +1,6 @@
-# Purpose
+# Terminology Guide
+
+## Summary
 
 We generally seek to describe selections of data using precise words. While there may not always be a perfect word that can capture all the possibilities of what a user might encounter throughout the course of using MONA, you can find an index of common terms whose use and meaning has been standardized for the purposes of this documentation here:
 
