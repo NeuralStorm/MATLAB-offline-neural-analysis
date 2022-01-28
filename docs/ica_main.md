@@ -11,7 +11,7 @@ The `ica_main` function performs independent component analysis on feature sets 
 The particular variables MONA will expect to find in `conf_ica.csv` are:
 
 |Variable Name|Description| Format |
-|:-----------:|:--:| :----------:|
+|:-----------|:--| :----------:|
 |`ic_pc`|# of PCs to use in ICA. `0` = no PCA.|`Integer`
 |`extended`|Perform tanh() "extended-ICA" with sign estimation this # of training blocks. If greater than `0`, automatically estimate the number of sub-Gaussian sources. If less, fix # of sub-Gaussian comps to -#.|`Integer`
 |`sphering`|Flag sphering of data|`on`/`off`
