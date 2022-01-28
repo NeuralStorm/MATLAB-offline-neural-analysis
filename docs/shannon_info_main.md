@@ -10,7 +10,8 @@ The `shannon_info_main` function serves to calculate the entropy and mutual info
     3. Generate relative response matrix using parsed neural data.
 
 2. Information Theory
-    1. Calculate Shannon Mutual Information
+    1. Calculate Shannon Entropy for count & timing.
+    2. Calculate Shannon Mutual Information for count & timing.
 
 ## Configuration File
 
