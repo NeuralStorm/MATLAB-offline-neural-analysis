@@ -3,6 +3,7 @@
 We generally seek to describe selections of data using precise words. While there may not always be a perfect word that can capture all the possibilities of what a user might encounter throughout the course of using MONA, you can find an index of common terms whose use and meaning has been standardized for the purposes of this documentation here:
 
 ## Fixed Terminology
+
 |Term         | Description |Abbreviations|
 |:-----------|:----------|:---------------------|
 |Bin| Temporal resolution of data. |N/A|
@@ -16,5 +17,8 @@ We generally seek to describe selections of data using precise words. While ther
 |Feature|Abstraction from the raw data that represent some variable of interest, such as the firing rate of a single neuron or the power in a particular frequency band. Features can be endless -- whatever variables the user creates from their data. Note that features can also be derived from population functions. |feat|
 
 ## Miscellaneous Terminology
+
+|Term         | Description |Abbreviations|
+|:-----------|:----------|:---------------------|
 |Main|A function that runs a pre-defined  data analysis routine.|N/A|
 |Pipeline|A set of routines generally defined by a user or programmer that strings together multiple mains.|N/A|
