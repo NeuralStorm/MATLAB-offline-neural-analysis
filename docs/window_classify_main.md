@@ -6,7 +6,7 @@ The `window_classify_main` function serves to change the window users are classi
 
 1. Preliminary Handling
     1. Request project directory containing config, labels, and parsed data.
-    2. Read in bootstrap classifier configuration (`conf_window_classify.csv`) and subject labels (`labels_subjID.csv`).
+    2. Read in window classifier configuration (`conf_window_classify.csv`) and subject labels (`labels_subjID.csv`).
     3. Generate relative response matrix using parsed neural data.
 
 2. Classification
