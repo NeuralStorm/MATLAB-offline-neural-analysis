@@ -1,4 +1,6 @@
-# Required Base Layout
+# File Layout Guide
+
+## Required Base Layout
 
 The Matlab Offline Neural Analysis program makes a number of assumptions regarding the file layout of the target directory, and these must be followed if the program is to run successfully. The layout should consist of a top level project folder containing the labels file for each subject and the configuration file for each main function. The project folder also contains a folder labeled `raw`, which should contain all of the directories listed in the configuration file. These should generally be named after individual subjects.
 
@@ -20,6 +22,8 @@ Project_ABC
 |**Warning!**|
 |:-|
 |If you re-run the program after previously generating files, MONA will **overwrite** existing files in the working directory. To avoid this, save your output after using any main function.
+
+## Expected Output Layout
 
 Here is a comprehensive sample layout of a directory that has been run through the entire MONA pipeline:
 
