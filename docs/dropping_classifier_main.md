@@ -1,6 +1,12 @@
-## Summary
+# dropping_classifier_main
 
-The `dropping_classifier_main` function serves to drop channels according to metrics defined in the configuration file and then attempting classification to test how channel populations affect classification performance. Once the target directory has been set up with the [required file structure](https://github.com/NeuralStorm/MATLAB-offline-neural-analysis/blob/kevin-docs/docs/file_layout.md), and filenames match the [required naming conventions](https://github.com/NeuralStorm/MATLAB-offline-neural-analysis/blob/kevin-docs/docs/filename_convention.md), make sure that MONA is in your Matlab path and run `dropping_classifier_main` in the command window to start the program.
+## Purpose
+
+The `dropping_classifier_main` function serves to drop channels according to metrics defined in the configuration file and then attempting classification to test how channel populations affect classification performance.
+
+## Usage
+
+Once the target directory has been set up with the [required file structure](https://github.com/NeuralStorm/MATLAB-offline-neural-analysis/blob/kevin-docs/docs/file_layout.md), and filenames match the [required naming conventions](https://github.com/NeuralStorm/MATLAB-offline-neural-analysis/blob/kevin-docs/docs/filename_convention.md), make sure that MONA is in your Matlab path and run `dropping_classifier_main` in the command window to start the program.
 
 ## Configuration File
 
