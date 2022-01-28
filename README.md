@@ -7,7 +7,7 @@ The Moxon Neurorobotics Laboratory maintains a [Codebase Master Document](https:
 
 ## Content Guide
 
-- **[Summary](#Summary)**: Explanation of program purpose, its required inputs, and its expected outputs.
+- **[Purpose](#Purpose)**: Explanation of program purpose, its required inputs, and its expected outputs.
 - **[Pipeline](#Pipeline)**: Ordered list of what the program does when.
 - **[Terminology](#Terminology)**: Index of key terms commonly used in MONA documentation.
 - **[Usage Guide](#Usage-Guide)**: How to use the program.
@@ -16,7 +16,7 @@ The Moxon Neurorobotics Laboratory maintains a [Codebase Master Document](https:
     - **[Config File](#Config-File)**: Explanation of the config file and its contents.
     - **[Running the Program](#Running-Program)**: Breakdown of how the program is run.
 
-## <a name="Summary">Summary</a>
+## <a name="Purpose">Purpose</a>
 
 This program takes raw neural data, parses it, runs a number of analyses, and visualizes aspects of the processed data. MONA is intentionally modular and most of its functions and plots are entirely optional, and it is **strongly** recommended that users read this documentation as well as any linked readmes in their entirety so as to understand how to prepare a directory for use with MONA, how to opt in and out of specific options, and what purpose each main function serves.
 
