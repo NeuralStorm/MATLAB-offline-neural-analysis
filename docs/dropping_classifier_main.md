@@ -2,15 +2,6 @@
 
 The `dropping_classifier_main` function serves to drop channels according to metrics defined in the configuration file and then attempting classification to test how channel populations affect classification performance. Once the target directory has been set up with the [required file structure](https://github.com/NeuralStorm/MATLAB-offline-neural-analysis/blob/kevin-docs/docs/file_layout.md), and filenames match the [required naming conventions](https://github.com/NeuralStorm/MATLAB-offline-neural-analysis/blob/kevin-docs/docs/filename_convention.md), make sure that MONA is in your Matlab path and run `dropping_classifier_main` in the command window to start the program.
 
-## Program Workflow
-
-1. Preliminary Handling
-    1. Request project directory containing config, labels, and parsed data.
-    2. Read in bootstrap classifier configuration (`conf_dropping_classifier.csv`) and subject labels (`labels_subjID.csv`).
-    3. Generate relative response matrix using parsed neural data.
-
-2. Classification
-
 ## Configuration File
 
 The particular variables MONA will expect to find in `conf_dropping_classifier.csv` are:
