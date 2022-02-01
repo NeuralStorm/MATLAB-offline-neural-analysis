@@ -11,6 +11,7 @@ The Moxon Neurorobotics Laboratory maintains a [Codebase Master Document](https:
 - **[Pipeline](#Pipeline)**: Ordered list of what the program does when.
 - **[Terminology](#Terminology)**: Index of key terms commonly used in MONA documentation.
 - **[Usage Guide](#Usage-Guide)**: How to use the program.
+    - **[Dependencies](#Dependencies)**: Toolboxes required to run the MONA pipeline.
     - **[Installation](#Installation)**: How to install the program.
     - **[Labels File](#Labels-File)**: Explanation of the labels file and its contents.
     - **[Config File](#Config-File)**: Explanation of the config file and its contents.
@@ -44,6 +45,17 @@ The program is divided into a number of modular components that each handle a di
 We generally seek to describe selections of data using precise words. While there may not always be a perfect word that can capture all the possibilities of what a user might encounter throughout the course of using MONA, you can find an index of common terms whose use and meaning has been standardized for the purposes of this documentation [here](https://github.com/NeuralStorm/MATLAB-offline-neural-analysis/blob/kevin-docs/docs/terminology.md).
 
 ## <a name="Usage-Guide">Usage Guide</a>
+
+### <a name="Dependencies">Dependencies</a>
+
+In order to function properly, MONA requires that users install the following toolboxes:
+
+|Dependencies|Description|Link|
+|:-|:-|:-
+|Statistics and Machine Learning Toolbox|Analyzes and models data using statistics and machine learning.|[Mathworks Store](https://www.mathworks.com/products/statistics.html).
+|Curve Fitting Toolbox|Fits curves and surfaces to data using regression, interpolation, and smoothing.|[Mathworks Store](https://www.mathworks.com/products/curvefitting.html).
+|Scrollsubplot|Extends subplot to infinite canvas.|[Matlab Central](https://www.mathworks.com/matlabcentral/fileexchange/7730-scrollsubplot).
+|Parallel Computing Toolbox|Performs parallel computations on multicore computers, GPUs, and clusters.|[Mathworks Store](https://www.mathworks.com/products/parallel-computing.html).
 
 ### <a name="Installation">Installation</a>
 
