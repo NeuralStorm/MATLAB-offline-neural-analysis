@@ -10,7 +10,7 @@ Once the target directory has been set up with the [required file structure](htt
 
 ## Configuration File
 
-The particular variables MONA will expect to find in `conf_window_classify.csv` are:
+The particular variables MONA will expect to find in `conf_window_classifier.csv` are:
 
 |Variable Name|Description| Format |
 |:-----------|:--| :----------:|
