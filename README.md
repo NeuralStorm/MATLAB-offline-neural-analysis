@@ -11,7 +11,7 @@ The Moxon Neurorobotics Laboratory maintains a [Codebase Master Document](https:
 - **[Pipeline](#Pipeline)**: Ordered list of what the program does when.
 - **[Terminology](#Terminology)**: Index of key terms commonly used in MONA documentation.
 - **[Usage Guide](#Usage-Guide)**: How to use the program.
-    - **[Dependencies](#Dependencies)**: Toolboxes required to run the MONA pipeline.
+    - **[Dependencies](#Dependencies)**: Dependencies required to run the MONA pipeline.
     - **[Installation](#Installation)**: How to install the program.
     - **[Labels File](#Labels-File)**: Explanation of the labels file and its contents.
     - **[Config File](#Config-File)**: Explanation of the config file and its contents.
@@ -48,14 +48,14 @@ We generally seek to describe selections of data using precise words. While ther
 
 ### <a name="Dependencies">Dependencies</a>
 
-In order to function properly, MONA requires that users install the following toolboxes:
+In order to function properly, MONA requires that users install the following prerequisites:
 
 |Dependencies|Description|Link|
 |:-|:-|:-
-|Statistics and Machine Learning Toolbox|Analyzes and models data using statistics and machine learning.|[Mathworks Store](https://www.mathworks.com/products/statistics.html).
-|Curve Fitting Toolbox|Fits curves and surfaces to data using regression, interpolation, and smoothing.|[Mathworks Store](https://www.mathworks.com/products/curvefitting.html).
+|Statistics and Machine Learning Toolbox|Analyzes and models data.|[Mathworks Store](https://www.mathworks.com/products/statistics.html).
+|Curve Fitting Toolbox|Fits curves and surfaces to data.|[Mathworks Store](https://www.mathworks.com/products/curvefitting.html).
 |Scrollsubplot|Extends subplot to infinite canvas.|[Matlab Central](https://www.mathworks.com/matlabcentral/fileexchange/7730-scrollsubplot).
-|Parallel Computing Toolbox|Performs parallel computations on multicore computers, GPUs, and clusters.|[Mathworks Store](https://www.mathworks.com/products/parallel-computing.html).
+|Parallel Computing Toolbox|Enables parallel computations on multi-core PCs.|[Mathworks Store](https://www.mathworks.com/products/parallel-computing.html).
 
 ### <a name="Installation">Installation</a>
 
