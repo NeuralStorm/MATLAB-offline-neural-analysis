@@ -11,8 +11,8 @@ The Moxon Neurorobotics Laboratory maintains a [Codebase Master Document](https:
 - **[Pipeline](#Pipeline)**: Ordered list of what the program does when.
 - **[Terminology](#Terminology)**: Index of key terms commonly used in MONA documentation.
 - **[Usage Guide](#Usage-Guide)**: How to use the program.
-    - **[Dependencies](#Dependencies)**: Dependencies required to run the MONA pipeline.
     - **[Installation](#Installation)**: How to install the program.
+    - **[Dependencies](#Dependencies)**: Dependencies required to run the MONA pipeline.
     - **[Labels File](#Labels-File)**: Explanation of the labels file and its contents.
     - **[Config File](#Config-File)**: Explanation of the config file and its contents.
     - **[Running the Program](#Running-Program)**: Breakdown of how the program is run.
@@ -46,6 +46,10 @@ We generally seek to describe selections of data using precise words. While ther
 
 ## <a name="Usage-Guide">Usage Guide</a>
 
+### <a name="Installation">Installation</a>
+
+To install this program, follow the steps outlined in the Git tutorial within the [Codebase Master Document](https://ucdavis.box.com/s/icsjygmi2bkcv1275xskigibiewahd3p).
+
 ### <a name="Dependencies">Dependencies</a>
 
 In order to function properly, MONA requires that users install the following prerequisites:
@@ -56,10 +60,6 @@ In order to function properly, MONA requires that users install the following pr
 |Curve Fitting Toolbox|Fits curves and surfaces to data.|[Mathworks Store](https://www.mathworks.com/products/curvefitting.html).
 |Scrollsubplot|Extends subplot to infinite canvas.|[Matlab Central](https://www.mathworks.com/matlabcentral/fileexchange/7730-scrollsubplot).
 |Parallel Computing Toolbox|Enables parallel computations on multi-core PCs.|[Mathworks Store](https://www.mathworks.com/products/parallel-computing.html).
-
-### <a name="Installation">Installation</a>
-
-To install this program, follow the steps outlined in the Git tutorial within the [Codebase Master Document](https://ucdavis.box.com/s/icsjygmi2bkcv1275xskigibiewahd3p).
 
 ### <a name="Labels-File">Labels File</a>
 
