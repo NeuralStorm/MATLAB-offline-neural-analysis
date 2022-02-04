@@ -34,7 +34,7 @@ These are the parameters MONA will expect to see in `conf_sep.csv`:
 |`sub_cols`|Defines # of columns displayed in the SEP subplots.|`Integer`
 |`visible_plot`|Controls whether plots are displayed as plotting routine proceeds.|`Boolean`
 |`filter_data`|Controls whether continuous data is filtered.|`Boolean`
-|`notch_filt`|Controls whether notch filter is used when filtering.|`Boolean`
+|`notch_filt`|Controls whether [notch filter](https://www.everythingrf.com/community/what-is-a-notch-filter) is used when filtering.|`Boolean`
 |`notch_freq`|Notch filter frequency.|`Integer`
 |`notch_bandwidth`|Notch filter bandwidth.|`Integer`
 |`filt_type`|Filter type.|`bandpass`/`high`/`low`
