@@ -2,7 +2,8 @@ function [label_table] = load_labels(dir_path, csv_id)
     %% Load labels file
     csv_file = fullfile(dir_path, csv_id);
     if ~isfile(csv_file)
-        error('Must have label file to label')
+        labels_err = "Missing expected labels " + csv_file;
+        error(labels_err);
     end
     label_table = readtable(csv_file);
 

@@ -1,11 +1,10 @@
-function [] = mnts_main(varargin)
-
+function [] = pca_main(varargin)
     %% Get data directory
     project_path = get_project_path(varargin);
     start_time = tic;
 
     %% Import psth config and removes ignored animals
-    config = import_config(project_path, 'mnts');
+    config = import_config(project_path, 'pca');
     config(config.include_dir == 0, :) = [];
 
     %% Creating paths to do psth formatting
@@ -85,49 +84,6 @@ function [] = mnts_main(varargin)
                 handle_ME(ME, pca_psth_failed_path, [curr_dir, '_missing_dir.mat']);
             end
         end
-
-        e_msg_1 = 'No data directory to find MNTSs';
-        if dir_config.ic_analysis
-            [ica_path, ica_failed_path] = create_dir(mnts_path, 'ica');
-            export_params(ica_path, 'ica', config);
-            try
-                %% Check to make sure paths exist for analysis and create save path
-                e_msg_2 = ['No ', curr_dir, ' mnts data for ica'];
-                dir_mnts_path = enforce_dir_layout(data_path, curr_dir, mnts_failed_path, e_msg_1, e_msg_2);
-                [dir_save_path, dir_failed_path] = create_dir(ica_path, curr_dir);
-
-                %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-                %             ICA            %%
-                %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-                batch_ica(dir_save_path, dir_failed_path, dir_mnts_path, ...
-                    curr_dir, dir_config)
-            catch ME
-                handle_ME(ME, ica_failed_path, [curr_dir, '_missing_dir.mat']);
-            end
-        end
-
-        e_msg_1 = 'No data directory to find ICA MNTSs';
-        if dir_config.convert_mnts_psth
-            [ica_psth_path, ica_psth_failed_path] = create_dir(project_path, 'ica_psth');
-            export_params(ica_psth_path, 'ica_psth', config);
-            try
-                %% Check to make sure paths exist for analysis and create save path
-                e_msg_2 = ['No ', curr_dir, ' ica mnts data to convert to mnts'];
-                ica_path = [mnts_path, '/ica'];
-                dir_ica_path = enforce_dir_layout(ica_path, curr_dir, ica_psth_failed_path, e_msg_1, e_msg_2);
-                [ica_data_path, ~] = create_dir(ica_psth_path, 'data');
-                [dir_save_path, dir_failed_path] = create_dir(ica_data_path, curr_dir);
-
-                %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-                %          ICA PSTH          %%
-                %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-                batch_mnts_to_psth(dir_save_path, dir_failed_path, dir_ica_path, ...
-                    curr_dir, 'ica', dir_config)
-            catch ME
-                handle_ME(ME, ica_psth_failed_path, [curr_dir, '_missing_dir.mat']);
-            end
-        end
-
     end
     toc(start_time);
 end

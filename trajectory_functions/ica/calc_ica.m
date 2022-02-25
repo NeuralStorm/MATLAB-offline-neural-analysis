@@ -4,7 +4,6 @@ function [ica_results, ic_log] = calc_ica(chan_group_log, mnts_struct, ...
     %TODO add option to go straight from relative response to ica with no PCA middleman
     % TODO add check to make sure ica input has enough data
     ica_results = struct;
-    labeled_ics = struct;
     ic_log = table();
     unique_ch_groups = unique(chan_group_log.chan_group);
     for ch_group_i = 1:numel(unique_ch_groups)
@@ -18,6 +17,7 @@ function [ica_results, ic_log] = calc_ica(chan_group_log, mnts_struct, ...
             continue
         end
 
+        labeled_ics = chan_group_log(strcmpi(chan_group_log.chan_group, ch_group), :);
         ica_input = mnts_struct.(ch_group).mnts;
         if apply_z_score
             ica_input = zscore(ica_input)';
@@ -63,23 +63,16 @@ function [ica_results, ic_log] = calc_ica(chan_group_log, mnts_struct, ...
         for component_i = 1:tot_components
             ic_names{component_i} = [ch_group, '_ic_', num2str(component_i)];
         end
-        ch_group_list = chan_group_log(1:tot_components, :);
-        ch_group_list.channel = ic_names; ch_group_list.user_channels = ic_names;
-        ch_group_list.channel_data = num2cell(mnts, 1)';
-        labeled_ics.(ch_group) = ch_group_list;
-
-        ic_log = [ic_log; ch_group_list];
+        labeled_ics = labeled_ics(1:tot_components, :);
+        labeled_ics.channel = ic_names;
+        labeled_ics.user_channels = ic_names;
+        ic_log = [ic_log; labeled_ics];
 
         %% Store ICA results
-        ica_results.(ch_group).ica_weights = ica_weights;
-        ica_results.(ch_group).ica_sphere = ica_sphere;
-        ica_results.(ch_group).component_variance = compvars;
-        ica_results.(ch_group).bias = bias;
-        ica_results.(ch_group).signs = signs;
-        ica_results.(ch_group).learning_rates = learning_rates;
-        ica_results.(ch_group).activations = activations;
-        ica_results.(ch_group).mnts = mnts;
-        ica_results.(ch_group).chan_order = ic_names;
-        ica_results.(ch_group).orig_chan_order = mnts_struct.(ch_group).orig_chan_order;
+        ica_results.(ch_group) = struct('ica_weights', {ica_weights}, ...
+            'ica_sphere', {ica_sphere}, 'component_variance', {compvars}, ...
+            'bias', {bias}, 'signs', {signs}, 'learning_rates', {learning_rates}, ...
+            'activations', {activations}, 'mnts', {mnts}, 'chan_order', {ic_names}, ...
+            'orig_chan_order', {mnts_struct.(ch_group).orig_chan_order});
     end
 end

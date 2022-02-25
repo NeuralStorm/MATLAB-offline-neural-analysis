@@ -76,7 +76,7 @@ line([late_window(2) late_window(2)], ylim, 'Color', 'black', 'LineWidth',...
 set(gca,'tag',num2str(channel_index));
 set(gca,'ButtonDownFcn', @channel_select);
 %add comments
-title_text=[event_name, channel_name];
+title_text=strrep([event_name, channel_name], '_', ' ');
 title(title_text, 'FontSize', 7);
 hold off
 

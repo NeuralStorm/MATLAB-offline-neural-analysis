@@ -21,7 +21,6 @@ function sort_peaks(hObject, handles)
     handles.sep_data(handles.index).neg_peak2 = neg_sorted_peak_array(2, 2);
     handles.sep_data(handles.index).neg_peak_latency3 = neg_sorted_peak_array(3, 1);
     handles.sep_data(handles.index).neg_peak3 = neg_sorted_peak_array(3, 2);
-    
+
     guidata(hObject, handles);
-    
 end

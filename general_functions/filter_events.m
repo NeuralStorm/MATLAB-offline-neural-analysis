@@ -13,6 +13,7 @@ function [event_info] = filter_events(event_info, include_events, trial_range)
     end
     if ischar(include_events)
         include_events = strrep(include_events, ';', ',');
+        include_events = strrep(include_events, ' ', ''); % remove any spaces
         include_events = strsplit(include_events, ',');
         event_info = event_info(ismember(event_info.event_labels, include_events), :);
     elseif isnumeric(include_events) && (~isempty(include_events) && ~all(isnan(include_events)))

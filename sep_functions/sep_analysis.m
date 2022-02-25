@@ -61,8 +61,7 @@ function [sep_res] = sep_analysis(sep_data, event_info, window_s, window_e, base
 
                 sig_response = sig_early | sig_late;
 
-
-                %TODO store results in table
+                %% Store res in table
                 a = [{ch_group}, {chan}, {event}, {sep}, upper_thresh, lower_thresh, ...
                     early_neg_peak, early_neg_pl, early_pos_peak, early_pos_pl, ...
                     sig_early, late_neg_peak, late_neg_pl, late_pos_peak, late_pos_pl, ...
@@ -74,11 +73,4 @@ function [sep_res] = sep_analysis(sep_data, event_info, window_s, window_e, base
             chan_e = chan_e + tot_bins;
         end
     end
-end
-
-function [avg_bfr, bfr_std, upper_thresh, lower_thresh] = get_threshold(baseline_psth, threshold_scalar)
-    avg_bfr = mean(baseline_psth);
-    bfr_std = std(baseline_psth);
-    upper_thresh = avg_bfr + (threshold_scalar * bfr_std);
-    lower_thresh = avg_bfr - (threshold_scalar * bfr_std);
 end

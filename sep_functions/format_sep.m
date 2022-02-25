@@ -6,6 +6,7 @@ function sep_data = format_sep(chan_table, event_info, ...
     window_s = window_s * sample_rate;
     window_e = window_e * sample_rate;
     [bin_edges, ~] = get_bins(window_s, window_e, 1);
+    bin_edges(end) = [];
     %% Creates the PSTH
     unique_ch_groups = unique(chan_table.chan_group);
     for ch_group_i = 1:length(unique_ch_groups)

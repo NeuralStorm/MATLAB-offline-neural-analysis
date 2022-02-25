@@ -21,7 +21,7 @@ function [] = batch_parser(parsed_path, failed_path, animal_path, dir_name, conf
         else
             for ext_i = 1:length(unique_exts)
                 curr_ext = unique_exts{ext_i};
-                ext_file_list = filenames(contains(filenames, curr_ext));
+                ext_file_list = get_file_list(animal_path, curr_ext);
                 switch curr_ext
                     case {'.plx', '.pl2'}
                         %% Handle parsing plx files

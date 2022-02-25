@@ -55,12 +55,12 @@ function [event_info] = find_event_samples(dig_sig)
     %x contains the time stamp of the low -> high part of the pulse
     %y contains the time stamp of the high -> low part of the pulse
 
-    headers = [["event_labels", "string"]; ["event_ts", "double"]];
+    headers = [["event_labels", "cell"]; ["event_ts", "double"]];
     event_info = prealloc_table(headers, [0, size(headers, 1)]);
     [tot_rows, tot_cols] = size(dig_sig);
     for row_i = 1:tot_rows
-        lo_hi = [];
-        hi_lo = [];
+        lo_hi = cell(0,2); % prealloc so that empty cell array doesnt cause error
+        hi_lo = cell(0,2); % prealloc so that empty cell array doesnt cause error
         x = 1;
         while x <= tot_cols
             if dig_sig(row_i, x) == 1
@@ -86,9 +86,9 @@ function [event_info] = find_event_samples(dig_sig)
 
         a = [lo_hi; hi_lo];
         event_info = vertcat_cell(event_info, a, headers(:, 1), "after");
-        event_info = sortrows(event_info, 'event_ts');
-        tot_trials = height(event_info);
-        event_i = 1:1:tot_trials;
-        event_info.event_indices = event_i';
     end
+    event_info = sortrows(event_info, 'event_ts');
+    tot_trials = height(event_info);
+    event_i = 1:1:tot_trials;
+    event_info.event_indices = event_i';
 end
