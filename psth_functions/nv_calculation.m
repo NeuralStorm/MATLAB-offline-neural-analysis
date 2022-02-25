@@ -36,7 +36,7 @@ function res = nv_calculation(rr_data, event_info, window_start, window_end, ...
                 norm_var = norm_var_scaling * (epsilon + bfr_var)/(norm_var_scaling * epsilon + avg_bfr);
                 fano = avg_bfr / bfr_var;
 
-                a = [{ch_group}, {chan}, {event}, avg_bfr, bfr_var, norm_var, fano];
+                a = [{ch_group}, {chan}, {event}, avg_bfr, bfr_var, fano, norm_var];
                 %% Store results in table
                 res = vertcat_cell(res, a, headers(:, 1), "after");
             end
