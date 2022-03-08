@@ -12,7 +12,7 @@
 2. Make sure filenames match [naming convention.](https://github.com/moxon-lab-codebase/docs/blob/main/offline_analysis/filename_convention.md)
 3. Make sure offline codebase is on your Matlab path. [Click here for details on adding dependencies](https://github.com/moxon-lab-codebase/docs/blob/main/matlab_basics/adding_dependencies.md).
 4. Make sure you have these other dependencies as well:
-    * [Parallel Computing Toolbox](https://www.mathworks.com/products/parallel-computing.html): This is used to help speed up plotting the PSTHS. This is not needed if you skip graphing
+    * [Parallel Computing Toolbox](https://www.mathworks.com/products/parallel-computing.html): This is used to help speed up bootstrapping.
 5. [Make a labels file for each subject.](https://github.com/moxon-lab-codebase/docs/blob/main/offline_analysis/labels_file.md)
     * labels_subjID.csv
 6. Set up config file. See config section below for more details.
@@ -37,7 +37,7 @@
 ### Creating relative response
 |Variable Name|Type| Description |
 |:-----------:|:--:| :----------:|
-|creaste_psth (should change name)|boolean|Controls if creating relative response from parsed spike data|
+|creaste_psth (should change name)|boolean|If pca or ica is set to the `psth_type`, this column is ignored. 1: creates relative response from `parsed_spike` before running the classifier. Note: if there are relative responses already along the `psth/data/subjId/` path, these files will be overwritten. 0: loads the relative response data from `psth/data/subjId/`.|
 |trial_range|numerical|If creating relative response, selects which trials are used to make relative response|
 |include_events|char/str|If creating relative response, selects which events are used to make relative response|
 
@@ -45,7 +45,7 @@
 |Variable Name|Type| Description |
 |:-----------:|:--:| :----------:|
 |combine_chan_groups|boolean|0 = keeps chan_groups separate, 1 = combine all chan_groups together before classifying|
-|boot_iterations|How many bootstrap iterations the bootstrapper will run|
+|boot_iterations|int|How many bootstrap iterations the bootstrapper will run|
 
 ## Classifier Output
 The bootstrap classifier analysis will output a csv file containing the results across subjects and session files called `res_type_chan_eucl_classifier.csv` and `res_type_pop_eucl_classifier.csv` on the top level of the project directory, where type = psth_type set in config. The `chan` csv is the performance of classifying with each channel separately while the `pop` csv is the performance of using each chan_group to classify.

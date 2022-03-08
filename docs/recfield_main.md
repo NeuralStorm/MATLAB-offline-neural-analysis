@@ -42,7 +42,7 @@
 ### Creating relative response
 |Variable Name|Type| Description |
 |:-----------:|:--:| :----------:|
-|creaste_psth (should change name)|boolean|Controls if creating relative response from parsed spike data|
+|creaste_psth (should change name)|boolean|If pca or ica is set to the `psth_type`, this column is ignored. 1: creates relative response from `parsed_spike` before running the classifier. Note: if there are relative responses already along the `psth/data/subjId/` path, these files will be overwritten. 0: loads the relative response data from `psth/data/subjId/`.|
 |trial_range|numerical|If creating relative response, selects which trials are used to make relative response|
 |include_events|char/str|If creating relative response, selects which events are used to make relative response|
 
