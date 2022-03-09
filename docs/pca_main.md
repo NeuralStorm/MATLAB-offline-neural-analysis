@@ -47,5 +47,5 @@
 ### Format RR
 |Variable Name|Type| Description |
 |:-----------:|:--:|:-----------:|
-|convert_mnts_psth|boolean|1: convert output of pca mapped data into rr format for later use. <br/>0: Does not convert output of pca into rr|
-|use_mnts|boolean|Ignored if `convert_mnts_psth` is set to false<br/>1: convert mnts input matrix for pca (`mnts/data/subj`) into rr format instead of pca output. Useful if your data has not been formatted in the rr matrix before. <br/>0: Uses pca output instead (`mnts/pca/subj`)|
+|convert_mnts_psth|boolean|1: convert mnts matrix into rr matrix for later use. <br/>0: Does not convert a specified mnts to rr|
+|use_mnts|boolean|Ignored if `convert_mnts_psth` is set to false<br/>In most cases, this should be set to false (0) since the user generally wants to convert the PC mapped data into the rr format<br/>1: convert mnts input matrix for pca (`mnts/data/subj`) into rr format. Useful if your data has not been formatted in the rr matrix before. <br/>0: Converts PC mapped mnts, from PCA, into the rr format (`mnts/pca/subj`)|
