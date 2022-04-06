@@ -122,7 +122,6 @@ Spike Codebase Example
 │     ├── LC02
 │     │  └── pc_analysis_LC.02.OpenLoop.Day0c.112015.mat
 │     └── pca_log.csv
-├── other_confs
 ├── parsed_spike
 │  ├── BPS153
 │  │  ├── BPS.153.normal.1.20180514.mat

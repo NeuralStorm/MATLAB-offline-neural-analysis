@@ -19,6 +19,7 @@ function [] = batch_recfield(project_path, save_path, failed_path, data_path, di
         'baseline_start', 'baseline_end', 'window_end', 'response_start', 'response_end', 'bin_size', ...
         'sig_alpha', 'mixed_smoothing', 'sig_check', 'consec_bins', ...
         'span', 'threshold_scalar'};
+    cluster_headers = [meta_headers, {'bin_gap'}];
     ignore_headers = {
         'significant', 'background_rate', 'background_std', 'avg_response', 'response_window_rm', 'threshold', 'p_val', ...
         'first_latency', 'last_latency', 'duration', 'peak_latency', 'peak_response', ...
@@ -97,8 +98,9 @@ function [] = batch_recfield(project_path, save_path, failed_path, data_path, di
 
             if config.cluster_analysis
                 %% Append to cluster analysis csv
+                cluster_meta = [meta_data, bin_gap];
                 tot_rows = height(cluster_res);
-                cluster_res = horzcat_cell(cluster_res, repmat(meta_data, [tot_rows, 1]), meta_headers, 'before');
+                cluster_res = horzcat_cell(cluster_res, repmat(cluster_meta, [tot_rows, 1]), cluster_headers, 'before');
                 export_csv(cluster_csv_path, cluster_res, ignore_headers);
             end
 
