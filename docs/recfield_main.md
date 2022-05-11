@@ -112,27 +112,27 @@ For more details on how these are calculated, [please see this notebook.](https:
 |chan_group|Name of channel group specified in labels file|
 |channel|Name of channel|
 |event|Name of event|
-|significant|boolean that describes if channel had significant response|
-|background_rate|average background activity in baseline window|
-|background_std|standard deviation of background activity in baseline window|
-|response_window_firing_rate|average response activity in response window|
-|response_window_tot_spikes|sum of response activity in response window|
-|threshold|threshold applied to response window to determine if response is significantly different from baseline|
-|first_latency|latency of first bin above threshold in response|
-|last_latency|latency of last bin above threshold in response|
-|duration|time from first to last latency|
-|peak_latency|time of peak in response|
-|peak_response|magnitude of peak in response|
-|corrected_peak|peak magnitude with background firing rate subtracted|
-|response_magnitude|sum of activity between first and last bin|
-|corrected_response_magnitude|response magnitude with background firing rate subtracted|
-|tot_sig_events|total significant events for given channel|
-|principal_event|event with largest response magnitude|
-|norm_response_magnitude|response magnitude normalized against principal event|
-|brf_s|same as background rate, but in unit of time instead of bins|
-|bfr_var|variance of baseline window in unit of time|
-|fano|fano factor of baseline window|
-|norm_var|normalized variance of baseline window|
+|significant|Boolean that describes if channel had significant response|
+|background_rate|Average background activity in baseline window|
+|background_std|Standard deviation of background activity in baseline window|
+|response_window_firing_rate|Average response activity in response window|
+|response_window_tot_spikes|Sum of response activity in response window|
+|threshold|Threshold applied to response window to determine if response is significantly different from baseline|
+|first_latency|Latency of first bin above threshold in response|
+|last_latency|Latency of last bin above threshold in response|
+|duration|Time from first to last latency|
+|peak_latency|Time of peak in response|
+|peak_response|Magnitude of peak in response|
+|corrected_peak|Peak magnitude with background firing rate subtracted|
+|response_magnitude|Sum of activity between first and last bin|
+|corrected_response_magnitude|Response magnitude with background firing rate subtracted|
+|tot_sig_events|Total significant events for given channel|
+|principal_event|Event with largest response magnitude|
+|norm_response_magnitude|Response magnitude normalized against principal event|
+|brf_s|Same as background rate, but in unit of time instead of bins|
+|bfr_var|Variance of baseline window in unit of time|
+|fano|Fano factor of baseline window|
+|norm_var|Normalized variance of baseline window|
 
 ## Cluster Analysis Output
 If selected, the cluster analysis will also output a csv file containing the results across subjects and session files called `res_type_cluster_analysis.csv` on the top level of the project directory, where type = psth_type set in config.
@@ -142,12 +142,12 @@ If selected, the cluster analysis will also output a csv file containing the res
 |Variable Name| Description |
 |:-----------:| :----------:|
 |filename|Name of file where data was from|
-|animal_id|subject id in filename|
-|exp_group|subject experimental group in filename|
-|exp_condition|subject experimental condition in filename|
-|optional_info|any optional info in filename|
-|date|date in filename|
-|record_session|session in filename|
+|animal_id|Subject id in filename|
+|exp_group|Subject experimental group in filename|
+|exp_condition|Subject experimental condition in filename|
+|optional_info|Any optional info in filename|
+|date|Date in filename|
+|record_session|Session in filename|
 ### Receptive Field Params
 All of these columns are set in the config described above.
 
@@ -176,12 +176,12 @@ These metrics are calculated the same way as the receptive field metrics are, bu
 |channel|Name of channel|
 |event|Name of event|
 |tot_clusters|Total clusters in channel PSTH found|
-|cluster_first_latency|latency of first bin above threshold in response|
-|cluster_last_latency|latency of last bin above threshold in response|
-|cluster_duration|time from first to last latency|
-|cluster_peak_latency|time of peak in response|
-|cluster_peak_response|magnitude of peak in response|
-|cluster_corrected_peak|peak magnitude with background firing rate subtracted|
-|cluster_response_magnitude|sum of activity between first and last bin|
-|cluster_corrected_response_magnitude|response magnitude with background firing rate subtracted|
+|cluster_first_latency|Latency of first bin above threshold in response|
+|cluster_last_latency|Latency of last bin above threshold in response|
+|cluster_duration|Time from first to last latency|
+|cluster_peak_latency|Time of peak in response|
+|cluster_peak_response|Magnitude of peak in response|
+|cluster_corrected_peak|Peak magnitude with background firing rate subtracted|
+|cluster_response_magnitude|Sum of activity between first and last bin|
+|cluster_corrected_response_magnitude|Response magnitude with background firing rate subtracted|
 |cluster_norm_response_magnitude|Normalized response magnitude to cluster with largest response magnitude|
