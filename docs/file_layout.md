@@ -1,5 +1,5 @@
 # Required Base Layout
-This is the base layout required to start running the code from the parser main. See the [parser main page](https://github.com/moxon-lab-codebase/MATLAB-offline-neural-analysis/wiki/Parser-Main) for a complete lists of current supported parsing formats.  
+This is the base layout required to start running the code from the parser main. See the [parser main page](./parsing_main.md) for a complete lists of current supported parsing formats.  
 
 There is a conf file for each main function. Please see the respictive markdown page for a desired analysis for more details on what parameters are needed.
 ```

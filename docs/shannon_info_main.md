@@ -8,10 +8,10 @@
 3. Calculate Shanon Mutual Information
 ---
 # Running shannon_info_main  
-1. Make sure data is organized in proper file structure. [See here for more details.](https://github.com/moxon-lab-codebase/docs/blob/main/offline_analysis/file_layout.md)
-2. Make sure filenames match [naming convention.](https://github.com/moxon-lab-codebase/docs/blob/main/offline_analysis/filename_convention.md)
+1. Make sure data is organized in proper file structure. [See here for more details.](./file_layout.md)
+2. Make sure filenames match [naming convention.](./filename_convention.md)
 3. Make sure offline codebase is on your Matlab path. [Click here for details on adding dependencies](https://github.com/moxon-lab-codebase/docs/blob/main/matlab_basics/adding_dependencies.md).
-4. [Make a labels file for each subject.](https://github.com/moxon-lab-codebase/docs/blob/main/offline_analysis/labels_file.md)
+4. [Make a labels file for each subject.](./labels_file.md)
     * labels_subjID.csv
 5. Set up config file. See config section below for more details.
     * conf_shannon_info.csv

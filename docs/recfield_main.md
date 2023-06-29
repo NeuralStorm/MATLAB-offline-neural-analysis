@@ -9,14 +9,14 @@
 4. Plot PSTH and receptive field measures and save to graph directory
 ---
 # Running recfield_main  
-1. Make sure data is organized in proper file structure. [See here for more details.](https://github.com/moxon-lab-codebase/docs/blob/main/offline_analysis/file_layout.md)
-2. Make sure filenames match [naming convention.](https://github.com/moxon-lab-codebase/docs/blob/main/offline_analysis/filename_convention.md)
+1. Make sure data is organized in proper file structure. [See here for more details.](./file_layout.md)
+2. Make sure filenames match [naming convention.](./filename_convention.md)
 3. Make sure offline codebase is on your Matlab path. [Click here for details on adding dependencies](https://github.com/moxon-lab-codebase/docs/blob/main/matlab_basics/adding_dependencies.md).
 4. Make sure you have these other dependencies as well:
     * [Curve Fitting Toolbox](https://www.mathworks.com/products/curvefitting.html): This allows for the smooth function to be called during significance check.
     * [Parallel Computing Toolbox](https://www.mathworks.com/products/parallel-computing.html): This is used to help speed up plotting the PSTHS. This is not needed if you skip graphing
     * [Scrollsubplot](https://www.mathworks.com/matlabcentral/fileexchange/7730-scrollsubplot): The scrollsubplot is required for plotting the PSTHs. This is not needed if you skip graphing.
-5. [Make a labels file for each subject.](https://github.com/moxon-lab-codebase/docs/blob/main/offline_analysis/labels_file.md)
+5. [Make a labels file for each subject.](./labels_file.md)
     * labels_subjID.csv
 6. Set up config file. See config section below for more details.
     * conf_recfield.csv
@@ -105,7 +105,7 @@ All of these columns are set in the config described above.
 |span|see above|
 |threshold_scalar| see above|
 ### Receptive Field Results
-For more details on how these are calculated, [please see this notebook.](https://github.com/moxon-lab-codebase/docs/blob/main/offline_analysis/receptive_field_analysis.ipynb)
+For more details on how these are calculated, [please see this notebook.](./receptive_field_analysis.ipynb)
 
 |Variable Name| Description |
 |:-----------:| :----------:|
